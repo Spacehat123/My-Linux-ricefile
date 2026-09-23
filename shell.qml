@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Wayland
 import "components"
 import "panels"
+import "wallpaper"
 
 ShellRoot {
     Variants {
@@ -15,6 +16,12 @@ ShellRoot {
             property bool leftSidebarOpen: false
             property bool rightSidebarOpen: false
             property bool bottomBarOpen: false
+
+            // Live wallpaper rendering surface (WlrLayer.Background)
+            Wallpaper {
+                id: wallpaper
+                screen: monitorScope.modelData
+            }
 
             // Edge trigger overlay window
             PanelWindow {
