@@ -1,11 +1,34 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import "components"
 import "panels"
 import "wallpaper"
 
 ShellRoot {
+    id: shellRoot
+
+    // Authoritative shell-level state for live wallpaper
+    property bool wallpaperEnabled: true
+
+    // Temporary development IPC control for toggling/managing wallpaper
+    IpcHandler {
+        target: "wallpaper"
+
+        property bool enabled: shellRoot.wallpaperEnabled
+
+        function toggle() {
+            shellRoot.wallpaperEnabled = !shellRoot.wallpaperEnabled;
+            console.log("[pranc-shell] IPC: wallpaperEnabled toggled to " + shellRoot.wallpaperEnabled);
+        }
+
+        function setEnabled(val: bool) {
+            shellRoot.wallpaperEnabled = val;
+            console.log("[pranc-shell] IPC: wallpaperEnabled set to " + shellRoot.wallpaperEnabled);
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 
@@ -21,6 +44,7 @@ ShellRoot {
             Wallpaper {
                 id: wallpaper
                 screen: monitorScope.modelData
+                enabled: shellRoot.wallpaperEnabled
             }
 
             // Edge trigger overlay window

@@ -21,17 +21,44 @@ cd ~/.config/quickshell/pranc-shell/wallpaper
 /usr/lib/qt6/bin/qsb --qt6 shaders/wallpaper.frag -o shaders/wallpaper.frag.qsb
 ```
 
-## Integration
+## Integration & Control
 
-In `shell.qml`:
+In `shell.qml`, authoritative state resides on `ShellRoot`:
 ```qml
-import "wallpaper"
+ShellRoot {
+    id: shellRoot
+    property bool wallpaperEnabled: true
 
-// Inside Variants { model: Quickshell.screens; Scope { id: monitorScope ... } }
-Wallpaper {
-    id: wallpaper
-    screen: monitorScope.modelData
-    enabled: true
-    activeRendering: true
+    IpcHandler {
+        target: "wallpaper"
+        function toggle(): void { ... }
+        function setEnabled(val: bool): void { ... }
+    }
+
+    Variants {
+        model: Quickshell.screens
+        Scope {
+            Wallpaper {
+                screen: monitorScope.modelData
+                enabled: shellRoot.wallpaperEnabled
+            }
+        }
+    }
 }
 ```
+
+### IPC Commands
+
+During development, wallpaper state can be controlled via the Quickshell CLI without UI overhead:
+```bash
+# Toggle wallpaper
+quickshell ipc -c pranc-shell call wallpaper toggle
+
+# Explicitly enable or disable
+quickshell ipc -c pranc-shell call wallpaper setEnabled false
+quickshell ipc -c pranc-shell call wallpaper setEnabled true
+
+# Query status property
+quickshell ipc -c pranc-shell prop get wallpaper enabled
+```
+
