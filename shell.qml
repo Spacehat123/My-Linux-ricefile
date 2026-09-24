@@ -3,11 +3,25 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import "components"
+import "core"
 import "panels"
 import "wallpaper"
 
 ShellRoot {
     id: shellRoot
+
+    // Compositor intelligence layer singletons (compositor-wide lifetime)
+    WorkspaceManager {
+        id: workspaceManager
+    }
+
+    SurfaceManager {
+        id: surfaceManager
+    }
+
+    // Authoritative shell-level aliases
+    readonly property alias workspaceManager: workspaceManager
+    readonly property alias surfaceManager: surfaceManager
 
     // Authoritative shell-level state for live wallpaper
     property bool wallpaperEnabled: true
@@ -26,6 +40,90 @@ ShellRoot {
         function setEnabled(val: bool) {
             shellRoot.wallpaperEnabled = val;
             console.log("[pranc-shell] IPC: wallpaperEnabled set to " + shellRoot.wallpaperEnabled);
+        }
+    }
+
+    // =========================================================================
+    // Headless IPC Verification: Workspace Intelligence
+    // =========================================================================
+    IpcHandler {
+        target: "workspace"
+
+        // Direct scalar properties for fast CLI query
+        property int focusedId: workspaceManager.focusedWorkspaceId
+        property string focusedName: workspaceManager.focusedWorkspaceName
+        property int count: workspaceManager.count
+
+        property string focusedJson: JSON.stringify({
+            id: workspaceManager.focusedWorkspaceId,
+            name: workspaceManager.focusedWorkspaceName,
+            hasFullscreen: workspaceManager.hasFullscreen,
+            urgent: workspaceManager.isUrgent,
+            monitorId: workspaceManager.focusedMonitorId,
+            monitorName: workspaceManager.focusedMonitorName
+        })
+
+        property string listJson: {
+            const list = workspaceManager.workspaceList;
+            if (!list) return "[]";
+            const result = [];
+            for (let i = 0; i < list.length; ++i) {
+                const ws = list[i];
+                if (!ws) continue;
+                result.push({
+                    id: ws.id,
+                    name: ws.name,
+                    active: ws.active,
+                    focused: ws.focused,
+                    urgent: ws.urgent,
+                    hasFullscreen: ws.hasFullscreen,
+                    monitor: ws.monitor ? ws.monitor.name : null,
+                    toplevelCount: ws.toplevels && ws.toplevels.values ? ws.toplevels.values.length : 0
+                });
+            }
+            return JSON.stringify(result);
+        }
+    }
+
+    // =========================================================================
+    // Headless IPC Verification: Surface Intelligence
+    // =========================================================================
+    IpcHandler {
+        target: "surface"
+
+        // Direct scalar properties for fast CLI query
+        property string activeAddress: surfaceManager.activeAddress
+        property string activeTitle: surfaceManager.activeTitle
+        property int count: surfaceManager.count
+
+        property string activeJson: JSON.stringify({
+            address: surfaceManager.activeAddress,
+            title: surfaceManager.activeTitle,
+            workspaceId: surfaceManager.activeWorkspaceId,
+            workspaceName: surfaceManager.activeWorkspaceName,
+            monitorId: surfaceManager.activeMonitorId,
+            monitorName: surfaceManager.activeMonitorName,
+            urgent: surfaceManager.isUrgent
+        })
+
+        property string listJson: {
+            const list = surfaceManager.toplevelList;
+            if (!list) return "[]";
+            const result = [];
+            for (let i = 0; i < list.length; ++i) {
+                const tl = list[i];
+                if (!tl) continue;
+                result.push({
+                    address: tl.address,
+                    title: tl.title,
+                    activated: tl.activated,
+                    urgent: tl.urgent,
+                    workspaceId: tl.workspace ? tl.workspace.id : null,
+                    workspaceName: tl.workspace ? tl.workspace.name : null,
+                    monitorName: tl.monitor ? tl.monitor.name : null
+                });
+            }
+            return JSON.stringify(result);
         }
     }
 
