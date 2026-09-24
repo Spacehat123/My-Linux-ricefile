@@ -227,10 +227,12 @@ QtObject {
     // Public Read-Only Query API
     // =========================================================================
 
-    // O(1) surface lookup by hex address
-    function getSurfaceByAddress(address: string) {
+    // O(1) surface lookup by hex address (supports both raw and 0x-prefixed hex)
+    function getSurfaceByAddress(address) {
         if (!address || !_projection || !_projection.addressMap) return null;
-        return _projection.addressMap[address] || null;
+        let addr = String(address).trim();
+        if (addr.startsWith("0x") || addr.startsWith("0X")) addr = addr.slice(2);
+        return _projection.addressMap[addr] || _projection.addressMap[address] || null;
     }
 
     // Retrieve all normalized surfaces belonging to a workspace ID

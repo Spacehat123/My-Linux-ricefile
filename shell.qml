@@ -32,11 +32,40 @@ ShellRoot {
         surfaceManager: surfaceManager
     }
 
+    // Desktop State & Composition Graph model (compositor-wide lifetime)
+    DesktopModel {
+        id: desktopModel
+        workspaceModel: workspaceModel
+        surfaceModel: surfaceModel
+    }
+
+    // Compositor Action Layer (Actuator & Security Barrier)
+    CompositorActionLayer {
+        id: compositorActionLayer
+        workspaceManager: workspaceManager
+        surfaceManager: surfaceManager
+        workspaceModel: workspaceModel
+        surfaceModel: surfaceModel
+        interactionModel: interactionModel
+    }
+
+    // Interaction & Intent Mediation Layer (compositor-wide lifetime)
+    InteractionModel {
+        id: interactionModel
+        desktopModel: desktopModel
+        surfaceModel: surfaceModel
+        workspaceModel: workspaceModel
+        actionLayer: compositorActionLayer
+    }
+
     // Authoritative shell-level aliases
     readonly property alias workspaceManager: workspaceManager
     readonly property alias surfaceManager: surfaceManager
     readonly property alias workspaceModel: workspaceModel
     readonly property alias surfaceModel: surfaceModel
+    readonly property alias desktopModel: desktopModel
+    readonly property alias interactionModel: interactionModel
+    readonly property alias compositorActionLayer: compositorActionLayer
 
     // =========================================================================
     // Workspace & Surface Intelligence Integration: Derived Global State
@@ -185,6 +214,9 @@ ShellRoot {
     // =========================================================================
     IpcHandler {
         target: "shell"
+
+        // Direct scalar properties
+        property int currentWorkspaceId: shellRoot.currentWorkspaceId
 
         // Direct scalar accessors
         function getCurrentWorkspaceId(): int {
@@ -477,6 +509,348 @@ ShellRoot {
         }
     }
 
+    // =========================================================================
+    // Headless IPC Verification: Unified Desktop Composition Model
+    // =========================================================================
+    IpcHandler {
+        target: "desktop"
+
+        // Direct scalar properties for fast CLI inspection
+        property int workspaceCount: desktopModel.workspaceCount
+        property int occupiedWorkspaceCount: desktopModel.occupiedWorkspaceCount
+        property int emptyWorkspaceCount: desktopModel.emptyWorkspaceCount
+        property int surfaceCount: desktopModel.surfaceCount
+        property int applicationCount: desktopModel.applicationCount
+        property int urgentSurfaceCount: desktopModel.urgentSurfaceCount
+        property int monitorCount: desktopModel.monitorCount
+        property bool isUrgent: desktopModel.isUrgent
+
+        property int focusedWorkspaceId: desktopModel.focusedWorkspaceId
+        property string focusedWorkspaceName: desktopModel.focusedWorkspaceName
+        property string focusedSurfaceTitle: desktopModel.focusedSurface ? desktopModel.focusedSurface.title : ""
+        property string focusedSurfaceAddress: desktopModel.focusedSurface ? desktopModel.focusedSurface.address : ""
+        property string focusedAppName: desktopModel.focusedApplication ? desktopModel.focusedApplication.appName : ""
+        property string focusedMonitorName: desktopModel.focusedMonitor ? desktopModel.focusedMonitor.name : ""
+
+        // Complete state summary snapshot
+        function getSummary(): string {
+            return JSON.stringify({
+                workspaces: {
+                    total: desktopModel.workspaceCount,
+                    occupied: desktopModel.occupiedWorkspaceCount,
+                    empty: desktopModel.emptyWorkspaceCount,
+                    focusedId: desktopModel.focusedWorkspaceId,
+                    focusedName: desktopModel.focusedWorkspaceName
+                },
+                surfaces: {
+                    total: desktopModel.surfaceCount,
+                    urgent: desktopModel.urgentSurfaceCount,
+                    focusedTitle: desktopModel.focusedSurface ? desktopModel.focusedSurface.title : null,
+                    focusedAddress: desktopModel.focusedSurface ? desktopModel.focusedSurface.address : null
+                },
+                applications: {
+                    total: desktopModel.applicationCount,
+                    focusedApp: desktopModel.focusedApplication ? desktopModel.focusedApplication.appName : null
+                },
+                monitors: {
+                    total: desktopModel.monitorCount,
+                    focusedMonitor: desktopModel.focusedMonitor ? desktopModel.focusedMonitor.name : null
+                },
+                isUrgent: desktopModel.isUrgent
+            });
+        }
+
+        // Focused composition snapshot
+        function getFocused(): string {
+            const ctx = desktopModel.getFocusedComposition();
+            return JSON.stringify({
+                workspace: ctx.workspace ? {
+                    id: ctx.workspace.id,
+                    name: ctx.workspace.name,
+                    surfaceCount: ctx.workspace.surfaceCount,
+                    applicationCount: ctx.workspace.applicationCount,
+                    monitorName: ctx.workspace.monitorName
+                } : null,
+                surface: ctx.surface ? {
+                    address: ctx.surface.address,
+                    title: ctx.surface.title,
+                    appName: ctx.surface.appName,
+                    appId: ctx.surface.appId,
+                    windowClass: ctx.surface.windowClass,
+                    isXWayland: ctx.surface.isXWayland
+                } : null,
+                application: ctx.application ? {
+                    appId: ctx.application.appId,
+                    appName: ctx.application.appName,
+                    surfaceCount: ctx.application.count
+                } : null,
+                monitor: ctx.monitor ? {
+                    id: ctx.monitor.id,
+                    name: ctx.monitor.name,
+                    activeWorkspaceId: ctx.monitor.activeWorkspaceId
+                } : null
+            });
+        }
+
+        // Workspace composition lookup
+        function getWorkspaceComposition(workspaceId: int): string {
+            const ws = desktopModel.getWorkspaceComposition(workspaceId);
+            if (!ws) return "null";
+            return JSON.stringify({
+                id: ws.id,
+                name: ws.name,
+                active: ws.active,
+                focused: ws.focused,
+                urgent: ws.urgent,
+                hasFullscreen: ws.hasFullscreen,
+                monitorName: ws.monitorName,
+                occupied: ws.occupied,
+                empty: ws.empty,
+                surfaceCount: ws.surfaceCount,
+                applicationCount: ws.applicationCount,
+                applications: ws.applications.map(a => ({
+                    appId: a.appId,
+                    appName: a.appName,
+                    count: a.count,
+                    isFocused: a.isFocused,
+                    isUrgent: a.isUrgent
+                })),
+                surfaces: ws.surfaces.map(s => ({
+                    address: s.address,
+                    title: s.title,
+                    appName: s.appName,
+                    activated: s.activated,
+                    urgent: s.urgent
+                }))
+            });
+        }
+
+        // Distinct applications on a workspace
+        function getApplicationsForWorkspace(workspaceId: int): string {
+            const apps = desktopModel.getApplicationsForWorkspace(workspaceId);
+            return JSON.stringify(apps.map(a => ({
+                appId: a.appId,
+                appName: a.appName,
+                count: a.count,
+                isFocused: a.isFocused,
+                isUrgent: a.isUrgent
+            })));
+        }
+
+        // Normalized surfaces on a workspace
+        function getSurfacesForWorkspace(workspaceId: int): string {
+            const surfs = desktopModel.getSurfacesForWorkspace(workspaceId);
+            return JSON.stringify(surfs.map(s => ({
+                address: s.address,
+                title: s.title,
+                appName: s.appName,
+                activated: s.activated,
+                urgent: s.urgent
+            })));
+        }
+
+        // Monitor composition lookup
+        function getMonitorComposition(monitorName: string): string {
+            const mon = desktopModel.getMonitorComposition(monitorName);
+            if (!mon) return "null";
+            return JSON.stringify({
+                id: mon.id,
+                name: mon.name,
+                activeWorkspaceId: mon.activeWorkspaceId,
+                activeWorkspaceName: mon.activeWorkspaceName,
+                workspaceCount: mon.workspaces.length,
+                workspaceIds: mon.workspaces.map(w => w.id),
+                surfaceCount: mon.surfaceCount,
+                applicationCount: mon.applicationCount,
+                isFocused: mon.isFocused,
+                hasFullscreen: mon.hasFullscreen,
+                applications: mon.applications.map(a => ({
+                    appId: a.appId,
+                    appName: a.appName,
+                    count: a.count,
+                    workspaceIds: a.workspaceIds
+                }))
+            });
+        }
+
+        // All monitor topology summary
+        function getMonitors(): string {
+            const list = desktopModel.monitors;
+            return JSON.stringify(list.map(mon => ({
+                id: mon.id,
+                name: mon.name,
+                activeWorkspaceId: mon.activeWorkspaceId,
+                activeWorkspaceName: mon.activeWorkspaceName,
+                workspaceCount: mon.workspaces.length,
+                surfaceCount: mon.surfaceCount,
+                applicationCount: mon.applicationCount,
+                isFocused: mon.isFocused
+            })));
+        }
+
+        // Application group lookup
+        function getApplicationGroup(appIdOrClass: string): string {
+            const app = desktopModel.getApplicationGroup(appIdOrClass);
+            if (!app) return "null";
+            return JSON.stringify({
+                appId: app.appId,
+                appName: app.appName,
+                windowClass: app.windowClass,
+                count: app.count,
+                isFocused: app.isFocused,
+                isUrgent: app.isUrgent,
+                primarySurfaceAddress: app.primarySurface ? app.primarySurface.address : ""
+            });
+        }
+    }
+
+    // =========================================================================
+    // Headless IPC Verification: Interaction & Intent Mediation Model
+    // =========================================================================
+    IpcHandler {
+        target: "interaction"
+
+        property int totalRequests: shellRoot.interactionModel ? shellRoot.interactionModel.totalRequestsCount : 0
+        property int validRequests: shellRoot.interactionModel ? shellRoot.interactionModel.validRequestsCount : 0
+        property int rejectedRequests: shellRoot.interactionModel ? shellRoot.interactionModel.rejectedRequestsCount : 0
+        property string lastIntent: shellRoot.interactionModel && shellRoot.interactionModel.lastRequest ? shellRoot.interactionModel.lastRequest.intent : ""
+        property bool lastValid: shellRoot.interactionModel && shellRoot.interactionModel.lastRequest ? shellRoot.interactionModel.lastRequest.valid : false
+
+        function getLastRequest(): string {
+            return JSON.stringify(shellRoot.interactionModel ? shellRoot.interactionModel.lastRequest : null);
+        }
+
+        function isActionAvailable(intent: string, target: string, payloadJson: string): bool {
+            if (!shellRoot.interactionModel) return false;
+            let payload = null;
+            if (payloadJson && payloadJson !== "" && payloadJson !== "null") {
+                try { payload = JSON.parse(payloadJson); } catch (e) { payload = null; }
+            }
+            return shellRoot.interactionModel.isActionAvailable(intent, target, payload);
+        }
+
+        function validateTarget(intent: string, target: string, payloadJson: string): string {
+            if (!shellRoot.interactionModel) return "{}";
+            let payload = null;
+            if (payloadJson && payloadJson !== "" && payloadJson !== "null") {
+                try { payload = JSON.parse(payloadJson); } catch (e) { payload = null; }
+            }
+            return JSON.stringify(shellRoot.interactionModel.validateTarget(intent, target, payload));
+        }
+
+        function requestAction(intent: string, target: string, payloadJson: string): bool {
+            if (!shellRoot.interactionModel) return false;
+            let payload = null;
+            if (payloadJson && payloadJson !== "" && payloadJson !== "null") {
+                try { payload = JSON.parse(payloadJson); } catch (e) { payload = null; }
+            }
+            return shellRoot.interactionModel.requestAction(intent, target, payload);
+        }
+
+        function requestSurfaceFocus(address: string): bool {
+            return shellRoot.interactionModel ? shellRoot.interactionModel.requestSurfaceFocus(address) : false;
+        }
+
+        function requestWorkspaceSwitch(workspaceId: int): bool {
+            return shellRoot.interactionModel ? shellRoot.interactionModel.requestWorkspaceSwitch(workspaceId) : false;
+        }
+
+        function requestSurfaceClose(address: string): bool {
+            return shellRoot.interactionModel ? shellRoot.interactionModel.requestSurfaceClose(address) : false;
+        }
+
+        function requestSurfaceMove(address: string, workspaceId: int): bool {
+            return shellRoot.interactionModel ? shellRoot.interactionModel.requestSurfaceMove(address, workspaceId) : false;
+        }
+
+        function canFocusSurface(address: string): bool {
+            return shellRoot.interactionModel ? shellRoot.interactionModel.canFocusSurface(address) : false;
+        }
+
+        function canCloseSurface(address: string): bool {
+            return shellRoot.interactionModel ? shellRoot.interactionModel.canCloseSurface(address) : false;
+        }
+
+        function canSwitchWorkspace(workspaceId: int): bool {
+            return shellRoot.interactionModel ? shellRoot.interactionModel.canSwitchWorkspace(workspaceId) : false;
+        }
+
+        function canMoveSurfaceToWorkspace(address: string, workspaceId: int): bool {
+            return shellRoot.interactionModel ? shellRoot.interactionModel.canMoveSurfaceToWorkspace(address, workspaceId) : false;
+        }
+
+        function canToggleFullscreen(address: string): bool {
+            return shellRoot.interactionModel ? shellRoot.interactionModel.canToggleFullscreen(address) : false;
+        }
+
+        function canToggleFloating(address: string): bool {
+            return shellRoot.interactionModel ? shellRoot.interactionModel.canToggleFloating(address) : false;
+        }
+
+        function requestSurfaceToggleFullscreen(address: string): bool {
+            return shellRoot.interactionModel ? shellRoot.interactionModel.requestSurfaceToggleFullscreen(address) : false;
+        }
+
+        function requestSurfaceToggleFloating(address: string): bool {
+            return shellRoot.interactionModel ? shellRoot.interactionModel.requestSurfaceToggleFloating(address) : false;
+        }
+
+        function getLastActionResult(): string {
+            return JSON.stringify(shellRoot.interactionModel ? shellRoot.interactionModel.lastActionResult : null);
+        }
+    }
+
+    // =========================================================================
+    // Headless IPC Verification: Compositor Action Layer
+    // =========================================================================
+    IpcHandler {
+        target: "action"
+
+        property int totalExecuted: shellRoot.compositorActionLayer ? shellRoot.compositorActionLayer.totalExecuted : 0
+        property int totalFailed: shellRoot.compositorActionLayer ? shellRoot.compositorActionLayer.totalFailed : 0
+        property string lastActionJson: shellRoot.compositorActionLayer ? shellRoot.compositorActionLayer.lastActionJson : "{}"
+
+        function execute(intent: string, target: string, payloadJson: string): string {
+            if (!shellRoot.compositorActionLayer) return JSON.stringify({ success: false, reason: "ERR_NATIVE_API_UNAVAILABLE" });
+            let payload = {};
+            if (payloadJson && payloadJson !== "" && payloadJson !== "null") {
+                try { payload = JSON.parse(payloadJson); } catch (e) { payload = {}; }
+            }
+            const res = shellRoot.compositorActionLayer.executeAction(intent, target, payload);
+            return JSON.stringify(res);
+        }
+
+        function switchWorkspace(workspaceId: int): string {
+            if (!shellRoot.compositorActionLayer) return JSON.stringify({ success: false, reason: "ERR_NATIVE_API_UNAVAILABLE" });
+            return JSON.stringify(shellRoot.compositorActionLayer.switchWorkspace(workspaceId, {}));
+        }
+
+        function focusSurface(address: string): string {
+            if (!shellRoot.compositorActionLayer) return JSON.stringify({ success: false, reason: "ERR_NATIVE_API_UNAVAILABLE" });
+            return JSON.stringify(shellRoot.compositorActionLayer.focusSurface(address, {}));
+        }
+
+        function closeSurface(address: string): string {
+            if (!shellRoot.compositorActionLayer) return JSON.stringify({ success: false, reason: "ERR_NATIVE_API_UNAVAILABLE" });
+            return JSON.stringify(shellRoot.compositorActionLayer.closeSurface(address, {}));
+        }
+
+        function moveSurfaceToWorkspace(address: string, workspaceId: int): string {
+            if (!shellRoot.compositorActionLayer) return JSON.stringify({ success: false, reason: "ERR_NATIVE_API_UNAVAILABLE" });
+            return JSON.stringify(shellRoot.compositorActionLayer.moveSurfaceToWorkspace(address, workspaceId, {}));
+        }
+
+        function toggleFullscreen(address: string): string {
+            if (!shellRoot.compositorActionLayer) return JSON.stringify({ success: false, reason: "ERR_NATIVE_API_UNAVAILABLE" });
+            return JSON.stringify(shellRoot.compositorActionLayer.toggleFullscreen(address, {}));
+        }
+
+        function toggleFloating(address: string): string {
+            if (!shellRoot.compositorActionLayer) return JSON.stringify({ success: false, reason: "ERR_NATIVE_API_UNAVAILABLE" });
+            return JSON.stringify(shellRoot.compositorActionLayer.toggleFloating(address, {}));
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 
@@ -627,6 +1001,9 @@ ShellRoot {
             RightSidebar {
                 id: rightSidebar
                 screen: monitorScope.modelData
+                desktopModel: shellRoot.desktopModel
+                surfaceModel: shellRoot.surfaceModel
+                interactionModel: shellRoot.interactionModel
                 open: monitorScope.rightSidebarOpen
 
                 onHoveredChanged: {
@@ -640,6 +1017,8 @@ ShellRoot {
             BottomBar {
                 id: bottomBar
                 screen: monitorScope.modelData
+                desktopModel: shellRoot.desktopModel
+                interactionModel: shellRoot.interactionModel
                 open: monitorScope.bottomBarOpen
 
                 onHoveredChanged: {

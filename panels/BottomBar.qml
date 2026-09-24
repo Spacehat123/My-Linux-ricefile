@@ -10,7 +10,12 @@ PanelWindow {
     property bool open: false
     visible: open || closeAnim.running
 
-    readonly property bool hovered: mouseArea.containsMouse
+    // Injected desktop composition model
+    property var desktopModel: null
+    property var interactionModel: null
+
+    // Dual-layer hover guard ensuring unbreakable hover continuity
+    readonly property bool hovered: mouseArea.containsMouse || (workspaceNav && workspaceNav.hovered)
 
     Theme {
         id: theme
@@ -49,13 +54,13 @@ PanelWindow {
                 anchors.fill: parent
                 orientation: Qt.Horizontal
 
-                // Temporary verification label
-                Text {
+                // Reusable Workspace Navigator HUD
+                WorkspaceNavigator {
+                    id: workspaceNav
                     anchors.centerIn: parent
-                    text: "BOTTOM BAR"
-                    color: theme.mutedTextColor
-                    font.pixelSize: 16
-                    font.bold: true
+                    desktopModel: root.desktopModel
+                    interactionModel: root.interactionModel
+                    screen: root.screen
                 }
             }
         }

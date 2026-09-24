@@ -122,7 +122,7 @@ QtObject {
     // =========================================================================
     // Public Read-Only Query API
     // =========================================================================
-    function getWorkspaceById(id: int) {
+    function getWorkspaceById(id) {
         if (!allWorkspaces) return null;
         for (let i = 0; i < allWorkspaces.length; ++i) {
             if (allWorkspaces[i].id === id) return allWorkspaces[i];
@@ -130,7 +130,7 @@ QtObject {
         return null;
     }
 
-    function getWorkspaceByName(name: string) {
+    function getWorkspaceByName(name) {
         if (!allWorkspaces || !name) return null;
         for (let i = 0; i < allWorkspaces.length; ++i) {
             if (allWorkspaces[i].name === name) return allWorkspaces[i];

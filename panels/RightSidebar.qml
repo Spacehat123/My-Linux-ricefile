@@ -10,7 +10,13 @@ PanelWindow {
     property bool open: false
     visible: open || closeAnim.running
 
-    readonly property bool hovered: mouseArea.containsMouse
+    // Injected authoritative models
+    property var desktopModel: null
+    property var surfaceModel: null
+    property var interactionModel: null
+
+    // Dual-layer hover guard ensuring unbreakable hover continuity
+    readonly property bool hovered: mouseArea.containsMouse || (appOverview && appOverview.hovered)
 
     Theme {
         id: theme
@@ -49,13 +55,14 @@ PanelWindow {
                 anchors.fill: parent
                 orientation: Qt.Vertical
 
-                // Temporary verification label
-                Text {
-                    anchors.centerIn: parent
-                    text: "RIGHT SIDEBAR"
-                    color: theme.mutedTextColor
-                    font.pixelSize: 16
-                    font.bold: true
+                // Integrated live Application Surface Overview HUD
+                ApplicationOverview {
+                    id: appOverview
+                    anchors.fill: parent
+                    desktopModel: root.desktopModel
+                    surfaceModel: root.surfaceModel
+                    interactionModel: root.interactionModel
+                    screen: root.screen
                 }
             }
         }
