@@ -9,6 +9,10 @@ QtObject {
     readonly property int panelBorderWidth: 1
     readonly property int panelCornerRadius: 12
 
+    // Layout and spacing constants
+    readonly property int panelPadding: 16
+    readonly property int itemSpacing: 12
+
     // Typography constants
     readonly property color primaryTextColor: "#ffffff"
     readonly property color secondaryTextColor: "#a0ffffff"

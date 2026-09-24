@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import "../theme"
+import "../components"
 
 PanelWindow {
     id: root
@@ -40,21 +41,22 @@ PanelWindow {
             y: 24
         }
 
-        // Translucent dark placeholder background with subtle outline and rounded corners
-        Rectangle {
+        PanelSurface {
             anchors.fill: parent
             radius: theme.panelCornerRadius
-            color: theme.panelBackground
-            border.color: theme.panelBorder
-            border.width: theme.panelBorderWidth
 
-            // Temporary verification label
-            Text {
-                anchors.centerIn: parent
-                text: "BOTTOM BAR"
-                color: theme.mutedTextColor
-                font.pixelSize: 16
-                font.bold: true
+            PanelContent {
+                anchors.fill: parent
+                orientation: Qt.Horizontal
+
+                // Temporary verification label
+                Text {
+                    anchors.centerIn: parent
+                    text: "BOTTOM BAR"
+                    color: theme.mutedTextColor
+                    font.pixelSize: 16
+                    font.bold: true
+                }
             }
         }
     }
