@@ -19,9 +19,24 @@ ShellRoot {
         id: surfaceManager
     }
 
+    // Spatial Workspace Foundation model (compositor-wide lifetime)
+    WorkspaceModel {
+        id: workspaceModel
+        workspaceManager: workspaceManager
+        surfaceManager: surfaceManager
+    }
+
+    // Surface Intelligence & Application Composition model (compositor-wide lifetime)
+    SurfaceModel {
+        id: surfaceModel
+        surfaceManager: surfaceManager
+    }
+
     // Authoritative shell-level aliases
     readonly property alias workspaceManager: workspaceManager
     readonly property alias surfaceManager: surfaceManager
+    readonly property alias workspaceModel: workspaceModel
+    readonly property alias surfaceModel: surfaceModel
 
     // =========================================================================
     // Workspace & Surface Intelligence Integration: Derived Global State
@@ -277,6 +292,188 @@ ShellRoot {
                 });
             }
             return JSON.stringify(result);
+        }
+    }
+
+    // =========================================================================
+    // Headless IPC Verification: Spatial Workspace Model
+    // =========================================================================
+    IpcHandler {
+        target: "model"
+
+        property int count: workspaceModel.count
+        property int occupiedCount: workspaceModel.occupiedCount
+        property int emptyCount: workspaceModel.emptyCount
+        property string orderedIdsJson: JSON.stringify(workspaceModel.workspaces.map(w => w.id))
+        property string activeIdsJson: JSON.stringify(workspaceModel.activeWorkspaceIds)
+
+        function getSummary(): string {
+            return JSON.stringify({
+                count: workspaceModel.count,
+                occupiedCount: workspaceModel.occupiedCount,
+                emptyCount: workspaceModel.emptyCount,
+                orderedIds: workspaceModel.workspaces.map(w => w.id),
+                focusedWorkspaceId: workspaceModel.focusedWorkspace ? workspaceModel.focusedWorkspace.id : -1
+            });
+        }
+
+        function getWorkspaceById(id: int): string {
+            const ws = workspaceModel.getWorkspaceById(id);
+            if (!ws) return "null";
+            return JSON.stringify({
+                id: ws.id,
+                name: ws.name,
+                active: ws.active,
+                focused: ws.focused,
+                urgent: ws.urgent,
+                monitorName: ws.monitorName,
+                surfaceCount: ws.surfaceCount,
+                occupied: ws.occupied,
+                empty: ws.empty
+            });
+        }
+
+        function getAdjacentWorkspace(id: int, offset: int, wrap: bool): string {
+            const ws = workspaceModel.getAdjacentWorkspace(id, offset, wrap ?? false);
+            if (!ws) return "null";
+            return JSON.stringify({
+                id: ws.id,
+                name: ws.name,
+                occupied: ws.occupied
+            });
+        }
+
+        function getOccupiedWorkspaces(): string {
+            const list = workspaceModel.getOccupiedWorkspaces();
+            return JSON.stringify(list.map(w => ({ id: w.id, name: w.name, surfaceCount: w.surfaceCount })));
+        }
+
+        function getEmptyWorkspaces(): string {
+            const list = workspaceModel.getEmptyWorkspaces();
+            return JSON.stringify(list.map(w => ({ id: w.id, name: w.name })));
+        }
+
+        function getWorkspacesForMonitor(monitorName: string): string {
+            const list = workspaceModel.getWorkspacesForMonitor(monitorName);
+            return JSON.stringify(list.map(w => ({ id: w.id, name: w.name, active: w.active })));
+        }
+
+        function getWorkspaceForSurface(address: string): string {
+            const ws = workspaceModel.getWorkspaceForSurface(address);
+            if (!ws) return "null";
+            return JSON.stringify({ id: ws.id, name: ws.name });
+        }
+    }
+
+    // =========================================================================
+    // Headless IPC Verification: Surface Intelligence & Application Model
+    // =========================================================================
+    IpcHandler {
+        target: "model-surface"
+
+        // Direct scalar properties for fast CLI query
+        property int count: surfaceModel.count
+        property int urgentCount: surfaceModel.urgentCount
+        property int applicationCount: surfaceModel.applicationCount
+        property string activeAddress: surfaceModel.focusedSurface ? surfaceModel.focusedSurface.address : ""
+        property string activeTitle: surfaceModel.focusedSurface ? surfaceModel.focusedSurface.title : ""
+        property string activeAppId: surfaceModel.focusedSurface ? surfaceModel.focusedSurface.appId : ""
+        property string activeAppName: surfaceModel.focusedSurface ? surfaceModel.focusedSurface.appName : ""
+
+        // State summary snapshot
+        function getSummary(): string {
+            return JSON.stringify({
+                surfaceCount: surfaceModel.count,
+                urgentCount: surfaceModel.urgentCount,
+                applicationCount: surfaceModel.applicationCount,
+                focusedSurface: surfaceModel.focusedSurface ? {
+                    address: surfaceModel.focusedSurface.address,
+                    title: surfaceModel.focusedSurface.title,
+                    appName: surfaceModel.focusedSurface.appName,
+                    appId: surfaceModel.focusedSurface.appId,
+                    windowClass: surfaceModel.focusedSurface.windowClass,
+                    workspaceId: surfaceModel.focusedSurface.workspaceId,
+                    monitorName: surfaceModel.focusedSurface.monitorName
+                } : null
+            });
+        }
+
+        // Query normalized surface by address
+        function getSurfaceByAddress(address: string): string {
+            const s = surfaceModel.getSurfaceByAddress(address);
+            if (!s) return "null";
+            return JSON.stringify({
+                address: s.address,
+                title: s.title,
+                appName: s.appName,
+                appId: s.appId,
+                windowClass: s.windowClass,
+                isXWayland: s.isXWayland,
+                workspaceId: s.workspaceId,
+                monitorName: s.monitorName,
+                activated: s.activated,
+                urgent: s.urgent,
+                fullscreen: s.fullscreen,
+                floating: s.floating
+            });
+        }
+
+        // Query surfaces by workspace
+        function getSurfacesForWorkspace(workspaceId: int): string {
+            const list = surfaceModel.getSurfacesForWorkspace(workspaceId);
+            return JSON.stringify(list.map(s => ({
+                address: s.address,
+                title: s.title,
+                appName: s.appName,
+                activated: s.activated,
+                urgent: s.urgent
+            })));
+        }
+
+        // Query surfaces by monitor
+        function getSurfacesForMonitor(monitorName: string): string {
+            const list = surfaceModel.getSurfacesForMonitor(monitorName);
+            return JSON.stringify(list.map(s => ({
+                address: s.address,
+                title: s.title,
+                appName: s.appName,
+                workspaceId: s.workspaceId
+            })));
+        }
+
+        // Query surfaces by application identity
+        function getSurfacesForApplication(appIdOrClass: string): string {
+            const list = surfaceModel.getSurfacesForApplication(appIdOrClass);
+            return JSON.stringify(list.map(s => ({
+                address: s.address,
+                title: s.title,
+                workspaceId: s.workspaceId,
+                activated: s.activated
+            })));
+        }
+
+        // Query urgent surfaces
+        function getUrgentSurfaces(): string {
+            const list = surfaceModel.getUrgentSurfaces();
+            return JSON.stringify(list.map(s => ({
+                address: s.address,
+                title: s.title,
+                appName: s.appName,
+                workspaceId: s.workspaceId
+            })));
+        }
+
+        // Query all application groups
+        function getApplications(): string {
+            const list = surfaceModel.applications;
+            return JSON.stringify(list.map(a => ({
+                appId: a.appId,
+                appName: a.appName,
+                windowClass: a.windowClass,
+                count: a.count,
+                isFocused: a.isFocused,
+                isUrgent: a.isUrgent
+            })));
         }
     }
 
