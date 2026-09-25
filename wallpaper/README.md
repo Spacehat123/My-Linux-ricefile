@@ -47,6 +47,10 @@ ShellRoot {
 }
 ```
 
+### UI Control
+
+The live wallpaper engine can also be toggled directly from the UI using the **Wallpaper Engine** switch inside the **Control Center** (`LeftSidebar`).
+
 ### IPC Commands
 
 During development, wallpaper state can be controlled via the Quickshell CLI without UI overhead:
