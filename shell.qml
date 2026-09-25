@@ -64,10 +64,19 @@ ShellRoot {
         actionLayer: compositorActionLayer
     }
 
+    // Unified Desktop Presentation State (Task 25)
+    DesktopState {
+        id: desktopState
+        desktopModel: desktopModel
+        idleManager: idleManager
+        ambientEnabled: shellRoot.ambientEnabled
+    }
+
     // Authoritative shell-level aliases
     readonly property alias idleManager: idleManager
     readonly property bool idle: idleManager.idle
     property bool ambientEnabled: true
+    readonly property alias desktopState: desktopState
     readonly property alias workspaceManager: workspaceManager
     readonly property alias surfaceManager: surfaceManager
     readonly property alias workspaceModel: workspaceModel
@@ -936,6 +945,133 @@ ShellRoot {
         }
     }
 
+    // =========================================================================
+    // Headless IPC Verification: Unified Desktop Presentation State (Task 25)
+    // =========================================================================
+    IpcHandler {
+        target: "state"
+
+        property int currentWorkspaceId: desktopState.currentWorkspaceId
+        property int previousWorkspaceId: desktopState.previousWorkspaceId
+        property string direction: desktopState.workspaceTransitionDirection
+        property int directionSign: desktopState.workspaceTransitionDirectionSign
+        property bool transitioning: desktopState.workspaceTransitioning
+        property int surfaceCount: desktopState.currentSurfaceCount
+        property bool hasFullscreen: desktopState.currentWorkspaceHasFullscreen
+        property bool isUrgent: desktopState.currentWorkspaceIsUrgent
+        property bool ambientActive: desktopState.ambientActive
+        property bool leftSidebarOpen: desktopState.leftSidebarOpen
+        property bool rightSidebarOpen: desktopState.rightSidebarOpen
+        property bool bottomBarOpen: desktopState.bottomBarOpen
+
+        function getSummary(): string {
+            return JSON.stringify({
+                currentWorkspaceId: desktopState.currentWorkspaceId,
+                previousWorkspaceId: desktopState.previousWorkspaceId,
+                workspaceTransitionDirection: desktopState.workspaceTransitionDirection,
+                workspaceTransitionDirectionSign: desktopState.workspaceTransitionDirectionSign,
+                workspaceTransitioning: desktopState.workspaceTransitioning,
+                currentSurfaceCount: desktopState.currentSurfaceCount,
+                currentWorkspaceHasFullscreen: desktopState.currentWorkspaceHasFullscreen,
+                currentWorkspaceIsUrgent: desktopState.currentWorkspaceIsUrgent,
+                ambientActive: desktopState.ambientActive,
+                leftSidebarOpen: desktopState.leftSidebarOpen,
+                rightSidebarOpen: desktopState.rightSidebarOpen,
+                bottomBarOpen: desktopState.bottomBarOpen
+            });
+        }
+
+        function getTransition(): string {
+            return JSON.stringify({
+                currentWorkspaceId: desktopState.currentWorkspaceId,
+                previousWorkspaceId: desktopState.previousWorkspaceId,
+                direction: desktopState.workspaceTransitionDirection,
+                directionSign: desktopState.workspaceTransitionDirectionSign,
+                transitioning: desktopState.workspaceTransitioning,
+                progress: desktopState.workspaceTransitionProgress
+            });
+        }
+
+        function setLeftSidebarOpen(val: bool): string {
+            desktopState.setLeftSidebarOpen(val);
+            return JSON.stringify({ success: true, leftSidebarOpen: desktopState.leftSidebarOpen });
+        }
+
+        function setRightSidebarOpen(val: bool): string {
+            desktopState.setRightSidebarOpen(val);
+            return JSON.stringify({ success: true, rightSidebarOpen: desktopState.rightSidebarOpen });
+        }
+
+        function setBottomBarOpen(val: bool): string {
+            desktopState.setBottomBarOpen(val);
+            return JSON.stringify({ success: true, bottomBarOpen: desktopState.bottomBarOpen });
+        }
+    }
+
+    // =========================================================================
+    // Headless IPC Verification: Shell Control Center (Task 26)
+    // =========================================================================
+    IpcHandler {
+        target: "control"
+
+        property bool leftSidebarOpen: desktopState.leftSidebarOpen
+        property bool rightSidebarOpen: desktopState.rightSidebarOpen
+        property bool bottomBarOpen: desktopState.bottomBarOpen
+        property bool wallpaperEnabled: shellRoot.wallpaperEnabled
+        property bool ambientEnabled: shellRoot.ambientEnabled
+
+        property int focusedWorkspaceId: desktopState.currentWorkspaceId
+        property string focusedWorkspaceName: desktopState.currentWorkspace ? (desktopState.currentWorkspace.name || "") : ""
+        property int focusedSurfaceCount: desktopState.currentSurfaceCount
+        property bool focusedHasFullscreen: desktopState.currentWorkspaceHasFullscreen
+        property bool focusedIsUrgent: desktopState.currentWorkspaceIsUrgent
+
+        property int workspaceCount: desktopModel.workspaceCount
+        property int totalSurfaceCount: desktopModel.surfaceCount
+
+        function toggleWallpaper(): string {
+            shellRoot.wallpaperEnabled = !shellRoot.wallpaperEnabled;
+            return JSON.stringify({ success: true, wallpaperEnabled: shellRoot.wallpaperEnabled });
+        }
+
+        function toggleAmbient(): string {
+            shellRoot.ambientEnabled = !shellRoot.ambientEnabled;
+            return JSON.stringify({ success: true, ambientEnabled: shellRoot.ambientEnabled });
+        }
+
+        function setWallpaperEnabled(val: bool): string {
+            shellRoot.wallpaperEnabled = val;
+            return JSON.stringify({ success: true, wallpaperEnabled: shellRoot.wallpaperEnabled });
+        }
+
+        function setAmbientEnabled(val: bool): string {
+            shellRoot.ambientEnabled = val;
+            return JSON.stringify({ success: true, ambientEnabled: shellRoot.ambientEnabled });
+        }
+
+        function setLeftSidebarOpen(val: bool): string {
+            desktopState.setLeftSidebarOpen(val);
+            return JSON.stringify({ success: true, leftSidebarOpen: desktopState.leftSidebarOpen });
+        }
+
+        function getSummary(): string {
+            return JSON.stringify({
+                leftSidebarOpen: desktopState.leftSidebarOpen,
+                rightSidebarOpen: desktopState.rightSidebarOpen,
+                bottomBarOpen: desktopState.bottomBarOpen,
+                wallpaperEnabled: shellRoot.wallpaperEnabled,
+                ambientEnabled: shellRoot.ambientEnabled,
+                focusedWorkspaceId: desktopState.currentWorkspaceId,
+                focusedWorkspaceName: desktopState.currentWorkspace ? (desktopState.currentWorkspace.name || "") : "",
+                focusedSurfaceCount: desktopState.currentSurfaceCount,
+                focusedHasFullscreen: desktopState.currentWorkspaceHasFullscreen,
+                focusedIsUrgent: desktopState.currentWorkspaceIsUrgent,
+                workspaceCount: desktopModel.workspaceCount,
+                totalSurfaceCount: desktopModel.surfaceCount
+            });
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 
@@ -960,6 +1096,13 @@ ShellRoot {
                 screen: monitorScope.modelData
                 idle: shellRoot.idle
                 enabled: shellRoot.ambientEnabled
+            }
+
+            // Spatial Workspace Transition HUD (WlrLayer.Top, ephemeral)
+            DesktopTransition {
+                id: desktopTransition
+                screen: monitorScope.modelData
+                desktopState: shellRoot.desktopState
             }
 
             // Edge trigger overlay window
@@ -1081,11 +1224,19 @@ ShellRoot {
             LeftSidebar {
                 id: leftSidebar
                 screen: monitorScope.modelData
-                open: monitorScope.leftSidebarOpen
+                desktopModel: shellRoot.desktopModel
+                desktopState: shellRoot.desktopState
+                wallpaperEnabled: shellRoot.wallpaperEnabled
+                ambientEnabled: shellRoot.ambientEnabled
+                open: monitorScope.leftSidebarOpen || (shellRoot.desktopState && shellRoot.desktopState.leftSidebarOpen)
+
+                onToggleWallpaper: shellRoot.wallpaperEnabled = !shellRoot.wallpaperEnabled
+                onToggleAmbient: shellRoot.ambientEnabled = !shellRoot.ambientEnabled
 
                 onHoveredChanged: {
                     if (!hovered && !leftTrigger.active) {
                         monitorScope.leftSidebarOpen = false
+                        if (shellRoot.desktopState) shellRoot.desktopState.setLeftSidebarOpen(false)
                     }
                 }
             }
@@ -1097,11 +1248,12 @@ ShellRoot {
                 desktopModel: shellRoot.desktopModel
                 surfaceModel: shellRoot.surfaceModel
                 interactionModel: shellRoot.interactionModel
-                open: monitorScope.rightSidebarOpen
+                open: monitorScope.rightSidebarOpen || (shellRoot.desktopState && shellRoot.desktopState.rightSidebarOpen)
 
                 onHoveredChanged: {
                     if (!hovered && !rightTrigger.active) {
                         monitorScope.rightSidebarOpen = false
+                        if (shellRoot.desktopState) shellRoot.desktopState.setRightSidebarOpen(false)
                     }
                 }
             }
@@ -1112,11 +1264,13 @@ ShellRoot {
                 screen: monitorScope.modelData
                 desktopModel: shellRoot.desktopModel
                 interactionModel: shellRoot.interactionModel
-                open: monitorScope.bottomBarOpen
+                desktopState: shellRoot.desktopState
+                open: monitorScope.bottomBarOpen || (shellRoot.desktopState && shellRoot.desktopState.bottomBarOpen)
 
                 onHoveredChanged: {
                     if (!hovered && !centerTrigger.active) {
                         monitorScope.bottomBarOpen = false
+                        if (shellRoot.desktopState) shellRoot.desktopState.setBottomBarOpen(false)
                     }
                 }
             }

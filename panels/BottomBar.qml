@@ -13,6 +13,7 @@ PanelWindow {
     // Injected desktop composition model
     property var desktopModel: null
     property var interactionModel: null
+    property var desktopState: null
 
     // Dual-layer hover guard ensuring unbreakable hover continuity
     readonly property bool hovered: mouseArea.containsMouse || (workspaceNav && workspaceNav.hovered)
@@ -49,6 +50,7 @@ PanelWindow {
         PanelSurface {
             anchors.fill: parent
             radius: theme.panelCornerRadius
+            border.color: theme.panelBorder
 
             PanelContent {
                 anchors.fill: parent
@@ -60,6 +62,7 @@ PanelWindow {
                     anchors.centerIn: parent
                     desktopModel: root.desktopModel
                     interactionModel: root.interactionModel
+                    desktopState: root.desktopState
                     screen: root.screen
                 }
             }

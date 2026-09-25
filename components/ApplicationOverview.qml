@@ -40,7 +40,7 @@ Item {
         anchors.right: parent.right
         height: theme.surfaceHeaderHeight
 
-        // Tactical Category Title
+        // Tactical Category Title & Workspace Context
         Row {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
@@ -53,6 +53,30 @@ Item {
                 font.family: "monospace"
                 font.letterSpacing: 1.5
                 color: theme.primaryTextColor
+            }
+
+            // Lightweight Focused Workspace Context Badge
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                height: 16
+                implicitWidth: wsContextText.implicitWidth + 8
+                radius: theme.surfaceTagCornerRadius
+                color: theme.surfaceTagFocusedBackground
+                border.color: theme.surfaceTagBorder
+                border.width: 1
+
+                Text {
+                    id: wsContextText
+                    anchors.centerIn: parent
+                    text: {
+                        const wsId = root.desktopModel ? root.desktopModel.focusedWorkspaceId : -1;
+                        return wsId !== -1 ? "WS " + wsId : "WS -";
+                    }
+                    font.pixelSize: 9
+                    font.bold: true
+                    font.family: "monospace"
+                    color: theme.surfaceTagFocusedText
+                }
             }
         }
 

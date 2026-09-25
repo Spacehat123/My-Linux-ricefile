@@ -10,7 +10,18 @@ PanelWindow {
     property bool open: false
     visible: open || closeAnim.running
 
-    readonly property bool hovered: mouseArea.containsMouse
+    // Injected authoritative models & presentation state
+    property var desktopModel: null
+    property var desktopState: null
+    property bool wallpaperEnabled: true
+    property bool ambientEnabled: true
+
+    // Action signals
+    signal toggleWallpaper()
+    signal toggleAmbient()
+
+    // Dual-layer hover guard ensuring unbreakable hover continuity
+    readonly property bool hovered: mouseArea.containsMouse || (controlCenter && controlCenter.hovered)
 
     Theme {
         id: theme
@@ -49,13 +60,18 @@ PanelWindow {
                 anchors.fill: parent
                 orientation: Qt.Vertical
 
-                // Temporary verification label
-                Text {
-                    anchors.centerIn: parent
-                    text: "LEFT SIDEBAR"
-                    color: theme.mutedTextColor
-                    font.pixelSize: 16
-                    font.bold: true
+                // Integrated Desktop Control Center HUD
+                ControlCenter {
+                    id: controlCenter
+                    anchors.fill: parent
+                    desktopModel: root.desktopModel
+                    desktopState: root.desktopState
+                    screen: root.screen
+                    wallpaperEnabled: root.wallpaperEnabled
+                    ambientEnabled: root.ambientEnabled
+
+                    onToggleWallpaper: root.toggleWallpaper()
+                    onToggleAmbient: root.toggleAmbient()
                 }
             }
         }

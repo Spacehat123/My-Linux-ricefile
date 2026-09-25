@@ -9,6 +9,7 @@ Item {
     // =========================================================================
     property var desktopModel: null
     property var interactionModel: null
+    property var desktopState: null
     property var screen: null
     property bool filterCurrentMonitor: false
 
@@ -32,23 +33,6 @@ Item {
     property int activeSlotIndex: 0
     property bool initialized: false
 
-    function calculateDirection(newId, oldId) {
-        if (oldId === -1 || newId === oldId) return 1;
-        if (root.desktopModel && root.desktopModel.workspaces) {
-            const list = root.desktopModel.workspaces;
-            let newIdx = -1;
-            let oldIdx = -1;
-            for (let i = 0; i < list.length; ++i) {
-                if (list[i].id === newId) newIdx = i;
-                if (list[i].id === oldId) oldIdx = i;
-            }
-            if (newIdx !== -1 && oldIdx !== -1) {
-                return newIdx >= oldIdx ? 1 : -1;
-            }
-        }
-        return newId >= oldId ? 1 : -1;
-    }
-
     // React to focused workspace ID changes (spatial exit / enter transitions)
     onFocusedWorkspaceIdChanged: {
         const curId = root.focusedWorkspaceId;
@@ -63,7 +47,9 @@ Item {
             return;
         }
 
-        const dir = calculateDirection(curId, root.previousWorkspaceId);
+        const dir = (root.desktopState && root.desktopState.workspaceTransitionDirectionSign !== 0)
+            ? root.desktopState.workspaceTransitionDirectionSign
+            : (curId >= root.previousWorkspaceId ? 1 : -1);
         root.transitionDirection = dir;
         root.previousWorkspaceId = curId;
 

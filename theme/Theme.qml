@@ -206,5 +206,15 @@ QtObject {
     readonly property int ambientBracketSize: 48
     readonly property int ambientLineWidth: 1
     readonly property int ambientCornerOffset: 36
+
+    // =========================================================================
+    // Spatial Workspace Transition Tokens (Task 25)
+    // =========================================================================
+    readonly property int spatialTransitionDuration: 280
+    readonly property int spatialTransitionReticleWidth: 260
+    readonly property int spatialTransitionReticleHeight: 48
+    readonly property int spatialTransitionOffset: 36
+    readonly property color spatialTransitionBorder: "#00bfff"
+    readonly property color spatialTransitionGlow: "#2000bfff"
 }
 
