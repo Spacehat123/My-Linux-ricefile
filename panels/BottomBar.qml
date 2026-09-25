@@ -15,8 +15,10 @@ PanelWindow {
     property var interactionModel: null
     property var desktopState: null
 
+    signal takeScreenshot()
+
     // Dual-layer hover guard ensuring unbreakable hover continuity
-    readonly property bool hovered: mouseArea.containsMouse || (workspaceNav && workspaceNav.hovered)
+    readonly property bool hovered: mouseArea.containsMouse || (workspaceNav && workspaceNav.hovered) || (screenshotBtn && screenshotBtn.hovered)
 
     Theme {
         id: theme
@@ -26,7 +28,7 @@ PanelWindow {
         bottom: true
     }
 
-    implicitWidth: Math.max(540, (workspaceNav ? workspaceNav.implicitWidth : 0) + theme.panelPadding * 2)
+    implicitWidth: Math.max(580, (workspaceNav ? workspaceNav.implicitWidth : 0) + 60 + theme.panelPadding * 2)
     implicitHeight: 64
     exclusionMode: ExclusionMode.Ignore
     aboveWindows: true
@@ -56,14 +58,78 @@ PanelWindow {
                 anchors.fill: parent
                 orientation: Qt.Horizontal
 
-                // Reusable Workspace Navigator HUD
-                WorkspaceNavigator {
-                    id: workspaceNav
+                Row {
+                    id: bottomBarRow
                     anchors.centerIn: parent
-                    desktopModel: root.desktopModel
-                    interactionModel: root.interactionModel
-                    desktopState: root.desktopState
-                    screen: root.screen
+                    spacing: 12
+
+                    // Reusable Workspace Navigator HUD
+                    WorkspaceNavigator {
+                        id: workspaceNav
+                        desktopModel: root.desktopModel
+                        interactionModel: root.interactionModel
+                        desktopState: root.desktopState
+                        screen: root.screen
+                    }
+
+                    // Elegant vertical divider
+                    Rectangle {
+                        width: 1
+                        height: theme.workspaceItemHeight - 8
+                        color: theme.panelBorder
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    // Taskbar Screenshot Button
+                    Item {
+                        id: screenshotBtn
+                        width: theme.workspaceItemHeight
+                        height: theme.workspaceItemHeight
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        readonly property bool hovered: btnMouseArea.containsMouse
+
+                        Rectangle {
+                            id: btnBg
+                            anchors.fill: parent
+                            radius: theme.workspaceCornerRadius
+                            color: screenshotBtn.hovered ? theme.workspaceFocusedBackground : theme.workspaceOccupiedBackground
+                            border.color: screenshotBtn.hovered ? theme.workspaceFocusedBorder : theme.workspaceOccupiedBorder
+                            border.width: 1
+
+                            Behavior on color {
+                                ColorAnimation { duration: 150 }
+                            }
+                            Behavior on border.color {
+                                ColorAnimation { duration: 150 }
+                            }
+
+                            // Camera Icon
+                            Text {
+                                anchors.centerIn: parent
+                                text: "📷"
+                                font.pixelSize: 14
+                                color: screenshotBtn.hovered ? theme.workspaceFocusedText : theme.primaryTextColor
+                                scale: btnMouseArea.pressed ? 0.9 : (screenshotBtn.hovered ? 1.08 : 1.0)
+
+                                Behavior on scale {
+                                    NumberAnimation { duration: 100 }
+                                }
+                            }
+                        }
+
+                        MouseArea {
+                            id: btnMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+
+                            onClicked: {
+                                console.log("[pranc-shell] BottomBar: Screenshot button clicked");
+                                root.takeScreenshot();
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import "components"
 import "core"
 import "desktop"
@@ -123,14 +124,103 @@ ShellRoot {
         return workspaceManager.getWorkspacesForMonitor(monitor);
     }
 
-    // Authoritative shell-level state for live wallpaper
+    // Authoritative shell-level state for live wallpaper and background media
     property bool wallpaperEnabled: true
+    property string wallpaperMediaType: "procedural" // "procedural" | "image" | "video"
+    property string wallpaperMediaSource: ""
 
-    // Temporary development IPC control for toggling/managing wallpaper
+    function detectMediaType(path) {
+        if (!path || path.trim().length === 0) return "procedural";
+        const lower = path.toLowerCase().trim();
+        if (lower.endsWith(".mp4") || lower.endsWith(".webm") || lower.endsWith(".mkv") || lower.endsWith(".mov") || lower.endsWith(".avi")) {
+            return "video";
+        }
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".webp") ||
+            lower.endsWith(".avif") || lower.endsWith(".bmp") || lower.endsWith(".svg") || lower.endsWith(".gif")) {
+            return "image";
+        }
+        return "procedural";
+    }
+
+    function applyWallpaperMedia(path, saveSession) {
+        if (!path || path.trim().length === 0) {
+            clearWallpaperMedia();
+            return;
+        }
+        const cleanPath = path.trim();
+        wallpaperMediaType = detectMediaType(cleanPath);
+        wallpaperMediaSource = cleanPath.startsWith("file://") ? cleanPath : ("file://" + cleanPath);
+        console.log("[pranc-shell] Background media set to: " + wallpaperMediaSource + " (" + wallpaperMediaType + ")");
+        const shouldSave = (saveSession !== undefined) ? Boolean(saveSession) : true;
+        if (shouldSave) {
+            saveSessionMedia(cleanPath);
+        }
+    }
+
+    function clearWallpaperMedia() {
+        wallpaperMediaType = "procedural";
+        wallpaperMediaSource = "";
+        console.log("[pranc-shell] Background media cleared, returned to procedural shader");
+        saveSessionMedia("");
+    }
+
+    function saveSessionMedia(path) {
+        saveSessionProc.exec(["bash", "-c", "mkdir -p ~/.cache/pranc-shell && echo -n '" + path.replace(/'/g, "'\\''") + "' > ~/.cache/pranc-shell/session_wallpaper.txt"]);
+    }
+
+    function openMediaPicker() {
+        const rawPath = Quickshell.shellPath("scripts/media-picker.py").toString();
+        const scriptPath = rawPath.replace(/^file:\/\//, "");
+        Quickshell.execDetached(["python3", scriptPath]);
+        return JSON.stringify({ success: true, status: "opened" });
+    }
+
+    // Session media persistence loaders
+    Process {
+        id: loadSessionProc
+        command: ["bash", "-c", "cat ~/.cache/pranc-shell/session_wallpaper.txt 2>/dev/null || true"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const saved = text.trim();
+                if (saved.length > 0) {
+                    shellRoot.applyWallpaperMedia(saved, false);
+                }
+            }
+        }
+    }
+
+    Process {
+        id: saveSessionProc
+    }
+
+    Component.onCompleted: {
+        loadSessionProc.running = true;
+    }
+
+    // Global Shortcuts for Background Media Picker
+    GlobalShortcut {
+        name: "mediaPickerToggle"
+        description: "Open desktop background media picker"
+        onPressed: {
+            shellRoot.openMediaPicker();
+        }
+    }
+
+    GlobalShortcut {
+        name: "wallpaperSelectorToggle"
+        description: "Toggle wallpaper media selector"
+        onPressed: {
+            shellRoot.openMediaPicker();
+        }
+    }
+
+    // Development & Control IPC interface for wallpaper
     IpcHandler {
         target: "wallpaper"
 
         property bool enabled: shellRoot.wallpaperEnabled
+        property string mediaType: shellRoot.wallpaperMediaType
+        property string mediaSource: shellRoot.wallpaperMediaSource
 
         function toggle() {
             shellRoot.wallpaperEnabled = !shellRoot.wallpaperEnabled;
@@ -140,6 +230,32 @@ ShellRoot {
         function setEnabled(val: bool) {
             shellRoot.wallpaperEnabled = val;
             console.log("[pranc-shell] IPC: wallpaperEnabled set to " + shellRoot.wallpaperEnabled);
+        }
+
+        function openPicker(): string {
+            return shellRoot.openMediaPicker();
+        }
+
+        function setMedia(path: string): string {
+            shellRoot.applyWallpaperMedia(path, true);
+            return JSON.stringify({
+                success: true,
+                mediaType: shellRoot.wallpaperMediaType,
+                mediaSource: shellRoot.wallpaperMediaSource
+            });
+        }
+
+        function clearMedia(): string {
+            shellRoot.clearWallpaperMedia();
+            return JSON.stringify({ success: true, mediaType: "procedural" });
+        }
+
+        function getMedia(): string {
+            return JSON.stringify({
+                enabled: shellRoot.wallpaperEnabled,
+                mediaType: shellRoot.wallpaperMediaType,
+                mediaSource: shellRoot.wallpaperMediaSource
+            });
         }
     }
 
@@ -1028,6 +1144,8 @@ ShellRoot {
 
         property int workspaceCount: desktopModel.workspaceCount
         property int totalSurfaceCount: desktopModel.surfaceCount
+        property string wallpaperMediaType: shellRoot.wallpaperMediaType
+        property string wallpaperMediaSource: shellRoot.wallpaperMediaSource
 
         function toggleWallpaper(): string {
             shellRoot.wallpaperEnabled = !shellRoot.wallpaperEnabled;
@@ -1054,12 +1172,32 @@ ShellRoot {
             return JSON.stringify({ success: true, leftSidebarOpen: desktopState.leftSidebarOpen });
         }
 
+        function openMediaPicker(): string {
+            return shellRoot.openMediaPicker();
+        }
+
+        function setWallpaperMedia(path: string): string {
+            shellRoot.applyWallpaperMedia(path, true);
+            return JSON.stringify({
+                success: true,
+                mediaType: shellRoot.wallpaperMediaType,
+                mediaSource: shellRoot.wallpaperMediaSource
+            });
+        }
+
+        function clearWallpaperMedia(): string {
+            shellRoot.clearWallpaperMedia();
+            return JSON.stringify({ success: true, mediaType: "procedural" });
+        }
+
         function getSummary(): string {
             return JSON.stringify({
                 leftSidebarOpen: desktopState.leftSidebarOpen,
                 rightSidebarOpen: desktopState.rightSidebarOpen,
                 bottomBarOpen: desktopState.bottomBarOpen,
                 wallpaperEnabled: shellRoot.wallpaperEnabled,
+                wallpaperMediaType: shellRoot.wallpaperMediaType,
+                wallpaperMediaSource: shellRoot.wallpaperMediaSource,
                 ambientEnabled: shellRoot.ambientEnabled,
                 focusedWorkspaceId: desktopState.currentWorkspaceId,
                 focusedWorkspaceName: desktopState.currentWorkspace ? (desktopState.currentWorkspace.name || "") : "",
@@ -1088,6 +1226,8 @@ ShellRoot {
                 id: wallpaper
                 screen: monitorScope.modelData
                 enabled: shellRoot.wallpaperEnabled
+                mediaType: shellRoot.wallpaperMediaType
+                mediaSource: shellRoot.wallpaperMediaSource
             }
 
             // Desktop Ambient HUD layer (WlrLayer.Bottom)
