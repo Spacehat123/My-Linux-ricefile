@@ -70,6 +70,31 @@ QtObject {
     readonly property color workspaceOtherMonitorText: "#80ffffff"
 
     // =========================================================================
+    // Spatial Workspace HUD & Transition Tokens (Task 23)
+    // =========================================================================
+    readonly property int workspaceHudWidth: 148
+    readonly property int workspaceHudSpacing: 10
+    readonly property int workspaceHudCornerRadius: 6
+    readonly property int workspaceTransitionDuration: 180
+    readonly property int workspaceTransitionDistance: 20
+
+    // Context HUD Palette
+    readonly property color workspaceHudBackground: "#0affffff"
+    readonly property color workspaceHudBorder: "#1affffff"
+    readonly property color workspaceHudLabelText: "#7000bfff"
+    readonly property color workspaceHudValueText: "#ffffff"
+    readonly property color workspaceHudMutedText: "#60ffffff"
+    readonly property color workspaceHudFullscreenBadge: "#ffb700"
+    readonly property color workspaceHudFullscreenBackground: "#24ffb700"
+    readonly property color workspaceHudUrgentBadge: "#ff3366"
+    readonly property color workspaceHudUrgentBackground: "#30ff3366"
+    readonly property color workspaceHudMonitorBadge: "#00e5ff"
+
+    // Sliding Reticle / Focal Cursor
+    readonly property color workspaceFocalCursorBorder: "#00bfff"
+    readonly property color workspaceFocalCursorGlow: "#1800bfff"
+
+    // =========================================================================
     // Application Overview Layout & Spacing Metrics
     // =========================================================================
     readonly property int surfaceHeaderHeight: 38

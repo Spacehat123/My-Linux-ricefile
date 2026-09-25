@@ -25,7 +25,7 @@ PanelWindow {
         bottom: true
     }
 
-    implicitWidth: 520
+    implicitWidth: Math.max(540, (workspaceNav ? workspaceNav.implicitWidth : 0) + theme.panelPadding * 2)
     implicitHeight: 64
     exclusionMode: ExclusionMode.Ignore
     aboveWindows: true
