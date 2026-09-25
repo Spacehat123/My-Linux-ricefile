@@ -4,11 +4,17 @@ import Quickshell.Io
 import Quickshell.Wayland
 import "components"
 import "core"
+import "desktop"
 import "panels"
 import "wallpaper"
 
 ShellRoot {
     id: shellRoot
+
+    // Idle & Power Intelligence Layer (compositor-wide lifetime)
+    IdleManager {
+        id: idleManager
+    }
 
     // Compositor intelligence layer singletons (compositor-wide lifetime)
     WorkspaceManager {
@@ -59,6 +65,9 @@ ShellRoot {
     }
 
     // Authoritative shell-level aliases
+    readonly property alias idleManager: idleManager
+    readonly property bool idle: idleManager.idle
+    property bool ambientEnabled: true
     readonly property alias workspaceManager: workspaceManager
     readonly property alias surfaceManager: surfaceManager
     readonly property alias workspaceModel: workspaceModel
@@ -851,6 +860,82 @@ ShellRoot {
         }
     }
 
+    // =========================================================================
+    // Headless IPC Verification: Idle State Intelligence (Task 24)
+    // =========================================================================
+    IpcHandler {
+        target: "idle"
+
+        property bool isIdle: idleManager.idle
+        property int idleSeconds: idleManager.idleSeconds
+        property bool enabled: idleManager.enabled
+        property bool respectInhibitors: idleManager.respectInhibitors
+        property bool simulated: idleManager.simulationActive
+
+        function getSummary(): string {
+            return JSON.stringify({
+                idle: idleManager.idle,
+                idleSeconds: idleManager.idleSeconds,
+                enabled: idleManager.enabled,
+                respectInhibitors: idleManager.respectInhibitors,
+                simulated: idleManager.simulationActive
+            });
+        }
+
+        function setIdleTimeout(seconds: int): string {
+            idleManager.setIdleSeconds(seconds);
+            return JSON.stringify({ success: true, idleSeconds: idleManager.idleSeconds });
+        }
+
+        function setEnabled(val: bool): string {
+            idleManager.setEnabled(val);
+            return JSON.stringify({ success: true, enabled: idleManager.enabled });
+        }
+
+        function setRespectInhibitors(val: bool): string {
+            idleManager.setRespectInhibitors(val);
+            return JSON.stringify({ success: true, respectInhibitors: idleManager.respectInhibitors });
+        }
+
+        function setSimulatedIdle(val: bool): string {
+            idleManager.setSimulatedIdle(val);
+            return JSON.stringify({ success: true, simulated: true, idle: idleManager.idle });
+        }
+
+        function clearSimulation(): string {
+            idleManager.clearSimulation();
+            return JSON.stringify({ success: true, simulated: false, idle: idleManager.idle });
+        }
+    }
+
+    // =========================================================================
+    // Headless IPC Verification: Ambient Layer Control (Task 24)
+    // =========================================================================
+    IpcHandler {
+        target: "ambient"
+
+        property bool enabled: shellRoot.ambientEnabled
+        property bool active: shellRoot.ambientEnabled && shellRoot.idle
+
+        function getSummary(): string {
+            return JSON.stringify({
+                enabled: shellRoot.ambientEnabled,
+                active: shellRoot.ambientEnabled && shellRoot.idle,
+                idle: shellRoot.idle
+            });
+        }
+
+        function toggle(): string {
+            shellRoot.ambientEnabled = !shellRoot.ambientEnabled;
+            return JSON.stringify({ success: true, enabled: shellRoot.ambientEnabled });
+        }
+
+        function setEnabled(val: bool): string {
+            shellRoot.ambientEnabled = val;
+            return JSON.stringify({ success: true, enabled: shellRoot.ambientEnabled });
+        }
+    }
+
     Variants {
         model: Quickshell.screens
 
@@ -867,6 +952,14 @@ ShellRoot {
                 id: wallpaper
                 screen: monitorScope.modelData
                 enabled: shellRoot.wallpaperEnabled
+            }
+
+            // Desktop Ambient HUD layer (WlrLayer.Bottom)
+            AmbientLayer {
+                id: ambientLayer
+                screen: monitorScope.modelData
+                idle: shellRoot.idle
+                enabled: shellRoot.ambientEnabled
             }
 
             // Edge trigger overlay window

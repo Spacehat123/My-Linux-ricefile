@@ -188,5 +188,23 @@ QtObject {
     readonly property color actionActiveText: "#00e5ff"
     readonly property color actionDrawerBackground: "#14ffffff"
     readonly property color actionDrawerBorder: "#24ffffff"
+
+    // =========================================================================
+    // Desktop Ambient & Idle State Tokens (Task 24)
+    // =========================================================================
+    readonly property int ambientFadeInDuration: 1000
+    readonly property int ambientFadeOutDuration: 180
+    readonly property color ambientHudPrimary: "#00bfff"         // High-contrast neon cyan
+    readonly property color ambientHudSecondary: "#00e5ff"       // Bright accent cyan
+    readonly property color ambientHudFaint: "#1800bfff"          // Ultra-subtle tactical wash
+    readonly property color ambientHudMuted: "#30ffffff"          // Subdued coordinate lines
+    readonly property color ambientHudSubtle: "#18ffffff"         // Hairline guides
+    readonly property color ambientHudText: "#80ffffff"           // Muted telemetry readout
+    readonly property color ambientHudAccentText: "#a000bfff"     // Tactical section header
+    readonly property color ambientHudDarkFill: "#0c0d1480"       // Very faint dark backdrop tint
+    readonly property int ambientReticleSize: 240
+    readonly property int ambientBracketSize: 48
+    readonly property int ambientLineWidth: 1
+    readonly property int ambientCornerOffset: 36
 }
 
