@@ -538,7 +538,7 @@ Item {
 
             Text {
                 anchors.centerIn: parent
-                text: "SYS // PRANC.SHELL v0.26"
+                text: "SYS // PRANC.SHELL v0.27"
                 font.pixelSize: 8
                 font.family: "monospace"
                 font.letterSpacing: 1.5
