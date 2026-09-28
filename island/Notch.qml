@@ -168,16 +168,24 @@ PanelWindow {
             opacity: 0
         }
 
-        Rectangle {
-            id: mediaProgress
+        Item {
+            id: mediaRingClip
 
-            x: notchBody.x + 6
-            y: notchBody.y + notchBody.height - 6
-            width: (notchBody.width - 12) * window.mediaFraction
-            height: 3
-            radius: 1.5
-            color: Theme.primary
+            x: notchBody.x
+            y: notchBody.y
+            width: notchBody.width * window.mediaFraction
+            height: notchBody.height
+            clip: true
             visible: window.mediaActive
+
+            Rectangle {
+                width: notchBody.width
+                height: notchBody.height
+                radius: Theme.radius
+                color: "transparent"
+                border.width: 3
+                border.color: Theme.primary
+            }
         }
 
         Shape {
@@ -191,8 +199,8 @@ PanelWindow {
 
                 readonly property real size: window.cornerWing
 
-                strokeWidth: borderGlow.opacity * 2
-                strokeColor: Theme.foreground
+                strokeWidth: Math.max(borderGlow.opacity * 2, window.mediaActive ? 2 : 0)
+                strokeColor: borderGlow.opacity > 0.01 ? Theme.foreground : Theme.primary
                 fillColor: Theme.shellBackground
                 startX: 0
                 startY: 0
@@ -231,8 +239,8 @@ PanelWindow {
 
                 readonly property real size: window.cornerWing
 
-                strokeWidth: borderGlow.opacity * 2
-                strokeColor: Theme.foreground
+                strokeWidth: Math.max(borderGlow.opacity * 2, window.mediaActive ? 2 : 0)
+                strokeColor: borderGlow.opacity > 0.01 ? Theme.foreground : Theme.primary
                 fillColor: Theme.shellBackground
                 startX: rightShoulderPath.size
                 startY: 0
