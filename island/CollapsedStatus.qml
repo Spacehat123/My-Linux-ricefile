@@ -49,11 +49,11 @@ Item {
             color: Theme.red
         }
 
-        // Primary activity label (single slot).
+        // Primary activity label (single slot; shrinks when weather shares the pill).
         ShellText {
             anchors.verticalCenter: parent.verticalCenter
             visible: text !== ""
-            width: Math.min(implicitWidth, 104)
+            width: Math.min(implicitWidth, root.weatherMini !== "" ? 68 : 104)
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -72,10 +72,10 @@ Item {
             font.pixelSize: 11
         }
 
-        // Pinned weather: only when idle.
+        // Pinned weather: right side, alongside the label when one is shown.
         ShellText {
             anchors.verticalCenter: parent.verticalCenter
-            visible: root.label === "" && root.weatherMini !== ""
+            visible: root.weatherMini !== ""
             text: root.weatherMini
             color: Theme.muted
             font.pixelSize: 11

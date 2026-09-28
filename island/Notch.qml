@@ -312,33 +312,11 @@ PanelWindow {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             acceptedButtons: Qt.LeftButton | Qt.RightButton
-            // Set on press when a Ctrl+click is routed to transport, so the
-            // matching release-time clicked() is swallowed even if Ctrl was
-            // already released before the button came up.
-            property bool ctrlClick: false
-            onPressed: (mouse) => {
-                // Ctrl + click = media transport. Routed on press, where the
-                // modifier state is reliable, and accepted so the panel path
-                // below can never fire for this gesture.
-                ctrlClick = false;
-                if (mouse.modifiers & Qt.ControlModifier) {
-                    ctrlClick = true;
-                    if (window.islandPlayer) {
-                        if (mouse.button === Qt.LeftButton && window.islandPlayer.canGoPrevious)
-                            window.islandPlayer.previous();
-                        else if (mouse.button === Qt.RightButton && window.islandPlayer.canGoNext)
-                            window.islandPlayer.next();
-                    }
-                    mouse.accepted = true;
-                }
-            }
+            // NOTE: Ctrl+click media transport lives in Hyprland
+            // (CTRL + mouse:272/273 -> playerctl previous/next). Handled at
+            // the compositor because layershell delivery of release-time
+            // modifiers proved unreliable; no transport here by design.
             onClicked: (mouse) => {
-                if (ctrlClick) {
-                    ctrlClick = false;
-                    return ;
-                }
-                if (mouse.modifiers & Qt.ControlModifier)
-                    return ;
                 if (mouse.button !== Qt.LeftButton)
                     return ;
                 // Plain click always opens control center (hub for everything).
