@@ -11,8 +11,9 @@ PanelWindow {
     id: window
 
     readonly property int contentPadding: 14
-    readonly property int collapsedHeight: 32
-    readonly property int cornerWing: 16
+    readonly property int collapsedHeight: 24
+    readonly property int cornerWing: 12
+    readonly property int topGap: 10
     readonly property int canvasWidth: 552
     readonly property int canvasHeight: 600
     readonly property int requestedTopPadding: ShellState.panel === "launcher" ? 10 : contentPadding
@@ -121,6 +122,7 @@ PanelWindow {
         id: notchSurface
 
         anchors.top: parent.top
+        anchors.topMargin: window.topGap
         anchors.horizontalCenter: parent.horizontalCenter
         width: window.targetVisualWidth
         height: window.targetVisualHeight
@@ -147,10 +149,10 @@ PanelWindow {
             id: notchBody
 
             x: window.cornerWing
-            y: -15
+            y: 0
             width: parent.width - window.cornerWing * 2
-            height: parent.height + 15
-            radius: Theme.radius
+            height: parent.height
+            radius: Math.min(Theme.radius, height / 2)
             color: Theme.shellBackground
         }
 
@@ -161,7 +163,7 @@ PanelWindow {
             y: notchBody.y
             width: notchBody.width
             height: notchBody.height
-            radius: Theme.radius
+            radius: notchBody.radius
             color: "transparent"
             border.width: 2
             border.color: Theme.foreground
@@ -181,7 +183,7 @@ PanelWindow {
             Rectangle {
                 width: notchBody.width
                 height: notchBody.height
-                radius: Theme.radius
+                radius: notchBody.radius
                 color: "transparent"
                 border.width: 3
                 border.color: Theme.primary
@@ -192,6 +194,7 @@ PanelWindow {
             x: 0
             width: window.cornerWing
             height: window.cornerWing
+            visible: false
             preferredRendererType: Shape.CurveRenderer
 
             ShapePath {
@@ -232,6 +235,7 @@ PanelWindow {
             x: parent.width - width
             width: window.cornerWing
             height: window.cornerWing
+            visible: false
             preferredRendererType: Shape.CurveRenderer
 
             ShapePath {
@@ -519,10 +523,10 @@ PanelWindow {
 
     mask: Region {
         item: notchBody
-        topLeftRadius: 0
-        topRightRadius: 0
-        bottomLeftRadius: Theme.radius
-        bottomRightRadius: Theme.radius
+        topLeftRadius: notchBody.radius
+        topRightRadius: notchBody.radius
+        bottomLeftRadius: notchBody.radius
+        bottomRightRadius: notchBody.radius
     }
 
 }
