@@ -14,12 +14,16 @@ Item {
     property bool recActive: false
     property int shelfCount: 0
     property string weatherMini: ""
+    property bool volumeActive: false
+    property string volumeText: ""
+    property bool volumeMuted: false
 
     implicitHeight: 24
 
     Row {
         anchors.centerIn: parent
         spacing: 5
+        visible: !root.volumeActive
 
         // Unread bubble: only when unread exist.
         Rectangle {
@@ -99,6 +103,47 @@ Item {
             radius: 4
             visible: root.camActive
             color: "#c678dd"
+        }
+    }
+
+    // Volume takeover: exclusive state over the fill, nothing else visible.
+    // Dark chip keeps the text readable at any fill level.
+    Rectangle {
+        anchors.centerIn: parent
+        width: volRow.width + 14
+        height: 18
+        radius: 9
+        visible: root.volumeActive
+        color: "#90000000"
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 120
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Row {
+            id: volRow
+            anchors.centerIn: parent
+            spacing: 5
+
+            ShellText {
+                anchors.verticalCenter: parent.verticalCenter
+                text: root.volumeMuted ? "󰝟" : "󰕾"
+                color: Theme.shellForeground
+                font.family: Theme.iconFontFamily
+                font.pixelSize: 12
+                font.weight: Font.Bold
+            }
+
+            ShellText {
+                anchors.verticalCenter: parent.verticalCenter
+                text: root.volumeText
+                color: Theme.shellForeground
+                font.pixelSize: 12
+                font.weight: Font.DemiBold
+            }
         }
     }
 }

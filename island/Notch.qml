@@ -167,6 +167,43 @@ PanelWindow {
             color: Theme.shellBackground
         }
 
+        Item {
+            id: volumeFillClip
+
+            // Inset by the border width so the fill stays strictly inside
+            // the pill edge at every level (never touches the outline).
+            x: notchBody.x + 2
+            y: notchBody.y + 2
+            width: notchBody.width - 4
+            height: notchBody.height - 4
+            clip: true
+            visible: IslandHub.volumeActive
+
+            Rectangle {
+                id: volumeFill
+
+                width: parent.width
+                height: parent.height * Math.max(0, Math.min(100, IslandHub.volumePercent)) / 100
+                anchors.bottom: parent.bottom
+                radius: Math.max(0, notchBody.radius - 2)
+                color: Theme.primary
+
+                Behavior on height {
+                    NumberAnimation {
+                        duration: 180
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 150
+                    easing.type: Easing.OutCubic
+                }
+            }
+        }
+
         Rectangle {
             id: borderGlow
 
@@ -179,6 +216,20 @@ PanelWindow {
             border.width: 2
             border.color: IslandHub.flashActive ? IslandHub.flashColor : (IslandHub.recordingActive ? Theme.red : Theme.foreground)
             opacity: IslandHub.flashActive ? 1 : (IslandHub.recordingActive ? (recBlinkOn ? 1 : 0) : 0)
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 150
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            Behavior on border.color {
+                ColorAnimation {
+                    duration: 150
+                    easing.type: Easing.OutCubic
+                }
+            }
         }
 
         Item {
@@ -189,7 +240,14 @@ PanelWindow {
             width: notchBody.width * window.mediaFraction
             height: notchBody.height
             clip: true
-            visible: window.mediaActive
+            visible: window.mediaActive && !IslandHub.volumeActive
+
+            Behavior on width {
+                NumberAnimation {
+                    duration: 800
+                    easing.type: Easing.OutCubic
+                }
+            }
 
             Rectangle {
                 width: notchBody.width
@@ -297,6 +355,9 @@ PanelWindow {
             recActive: IslandHub.recordingActive
             shelfCount: ShelfState.files.length
             weatherMini: WeatherState.collapsedVisible ? WeatherState.tempC : ""
+            volumeActive: IslandHub.volumeActive
+            volumeText: IslandHub.volumeText
+            volumeMuted: IslandHub.volumeMuted
 
             Behavior on opacity {
                 NumberAnimation {

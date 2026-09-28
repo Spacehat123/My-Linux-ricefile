@@ -49,7 +49,20 @@ Singleton {
         return String(m).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
     }
 
-    // -- transient border flash (volume 500ms, screenshot white, bt, ...) --
+    // -- volume takeover: exclusive 1000ms island state, restarts on change --
+    property bool volumeActive: false
+    property int volumePercent: 0
+    property bool volumeMuted: false
+    readonly property string volumeText: volumeMuted ? "Muted" : volumePercent + "%"
+    function showVolume() {
+        if (sinkAudio) {
+            volumePercent = Math.round((sinkAudio.volume || 0) * 100);
+            volumeMuted = sinkAudio.muted === true;
+        }
+        volumeActive = true;
+        volumeTimer.restart();
+    }
+    // -- transient border flash (screenshot white, bt, ...) --
     property color flashColor: "white"
     property bool flashActive: false
     function flashBorder(color, ms) {
@@ -106,6 +119,12 @@ Singleton {
     }
 
     Timer {
+        id: volumeTimer
+        interval: 1000
+        onTriggered: root.volumeActive = false
+    }
+
+    Timer {
         id: restoreTimer
         interval: 500
         onTriggered: root.flashActive = false
@@ -124,15 +143,15 @@ Singleton {
         onTriggered: root.recElapsedSec = Math.floor(Date.now() / 1000 - root.recStartEpoch)
     }
 
-    // -- volume watcher: 500ms border override, then automatic restore --
+    // -- volume watcher: 1000ms exclusive takeover, then automatic restore --
     readonly property var sinkAudio: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio : null
     Connections {
         target: root.sinkAudio
         function onVolumeChanged() {
-            root.flashBorder(Theme.blue, 500);
+            root.showVolume();
         }
         function onMutedChanged() {
-            root.flashBorder(Theme.blue, 500);
+            root.showVolume();
         }
     }
 
