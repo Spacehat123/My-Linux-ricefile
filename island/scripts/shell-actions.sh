@@ -171,6 +171,9 @@ case "$action" in
     [[ ${2:-} =~ ^[0-9]+$ ]]
     cliphist decode "$2"
     ;;
+  clipboard-wipe)
+    cliphist wipe
+    ;;
   clipboard-paste)
     [[ ${2:-} =~ ^[0-9]+$ ]]
     target=$(hyprctl activewindow -j | jq -r '.address // empty')

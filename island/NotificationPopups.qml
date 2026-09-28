@@ -12,6 +12,7 @@ PanelWindow {
     color: "transparent"
     aboveWindows: true
     exclusionMode: ExclusionMode.Ignore
+    visible: !IslandHub.dnd
     WlrLayershell.namespace: "vyeos-notifications"
 
     anchors {

@@ -25,6 +25,7 @@ PanelWindow {
     readonly property real panelContentHeight: ShellState.expanded ? Math.max(ShellState.panelHeights[ShellState.panel] || 0, requestedPanel ? requestedPanel.implicitHeight : 0) : 0
     property bool contentRevealed: false
     property bool clockRevealed: true
+    property bool recBlinkOn: false
     property string displayedPanel: "control"
     readonly property var islandPlayer: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
     readonly property real mediaFraction: islandPlayer && islandPlayer.length > 0 ? Math.min(1, islandPlayer.position / islandPlayer.length) : 0
@@ -40,7 +41,11 @@ PanelWindow {
             "wallpaper": wallpaperPanel,
             "capture": capturePanel,
             "power": powerPanel,
-            "media": mediaPanel
+            "media": mediaPanel,
+            "notifications": notifCenterPanel,
+            "timer": timerPanel,
+            "shelf": shelfPanel,
+            "weather": weatherPanel
         };
         return panels[displayedPanel] || null;
     }
@@ -55,7 +60,11 @@ PanelWindow {
             "wallpaper": wallpaperPanel,
             "capture": capturePanel,
             "power": powerPanel,
-            "media": mediaPanel
+            "media": mediaPanel,
+            "notifications": notifCenterPanel,
+            "timer": timerPanel,
+            "shelf": shelfPanel,
+            "weather": weatherPanel
         };
         return panels[ShellState.panel] || null;
     }
@@ -109,6 +118,8 @@ PanelWindow {
                 clockRevealTimer.stop();
                 window.clockRevealed = false;
                 window.displayedPanel = ShellState.panel;
+                if (ShellState.panel === "notifications")
+                    IslandHub.markSeen();
                 focusTimer.restart();
             } else {
                 clockRevealTimer.restart();
@@ -166,8 +177,8 @@ PanelWindow {
             radius: notchBody.radius
             color: "transparent"
             border.width: 2
-            border.color: Theme.foreground
-            opacity: 0
+            border.color: IslandHub.flashActive ? IslandHub.flashColor : (IslandHub.recordingActive ? Theme.red : Theme.foreground)
+            opacity: IslandHub.flashActive ? 1 : (IslandHub.recordingActive ? (recBlinkOn ? 1 : 0) : 0)
         }
 
         Item {
@@ -272,48 +283,27 @@ PanelWindow {
 
         }
 
-        Row {
+        CollapsedStatus {
             anchors.left: notchBody.left
             anchors.right: notchBody.right
             anchors.top: parent.top
             height: window.collapsedHeight
-            anchors.leftMargin: 6
-            anchors.rightMargin: 6
             visible: opacity > 0
             opacity: window.clockRevealed ? 1 : 0
-
-            ShellText {
-                width: parent.width / 2
-                height: parent.height
-                horizontalAlignment: Text.AlignRight
-                verticalAlignment: Text.AlignVCenter
-                rightPadding: 6
-                text: Qt.formatDateTime(clock.date, "HH:mm")
-                color: Theme.shellForeground
-                font.pixelSize: 12
-                font.weight: Font.DemiBold
-            }
-
-            ShellText {
-                width: parent.width / 2
-                height: parent.height
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
-                leftPadding: 6
-                text: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][clock.date.getDay()] + " " + Qt.formatDateTime(clock.date, "d/M")
-                color: Theme.shellForeground
-                font.pixelSize: 12
-                font.weight: Font.DemiBold
-            }
+            unread: IslandHub.unreadCount
+            label: IslandHub.primaryLabel(window.islandPlayer ? (window.islandPlayer.trackTitle || "") : "", window.islandPlayer ? (window.islandPlayer.trackArtist || "") : "")
+            micActive: PrivacyState.micActive
+            camActive: PrivacyState.camActive
+            recActive: IslandHub.recordingActive
+            shelfCount: ShelfState.files.length
+            weatherMini: WeatherState.collapsedVisible ? WeatherState.tempC : ""
 
             Behavior on opacity {
                 NumberAnimation {
                     duration: 90
                     easing.type: Easing.OutCubic
                 }
-
             }
-
         }
 
         MouseArea {
@@ -321,7 +311,34 @@ PanelWindow {
             enabled: !ShellState.expanded
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: ShellState.show("control")
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onClicked: (mouse) => {
+                // mainMod + click = media transport (preserved contract).
+                if ((mouse.modifiers & Qt.MetaModifier) && window.islandPlayer) {
+                    if (mouse.button === Qt.LeftButton && window.islandPlayer.canGoPrevious)
+                        window.islandPlayer.previous();
+                    else if (mouse.button === Qt.RightButton && window.islandPlayer.canGoNext)
+                        window.islandPlayer.next();
+                    return ;
+                }
+                if (mouse.button !== Qt.LeftButton)
+                    return ;
+                ShellState.show(IslandHub.primaryPanel());
+            }
+        }
+
+        DropArea {
+            anchors.fill: notchBody
+            enabled: !ShellState.expanded
+            onDropped: (drop) => {
+                if (drop.hasUrls && window.screen === Quickshell.screens[0]) {
+                    const added = ShelfState.addUrls(drop.urls);
+                    if (added > 0) {
+                        IslandHub.showTransient(ShelfState.lastEvent, 3000);
+                        IslandHub.flashBorder(Theme.primary, 600);
+                    }
+                }
+            }
         }
 
         Item {
@@ -413,6 +430,34 @@ PanelWindow {
                 visible: window.displayedPanel === "media"
             }
 
+            NotifCenterPanel {
+                id: notifCenterPanel
+
+                width: parent.width
+                visible: window.displayedPanel === "notifications"
+            }
+
+            TimerPanel {
+                id: timerPanel
+
+                width: parent.width
+                visible: window.displayedPanel === "timer"
+            }
+
+            ShelfPanel {
+                id: shelfPanel
+
+                width: parent.width
+                visible: window.displayedPanel === "shelf"
+            }
+
+            WeatherPanel {
+                id: weatherPanel
+
+                width: parent.width
+                visible: window.displayedPanel === "weather"
+            }
+
             Behavior on opacity {
                 NumberAnimation {
                     duration: Theme.animationNormal
@@ -443,10 +488,34 @@ PanelWindow {
 
     }
 
-    SystemClock {
-        id: clock
+    Timer {
+        interval: 500
+        running: IslandHub.recordingActive
+        repeat: true
+        onTriggered: window.recBlinkOn = !window.recBlinkOn
+    }
 
-        precision: SystemClock.Minutes
+    Connections {
+        target: PowerState
+        function onPlugEventTickChanged() {
+            IslandHub.showTransient(PowerState.lastPlugEvent, 3000);
+            IslandHub.flashBorder(PowerState.charging ? Theme.primary : Theme.foreground, 800);
+        }
+    }
+
+    Connections {
+        target: BtState
+        function onEventTickChanged() {
+            IslandHub.showTransient(BtState.lastEvent, 3000);
+            IslandHub.flashBorder(Theme.blue, 800);
+        }
+    }
+
+    Connections {
+        target: ShelfState
+        function onEventTickChanged() {
+            IslandHub.showTransient(ShelfState.lastEvent, 3000);
+        }
     }
 
     HyprlandFocusGrab {

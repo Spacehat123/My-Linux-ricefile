@@ -176,6 +176,7 @@ ShellRoot {
     }
 
     Component.onCompleted: {
+        IslandHub.notifModel = notificationServer.trackedNotifications;
         Quickshell.execDetached(["sh", "-c", "pgrep -x awww-daemon >/dev/null || exec awww-daemon"]);
         Quickshell.execDetached(["sh", "-c", "pgrep -xf 'wl-paste --type text --watch cliphist store' >/dev/null || wl-paste --type text --watch cliphist store >/dev/null 2>&1 & pgrep -xf 'wl-paste --type image --watch cliphist store' >/dev/null || wl-paste --type image --watch cliphist store >/dev/null 2>&1 &"]);
         wallpaperRestoreDelay.start();
@@ -1167,6 +1168,8 @@ ShellRoot {
         onNotification: (notification) => {
             notification.tracked = true;
             ShellState.noticeTick = ShellState.noticeTick + 1;
+            IslandHub.notifModel = notificationServer.trackedNotifications;
+            IslandHub.notifyArrived();
         }
     }
 
@@ -1214,6 +1217,75 @@ ShellRoot {
 
         function previous() {
             ShellState.cycle(-1);
+        }
+    }
+
+    IpcHandler {
+        target: "island"
+
+        function getSummary(): string {
+            return JSON.stringify({
+                unread: IslandHub.unreadCount,
+                dnd: IslandHub.dnd,
+                recording: IslandHub.recordingActive,
+                recElapsedSec: IslandHub.recElapsedSec,
+                mediaActive: IslandHub.mediaActive,
+                mediaPlaying: IslandHub.mediaPlaying,
+                timerActive: TimerState.hasActive,
+                timerText: TimerState.compactText,
+                micActive: PrivacyState.micActive,
+                camActive: PrivacyState.camActive,
+                charging: PowerState.charging,
+                batteryPercent: Math.round(PowerState.percent * 100),
+                btConnected: BtState.connectedNames,
+                shelfFiles: ShelfState.files.length,
+                downloads: ShelfState.activeDownloads.length,
+                weather: WeatherState.tempC,
+                primaryPanel: IslandHub.primaryPanel()
+            });
+        }
+
+        function timerToggle(): string {
+            if (TimerState.swRunning)
+                TimerState.swPause();
+            else
+                TimerState.swStart();
+            return JSON.stringify({ success: true, running: TimerState.swRunning });
+        }
+
+        function timerReset(): string {
+            TimerState.swReset();
+            return JSON.stringify({ success: true });
+        }
+
+        function countdownAdd(minutes: int): string {
+            TimerState.addCountdown(minutes, "");
+            return JSON.stringify({ success: true, count: TimerState.countdowns.length });
+        }
+
+        function focusStart(minutes: int): string {
+            TimerState.startFocus(minutes || 25);
+            return JSON.stringify({ success: true, focusActive: TimerState.focusActive });
+        }
+
+        function focusEnd(): string {
+            TimerState.endFocus();
+            return JSON.stringify({ success: true });
+        }
+
+        function markSeen(): string {
+            IslandHub.markSeen();
+            return JSON.stringify({ success: true });
+        }
+
+        function shelfAdd(path: string): string {
+            const added = ShelfState.addFile(path);
+            return JSON.stringify({ success: added, files: ShelfState.files.length });
+        }
+
+        function weatherRefresh(): string {
+            WeatherState.refresh();
+            return JSON.stringify({ success: true });
         }
     }
 

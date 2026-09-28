@@ -299,6 +299,41 @@ FocusScope {
 
         }
 
+        Row {
+            width: parent.width
+            spacing: 8
+
+            ShellText {
+                width: parent.width - 120
+                anchors.verticalCenter: parent.verticalCenter
+                wrapMode: Text.WordWrap
+                text: "Stored persistently by cliphist."
+                color: Theme.mutedDark
+                font.pixelSize: 9
+            }
+
+            Rectangle {
+                width: 112
+                height: 26
+                radius: 13
+                color: wipeMouse.containsMouse ? Theme.red : Theme.bg1
+
+                ShellText {
+                    anchors.centerIn: parent
+                    text: "Wipe history"
+                    font.pixelSize: 10
+                }
+
+                MouseArea {
+                    id: wipeMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: Backend.clearClipboard()
+                }
+            }
+        }
+
     }
 
 }

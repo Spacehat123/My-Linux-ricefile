@@ -1130,6 +1130,18 @@ FocusScope {
                 }, {
                     key: "capture",
                     label: "Capture"
+                }, {
+                    key: "notifications",
+                    label: "Notifs"
+                }, {
+                    key: "timer",
+                    label: "Timer"
+                }, {
+                    key: "shelf",
+                    label: "Shelf"
+                }, {
+                    key: "weather",
+                    label: "Weather"
                 }]
 
                 delegate: Rectangle {

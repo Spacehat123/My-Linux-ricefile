@@ -78,6 +78,10 @@ Singleton {
         clipboardProcess.running = true;
     }
 
+    function clearClipboard() {
+        clipboardWipeProcess.exec([helper, "clipboard-wipe"]);
+    }
+
     function pasteClipboard(id) {
         pasteProcess.exec([helper, "clipboard-paste", String(id)]);
     }
@@ -291,6 +295,12 @@ Singleton {
             }
         }
 
+    }
+
+    Process {
+        id: clipboardWipeProcess
+
+        onExited: root.refreshClipboard()
     }
 
     Process {
