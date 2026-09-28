@@ -1,13 +1,14 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.Notifications
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import "components"
 import "core"
 import "desktop"
+import "island" // bare `Theme` in this file = island singleton (do NOT add `import "theme"` here)
 import "panels"
-import "wallpaper"
 
 ShellRoot {
     id: shellRoot
@@ -124,77 +125,60 @@ ShellRoot {
         return workspaceManager.getWorkspacesForMonitor(monitor);
     }
 
-    // Authoritative shell-level state for live wallpaper and background media
+    // Wallpaper state. Renderer is the ported dotarch system (awww-daemon +
+    // island/scripts/theme-system.sh). wallpaperEnabled is retained for the
+    // sidebar toggle UI; rendering is owned by awww, not a QML layer.
     property bool wallpaperEnabled: true
-    property string wallpaperMediaType: "procedural" // "procedural" | "image" | "video"
+    property string wallpaperMediaType: "image"
     property string wallpaperMediaSource: ""
 
-    function detectMediaType(path) {
-        if (!path || path.trim().length === 0) return "procedural";
-        const lower = path.toLowerCase().trim();
-        if (lower.endsWith(".mp4") || lower.endsWith(".webm") || lower.endsWith(".mkv") || lower.endsWith(".mov") || lower.endsWith(".avi")) {
-            return "video";
-        }
-        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".webp") ||
-            lower.endsWith(".avif") || lower.endsWith(".bmp") || lower.endsWith(".svg") || lower.endsWith(".gif")) {
-            return "image";
-        }
-        return "procedural";
+    readonly property string islandThemeHelper: Quickshell.shellPath("island/scripts/theme-system.sh").toString().replace(/^file:\/\//, "")
+
+    function islandSetWallpaper(path) {
+        // theme-system.sh requires a plain path inside ~/Pictures/Wallpapers/<theme>/,
+        // so strip any file:// prefix IPC callers may send (it dies otherwise).
+        let cleanPath = path.trim().replace(/^file:\/\//, "");
+        setWallpaperProc.exec([shellRoot.islandThemeHelper, "wallpaper", cleanPath]);
+        shellRoot.wallpaperMediaType = "image";
+        shellRoot.wallpaperMediaSource = "file://" + cleanPath;
+        console.log("[pranc-shell] Wallpaper set via island system: " + shellRoot.wallpaperMediaSource);
+        return JSON.stringify({ success: true, mediaType: "image", mediaSource: shellRoot.wallpaperMediaSource });
     }
 
-    function applyWallpaperMedia(path, saveSession) {
-        if (!path || path.trim().length === 0) {
-            clearWallpaperMedia();
-            return;
-        }
-        const cleanPath = path.trim();
-        wallpaperMediaType = detectMediaType(cleanPath);
-        wallpaperMediaSource = cleanPath.startsWith("file://") ? cleanPath : ("file://" + cleanPath);
-        console.log("[pranc-shell] Background media set to: " + wallpaperMediaSource + " (" + wallpaperMediaType + ")");
-        const shouldSave = (saveSession !== undefined) ? Boolean(saveSession) : true;
-        if (shouldSave) {
-            saveSessionMedia(cleanPath);
-        }
-    }
-
-    function clearWallpaperMedia() {
-        wallpaperMediaType = "procedural";
-        wallpaperMediaSource = "";
-        console.log("[pranc-shell] Background media cleared, returned to procedural shader");
-        saveSessionMedia("");
-    }
-
-    function saveSessionMedia(path) {
-        saveSessionProc.exec(["bash", "-c", "mkdir -p ~/.cache/pranc-shell && echo -n '" + path.replace(/'/g, "'\\''") + "' > ~/.cache/pranc-shell/session_wallpaper.txt"]);
+    function islandClearWallpaper() {
+        setWallpaperProc.exec(["awww", "clear", "000000"]);
+        shellRoot.wallpaperMediaType = "procedural";
+        shellRoot.wallpaperMediaSource = "";
+        console.log("[pranc-shell] Wallpaper cleared via awww");
+        return JSON.stringify({ success: true, mediaType: "procedural" });
     }
 
     function openMediaPicker() {
-        const rawPath = Quickshell.shellPath("scripts/media-picker.py").toString();
-        const scriptPath = rawPath.replace(/^file:\/\//, "");
-        Quickshell.execDetached(["python3", scriptPath]);
+        ShellState.show("wallpaper");
         return JSON.stringify({ success: true, status: "opened" });
     }
 
-    // Session media persistence loaders
     Process {
-        id: loadSessionProc
-        command: ["bash", "-c", "cat ~/.cache/pranc-shell/session_wallpaper.txt 2>/dev/null || true"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const saved = text.trim();
-                if (saved.length > 0) {
-                    shellRoot.applyWallpaperMedia(saved, false);
-                }
-            }
-        }
+        id: setWallpaperProc
     }
 
     Process {
-        id: saveSessionProc
+        id: restoreWallpaperProc
+        command: [shellRoot.islandThemeHelper, "restore-wallpaper"]
+    }
+
+    // dotarch wallpaper bootstrap: ensure the renderer daemon, then restore
+    // the saved wallpaper once it is ready. No Hyprland config change needed.
+    Timer {
+        id: wallpaperRestoreDelay
+        interval: 900
+        onTriggered: restoreWallpaperProc.running = true
     }
 
     Component.onCompleted: {
-        loadSessionProc.running = true;
+        Quickshell.execDetached(["sh", "-c", "pgrep -x awww-daemon >/dev/null || exec awww-daemon"]);
+        Quickshell.execDetached(["sh", "-c", "pgrep -xf 'wl-paste --type text --watch cliphist store' >/dev/null || wl-paste --type text --watch cliphist store >/dev/null 2>&1 & pgrep -xf 'wl-paste --type image --watch cliphist store' >/dev/null || wl-paste --type image --watch cliphist store >/dev/null 2>&1 &"]);
+        wallpaperRestoreDelay.start();
     }
 
     // Global Shortcuts for Background Media Picker
@@ -206,6 +190,9 @@ ShellRoot {
         }
     }
 
+    // NOTE: Super-tap opens the launcher via Hyprland bind (SUPER_L release)
+    // straight to `qs ipc call notch toggle launcher`, not via GlobalShortcut.
+
     GlobalShortcut {
         name: "wallpaperSelectorToggle"
         description: "Toggle wallpaper media selector"
@@ -214,50 +201,10 @@ ShellRoot {
         }
     }
 
-    // Development & Control IPC interface for wallpaper
-    IpcHandler {
-        target: "wallpaper"
-
-        property bool enabled: shellRoot.wallpaperEnabled
-        property string mediaType: shellRoot.wallpaperMediaType
-        property string mediaSource: shellRoot.wallpaperMediaSource
-
-        function toggle() {
-            shellRoot.wallpaperEnabled = !shellRoot.wallpaperEnabled;
-            console.log("[pranc-shell] IPC: wallpaperEnabled toggled to " + shellRoot.wallpaperEnabled);
-        }
-
-        function setEnabled(val: bool) {
-            shellRoot.wallpaperEnabled = val;
-            console.log("[pranc-shell] IPC: wallpaperEnabled set to " + shellRoot.wallpaperEnabled);
-        }
-
-        function openPicker(): string {
-            return shellRoot.openMediaPicker();
-        }
-
-        function setMedia(path: string): string {
-            shellRoot.applyWallpaperMedia(path, true);
-            return JSON.stringify({
-                success: true,
-                mediaType: shellRoot.wallpaperMediaType,
-                mediaSource: shellRoot.wallpaperMediaSource
-            });
-        }
-
-        function clearMedia(): string {
-            shellRoot.clearWallpaperMedia();
-            return JSON.stringify({ success: true, mediaType: "procedural" });
-        }
-
-        function getMedia(): string {
-            return JSON.stringify({
-                enabled: shellRoot.wallpaperEnabled,
-                mediaType: shellRoot.wallpaperMediaType,
-                mediaSource: shellRoot.wallpaperMediaSource
-            });
-        }
-    }
+    // NOTE: the old `wallpaper` IPC target lived here. Wallpaper is now owned
+    // by the ported dotarch system: `qs ipc call notch toggle wallpaper`
+    // opens the picker, `wallpaper-set PATH` applies, `theme ...` manages
+    // themes. See island/ and the `control` target below.
 
     // =========================================================================
     // Headless IPC Verification: Workspace Intelligence
@@ -1177,17 +1124,11 @@ ShellRoot {
         }
 
         function setWallpaperMedia(path: string): string {
-            shellRoot.applyWallpaperMedia(path, true);
-            return JSON.stringify({
-                success: true,
-                mediaType: shellRoot.wallpaperMediaType,
-                mediaSource: shellRoot.wallpaperMediaSource
-            });
+            return shellRoot.islandSetWallpaper(path);
         }
 
         function clearWallpaperMedia(): string {
-            shellRoot.clearWallpaperMedia();
-            return JSON.stringify({ success: true, mediaType: "procedural" });
+            return shellRoot.islandClearWallpaper();
         }
 
         function getSummary(): string {
@@ -1210,6 +1151,120 @@ ShellRoot {
         }
     }
 
+    // =========================================================================
+    // Dynamic Island + notifications (ported from vyeos/dotarch, lives in island/)
+    // =========================================================================
+    property string pendingCaptureMode: ""
+
+    NotificationServer {
+        id: notificationServer
+
+        keepOnReload: true
+        bodySupported: true
+        bodyMarkupSupported: false
+        actionsSupported: true
+        imageSupported: true
+        onNotification: notification => notification.tracked = true
+    }
+
+    NotificationPopups {
+        notificationModel: notificationServer.trackedNotifications
+        screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
+    }
+
+    LowBatteryMonitor {}
+
+    Variants {
+        model: Quickshell.screens
+
+        Notch {
+            required property var modelData
+
+            screen: modelData
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        CaptureSelector {
+            required property var modelData
+
+            screen: modelData
+        }
+    }
+
+    IpcHandler {
+        target: "notch"
+
+        function toggle(panel: string) {
+            ShellState.show(panel);
+        }
+
+        function close() {
+            ShellState.close();
+        }
+
+        function next() {
+            ShellState.cycle(1);
+        }
+
+        function previous() {
+            ShellState.cycle(-1);
+        }
+    }
+
+    IpcHandler {
+        target: "theme"
+
+        function reload() {
+            Theme.reload();
+            AppearanceState.refreshThemes();
+            AppearanceState.refreshWallpapers();
+        }
+    }
+
+    IpcHandler {
+        target: "capture"
+
+        function screenshot(mode: string) {
+            if (!["full", "window", "region"].includes(mode))
+                return;
+
+            shellRoot.pendingCaptureMode = mode;
+            if (mode !== "region")
+                ShellState.close();
+            captureShortcutDelay.restart();
+        }
+
+        function toggleRecording() {
+            if (Backend.recording) {
+                Backend.toggleRecording();
+                return;
+            }
+
+            ShellState.close();
+            recordingShortcutDelay.restart();
+        }
+    }
+
+    Timer {
+        id: captureShortcutDelay
+
+        interval: Theme.animationNormal + 100
+        onTriggered: {
+            Backend.capture(shellRoot.pendingCaptureMode);
+            shellRoot.pendingCaptureMode = "";
+        }
+    }
+
+    Timer {
+        id: recordingShortcutDelay
+
+        interval: Theme.animationNormal + 100
+        onTriggered: Backend.toggleRecording()
+    }
+
     Variants {
         model: Quickshell.screens
 
@@ -1220,15 +1275,6 @@ ShellRoot {
             property bool leftSidebarOpen: false
             property bool rightSidebarOpen: false
             property bool bottomBarOpen: false
-
-            // Live wallpaper rendering surface (WlrLayer.Background)
-            Wallpaper {
-                id: wallpaper
-                screen: monitorScope.modelData
-                enabled: shellRoot.wallpaperEnabled
-                mediaType: shellRoot.wallpaperMediaType
-                mediaSource: shellRoot.wallpaperMediaSource
-            }
 
             // Desktop Ambient HUD layer (WlrLayer.Bottom)
             AmbientLayer {

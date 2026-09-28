@@ -346,10 +346,10 @@ class MediaPickerWindow(QDialog):
     def apply_and_close(self):
         if self.selected_path and os.path.exists(self.selected_path):
             print(self.selected_path)
-            # Dispatch to pranc-shell IPC with correct space-separated arguments
+            # Dispatch to the island wallpaper system (replaces removed `wallpaper` IPC target)
             try:
                 subprocess.run(
-                    ["qs", "-c", "pranc-shell", "ipc", "call", "wallpaper", "setMedia", self.selected_path],
+                    ["wallpaper-set", self.selected_path],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                     check=False
