@@ -1238,6 +1238,7 @@ ShellRoot {
                 charging: PowerState.charging,
                 batteryPercent: Math.round(PowerState.percent * 100),
                 btConnected: BtState.connectedNames,
+                btPowered: BtState.powered,
                 shelfFiles: ShelfState.files.length,
                 downloads: ShelfState.activeDownloads.length,
                 weather: WeatherState.tempC,
