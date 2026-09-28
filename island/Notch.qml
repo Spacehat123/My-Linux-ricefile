@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Services.Mpris
 import Quickshell.Wayland
 import "components"
 import "panels"
@@ -24,6 +25,9 @@ PanelWindow {
     property bool contentRevealed: false
     property bool clockRevealed: true
     property string displayedPanel: "control"
+    readonly property var islandPlayer: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
+    readonly property real mediaFraction: islandPlayer && islandPlayer.length > 0 ? Math.min(1, islandPlayer.position / islandPlayer.length) : 0
+    readonly property bool mediaActive: islandPlayer !== null && islandPlayer.length > 0
     readonly property Item activePanel: {
         const panels = {
             "control": controlPanel,
@@ -34,7 +38,8 @@ PanelWindow {
             "theme": themePanel,
             "wallpaper": wallpaperPanel,
             "capture": capturePanel,
-            "power": powerPanel
+            "power": powerPanel,
+            "media": mediaPanel
         };
         return panels[displayedPanel] || null;
     }
@@ -48,7 +53,8 @@ PanelWindow {
             "theme": themePanel,
             "wallpaper": wallpaperPanel,
             "capture": capturePanel,
-            "power": powerPanel
+            "power": powerPanel,
+            "media": mediaPanel
         };
         return panels[ShellState.panel] || null;
     }
@@ -148,6 +154,32 @@ PanelWindow {
             color: Theme.shellBackground
         }
 
+        Rectangle {
+            id: borderGlow
+
+            x: notchBody.x
+            y: notchBody.y
+            width: notchBody.width
+            height: notchBody.height
+            radius: Theme.radius
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.foreground
+            opacity: 0
+        }
+
+        Rectangle {
+            id: mediaProgress
+
+            x: notchBody.x + 6
+            y: notchBody.y + notchBody.height - 6
+            width: (notchBody.width - 12) * window.mediaFraction
+            height: 3
+            radius: 1.5
+            color: Theme.primary
+            visible: window.mediaActive
+        }
+
         Shape {
             x: 0
             width: window.cornerWing
@@ -159,23 +191,24 @@ PanelWindow {
 
                 readonly property real size: window.cornerWing
 
-                strokeWidth: 0
+                strokeWidth: borderGlow.opacity * 2
+                strokeColor: Theme.foreground
                 fillColor: Theme.shellBackground
                 startX: 0
                 startY: 0
 
                 PathLine {
-                    x: leftShoulderPath.size
+                    x: leftShoulderPath.size + 2
                     y: 0
                 }
 
                 PathLine {
-                    x: leftShoulderPath.size
+                    x: leftShoulderPath.size + 2
                     y: leftShoulderPath.size
                 }
 
                 PathCubic {
-                    control1X: leftShoulderPath.size
+                    control1X: leftShoulderPath.size + 2
                     control1Y: leftShoulderPath.size * 0.448
                     control2X: leftShoulderPath.size * 0.552
                     control2Y: 0
@@ -198,23 +231,24 @@ PanelWindow {
 
                 readonly property real size: window.cornerWing
 
-                strokeWidth: 0
+                strokeWidth: borderGlow.opacity * 2
+                strokeColor: Theme.foreground
                 fillColor: Theme.shellBackground
                 startX: rightShoulderPath.size
                 startY: 0
 
                 PathLine {
-                    x: 0
+                    x: -2
                     y: 0
                 }
 
                 PathLine {
-                    x: 0
+                    x: -2
                     y: rightShoulderPath.size
                 }
 
                 PathCubic {
-                    control1X: 0
+                    control1X: -2
                     control1Y: rightShoulderPath.size * 0.448
                     control2X: rightShoulderPath.size * 0.448
                     control2Y: 0
@@ -360,6 +394,13 @@ PanelWindow {
                 visible: window.displayedPanel === "power"
             }
 
+            MediaPanel {
+                id: mediaPanel
+
+                width: parent.width
+                visible: window.displayedPanel === "media"
+            }
+
             Behavior on opacity {
                 NumberAnimation {
                     duration: Theme.animationNormal
@@ -422,6 +463,44 @@ PanelWindow {
                 window.clockRevealed = true;
 
         }
+    }
+
+    SequentialAnimation {
+        id: noticeFlash
+
+        loops: 2
+
+        NumberAnimation {
+            target: borderGlow
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: 160
+            easing.type: Easing.OutCubic
+        }
+
+        NumberAnimation {
+            target: borderGlow
+            property: "opacity"
+            to: 0
+            duration: 380
+            easing.type: Easing.InCubic
+        }
+
+    }
+
+    Connections {
+        target: ShellState
+        function onNoticeTickChanged() {
+            noticeFlash.restart();
+        }
+    }
+
+    Timer {
+        interval: 1000
+        running: window.islandPlayer && window.islandPlayer.isPlaying
+        repeat: true
+        onTriggered: window.islandPlayer.positionChanged()
     }
 
     Shortcut {

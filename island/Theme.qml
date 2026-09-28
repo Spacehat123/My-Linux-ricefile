@@ -42,7 +42,7 @@ Singleton {
     readonly property color shellBackground: "#000000"
     readonly property color shellForeground: "#ffffff"
     readonly property string fontFamily: "Geist"
-    readonly property string iconFontFamily: "JetBrainsMono Nerd Font"
+    readonly property string iconFontFamily: "JetBrainsMonoNL Nerd Font"
     readonly property int radiusSmall: 10
     readonly property int radius: 15
     readonly property int animationFast: 140

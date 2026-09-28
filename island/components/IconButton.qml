@@ -51,6 +51,7 @@ FocusScope {
         anchors.centerIn: parent
         text: root.icon
         color: root.hovered ? root.hoverForegroundColor : root.foregroundColor
+        font.family: Theme.iconFontFamily
         font.pixelSize: 15
         font.weight: Font.DemiBold
 

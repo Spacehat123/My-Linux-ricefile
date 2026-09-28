@@ -15,7 +15,8 @@ Singleton {
         "theme": 420,
         "wallpaper": 500,
         "capture": 395,
-        "power": 380
+        "power": 380,
+        "media": 520
     })
     readonly property var panelHeights: ({
         "control": 386,
@@ -26,9 +27,11 @@ Singleton {
         "theme": 252,
         "wallpaper": 382,
         "capture": 208,
-        "power": 56
+        "power": 56,
+        "media": 280
     })
     property string panel: "clock"
+    property int noticeTick: 0
     readonly property bool expanded: panel !== "clock"
     readonly property int targetWidth: expanded ? panelWidths[panel] : 145
     property var todos: []
@@ -75,7 +78,7 @@ Singleton {
     }
 
     function cycle(offset) {
-        const panels = ["clock", "control", "launcher", "clipboard", "todo", "notes", "theme", "wallpaper", "capture", "power"];
+        const panels = ["clock", "control", "launcher", "clipboard", "todo", "notes", "theme", "wallpaper", "capture", "power", "media"];
         const current = Math.max(0, panels.indexOf(panel));
         setPanel(panels[(current + offset + panels.length) % panels.length]);
     }

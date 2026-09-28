@@ -408,26 +408,11 @@ FocusScope {
         }
 
         Row {
-            id: quickActions
+            id: systemActions
 
             width: parent.width
             height: 58
             spacing: 7
-
-            ActionTile {
-                id: wifiTile
-
-                width: (parent.width - 14) / 3
-                icon: "󰤨"
-                title: "Wi-Fi"
-                subtitle: root.connectedWifi ? root.connectedWifi.name : (Networking.wifiEnabled ? "Not connected" : "Off")
-                active: Networking.wifiEnabled
-                expandable: true
-                expanded: root.expandedSection === "wifi"
-                detailAccessibleName: "Show Wi-Fi networks"
-                onClicked: root.toggleWifi()
-                onDetailClicked: root.toggleSection("wifi")
-            }
 
             ActionTile {
                 id: audioTile
@@ -443,27 +428,6 @@ FocusScope {
                 onClicked: root.toggleAudio()
                 onDetailClicked: root.toggleSection("audio")
             }
-
-            ActionTile {
-                width: (parent.width - 14) / 3
-                icon: root.batteryCharging ? "" : "󰁹"
-                title: "Battery: " + Math.round(root.batteryLevel * 100) + "%"
-                subtitle: {
-                    const words = Backend.powerProfile.split("-");
-                    return words.map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
-                }
-                active: root.batteryCharging || Backend.powerProfile === "performance"
-                onClicked: Backend.cyclePowerProfile()
-            }
-
-        }
-
-        Row {
-            id: systemActions
-
-            width: parent.width
-            height: 58
-            spacing: 7
 
             ActionTile {
                 id: bluetoothTile
@@ -495,21 +459,6 @@ FocusScope {
                 onDetailClicked: root.toggleSection("output")
             }
 
-            ActionTile {
-                id: nightLightTile
-
-                width: (parent.width - 14) / 3
-                icon: "󰖔"
-                title: "Night Light"
-                subtitle: Backend.nightLightStatus === "unavailable" ? "Not installed" : (Backend.nightLightStatus === "on" ? ShellState.nightLightTemperature + " K" : "Off")
-                active: Backend.nightLightStatus === "on"
-                expandable: Backend.nightLightStatus !== "unavailable"
-                expanded: root.expandedSection === "nightlight"
-                detailAccessibleName: "Adjust Night Light temperature"
-                onClicked: Backend.toggleNightLight()
-                onDetailClicked: root.toggleSection("nightlight")
-            }
-
         }
 
         Rectangle {
@@ -536,7 +485,7 @@ FocusScope {
             Rectangle {
                 anchors.top: parent.top
                 x: {
-                    const sourceTile = root.displayedSection === "audio" ? audioTile : (root.displayedSection === "output" ? outputAudioTile : nightLightTile);
+                    const sourceTile = root.displayedSection === "audio" ? audioTile : (root.displayedSection === "bluetooth" ? bluetoothTile : outputAudioTile);
                     const centeredX = sourceTile.x + sourceTile.width / 2 - devicePicker.x - width / 2;
                     return Math.max(Theme.radius, Math.min(parent.width - width - Theme.radius, centeredX));
                 }
@@ -1076,197 +1025,52 @@ FocusScope {
             }
         }
 
-        Rectangle {
-            id: mediaCard
+        Row {
+            id: mediaTransport
 
-            width: parent.width
-            height: 118
-            radius: Theme.radius
-            clip: true
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 10
             enabled: root.expandedSection === ""
 
-            Image {
-                id: mediaArtwork
-
-                anchors.fill: parent
-                source: root.player ? root.player.trackArtUrl : ""
-                fillMode: Image.PreserveAspectCrop
-                opacity: status === Image.Ready ? 0.26 : 0
-                layer.enabled: status === Image.Ready
-
-                layer.effect: MultiEffect {
-                    autoPaddingEnabled: false
-                    maskEnabled: true
-
-                    maskSource: Rectangle {
-                        width: mediaArtwork.width
-                        height: mediaArtwork.height
-                        radius: Theme.radius
-                        layer.enabled: mediaArtwork.status === Image.Ready
-                    }
-
-                }
-
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: Theme.animationNormal
-                    }
-
-                }
-
-            }
-
-            Column {
-                anchors.left: parent.left
-                anchors.right: controls.left
-                anchors.top: parent.top
-                anchors.bottom: progress.top
-                anchors.margins: 12
-                spacing: 3
-
-                ShellText {
-                    text: root.sink ? "󰕾  " + (root.sink.description || "Default output") : "󰝟  No audio output"
-                    color: Theme.muted
-                    font.pixelSize: 9
-                    elide: Text.ElideRight
-                    width: parent.width
-                }
-
-                Item {
-                    width: 1
-                    height: 5
-                }
-
-                ShellText {
-                    width: parent.width
-                    text: root.player ? (root.player.trackTitle || "Unknown title") : "Nothing playing"
-                    font.pixelSize: 18
-                    font.weight: Font.Bold
-                    elide: Text.ElideRight
-                }
-
-                ShellText {
-                    width: parent.width
-                    text: root.player ? (root.player.trackArtist || root.player.identity || "Unknown artist") : "Open a media player to begin"
-                    color: Theme.muted
-                    font.pixelSize: 10
-                    elide: Text.ElideRight
-                }
-
-            }
-
-            Row {
-                id: controls
-
-                anchors.right: parent.right
-                anchors.rightMargin: 12
+            IconButton {
+                width: 28
+                height: 28
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 5
+                icon: "\uf04ae"
+                accessibleName: "Previous track"
+                onClicked: {
+                    if (root.player && root.player.canGoPrevious)
+                        root.player.previous();
 
-                IconButton {
-                    width: 28
-                    height: 28
-                    icon: "󰒮"
-                    accessibleName: "Previous track"
-                    onClicked: {
-                        if (root.player && root.player.canGoPrevious)
-                            root.player.previous();
-
-                    }
                 }
-
-                IconButton {
-                    width: 42
-                    height: 42
-                    icon: root.player && root.player.isPlaying ? "󰏤" : "󰐊"
-                    accessibleName: root.player && root.player.isPlaying ? "Pause" : "Play"
-                    backgroundColor: Theme.foreground
-                    foregroundColor: Theme.bgDim
-                    onClicked: {
-                        if (root.player && root.player.canTogglePlaying)
-                            root.player.togglePlaying();
-
-                    }
-                }
-
-                IconButton {
-                    width: 28
-                    height: 28
-                    icon: "󰒭"
-                    accessibleName: "Next track"
-                    onClicked: {
-                        if (root.player && root.player.canGoNext)
-                            root.player.next();
-
-                    }
-                }
-
             }
 
-            Row {
-                id: progress
-
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                anchors.margins: 12
-                height: 12
-                spacing: 8
-
-                ShellText {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.player ? root.formatDuration(root.player.position) : "0:00"
-                    color: Theme.muted
-                    font.pixelSize: 8
-                }
-
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width - 68
-                    height: 3
-                    radius: 2
-                    color: Qt.rgba(0.83, 0.78, 0.67, 0.25)
-
-                    Rectangle {
-                        width: parent.width * (root.player && root.player.length > 0 ? Math.min(1, root.player.position / root.player.length) : 0)
-                        height: parent.height
-                        radius: parent.radius
-                        color: Theme.foreground
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        enabled: root.player && root.player.positionSupported && root.player.length > 0
-                        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        onPressed: (mouse) => {
-                            root.player.position = root.player.length * mouse.x / width;
-                        }
-                    }
+            IconButton {
+                width: 42
+                height: 42
+                anchors.verticalCenter: parent.verticalCenter
+                icon: root.player && root.player.isPlaying ? "\uf04c" : "\uf04b"
+                accessibleName: root.player && root.player.isPlaying ? "Pause" : "Play"
+                backgroundColor: Theme.foreground
+                foregroundColor: Theme.bgDim
+                onClicked: {
+                    if (root.player && root.player.canTogglePlaying)
+                        root.player.togglePlaying();
 
                 }
-
-                ShellText {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.player ? root.formatDuration(root.player.length) : "0:00"
-                    color: Theme.muted
-                    font.pixelSize: 8
-                }
-
             }
 
-            gradient: Gradient {
-                orientation: Gradient.Horizontal
+            IconButton {
+                width: 28
+                height: 28
+                anchors.verticalCenter: parent.verticalCenter
+                icon: "\uf04ad"
+                accessibleName: "Next track"
+                onClicked: {
+                    if (root.player && root.player.canGoNext)
+                        root.player.next();
 
-                GradientStop {
-                    position: 0
-                    color: Theme.primaryContainer
                 }
-
-                GradientStop {
-                    position: 1
-                    color: Theme.bgYellow
-                }
-
             }
 
         }

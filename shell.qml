@@ -1164,7 +1164,10 @@ ShellRoot {
         bodyMarkupSupported: false
         actionsSupported: true
         imageSupported: true
-        onNotification: notification => notification.tracked = true
+        onNotification: (notification) => {
+            notification.tracked = true;
+            ShellState.noticeTick = ShellState.noticeTick + 1;
+        }
     }
 
     NotificationPopups {
