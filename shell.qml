@@ -182,6 +182,15 @@ ShellRoot {
         wallpaperRestoreDelay.start();
     }
 
+    Connections {
+        target: idleManager
+        function onIdleChanged() {
+            if (!idleManager.idle) {
+                IslandHub.notifyWake();
+            }
+        }
+    }
+
     // Global Shortcuts for Background Media Picker
     GlobalShortcut {
         name: "mediaPickerToggle"

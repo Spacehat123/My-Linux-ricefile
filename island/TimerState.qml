@@ -39,6 +39,22 @@ Singleton {
             return IslandHub.formatElapsed(swElapsedSec);
         return "";
     }
+    // Timer progress for island line: 0.0 -> 1.0
+    readonly property real progressFraction: {
+        if (focusActive && focusTotalSec > 0)
+            return 1 - focusRemainingSec / focusTotalSec;
+        if (activeCountdown && activeCountdown.totalSec > 0)
+            return 1 - activeCountdown.remainingSec / activeCountdown.totalSec;
+        return -1; // inactive
+    }
+    // Urgent countdown (≤5s remaining): -1 = not urgent, else seconds remaining
+    readonly property int urgentRemaining: {
+        if (focusActive && focusRemainingSec > 0 && focusRemainingSec <= 5)
+            return focusRemainingSec;
+        if (activeCountdown && activeCountdown.remainingSec > 0 && activeCountdown.remainingSec <= 5)
+            return activeCountdown.remainingSec;
+        return -1;
+    }
 
     function swStart() {
         swBase = Date.now() / 1000 - swElapsedSec;
@@ -114,6 +130,7 @@ Singleton {
                         c.running = false;
                         IslandHub.showTransient((c.label || "Timer") + " done", 4000);
                         IslandHub.flashBorder(Theme.foreground, 800);
+                        IslandHub.burst();
                     }
                     next[i] = c;
                     changed = true;
@@ -127,6 +144,7 @@ Singleton {
                     root.endFocus();
                     IslandHub.showTransient("Focus complete", 4000);
                     IslandHub.flashBorder(Theme.foreground, 800);
+                    IslandHub.burst();
                 }
             }
         }

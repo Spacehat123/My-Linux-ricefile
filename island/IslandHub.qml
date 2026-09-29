@@ -3,12 +3,12 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
 import Quickshell.Services.Pipewire
+import Quickshell.Wayland
 pragma Singleton
 
 // IslandHub: central state + border-indication arbitration for the pill.
 // Layered border model (lowest to highest priority):
 //   idle (transparent) < notification flash < media ring (separate item)
-//   < recording blink (red, persistent) < transient flash (volume/screenshot/...)
 // Transient flashes temporarily override and then fall back automatically,
 // so the underlying activity state is never destroyed.
 Singleton {
@@ -28,7 +28,14 @@ Singleton {
     property bool dnd: false
 
     // -- media mirror (same source as Notch.islandPlayer, no extra deps) --
-    readonly property var player: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
+    readonly property var player: (() => {
+        const players = Mpris.players.values;
+        for (let i = 0; i < players.length; ++i) {
+            if (players[i] && players[i].isPlaying)
+                return players[i];
+        }
+        return players.length > 0 ? players[0] : null;
+    })()
     readonly property bool mediaActive: player !== null && player.length > 0
     readonly property bool mediaPlaying: player !== null && player.isPlaying
 
@@ -78,6 +85,26 @@ Singleton {
         transientText = text;
         transientTimer.interval = Math.max(500, ms || 3000);
         transientTimer.restart();
+    }
+
+    // -- micro particle burst trigger (major events only) --
+    property int burstTick: 0
+    function burst() {
+        burstTick += 1;
+    }
+
+    // -- screenshot sweep trigger --
+    property int sweepTick: 0
+    function sweep() {
+        sweepTick += 1;
+    }
+
+    // -- idle wake brighten --
+    // Triggered by shell.qml watching the shared IdleManager
+    property int wakeTick: 0
+    function notifyWake() {
+        wakeTick += 1;
+        flashBorder(Theme.primary, 1500);
     }
 
     // -- click routing: most prominent live activity wins --
@@ -136,13 +163,6 @@ Singleton {
         onTriggered: root.transientText = ""
     }
 
-    Timer {
-        interval: 1000
-        running: root.recordingActive
-        repeat: true
-        onTriggered: root.recElapsedSec = Math.floor(Date.now() / 1000 - root.recStartEpoch)
-    }
-
     // -- volume watcher: 1000ms exclusive takeover, then automatic restore --
     readonly property var sinkAudio: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio : null
     Connections {
@@ -155,12 +175,107 @@ Singleton {
         }
     }
 
+    // -- real audio levels for the waveform (level-meter.py daemon) --
+    readonly property string levelHelper: Quickshell.shellPath("island/scripts/level-meter.py").toString().replace(/^file:\/\//, "")
+    readonly property string levelFile: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/cool-shell-levels"
+    property var levels: [0, 0, 0, 0]
+
+    function startLevels() {
+        if (!levelProc.running)
+            levelProc.exec(["python3", root.levelHelper]);
+    }
+    function stopLevels() {
+        if (levelProc.running)
+            levelProc.running = false;
+        root.levels = [0, 0, 0, 0];
+    }
+
+    onMediaPlayingChanged: {
+        if (root.mediaPlaying)
+            root.startLevels();
+        else
+            root.stopLevels();
+    }
+
+    Connections {
+        target: Pipewire
+        function onDefaultAudioSinkChanged() {
+            // Monitor source follows the default sink; restart the tap.
+            if (root.mediaPlaying) {
+                root.stopLevels();
+                root.startLevels();
+            }
+        }
+    }
+
+    Process {
+        id: levelProc
+        onExited: {
+            // Watchdog: daemon died while music plays -> restart after 2s.
+            if (root.mediaPlaying)
+                levelRestart.restart();
+        }
+    }
+
+    Timer {
+        id: levelRestart
+        interval: 2000
+        onTriggered: {
+            if (root.mediaPlaying && !levelProc.running)
+                root.startLevels();
+        }
+    }
+
+    Timer {
+        id: levelPoll
+        interval: 150
+        running: root.mediaPlaying
+        repeat: true
+        onTriggered: {
+            if (!levelCat.running)
+                levelCat.exec(["cat", root.levelFile]);
+        }
+    }
+
+    Process {
+        id: levelCat
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const parts = text.trim().split(/\s+/);
+                if (parts.length >= 4) {
+                    const next = [];
+                    for (let i = 0; i < 4; ++i) {
+                        const v = Number(parts[i]);
+                        next.push(Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0);
+                    }
+                    root.levels = next;
+                    root.levelUpdatedAt = Date.now();
+                }
+            }
+        }
+    }
+
+    // Staleness: daemon dead/file gone while playing -> decay to silence.
+    property double levelUpdatedAt: 0
+    Timer {
+        interval: 500
+        running: root.mediaPlaying
+        repeat: true
+        onTriggered: {
+            if (Date.now() - root.levelUpdatedAt > 1200)
+                root.levels = [0, 0, 0, 0];
+        }
+    }
+
     // -- screenshot watcher: brief white flash overriding current border --
     Connections {
         target: Backend
         function onLastCaptureChanged() {
-            if (Backend.lastCapture)
+            if (Backend.lastCapture) {
                 root.flashBorder("white", 700);
+                root.burst();
+                root.sweep();
+            }
         }
     }
 }

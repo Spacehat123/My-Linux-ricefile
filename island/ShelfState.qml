@@ -133,7 +133,25 @@ Singleton {
                     next.push({ name: name, sizeMB: (size / 1024 / 1024).toFixed(1), rateMBs: rate.toFixed(1) });
                 }
                 root.sizeMemo = memo;
-                // Drop vanished entries silently (finished); announce new ones.
+                // Detect completed downloads (vanished from partial list).
+                if (root.activeDownloads.length > next.length) {
+                    for (let k = 0; k < root.activeDownloads.length; ++k) {
+                        let stillThere = false;
+                        for (let j = 0; j < next.length; ++j) {
+                            if (next[j].name === root.activeDownloads[k].name) {
+                                stillThere = true;
+                                break;
+                            }
+                        }
+                        if (!stillThere) {
+                            root.lastEvent = "Download complete " + root.activeDownloads[k].name;
+                            root.eventTick += 1;
+                            // Trigger micro particle burst for completed download.
+                            IslandHub.burst();
+                        }
+                    }
+                }
+                // Detect new downloads.
                 if (next.length > root.activeDownloads.length) {
                     for (let j = 0; j < next.length; ++j) {
                         let known = false;

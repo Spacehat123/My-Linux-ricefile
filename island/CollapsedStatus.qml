@@ -17,6 +17,8 @@ Item {
     property bool volumeActive: false
     property string volumeText: ""
     property bool volumeMuted: false
+    property string btConnected: ""
+    property bool mediaPlaying: false
 
     implicitHeight: 24
 
@@ -43,28 +45,174 @@ Item {
             }
         }
 
-        // Recording dot.
+        // Recording dot with enhanced pulse.
         Rectangle {
+            id: recDot
             anchors.verticalCenter: parent.verticalCenter
             width: 8
             height: 8
             radius: 4
             visible: root.recActive
             color: Theme.red
+
+            // Enhanced pulse: scale + opacity pulse synced with IslandHub.recBlinkOn
+            // but smoother (scale + fade instead of just border blink).
+            SequentialAnimation {
+                id: recPulse
+                loops: Animation.Infinite
+                running: root.recActive
+
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: recDot
+                        property: "scale"
+                        to: 1.3
+                        duration: 500
+                        easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        target: recDot
+                        property: "opacity"
+                        to: 0.5
+                        duration: 500
+                        easing.type: Easing.OutCubic
+                    }
+                }
+
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: recDot
+                        property: "scale"
+                        to: 1
+                        duration: 500
+                        easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        target: recDot
+                        property: "opacity"
+                        to: 1
+                        duration: 500
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
         }
 
         // Primary activity label (single slot; shrinks when weather shares the pill).
+        // Content morph: old text dips (scale+fade 110ms), swaps, new pops in.
         ShellText {
+            id: primaryLabel
+
+            property string shown: ""
+            text: shown
+            transformOrigin: Item.Center
             anchors.verticalCenter: parent.verticalCenter
             visible: text !== ""
             width: Math.min(implicitWidth, root.weatherMini !== "" ? 68 : 104)
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            text: root.label
             color: root.recActive ? Theme.red : Theme.shellForeground
             font.pixelSize: 11
             font.weight: Font.DemiBold
+
+            function syncLabel() {
+                if (shown === root.label)
+                    return ;
+                if (shown === "") {
+                    shown = root.label;
+                    return ;
+                }
+                if (morphOut.running || morphIn.running) {
+                    shown = root.label;
+                    scale = 1;
+                    opacity = 1;
+                    return ;
+                }
+                morphOut.restart();
+            }
+
+            ParallelAnimation {
+                id: morphOut
+
+                NumberAnimation {
+                    target: primaryLabel
+                    property: "scale"
+                    to: 0.6
+                    duration: 110
+                    easing.type: Easing.OutCubic
+                }
+
+                NumberAnimation {
+                    target: primaryLabel
+                    property: "opacity"
+                    to: 0
+                    duration: 110
+                    easing.type: Easing.OutCubic
+                }
+
+                onFinished: {
+                    primaryLabel.shown = root.label;
+                    morphIn.restart();
+                }
+            }
+
+            ParallelAnimation {
+                id: morphIn
+
+                NumberAnimation {
+                    target: primaryLabel
+                    property: "scale"
+                    to: 1
+                    duration: 140
+                    easing.type: Easing.OutCubic
+                }
+
+                NumberAnimation {
+                    target: primaryLabel
+                    property: "opacity"
+                    to: 1
+                    duration: 140
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            Connections {
+                // Fires whenever the bound label prop changes upstream.
+                function onLabelChanged() {
+                    primaryLabel.syncLabel();
+                }
+
+                target: root
+            }
+
+            Component.onCompleted: primaryLabel.syncLabel()
+        }
+
+        // Music waveform: real amplitude bars from the PipeWire monitor tap.
+        Row {
+            anchors.verticalCenter: parent.verticalCenter
+            visible: root.mediaPlaying && !root.volumeActive
+            spacing: 1
+
+            Repeater {
+                model: 4
+                Rectangle {
+                    required property int index
+                    width: 2
+                    height: 2 + (IslandHub.levels[index] || 0) * 10
+                    radius: 1
+                    color: Theme.primary
+                    opacity: 0.7
+
+                    Behavior on height {
+                        NumberAnimation {
+                            duration: 120
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                }
+            }
         }
 
         // Shelf count: only when idle (no primary label).
@@ -103,6 +251,51 @@ Item {
             radius: 4
             visible: root.camActive
             color: "#c678dd"
+        }
+
+        // Bluetooth connect/disconnect: icon slides in/out
+        Rectangle {
+            id: btIcon
+            anchors.verticalCenter: parent.verticalCenter
+            width: 12
+            height: 12
+            radius: 6
+            visible: root.btConnected !== ""
+            color: Theme.primary
+
+            transform: Translate {
+                id: btSlide
+            }
+
+            ShellText {
+                anchors.centerIn: parent
+                text: "󰂯"
+                font.family: Theme.iconFontFamily
+                font.pixelSize: 8
+                color: "#000000"
+            }
+
+            SequentialAnimation {
+                id: btSlideAnim
+
+                NumberAnimation {
+                    target: btSlide
+                    property: "x"
+                    from: 14
+                    to: 0
+                    duration: 300
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            Connections {
+                function onBtConnectedChanged() {
+                    if (root.btConnected !== "")
+                        btSlideAnim.restart();
+                }
+
+                target: root
+            }
         }
     }
 

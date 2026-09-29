@@ -16,7 +16,14 @@ FocusScope {
 
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property var source: Pipewire.defaultAudioSource
-    readonly property var player: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
+    readonly property var player: (() => {
+        const players = Mpris.players.values;
+        for (let i = 0; i < players.length; ++i) {
+            if (players[i] && players[i].isPlaying)
+                return players[i];
+        }
+        return players.length > 0 ? players[0] : null;
+    })()
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property var wifiDevice: Networking.devices.values.find((device) => {
         return device.type === DeviceType.Wifi;

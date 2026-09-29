@@ -9,7 +9,14 @@ import "../components"
 FocusScope {
     id: root
 
-    readonly property var player: Mpris.players.values.length > 0 ? Mpris.players.values[0] : null
+    readonly property var player: (() => {
+        const players = Mpris.players.values;
+        for (let i = 0; i < players.length; ++i) {
+            if (players[i] && players[i].isPlaying)
+                return players[i];
+        }
+        return players.length > 0 ? players[0] : null;
+    })()
     readonly property var sink: Pipewire.defaultAudioSink
 
     function takeInitialFocus() {
@@ -86,12 +93,17 @@ FocusScope {
             }
 
             Column {
+                id: trackInfo
                 anchors.left: parent.left
                 anchors.right: controls.left
                 anchors.top: parent.top
                 anchors.bottom: progress.top
                 anchors.margins: 12
                 spacing: 3
+
+                transform: Translate {
+                    id: trackSlide
+                }
 
                 ShellText {
                     text: root.sink ? "  " + (root.sink.description || "Default output") : "  No audio output"
@@ -172,6 +184,62 @@ FocusScope {
                     }
                 }
 
+            }
+
+            // Track swap: quick dip + slide so new artwork/text glides in.
+            SequentialAnimation {
+                id: trackSwap
+
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: trackInfo
+                        property: "opacity"
+                        to: 0
+                        duration: 120
+                        easing.type: Easing.OutCubic
+                    }
+
+                    NumberAnimation {
+                        target: trackSlide
+                        property: "x"
+                        to: -14
+                        duration: 120
+                        easing.type: Easing.OutCubic
+                    }
+                }
+
+                PropertyAction {
+                    target: trackSlide
+                    property: "x"
+                    value: 14
+                }
+
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: trackInfo
+                        property: "opacity"
+                        to: 1
+                        duration: 180
+                        easing.type: Easing.OutCubic
+                    }
+
+                    NumberAnimation {
+                        target: trackSlide
+                        property: "x"
+                        to: 0
+                        duration: 180
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
+
+            Connections {
+                target: root.player
+                function onTrackTitleChanged() {
+                    // Binding already swapped artwork/text; the dip covers it.
+                    if (!trackSwap.running)
+                        trackSwap.restart();
+                }
             }
 
             Row {
