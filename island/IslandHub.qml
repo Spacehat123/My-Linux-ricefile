@@ -104,7 +104,7 @@ Singleton {
     property int wakeTick: 0
     function notifyWake() {
         wakeTick += 1;
-        flashBorder(Theme.primary, 1500);
+        flashBorder(Theme.primary, 400);
     }
 
     // -- click routing: most prominent live activity wins --

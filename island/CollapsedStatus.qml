@@ -27,8 +27,10 @@ Item {
         spacing: 5
         visible: !root.volumeActive
 
-        // Unread bubble: only when unread exist.
+        // Unread bubble: only when unread exist. Pops in with overshoot;
+        // rapid increments coalesce via restart (final count always correct).
         Rectangle {
+            id: unreadBubble
             anchors.verticalCenter: parent.verticalCenter
             width: 18
             height: 18
@@ -42,6 +44,38 @@ Item {
                 font.pixelSize: 10
                 font.weight: Font.Bold
                 color: "#000000"
+            }
+
+            SequentialAnimation {
+                id: bubblePop
+
+                NumberAnimation {
+                    target: unreadBubble
+                    property: "scale"
+                    from: 0.7
+                    to: 1.08
+                    duration: 150
+                    easing.type: Easing.OutCubic
+                }
+
+                NumberAnimation {
+                    target: unreadBubble
+                    property: "scale"
+                    to: 1
+                    duration: 150
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            Connections {
+                function onUnreadChanged() {
+                    if (root.unread > 0)
+                        bubblePop.restart();
+                    else
+                        unreadBubble.scale = 1;
+                }
+
+                target: root
             }
         }
 
@@ -57,6 +91,8 @@ Item {
 
             // Enhanced pulse: scale + opacity pulse synced with IslandHub.recBlinkOn
             // but smoother (scale + fade instead of just border blink).
+            // Loop stops on its own when recActive goes false; the stop
+            // fade below resets scale/opacity so nothing sticks mid-pulse.
             SequentialAnimation {
                 id: recPulse
                 loops: Animation.Infinite
@@ -95,6 +131,50 @@ Item {
                         easing.type: Easing.OutCubic
                     }
                 }
+            }
+
+            // Stop fade: shrink out, then reset for next recording.
+            SequentialAnimation {
+                id: recStop
+
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: recDot
+                        property: "scale"
+                        to: 0.6
+                        duration: 150
+                        easing.type: Easing.OutCubic
+                    }
+
+                    NumberAnimation {
+                        target: recDot
+                        property: "opacity"
+                        to: 0
+                        duration: 150
+                        easing.type: Easing.OutCubic
+                    }
+                }
+
+                PropertyAction {
+                    target: recDot
+                    property: "scale"
+                    value: 1
+                }
+
+                PropertyAction {
+                    target: recDot
+                    property: "opacity"
+                    value: 1
+                }
+            }
+
+            Connections {
+                function onRecActiveChanged() {
+                    if (!root.recActive)
+                        recStop.restart();
+                }
+
+                target: root
             }
         }
 
@@ -253,15 +333,18 @@ Item {
             color: "#c678dd"
         }
 
-        // Bluetooth connect/disconnect: icon slides in/out
+        // Bluetooth connect/disconnect: icon slides+fades in on connect,
+        // lingers briefly then retracts/fades on disconnect.
         Rectangle {
             id: btIcon
             anchors.verticalCenter: parent.verticalCenter
             width: 12
             height: 12
             radius: 6
-            visible: root.btConnected !== ""
+            visible: btShown !== ""
             color: Theme.primary
+
+            property string btShown: ""
 
             transform: Translate {
                 id: btSlide
@@ -278,20 +361,63 @@ Item {
             SequentialAnimation {
                 id: btSlideAnim
 
+                ParallelAnimation {
+                    NumberAnimation {
+                        target: btSlide
+                        property: "x"
+                        from: 14
+                        to: 0
+                        duration: 300
+                        easing.type: Easing.OutCubic
+                    }
+
+                    NumberAnimation {
+                        target: btIcon
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: 300
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
+
+            SequentialAnimation {
+                id: btFadeOut
+
+                PauseAnimation {
+                    duration: 400
+                }
+
                 NumberAnimation {
-                    target: btSlide
-                    property: "x"
-                    from: 14
+                    target: btIcon
+                    property: "opacity"
                     to: 0
                     duration: 300
                     easing.type: Easing.OutCubic
+                }
+
+                ScriptAction {
+                    script: btIcon.btShown = ""
+                }
+
+                PropertyAction {
+                    target: btIcon
+                    property: "opacity"
+                    value: 1
                 }
             }
 
             Connections {
                 function onBtConnectedChanged() {
-                    if (root.btConnected !== "")
+                    if (root.btConnected !== "") {
+                        btFadeOut.stop();
+                        btIcon.btShown = root.btConnected;
+                        btIcon.opacity = 1;
                         btSlideAnim.restart();
+                    } else if (btIcon.btShown !== "") {
+                        btFadeOut.restart();
+                    }
                 }
 
                 target: root

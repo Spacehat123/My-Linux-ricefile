@@ -913,6 +913,13 @@ PanelWindow {
     }
 
     Connections {
+        target: TimerState
+        function onDoneTickChanged() {
+            snapPop.restart();
+        }
+    }
+
+    Connections {
         target: PowerState
         function onPlugEventTickChanged() {
             IslandHub.showTransient(PowerState.lastPlugEvent, 3000);

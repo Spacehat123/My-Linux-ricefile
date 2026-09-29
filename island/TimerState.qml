@@ -107,6 +107,9 @@ Singleton {
         IslandHub.dnd = false;
     }
 
+    // One-shot completion tick: Notch watches this for a compact pop.
+    property int doneTick: 0
+
     Timer {
         interval: 1000
         running: root.swRunning
@@ -128,9 +131,10 @@ Singleton {
                     c.remainingSec = Math.max(0, Math.ceil(c.base - now));
                     if (c.remainingSec <= 0) {
                         c.running = false;
-                        IslandHub.showTransient((c.label || "Timer") + " done", 4000);
+                        IslandHub.showTransient((c.label || "Timer") + " done", 1000);
                         IslandHub.flashBorder(Theme.foreground, 800);
                         IslandHub.burst();
+                        root.doneTick += 1;
                     }
                     next[i] = c;
                     changed = true;
@@ -142,9 +146,10 @@ Singleton {
                 root.focusRemainingSec = Math.max(0, root.focusRemainingSec - 1);
                 if (root.focusRemainingSec <= 0) {
                     root.endFocus();
-                    IslandHub.showTransient("Focus complete", 4000);
+                    IslandHub.showTransient("Focus complete", 1000);
                     IslandHub.flashBorder(Theme.foreground, 800);
                     IslandHub.burst();
+                    root.doneTick += 1;
                 }
             }
         }
