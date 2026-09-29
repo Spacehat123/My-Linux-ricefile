@@ -9,18 +9,18 @@ FocusScope {
     property string editingId: ""
     property string detailsId: ""
     property bool textEditorActive: todoInput.activeFocus || categoryInput.activeFocus || dateInput.activeFocus || notesInput.activeFocus || editingId !== ""
-    readonly property string today: ShellState.todayKey()
-    readonly property string tomorrow: ShellState.tomorrowKey()
-    readonly property var visibleTodos: filterTodos(ShellState.todos)
+    readonly property string today: TodoState.todayKey()
+    readonly property string tomorrow: TodoState.tomorrowKey()
+    readonly property var visibleTodos: filterTodos(TodoState.todos)
     readonly property int detailsIndex: sourceIndexForId(detailsId)
-    readonly property var detailsTask: detailsIndex >= 0 ? ShellState.todos[detailsIndex] : null
+    readonly property var detailsTask: detailsIndex >= 0 ? TodoState.todos[detailsIndex] : null
 
     function takeInitialFocus() {
         todoInput.forceActiveFocus(Qt.TabFocusReason);
     }
 
     function addTodo() {
-        ShellState.addTodo(todoInput.text);
+        TodoState.addTodo(todoInput.text);
         todoInput.clear();
     }
 
@@ -46,8 +46,8 @@ FocusScope {
     function sourceIndexForId(id) {
         if (!id)
             return -1;
-        for (let i = 0; i < ShellState.todos.length; i++) {
-            if (ShellState.todos[i].id === id)
+        for (let i = 0; i < TodoState.todos.length; i++) {
+            if (TodoState.todos[i].id === id)
                 return i;
         }
         return -1;
@@ -90,7 +90,7 @@ FocusScope {
     function toggleSelected() {
         if (taskList.currentIndex < 0 || taskList.currentIndex >= visibleTodos.length)
             return;
-        ShellState.toggleTodo(visibleTodos[taskList.currentIndex].sourceIndex);
+        TodoState.toggleTodo(visibleTodos[taskList.currentIndex].sourceIndex);
     }
 
     function reorderSelected(offset) {
@@ -98,7 +98,7 @@ FocusScope {
         const target = current + offset;
         if (current < 0 || target < 0 || target >= visibleTodos.length)
             return;
-        ShellState.swapTodos(visibleTodos[current].sourceIndex, visibleTodos[target].sourceIndex);
+        TodoState.swapTodos(visibleTodos[current].sourceIndex, visibleTodos[target].sourceIndex);
         Qt.callLater(() => selectRow(target));
     }
 
@@ -153,7 +153,7 @@ FocusScope {
             return;
         const priorities = ["none", "low", "medium", "high"];
         const current = Math.max(0, priorities.indexOf(detailsTask.priority || "none"));
-        ShellState.updateTodo(detailsIndex, {
+        TodoState.updateTodo(detailsIndex, {
             "priority": priorities[(current + 1) % priorities.length]
         });
     }
@@ -362,7 +362,7 @@ FocusScope {
                 function saveTitle() {
                     const clean = editInput.text.trim();
                     if (clean)
-                        ShellState.updateTodo(modelData.sourceIndex, { "text": clean });
+                        TodoState.updateTodo(modelData.sourceIndex, { "text": clean });
                     root.editingId = "";
                     forceActiveFocus(Qt.OtherFocusReason);
                 }
@@ -429,7 +429,7 @@ FocusScope {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             taskList.currentIndex = taskRow.index;
-                            ShellState.toggleTodo(taskRow.modelData.sourceIndex);
+                            TodoState.toggleTodo(taskRow.modelData.sourceIndex);
                         }
                     }
                 }
@@ -567,7 +567,7 @@ FocusScope {
                         anchors.margins: -7
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            ShellState.removeTodo(root.detailsIndex);
+                            TodoState.removeTodo(root.detailsIndex);
                             root.detailsId = "";
                         }
                     }
@@ -656,7 +656,7 @@ FocusScope {
                         activeFocusOnTab: true
                         onEditingFinished: {
                             if (root.detailsIndex >= 0)
-                                ShellState.updateTodo(root.detailsIndex, { "category": text.trim().replace(/^#/, "") });
+                                TodoState.updateTodo(root.detailsIndex, { "category": text.trim().replace(/^#/, "") });
                         }
                     }
 
@@ -695,7 +695,7 @@ FocusScope {
                             anchors.fill: parent
                             anchors.margins: -5
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: ShellState.updateTodo(root.detailsIndex, { "dueDate": modelData.date })
+                            onClicked: TodoState.updateTodo(root.detailsIndex, { "dueDate": modelData.date })
                         }
                     }
                 }
@@ -718,7 +718,7 @@ FocusScope {
                         const clean = text.trim();
                         const parsed = root.parseDisplayDate(clean);
                         if (root.detailsIndex >= 0 && (!clean || parsed))
-                            ShellState.updateTodo(root.detailsIndex, { "dueDate": clean ? parsed : "" });
+                            TodoState.updateTodo(root.detailsIndex, { "dueDate": clean ? parsed : "" });
                     }
 
                     ShellText {
@@ -761,7 +761,7 @@ FocusScope {
                     activeFocusOnTab: true
                     onActiveFocusChanged: {
                         if (!activeFocus && root.detailsIndex >= 0)
-                            ShellState.updateTodo(root.detailsIndex, { "notes": text.trim() });
+                            TodoState.updateTodo(root.detailsIndex, { "notes": text.trim() });
                     }
                 }
 
@@ -771,7 +771,7 @@ FocusScope {
         Item {
             width: parent.width
             height: 16
-            visible: root.detailsTask === null && ShellState.todos.some((task) => task.done)
+            visible: root.detailsTask === null && TodoState.todos.some((task) => task.done)
 
             ShellText {
                 anchors.right: parent.right
@@ -783,7 +783,7 @@ FocusScope {
                     anchors.fill: parent
                     anchors.margins: -5
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: ShellState.clearCompletedTodos()
+                    onClicked: TodoState.clearCompletedTodos()
                 }
             }
         }

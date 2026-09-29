@@ -2,7 +2,9 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
+import "../island" as Island
 
 // Waybar replica: bottom bar, width 1000, margin-bottom 10.
 // Source of truth: ~/.config/waybar/config.jsonc + style.css
@@ -30,23 +32,15 @@ PanelWindow {
         hoverEnabled: true
         acceptedButtons: Qt.NoButton
     }
-    // Covers the workspace Repeater (delegate MouseAreas aren't addressable
-    // as a single id); NoButton so workspace clicks pass through.
-    MouseArea {
-        id: wsHover
-        anchors.fill: wsRow
-        hoverEnabled: true
-        acceptedButtons: Qt.NoButton
-    }
     readonly property bool hovered: barMouse.containsMouse || wsHover.containsMouse || netMouse.containsMouse || volMouse.containsMouse || batMouse.containsMouse
 
-    // ---- Waybar palette (style.css) ----
-    readonly property color wbBg: Qt.rgba(0, 0, 0, 0.62)
-    readonly property color wbBgHover: Qt.rgba(1, 1, 1, 0.4)
-    readonly property color wbText: "#d7d7d7"
-    readonly property color wbTextHover: "#a3a1a1"
-    readonly property color wbBorder: "#454446"
-    readonly property string wbFont: "JetBrainsMono Nerd Font Propo"
+    // ---- Unified Theme Palette ----
+    readonly property color wbBg: Qt.rgba(Island.Theme.bgDim.r, Island.Theme.bgDim.g, Island.Theme.bgDim.b, 0.78)
+    readonly property color wbBgHover: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25)
+    readonly property color wbText: Island.Theme.foreground
+    readonly property color wbTextHover: Island.Theme.primary
+    readonly property color wbBorder: Qt.rgba(Island.Theme.mutedDark.r, Island.Theme.mutedDark.g, Island.Theme.mutedDark.b, 0.35)
+    readonly property string wbFont: Island.Theme.iconFontFamily || "JetBrainsMono Nerd Font Propo"
     readonly property int wbFontSize: 12
 
     anchors {
@@ -73,37 +67,10 @@ PanelWindow {
         precision: SystemClock.Minutes
     }
 
-    // Pulseaudio: polled via wpctl (matches waybar's "{volume}%" / muted icon).
-    property string volText: "--"
-    property bool audioMuted: false
-    Process {
-        id: volPoll
-        command: ["wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                // "Volume: 0.23" or "Volume: 0.23 [MUTED]"
-                const m = text.match(/Volume:\s+([0-9.]+)(.*)/);
-                if (m) {
-                    root.audioMuted = m[2].indexOf("MUTED") !== -1;
-                    root.volText = Math.round(parseFloat(m[1]) * 100) + "%";
-                }
-            }
-        }
-    }
-    // Re-poll shortly after a wheel adjustment lands
-    Timer {
-        id: volSettle
-        interval: 300
-        onTriggered: volPoll.running = true
-    }
-    Timer {
-        interval: 2000
-        running: true
-        repeat: true
-        onTriggered: {
-            if (!volSettle.running) volPoll.running = true;
-        }
-    }
+    // Native PipeWire sink audio binding (zero process forks)
+    readonly property var sinkAudio: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio : null
+    readonly property bool audioMuted: sinkAudio ? sinkAudio.muted : false
+    readonly property string volText: sinkAudio ? Math.round(sinkAudio.volume * 100) + "%" : "--"
 
     property var bat: UPower.displayDevice
     property bool batReady: bat ? bat.ready : false
@@ -139,18 +106,14 @@ PanelWindow {
     }
     Timer {
         interval: 10000
-        running: true
+        running: root.open
         repeat: true
-        onTriggered: netProc.running = true
+        onTriggered: {
+            if (!netProc.running) netProc.running = true;
+        }
     }
-
-    Process {
-        id: volProc
-    }
-
     Component.onCompleted: {
         netProc.running = true;
-        volPoll.running = true;
     }
 
     Item {
@@ -161,6 +124,15 @@ PanelWindow {
         transform: Translate {
             id: contentTranslate
             y: 10
+        }
+
+        // Covers the workspace Repeater (delegate MouseAreas aren't addressable
+        // as a single id); NoButton so workspace clicks pass through.
+        MouseArea {
+            id: wsHover
+            anchors.fill: wsRow
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
         }
 
         // ---- Left: workspaces (format "{name}") ----
@@ -184,8 +156,8 @@ PanelWindow {
                     height: 20
                     width: Math.max(isActive ? 35 : 0, wsLabelText.implicitWidth + 20) // padding 0 5px
                     radius: isActive ? 15 : 10
-                    color: wsMouse.containsMouse ? root.wbBgHover : (isActive ? Qt.rgba(1, 1, 1, 0.4) : root.wbBg)
-                    border.color: root.wbBorder
+                    color: wsMouse.containsMouse ? root.wbBgHover : (isActive ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.28) : root.wbBg)
+                    border.color: isActive ? Island.Theme.primary : root.wbBorder
                     border.width: 1
 
                     Text {
@@ -222,7 +194,7 @@ PanelWindow {
             font.pixelSize: root.wbFontSize
             font.bold: true
             font.weight: Font.Bold
-            color: "#ffffff"
+            color: Island.Theme.foreground
         }
 
         // ---- Right: network, pulseaudio, battery pills ----
@@ -283,10 +255,11 @@ PanelWindow {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: Quickshell.execDetached(["pavucontrol"])
-                    onWheel: {
-                        const step = wheel.angleDelta.y > 0 ? "1%+" : "1%-"; // scroll-step 1
-                        volProc.exec(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", step]);
-                        volSettle.restart();
+                    onWheel: (wheel) => {
+                        if (root.sinkAudio) {
+                            const step = wheel.angleDelta.y > 0 ? 0.02 : -0.02;
+                            root.sinkAudio.volume = Math.max(0.0, Math.min(1.5, root.sinkAudio.volume + step));
+                        }
                     }
                 }
             }
@@ -360,6 +333,7 @@ PanelWindow {
         if (open) {
             closeAnim.stop();
             openAnim.start();
+            if (!netProc.running) netProc.running = true;
         } else {
             openAnim.stop();
             closeAnim.start();

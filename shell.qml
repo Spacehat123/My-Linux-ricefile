@@ -1404,41 +1404,6 @@ ShellRoot {
                     Region { item: rightTrigger }
                 }
 
-                // Temporary visual test & debug indicator row (top-left)
-                Row {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    spacing: 3
-
-                    // Shell alive indicator (from Task 1)
-                    Rectangle {
-                        width: 8
-                        height: 8
-                        color: "#80ffffff"
-                    }
-
-                    // Left trigger debug indicator
-                    Rectangle {
-                        width: 8
-                        height: 8
-                        color: leftTrigger.active ? "#00ff88" : "#30ffffff"
-                    }
-
-                    // Center trigger debug indicator
-                    Rectangle {
-                        width: 8
-                        height: 8
-                        color: centerTrigger.active ? "#00bfff" : "#30ffffff"
-                    }
-
-                    // Right trigger debug indicator
-                    Rectangle {
-                        width: 8
-                        height: 8
-                        color: rightTrigger.active ? "#ff0088" : "#30ffffff"
-                    }
-                }
-
                 // 1. Bottom-left -> controls left sidebar opening
                 EdgeTrigger {
                     id: leftTrigger

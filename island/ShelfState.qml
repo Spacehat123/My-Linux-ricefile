@@ -184,10 +184,12 @@ Singleton {
         repeat: true
         triggeredOnStart: true
         onTriggered: {
-            if (!root.downloadsDir)
-                root.downloadsDir = (root.homeDir ? root.homeDir + "/Downloads" : "");
-            if (root.downloadsDir)
-                downloadProbe.exec(["sh", "-c", "find '" + root.downloadsDir.replace(/'/g, "'\\''") + "' -maxdepth 1 -type f \\( -name '*.part' -o -name '*.crdownload' -o -name '*.aria2' \\) -printf '%s\\t%f\\n' 2>/dev/null"]);
+            if (!downloadProbe.running) {
+                if (!root.downloadsDir)
+                    root.downloadsDir = (root.homeDir ? root.homeDir + "/Downloads" : "");
+                if (root.downloadsDir)
+                    downloadProbe.exec(["sh", "-c", "find '" + root.downloadsDir.replace(/'/g, "'\\''") + "' -maxdepth 1 -type f \\( -name '*.part' -o -name '*.crdownload' -o -name '*.aria2' \\) -printf '%s\\t%f\\n' 2>/dev/null"]);
+            }
         }
     }
 }

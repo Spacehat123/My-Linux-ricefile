@@ -115,10 +115,19 @@ def stream_levels(proc, out_path):
 
 
 def write_levels(out_path, vals):
-    tmp = out_path + ".tmp"
-    with open(tmp, "w") as f:
-        f.write("%.3f %.3f %.3f %.3f\n" % tuple(vals))
-    os.replace(tmp, out_path)
+    line = "%.3f %.3f %.3f %.3f\n" % tuple(vals)
+    try:
+        sys.stdout.write(line)
+        sys.stdout.flush()
+    except Exception:
+        pass
+    try:
+        tmp = out_path + ".tmp"
+        with open(tmp, "w") as f:
+            f.write(line)
+        os.replace(tmp, out_path)
+    except Exception:
+        pass
 
 
 _CHILD = None

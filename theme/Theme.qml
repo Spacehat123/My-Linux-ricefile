@@ -1,11 +1,12 @@
 import QtQuick
+import "../island" as Island
 
 QtObject {
     id: root
 
     // Panel surface constants
-    readonly property color panelBackground: "#e0181825"
-    readonly property color panelBorder: "#30ffffff"
+    readonly property color panelBackground: Qt.rgba(Island.Theme.bg0.r, Island.Theme.bg0.g, Island.Theme.bg0.b, 0.88)
+    readonly property color panelBorder: Qt.rgba(Island.Theme.muted.r, Island.Theme.muted.g, Island.Theme.muted.b, 0.2)
     readonly property int panelBorderWidth: 1
     readonly property int panelCornerRadius: 12
 
@@ -14,13 +15,13 @@ QtObject {
     readonly property int itemSpacing: 12
 
     // Typography constants
-    readonly property color primaryTextColor: "#ffffff"
-    readonly property color secondaryTextColor: "#a0ffffff"
+    readonly property color primaryTextColor: Island.Theme.foreground
+    readonly property color secondaryTextColor: Island.Theme.muted
     readonly property color mutedTextColor: secondaryTextColor
 
     // Animation constants
-    readonly property int animDurationOpen: 200
-    readonly property int animDurationClose: 160
+    readonly property int animDurationOpen: Island.Theme.animationFast + 60
+    readonly property int animDurationClose: Island.Theme.animationFast + 20
 
     // =========================================================================
     // Workspace Navigator Metrics
@@ -34,40 +35,40 @@ QtObject {
     // =========================================================================
     // Workspace State Tokens: Focused / Active
     // =========================================================================
-    readonly property color workspaceFocusedBackground: "#2800bfff"  // Translucent cyan wash
-    readonly property color workspaceFocusedBorder: "#00bfff"          // High-contrast neon cyan
-    readonly property color workspaceFocusedText: "#ffffff"
-    readonly property color workspaceFocusedPip: "#00e5ff"
+    readonly property color workspaceFocusedBackground: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.16)
+    readonly property color workspaceFocusedBorder: Island.Theme.primary
+    readonly property color workspaceFocusedText: Island.Theme.foreground
+    readonly property color workspaceFocusedPip: Island.Theme.primary
 
     // =========================================================================
     // Workspace State Tokens: Occupied
     // =========================================================================
-    readonly property color workspaceOccupiedBackground: "#18ffffff" // Translucent white wash
-    readonly property color workspaceOccupiedBorder: "#38ffffff"     // Soft white outline
-    readonly property color workspaceOccupiedText: "#e0ffffff"
-    readonly property color workspaceOccupiedPip: "#80ffffff"
+    readonly property color workspaceOccupiedBackground: Qt.rgba(Island.Theme.foreground.r, Island.Theme.foreground.g, Island.Theme.foreground.b, 0.09)
+    readonly property color workspaceOccupiedBorder: Qt.rgba(Island.Theme.foreground.r, Island.Theme.foreground.g, Island.Theme.foreground.b, 0.22)
+    readonly property color workspaceOccupiedText: Island.Theme.foreground
+    readonly property color workspaceOccupiedPip: Island.Theme.muted
 
     // =========================================================================
     // Workspace State Tokens: Empty
     // =========================================================================
-    readonly property color workspaceEmptyBackground: "#08ffffff"    // Faint translucent tint
-    readonly property color workspaceEmptyBorder: "#18ffffff"        // Muted hairline outline
-    readonly property color workspaceEmptyText: "#60ffffff"
+    readonly property color workspaceEmptyBackground: Qt.rgba(Island.Theme.foreground.r, Island.Theme.foreground.g, Island.Theme.foreground.b, 0.03)
+    readonly property color workspaceEmptyBorder: Qt.rgba(Island.Theme.foreground.r, Island.Theme.foreground.g, Island.Theme.foreground.b, 0.09)
+    readonly property color workspaceEmptyText: Island.Theme.mutedDark
 
     // =========================================================================
     // Workspace State Tokens: Urgent
     // =========================================================================
-    readonly property color workspaceUrgentBackground: "#30ff3366"   // Crimson warning wash
-    readonly property color workspaceUrgentBorder: "#ff3366"         // Neon crimson border
-    readonly property color workspaceUrgentText: "#ffffff"
-    readonly property color workspaceUrgentPip: "#ff3366"
+    readonly property color workspaceUrgentBackground: Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.2)
+    readonly property color workspaceUrgentBorder: Island.Theme.red
+    readonly property color workspaceUrgentText: Island.Theme.foreground
+    readonly property color workspaceUrgentPip: Island.Theme.red
 
     // =========================================================================
     // Workspace State Tokens: Passive Hover & Multi-Monitor
     // =========================================================================
-    readonly property color workspaceHoverBackground: "#20ffffff"
-    readonly property color workspaceHoverBorder: "#50ffffff"
-    readonly property color workspaceOtherMonitorText: "#80ffffff"
+    readonly property color workspaceHoverBackground: Qt.rgba(Island.Theme.foreground.r, Island.Theme.foreground.g, Island.Theme.foreground.b, 0.12)
+    readonly property color workspaceHoverBorder: Qt.rgba(Island.Theme.foreground.r, Island.Theme.foreground.g, Island.Theme.foreground.b, 0.3)
+    readonly property color workspaceOtherMonitorText: Island.Theme.muted
 
     // =========================================================================
     // Spatial Workspace HUD & Transition Tokens (Task 23)
@@ -79,20 +80,20 @@ QtObject {
     readonly property int workspaceTransitionDistance: 20
 
     // Context HUD Palette
-    readonly property color workspaceHudBackground: "#0affffff"
-    readonly property color workspaceHudBorder: "#1affffff"
-    readonly property color workspaceHudLabelText: "#7000bfff"
-    readonly property color workspaceHudValueText: "#ffffff"
-    readonly property color workspaceHudMutedText: "#60ffffff"
-    readonly property color workspaceHudFullscreenBadge: "#ffb700"
-    readonly property color workspaceHudFullscreenBackground: "#24ffb700"
-    readonly property color workspaceHudUrgentBadge: "#ff3366"
-    readonly property color workspaceHudUrgentBackground: "#30ff3366"
-    readonly property color workspaceHudMonitorBadge: "#00e5ff"
+    readonly property color workspaceHudBackground: Qt.rgba(Island.Theme.bg0.r, Island.Theme.bg0.g, Island.Theme.bg0.b, 0.85)
+    readonly property color workspaceHudBorder: Qt.rgba(Island.Theme.muted.r, Island.Theme.muted.g, Island.Theme.muted.b, 0.2)
+    readonly property color workspaceHudLabelText: Island.Theme.muted
+    readonly property color workspaceHudValueText: Island.Theme.foreground
+    readonly property color workspaceHudMutedText: Island.Theme.mutedDark
+    readonly property color workspaceHudFullscreenBadge: Island.Theme.yellow
+    readonly property color workspaceHudFullscreenBackground: Qt.rgba(Island.Theme.yellow.r, Island.Theme.yellow.g, Island.Theme.yellow.b, 0.15)
+    readonly property color workspaceHudUrgentBadge: Island.Theme.red
+    readonly property color workspaceHudUrgentBackground: Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.2)
+    readonly property color workspaceHudMonitorBadge: Island.Theme.blue
 
     // Sliding Reticle / Focal Cursor
-    readonly property color workspaceFocalCursorBorder: "#00bfff"
-    readonly property color workspaceFocalCursorGlow: "#1800bfff"
+    readonly property color workspaceFocalCursorBorder: Island.Theme.primary
+    readonly property color workspaceFocalCursorGlow: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
 
     // =========================================================================
     // Application Overview Layout & Spacing Metrics
@@ -109,99 +110,99 @@ QtObject {
     // =========================================================================
     // Application Overview Card Tokens (Normal State)
     // =========================================================================
-    readonly property color surfaceCardBackground: "#12ffffff"          // Subtle card wash
-    readonly property color surfaceCardBorder: "#20ffffff"              // Soft boundary outline
-    readonly property color surfaceCardHoverBackground: "#1cffffff"     // Interactive card hover
-    readonly property color surfaceCardHoverBorder: "#38ffffff"
+    readonly property color surfaceCardBackground: Qt.rgba(Island.Theme.bg1.r, Island.Theme.bg1.g, Island.Theme.bg1.b, 0.5)
+    readonly property color surfaceCardBorder: Qt.rgba(Island.Theme.muted.r, Island.Theme.muted.g, Island.Theme.muted.b, 0.15)
+    readonly property color surfaceCardHoverBackground: Qt.rgba(Island.Theme.bg2.r, Island.Theme.bg2.g, Island.Theme.bg2.b, 0.7)
+    readonly property color surfaceCardHoverBorder: Qt.rgba(Island.Theme.muted.r, Island.Theme.muted.g, Island.Theme.muted.b, 0.3)
 
     // =========================================================================
     // Application Overview Card Tokens (Focused State)
     // =========================================================================
-    readonly property color surfaceCardFocusedBackground: "#2000bfff"   // Translucent neon cyan wash
-    readonly property color surfaceCardFocusedBorder: "#00bfff"         // High-contrast neon cyan outline
-    readonly property color surfaceCardFocusedPip: "#00e5ff"            // Bright status indicator
-    readonly property color surfaceCardFocusedText: "#ffffff"
+    readonly property color surfaceCardFocusedBackground: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
+    readonly property color surfaceCardFocusedBorder: Island.Theme.primary
+    readonly property color surfaceCardFocusedPip: Island.Theme.primary
+    readonly property color surfaceCardFocusedText: Island.Theme.foreground
 
     // =========================================================================
     // Application Overview Card Tokens (Urgent State)
     // =========================================================================
-    readonly property color surfaceCardUrgentBackground: "#28ff3366"    // Translucent crimson wash
-    readonly property color surfaceCardUrgentBorder: "#ff3366"          // Neon crimson boundary outline
-    readonly property color surfaceCardUrgentPip: "#ff3366"             // Warning pip
-    readonly property color surfaceCardUrgentText: "#ffffff"
+    readonly property color surfaceCardUrgentBackground: Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.2)
+    readonly property color surfaceCardUrgentBorder: Island.Theme.red
+    readonly property color surfaceCardUrgentPip: Island.Theme.red
+    readonly property color surfaceCardUrgentText: Island.Theme.foreground
 
     // =========================================================================
     // Window Item Row Tokens (Child Surfaces)
     // =========================================================================
-    readonly property color surfaceItemBackground: "#0affffff"          // Ultra-subtle row surface
-    readonly property color surfaceItemHoverBackground: "#20ffffff"     // Passive hover highlight
-    readonly property color surfaceItemFocusedBackground: "#2400bfff"   // Active surface row highlight
-    readonly property color surfaceItemFocusedBorder: "#4000bfff"
-    readonly property color surfaceItemUrgentBackground: "#30ff3366"    // Urgent surface row highlight
-    readonly property color surfaceItemUrgentBorder: "#ff3366"
+    readonly property color surfaceItemBackground: Qt.rgba(Island.Theme.foreground.r, Island.Theme.foreground.g, Island.Theme.foreground.b, 0.04)
+    readonly property color surfaceItemHoverBackground: Qt.rgba(Island.Theme.foreground.r, Island.Theme.foreground.g, Island.Theme.foreground.b, 0.12)
+    readonly property color surfaceItemFocusedBackground: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
+    readonly property color surfaceItemFocusedBorder: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.35)
+    readonly property color surfaceItemUrgentBackground: Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.2)
+    readonly property color surfaceItemUrgentBorder: Island.Theme.red
 
     // =========================================================================
     // HUD Badge, Tag, and Divider Tokens
     // =========================================================================
-    readonly property color surfaceBadgeBackground: "#1affffff"
-    readonly property color surfaceBadgeBorder: "#30ffffff"
-    readonly property color surfaceBadgeUrgentBackground: "#ff3366"
-    readonly property color surfaceBadgeUrgentText: "#ffffff"
-    readonly property color surfaceTagBackground: "#18ffffff"
-    readonly property color surfaceTagBorder: "#28ffffff"
-    readonly property color surfaceTagText: "#a0ffffff"
-    readonly property color surfaceTagFocusedBackground: "#3000bfff"
-    readonly property color surfaceTagFocusedText: "#00e5ff"
-    readonly property color surfaceDividerColor: "#20ffffff"
+    readonly property color surfaceBadgeBackground: Qt.rgba(Island.Theme.bg2.r, Island.Theme.bg2.g, Island.Theme.bg2.b, 0.7)
+    readonly property color surfaceBadgeBorder: Qt.rgba(Island.Theme.muted.r, Island.Theme.muted.g, Island.Theme.muted.b, 0.2)
+    readonly property color surfaceBadgeUrgentBackground: Island.Theme.red
+    readonly property color surfaceBadgeUrgentText: Island.Theme.foreground
+    readonly property color surfaceTagBackground: Qt.rgba(Island.Theme.bg1.r, Island.Theme.bg1.g, Island.Theme.bg1.b, 0.6)
+    readonly property color surfaceTagBorder: Qt.rgba(Island.Theme.muted.r, Island.Theme.muted.g, Island.Theme.muted.b, 0.15)
+    readonly property color surfaceTagText: Island.Theme.muted
+    readonly property color surfaceTagFocusedBackground: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.2)
+    readonly property color surfaceTagFocusedText: Island.Theme.primary
+    readonly property color surfaceDividerColor: Qt.rgba(Island.Theme.muted.r, Island.Theme.muted.g, Island.Theme.muted.b, 0.15)
 
     // =========================================================================
     // Scrollbar Tokens
     // =========================================================================
     readonly property int scrollbarWidth: 3
-    readonly property color scrollbarTrackColor: "#0affffff"
-    readonly property color scrollbarThumbColor: "#38ffffff"
-    readonly property color scrollbarThumbActiveColor: "#80ffffff"
+    readonly property color scrollbarTrackColor: Qt.rgba(Island.Theme.foreground.r, Island.Theme.foreground.g, Island.Theme.foreground.b, 0.04)
+    readonly property color scrollbarThumbColor: Qt.rgba(Island.Theme.foreground.r, Island.Theme.foreground.g, Island.Theme.foreground.b, 0.22)
+    readonly property color scrollbarThumbActiveColor: Qt.rgba(Island.Theme.foreground.r, Island.Theme.foreground.g, Island.Theme.foreground.b, 0.5)
 
     // =========================================================================
     // Interaction Affordance & Action Tokens (Task 20)
     // =========================================================================
-    readonly property color actionFocusPromptColor: "#00bfff"         // Neon cyan focus prompt
-    readonly property color actionFocusPromptMuted: "#80ffffff"        // Passive prompt
-    readonly property color actionCloseBackground: "#0affffff"
-    readonly property color actionCloseHoverBackground: "#30ff3366"    // Crimson warning wash
-    readonly property color actionCloseBorder: "#18ffffff"
-    readonly property color actionCloseHoverBorder: "#ff3366"          // Neon crimson border
-    readonly property color actionCloseText: "#80ffffff"
-    readonly property color actionCloseHoverText: "#ff3366"            // Illuminated crimson cross
+    readonly property color actionFocusPromptColor: Island.Theme.primary
+    readonly property color actionFocusPromptMuted: Island.Theme.muted
+    readonly property color actionCloseBackground: Qt.rgba(Island.Theme.foreground.r, Island.Theme.foreground.g, Island.Theme.foreground.b, 0.04)
+    readonly property color actionCloseHoverBackground: Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.2)
+    readonly property color actionCloseBorder: Qt.rgba(Island.Theme.muted.r, Island.Theme.muted.g, Island.Theme.muted.b, 0.15)
+    readonly property color actionCloseHoverBorder: Island.Theme.red
+    readonly property color actionCloseText: Island.Theme.muted
+    readonly property color actionCloseHoverText: Island.Theme.red
     readonly property int actionButtonSize: 18
     readonly property int actionButtonCornerRadius: 4
-    readonly property real actionAffordanceOpacityRest: 0.0            // Hidden at rest
-    readonly property real actionAffordanceOpacityHover: 1.0           // Revealed on hover
-    readonly property int animDurationAffordance: 120                  // Responsive reveal
-    readonly property color workspaceHoverBracketColor: "#00bfff"     // Tactical jump brackets
+    readonly property real actionAffordanceOpacityRest: 0.0
+    readonly property real actionAffordanceOpacityHover: 1.0
+    readonly property int animDurationAffordance: 120
+    readonly property color workspaceHoverBracketColor: Island.Theme.primary
 
     // =========================================================================
     // Action Toggle & Drawer Tokens (Task 22)
     // =========================================================================
-    readonly property color actionActiveBackground: "#2400bfff"
-    readonly property color actionActiveBorder: "#00bfff"
-    readonly property color actionActiveText: "#00e5ff"
-    readonly property color actionDrawerBackground: "#14ffffff"
-    readonly property color actionDrawerBorder: "#24ffffff"
+    readonly property color actionActiveBackground: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
+    readonly property color actionActiveBorder: Island.Theme.primary
+    readonly property color actionActiveText: Island.Theme.primary
+    readonly property color actionDrawerBackground: Qt.rgba(Island.Theme.bg1.r, Island.Theme.bg1.g, Island.Theme.bg1.b, 0.6)
+    readonly property color actionDrawerBorder: Qt.rgba(Island.Theme.muted.r, Island.Theme.muted.g, Island.Theme.muted.b, 0.2)
 
     // =========================================================================
     // Desktop Ambient & Idle State Tokens (Task 24)
     // =========================================================================
     readonly property int ambientFadeInDuration: 1000
     readonly property int ambientFadeOutDuration: 180
-    readonly property color ambientHudPrimary: "#00bfff"         // High-contrast neon cyan
-    readonly property color ambientHudSecondary: "#00e5ff"       // Bright accent cyan
-    readonly property color ambientHudFaint: "#1800bfff"          // Ultra-subtle tactical wash
-    readonly property color ambientHudMuted: "#30ffffff"          // Subdued coordinate lines
-    readonly property color ambientHudSubtle: "#18ffffff"         // Hairline guides
-    readonly property color ambientHudText: "#80ffffff"           // Muted telemetry readout
-    readonly property color ambientHudAccentText: "#a000bfff"     // Tactical section header
-    readonly property color ambientHudDarkFill: "#0c0d1480"       // Very faint dark backdrop tint
+    readonly property color ambientHudPrimary: Island.Theme.primary
+    readonly property color ambientHudSecondary: Island.Theme.aqua
+    readonly property color ambientHudFaint: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.1)
+    readonly property color ambientHudMuted: Qt.rgba(Island.Theme.muted.r, Island.Theme.muted.g, Island.Theme.muted.b, 0.2)
+    readonly property color ambientHudSubtle: Qt.rgba(Island.Theme.foreground.r, Island.Theme.foreground.g, Island.Theme.foreground.b, 0.08)
+    readonly property color ambientHudText: Island.Theme.muted
+    readonly property color ambientHudAccentText: Island.Theme.primary
+    readonly property color ambientHudDarkFill: Qt.rgba(Island.Theme.bgDim.r, Island.Theme.bgDim.g, Island.Theme.bgDim.b, 0.5)
     readonly property int ambientReticleSize: 240
     readonly property int ambientBracketSize: 48
     readonly property int ambientLineWidth: 1
@@ -214,7 +215,6 @@ QtObject {
     readonly property int spatialTransitionReticleWidth: 260
     readonly property int spatialTransitionReticleHeight: 48
     readonly property int spatialTransitionOffset: 36
-    readonly property color spatialTransitionBorder: "#00bfff"
-    readonly property color spatialTransitionGlow: "#2000bfff"
+    readonly property color spatialTransitionBorder: Island.Theme.primary
+    readonly property color spatialTransitionGlow: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
 }
-

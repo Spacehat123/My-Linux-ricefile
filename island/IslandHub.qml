@@ -197,7 +197,7 @@ Singleton {
 
     function startLevels() {
         if (!levelProc.running)
-            levelProc.exec(["python3", root.levelHelper]);
+            levelProc.exec(["python3", "-u", root.levelHelper]);
     }
     function stopLevels() {
         if (levelProc.running)
@@ -225,6 +225,21 @@ Singleton {
 
     Process {
         id: levelProc
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: (line) => {
+                const parts = line.trim().split(/\s+/);
+                if (parts.length >= 4) {
+                    const next = [];
+                    for (let i = 0; i < 4; ++i) {
+                        const v = Number(parts[i]);
+                        next.push(Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0);
+                    }
+                    root.levels = next;
+                    root.levelUpdatedAt = Date.now();
+                }
+            }
+        }
         onExited: {
             // Watchdog: daemon died while music plays -> restart after 2s.
             if (root.mediaPlaying)
@@ -238,35 +253,6 @@ Singleton {
         onTriggered: {
             if (root.mediaPlaying && !levelProc.running)
                 root.startLevels();
-        }
-    }
-
-    Timer {
-        id: levelPoll
-        interval: 150
-        running: root.mediaPlaying
-        repeat: true
-        onTriggered: {
-            if (!levelCat.running)
-                levelCat.exec(["cat", root.levelFile]);
-        }
-    }
-
-    Process {
-        id: levelCat
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const parts = text.trim().split(/\s+/);
-                if (parts.length >= 4) {
-                    const next = [];
-                    for (let i = 0; i < 4; ++i) {
-                        const v = Number(parts[i]);
-                        next.push(Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0);
-                    }
-                    root.levels = next;
-                    root.levelUpdatedAt = Date.now();
-                }
-            }
         }
     }
 

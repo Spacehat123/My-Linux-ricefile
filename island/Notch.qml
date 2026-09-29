@@ -19,10 +19,11 @@ PanelWindow {
     readonly property int requestedTopPadding: ShellState.panel === "launcher" ? 10 : contentPadding
     readonly property int requestedBottomPadding: ShellState.panel === "launcher" ? 4 : contentPadding
     readonly property int displayedTopPadding: displayedPanel === "launcher" ? 10 : contentPadding
-    readonly property int displayedBottomPadding: displayedPanel === "launcher" ? 4 : contentPadding
-    readonly property real targetVisualWidth: ShellState.targetWidth + cornerWing * 2
-    readonly property real targetVisualHeight: ShellState.expanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : collapsedHeight
-    readonly property real panelContentHeight: ShellState.expanded ? Math.max(ShellState.panelHeights[ShellState.panel] || 0, requestedPanel ? requestedPanel.implicitHeight : 0) : 0
+    readonly property bool isCurrentScreen: !Hyprland.focusedMonitor ? (window.screen === Quickshell.screens[0]) : (window.screen && window.screen.name === Hyprland.focusedMonitor.name)
+    readonly property bool isExpanded: ShellState.expanded && isCurrentScreen
+    readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : 145) + cornerWing * 2
+    readonly property real targetVisualHeight: isExpanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : collapsedHeight
+    readonly property real panelContentHeight: isExpanded ? Math.max(ShellState.panelHeights[ShellState.panel] || 0, requestedPanel ? requestedPanel.implicitHeight : 0) : 0
     property bool clockRevealed: true
     property bool recBlinkOn: false
     // Staged reveal: panel content fades/slides in 150ms after the pill
@@ -81,7 +82,7 @@ PanelWindow {
     }
 
     function focusInitialControl() {
-        if (!ShellState.expanded || !activePanel)
+        if (!window.isExpanded || !activePanel)
             return ;
 
         if (typeof activePanel.takeInitialFocus === "function") {
@@ -112,7 +113,7 @@ PanelWindow {
     implicitHeight: canvasHeight
     color: "transparent"
     aboveWindows: true
-    focusable: ShellState.expanded
+    focusable: window.isExpanded
     exclusionMode: ExclusionMode.Ignore
     // Overlay layer so the island renders above fullscreen windows (e.g. games)
     WlrLayershell.layer: WlrLayer.Overlay
@@ -127,7 +128,7 @@ PanelWindow {
 
     Connections {
         function onPanelChanged() {
-            if (ShellState.expanded) {
+            if (window.isExpanded) {
                 clockRevealTimer.stop();
                 stageTimer.restart();
                 window.clockRevealed = false;
@@ -145,7 +146,8 @@ PanelWindow {
                 stageTimer.stop();
                 window.contentStaged = false;
                 clockRevealTimer.restart();
-                snapPop.restart();
+                if (window.isCurrentScreen)
+                    snapPop.restart();
             }
         }
 
@@ -154,7 +156,7 @@ PanelWindow {
 
     Connections {
         function onUnreadCountChanged() {
-            if (window.screen === Quickshell.screens[0] && IslandHub.unreadCount > window.lastUnread) {
+            if (window.isCurrentScreen && IslandHub.unreadCount > window.lastUnread) {
                 arrivalPop.restart();
                 ripplePop.restart();
             }
@@ -167,7 +169,7 @@ PanelWindow {
     FocusScope {
         id: notchSurface
 
-        transformOrigin: Item.TopCenter
+        transformOrigin: Item.Top
         anchors.top: parent.top
         anchors.topMargin: window.topGap
         anchors.horizontalCenter: parent.horizontalCenter
@@ -767,7 +769,7 @@ PanelWindow {
 
         MouseArea {
             anchors.fill: parent
-            enabled: !ShellState.expanded
+            enabled: !window.isExpanded
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -785,7 +787,7 @@ PanelWindow {
                     ShellState.show("timer");
                     return ;
                 }
-                // Plain click always opens control center (hub for everything).
+                // Plain click always opens control center
                 ShellState.show("control");
             }
         }
@@ -793,7 +795,7 @@ PanelWindow {
         DropArea {
             id: shelfDropArea
             anchors.fill: notchBody
-            enabled: !ShellState.expanded
+            enabled: !window.isExpanded
 
             onEntered: {
                 shelfStretch.restart();
@@ -1133,8 +1135,8 @@ PanelWindow {
             PropertyAnimation {
                 target: notchSurface
                 property: "scale"
-                to: 0.8
-                duration: 150
+                to: ShellState.expanded ? 0.98 : 0.94
+                duration: 130
                 easing.type: Easing.OutCubic
             }
 
@@ -1142,7 +1144,7 @@ PanelWindow {
                 target: notchSurface
                 property: "scale"
                 to: 1
-                duration: 150
+                duration: 140
                 easing.type: Easing.OutCubic
             }
         }
@@ -1246,9 +1248,9 @@ PanelWindow {
 
     HyprlandFocusGrab {
         windows: [window]
-        active: ShellState.expanded && Backend.captureSelectionMode !== "region"
+        active: window.isExpanded && Backend.captureSelectionMode !== "region"
         onCleared: {
-            if (ShellState.expanded && Backend.captureSelectionMode !== "region")
+            if (window.isExpanded && Backend.captureSelectionMode !== "region")
                 ShellState.close();
 
         }
@@ -1266,7 +1268,7 @@ PanelWindow {
 
         interval: 150
         onTriggered: {
-            if (!ShellState.expanded)
+            if (!window.isExpanded)
                 window.clockRevealed = true;
 
         }
@@ -1326,7 +1328,7 @@ PanelWindow {
 
     Shortcut {
         sequence: "Escape"
-        enabled: ShellState.expanded
+        enabled: window.isExpanded
         onActivated: ShellState.close()
     }
 
