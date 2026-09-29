@@ -127,6 +127,29 @@ FocusScope {
         }
 
         Rectangle {
+            id: openAllButton
+            visible: ShelfState.hasFiles
+            width: parent.width
+            height: 30
+            radius: 15
+            color: openAllMouse.containsMouse ? Theme.primaryContainer : Theme.bg1
+
+            ShellText {
+                anchors.centerIn: parent
+                text: "Open all"
+                font.pixelSize: 12
+            }
+
+            MouseArea {
+                id: openAllMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: ShelfState.openAllFiles()
+            }
+        }
+
+        Rectangle {
             id: clearButton
             visible: ShelfState.hasFiles
             width: parent.width

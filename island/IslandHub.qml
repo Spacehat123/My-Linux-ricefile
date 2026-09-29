@@ -50,6 +50,14 @@ Singleton {
         }
     }
 
+    // Recording elapsed ticker: same 1s cadence family as the stopwatch.
+    Timer {
+        interval: 1000
+        running: root.recordingActive
+        repeat: true
+        onTriggered: root.recElapsedSec = Math.max(0, Math.floor(Date.now() / 1000 - root.recStartEpoch))
+    }
+
     function formatElapsed(totalSec) {
         const s = Math.max(0, Math.floor(totalSec));
         const m = Math.floor(s / 60);
@@ -93,9 +101,12 @@ Singleton {
         burstTick += 1;
     }
 
-    // -- screenshot sweep trigger --
+    // -- screenshot sweep trigger (color-parametric: white for captures,
+    // blue for Bluetooth energy — bar binds sweepColor) --
     property int sweepTick: 0
-    function sweep() {
+    property color sweepColor: "white"
+    function sweep(color) {
+        sweepColor = color || "white";
         sweepTick += 1;
     }
 
@@ -130,6 +141,10 @@ Singleton {
             return transientText;
         if (recordingActive)
             return "REC " + formatElapsed(recElapsedSec);
+        // Unacknowledged timer DONE outranks stale content but never live
+        // recording; cleared by island click or any timer mutation.
+        if (TimerState.completionHold)
+            return TimerState.compactText;
         if (TimerState.hasActive)
             return TimerState.compactText;
         if (mediaPlaying && playerTitle)

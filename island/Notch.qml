@@ -154,8 +154,10 @@ PanelWindow {
 
     Connections {
         function onUnreadCountChanged() {
-            if (window.screen === Quickshell.screens[0] && IslandHub.unreadCount > window.lastUnread)
+            if (window.screen === Quickshell.screens[0] && IslandHub.unreadCount > window.lastUnread) {
                 arrivalPop.restart();
+                ripplePop.restart();
+            }
             window.lastUnread = IslandHub.unreadCount;
         }
 
@@ -273,6 +275,85 @@ PanelWindow {
             }
         }
 
+        // Surface washes: the pill itself is the widget. Thin translucent
+        // fields bound to REAL state, rendered under fills/transients.
+        // Recording breathes red on the existing 500ms blink cadence
+        // (no new timer); timer/media washes track real progress.
+        Rectangle {
+            id: recWash
+
+            x: notchBody.x
+            y: notchBody.y
+            width: notchBody.width
+            height: notchBody.height
+            radius: notchBody.radius
+            color: Theme.red
+            opacity: (IslandHub.recordingActive && !IslandHub.volumeActive) ? (window.recBlinkOn ? 0.22 : 0.1) : 0
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 500
+                    easing.type: Easing.OutCubic
+                }
+            }
+        }
+
+        Item {
+            id: timerFillClip
+
+            x: notchBody.x + 2
+            y: notchBody.y + 2
+            width: notchBody.width - 4
+            height: notchBody.height - 4
+            clip: true
+            visible: TimerState.progressFraction >= 0 && !IslandHub.volumeActive && !IslandHub.recordingActive
+
+            Rectangle {
+                width: parent.width * Math.max(0, Math.min(1, TimerState.progressFraction))
+                height: parent.height
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                radius: Math.max(0, notchBody.radius - 2)
+                color: Theme.primary
+                opacity: 0.28
+
+                Behavior on width {
+                    NumberAnimation {
+                        duration: 260
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
+        }
+
+        Item {
+            id: mediaFillClip
+
+            x: notchBody.x + 2
+            y: notchBody.y + 2
+            width: notchBody.width - 4
+            height: notchBody.height - 4
+            clip: true
+            visible: window.mediaActive && !IslandHub.volumeActive && !IslandHub.recordingActive
+
+            Rectangle {
+                width: parent.width * window.mediaFraction
+                height: parent.height
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                radius: Math.max(0, notchBody.radius - 2)
+                color: Theme.primary
+                opacity: 0.22
+
+                Behavior on width {
+                    NumberAnimation {
+                        duration: 250
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
+        }
+
         Item {
             id: volumeFillClip
 
@@ -313,7 +394,9 @@ PanelWindow {
             }
         }
 
-        // Screenshot scan sweep: white bar sweeps left->right across the pill.
+        // Scan sweep: colored bar (sweepColor: white capture, blue BT)
+        // sweeps left->right across the full pill surface, soft trail
+        // behind the core. Clipped strictly to the pill.
         Item {
             id: shotSweepClip
 
@@ -325,11 +408,20 @@ PanelWindow {
             visible: false
 
             Rectangle {
+                id: shotTrail
+                width: 52
+                height: parent.height
+                x: shotSweep.x - width
+                color: IslandHub.sweepColor
+                opacity: 0.25
+            }
+
+            Rectangle {
                 id: shotSweep
-                width: 26
+                width: 30
                 height: parent.height
                 x: -width
-                color: "white"
+                color: IslandHub.sweepColor
                 opacity: 0.85
             }
 
@@ -345,7 +437,7 @@ PanelWindow {
                 NumberAnimation {
                     target: shotSweep
                     property: "x"
-                    from: -26
+                    from: -30
                     to: shotSweepClip.width
                     duration: 450
                     easing.type: Easing.OutCubic
@@ -355,6 +447,51 @@ PanelWindow {
                     target: shotSweepClip
                     property: "visible"
                     value: false
+                }
+            }
+        }
+
+        // Notification ripple: accent ring breathes outward through the
+        // pill on arrival. Clipped to the surface; nothing escapes it.
+        Item {
+            id: rippleClip
+
+            x: notchBody.x + 2
+            y: notchBody.y + 2
+            width: notchBody.width - 4
+            height: notchBody.height - 4
+            clip: true
+
+            Rectangle {
+                id: notifRipple
+                anchors.fill: parent
+                radius: notchBody.radius
+                color: "transparent"
+                border.width: 2
+                border.color: Theme.primary
+                opacity: 0
+                transformOrigin: Item.Center
+
+                ParallelAnimation {
+                    id: ripplePop
+
+                    NumberAnimation {
+                        target: notifRipple
+                        property: "scale"
+                        from: 0.7
+                        to: 1.15
+                        duration: 400
+                        easing.type: Easing.OutCubic
+                    }
+
+                    NumberAnimation {
+                        target: notifRipple
+                        property: "opacity"
+                        from: 1
+                        to: 0
+                        duration: 400
+                        easing.type: Easing.OutCubic
+                    }
                 }
             }
         }
@@ -417,6 +554,45 @@ PanelWindow {
             Behavior on border.color {
                 ColorAnimation {
                     duration: 150
+                    easing.type: Easing.OutCubic
+                }
+            }
+        }
+
+        // Completion blink: while a timer DONE awaits acknowledgement the
+        // island border breathes until the user clicks the island (which
+        // clears the hold). Separate overlay — never fights borderGlow.
+        Rectangle {
+            id: doneBlink
+
+            x: notchBody.x
+            y: notchBody.y
+            width: notchBody.width
+            height: notchBody.height
+            radius: notchBody.radius
+            color: "transparent"
+            border.width: 2
+            border.color: Theme.primary
+            visible: TimerState.completionHold
+            opacity: 1
+
+            SequentialAnimation {
+                loops: Animation.Infinite
+                running: TimerState.completionHold
+
+                NumberAnimation {
+                    target: doneBlink
+                    property: "opacity"
+                    to: 0.25
+                    duration: 500
+                    easing.type: Easing.OutCubic
+                }
+
+                NumberAnimation {
+                    target: doneBlink
+                    property: "opacity"
+                    to: 1
+                    duration: 500
                     easing.type: Easing.OutCubic
                 }
             }
@@ -602,6 +778,13 @@ PanelWindow {
             onClicked: (mouse) => {
                 if (mouse.button !== Qt.LeftButton)
                     return ;
+                // Awaiting-acknowledgement timer DONE: tap confirms it and
+                // lands on the timer panel; the blink holds until this tap.
+                if (TimerState.completionHold) {
+                    TimerState.clearCompletionHold();
+                    ShellState.show("timer");
+                    return ;
+                }
                 // Plain click always opens control center (hub for everything).
                 ShellState.show("control");
             }
@@ -889,6 +1072,30 @@ PanelWindow {
                 absorbProxy.opacity = 1;
                 IslandHub.burst();
                 absorbPop.restart();
+                // Absorbed: open the shelf on the result, then auto-close
+                // once the user has seen it land.
+                ShellState.show("shelf");
+                shelfAutoClose.restart();
+            }
+        }
+
+        // Shelf auto-close: after a drop-driven open, close once seen.
+        // Fires only while still on the shelf panel; any navigation away
+        // cancels it. Never fights the user's own panel switches.
+        Timer {
+            id: shelfAutoClose
+            interval: 3000
+            onTriggered: {
+                if (ShellState.panel === "shelf")
+                    ShellState.close();
+            }
+        }
+
+        Connections {
+            target: ShellState
+            function onPanelChanged() {
+                if (ShellState.panel !== "shelf")
+                    shelfAutoClose.stop();
             }
         }
 
@@ -1004,6 +1211,7 @@ PanelWindow {
             IslandHub.showTransient(BtState.lastEvent, 3000);
             IslandHub.flashBorder(Theme.blue, 800);
             IslandHub.burst();
+            IslandHub.sweep(Theme.blue);
         }
     }
 

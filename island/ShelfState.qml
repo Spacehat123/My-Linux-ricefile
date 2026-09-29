@@ -84,6 +84,14 @@ Singleton {
     function openFile(path) {
         Quickshell.execDetached(["xdg-open", cleanPath(path)]);
     }
+    // Open-all: launches each shelved file with its default handler.
+    // Read-only w.r.t. the shelf (never moves/deletes); non-blocking.
+    function openAllFiles() {
+        for (let i = 0; i < files.length; ++i) {
+            if (files[i] && files[i].path)
+                openFile(files[i].path);
+        }
+    }
 
     function save() {
         shelfFile.setText(JSON.stringify(files));

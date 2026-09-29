@@ -118,29 +118,22 @@ Singleton {
 
     // One-shot completion tick: Notch watches this for a compact pop.
     property int doneTick: 0
-    // Completion hold: keeps a readable DONE state (~1.4s) after a REAL
-    // zero-crossing, then restores previous content. Never set on
-    // pause/cancel/remove — only in the tick handler's finish branches.
+    // Completion hold: keeps a readable DONE state after a REAL
+    // zero-crossing until the user clicks the island (which clears it
+    // and opens the timer panel). Never set on pause/cancel/remove —
+    // only in the tick handler's finish branches.
     property string completedLabel: ""
     property bool completionHold: false
     function clearCompletionHold() {
         completionHold = false;
-        completionHoldTimer.stop();
     }
     function raiseCompletion(label) {
         completedLabel = label || "Timer";
         completionHold = true;
-        completionHoldTimer.restart();
         IslandHub.showTransient(completedLabel + " DONE", 1500);
         IslandHub.flashBorder(Theme.primary, 1200);
         IslandHub.burst();
         root.doneTick += 1;
-    }
-
-    Timer {
-        id: completionHoldTimer
-        interval: 1400
-        onTriggered: root.completionHold = false
     }
 
     Timer {
