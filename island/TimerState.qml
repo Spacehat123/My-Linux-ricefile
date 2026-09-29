@@ -31,6 +31,8 @@ Singleton {
         return null;
     }
     readonly property string compactText: {
+        if (root.completionHold)
+            return (root.completedLabel ? root.completedLabel + " " : "") + "DONE";
         if (focusActive)
             return "Focus " + IslandHub.formatElapsed(focusRemainingSec);
         if (activeCountdown)
@@ -39,8 +41,11 @@ Singleton {
             return IslandHub.formatElapsed(swElapsedSec);
         return "";
     }
-    // Timer progress for island line: 0.0 -> 1.0
+    // Timer progress for island line: 0.0 -> 1.0.
+    // During the completion hold the line snaps full so the finish reads.
     readonly property real progressFraction: {
+        if (root.completionHold)
+            return 1;
         if (focusActive && focusTotalSec > 0)
             return 1 - focusRemainingSec / focusTotalSec;
         if (activeCountdown && activeCountdown.totalSec > 0)
@@ -70,12 +75,14 @@ Singleton {
     }
 
     function addCountdown(minutes, label) {
+        root.clearCompletionHold();
         const total = Math.max(60, Math.round((Number(minutes) || 5) * 60));
         const next = countdowns.slice();
         next.push({ id: nextId++, label: (label || "").slice(0, 24), totalSec: total, remainingSec: total, running: false, base: 0 });
         countdowns = next;
     }
     function toggleCountdown(id) {
+        root.clearCompletionHold();
         const next = countdowns.slice();
         for (let i = 0; i < next.length; ++i) {
             if (next[i].id === id) {
@@ -93,10 +100,12 @@ Singleton {
         countdowns = next;
     }
     function removeCountdown(id) {
+        root.clearCompletionHold();
         countdowns = countdowns.filter((c) => c.id !== id);
     }
 
     function startFocus(minutes) {
+        root.clearCompletionHold();
         focusTotalSec = Math.max(60, Math.round((Number(minutes) || 25) * 60));
         focusRemainingSec = focusTotalSec;
         focusActive = true;
@@ -109,6 +118,30 @@ Singleton {
 
     // One-shot completion tick: Notch watches this for a compact pop.
     property int doneTick: 0
+    // Completion hold: keeps a readable DONE state (~1.4s) after a REAL
+    // zero-crossing, then restores previous content. Never set on
+    // pause/cancel/remove — only in the tick handler's finish branches.
+    property string completedLabel: ""
+    property bool completionHold: false
+    function clearCompletionHold() {
+        completionHold = false;
+        completionHoldTimer.stop();
+    }
+    function raiseCompletion(label) {
+        completedLabel = label || "Timer";
+        completionHold = true;
+        completionHoldTimer.restart();
+        IslandHub.showTransient(completedLabel + " DONE", 1500);
+        IslandHub.flashBorder(Theme.primary, 1200);
+        IslandHub.burst();
+        root.doneTick += 1;
+    }
+
+    Timer {
+        id: completionHoldTimer
+        interval: 1400
+        onTriggered: root.completionHold = false
+    }
 
     Timer {
         interval: 1000
@@ -131,10 +164,7 @@ Singleton {
                     c.remainingSec = Math.max(0, Math.ceil(c.base - now));
                     if (c.remainingSec <= 0) {
                         c.running = false;
-                        IslandHub.showTransient((c.label || "Timer") + " done", 1000);
-                        IslandHub.flashBorder(Theme.foreground, 800);
-                        IslandHub.burst();
-                        root.doneTick += 1;
+                        root.raiseCompletion(c.label);
                     }
                     next[i] = c;
                     changed = true;
@@ -146,10 +176,7 @@ Singleton {
                 root.focusRemainingSec = Math.max(0, root.focusRemainingSec - 1);
                 if (root.focusRemainingSec <= 0) {
                     root.endFocus();
-                    IslandHub.showTransient("Focus complete", 1000);
-                    IslandHub.flashBorder(Theme.foreground, 800);
-                    IslandHub.burst();
-                    root.doneTick += 1;
+                    root.raiseCompletion("Focus");
                 }
             }
         }

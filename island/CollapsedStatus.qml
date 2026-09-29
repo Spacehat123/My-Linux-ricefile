@@ -270,10 +270,45 @@ Item {
         }
 
         // Music waveform: real amplitude bars from the PipeWire monitor tap.
+        // Pops in on play; pause hides instantly (calm). Bars themselves
+        // animate via height Behavior while playing, still when paused.
         Row {
+            id: waveRow
             anchors.verticalCenter: parent.verticalCenter
             visible: root.mediaPlaying && !root.volumeActive
             spacing: 1
+            transformOrigin: Item.Center
+
+            ParallelAnimation {
+                id: wavePop
+
+                NumberAnimation {
+                    target: waveRow
+                    property: "scale"
+                    from: 0.6
+                    to: 1
+                    duration: 140
+                    easing.type: Easing.OutCubic
+                }
+
+                NumberAnimation {
+                    target: waveRow
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 140
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            Connections {
+                function onMediaPlayingChanged() {
+                    if (root.mediaPlaying)
+                        wavePop.restart();
+                }
+
+                target: root
+            }
 
             Repeater {
                 model: 4
@@ -305,32 +340,133 @@ Item {
         }
 
         // Pinned weather: right side, alongside the label when one is shown.
+        // Pops on refresh; disappear stays instant (calm).
         ShellText {
+            id: weatherText
             anchors.verticalCenter: parent.verticalCenter
             visible: root.weatherMini !== ""
             text: root.weatherMini
             color: Theme.muted
             font.pixelSize: 11
+            transformOrigin: Item.Center
+
+            ParallelAnimation {
+                id: weatherPop
+
+                NumberAnimation {
+                    target: weatherText
+                    property: "scale"
+                    from: 0.8
+                    to: 1
+                    duration: 140
+                    easing.type: Easing.OutCubic
+                }
+
+                NumberAnimation {
+                    target: weatherText
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 140
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            Connections {
+                function onWeatherMiniChanged() {
+                    if (root.weatherMini !== "")
+                        weatherPop.restart();
+                }
+
+                target: root
+            }
         }
 
         // Mic: small YELLOW indicator, only while capturing.
+        // Pops on appear; hide stays instant (calm, debounce already lags).
         Rectangle {
+            id: micDot
             anchors.verticalCenter: parent.verticalCenter
             width: 8
             height: 8
             radius: 4
             visible: root.micActive
             color: "#e5c535"
+            transformOrigin: Item.Center
+
+            ParallelAnimation {
+                id: micPop
+
+                NumberAnimation {
+                    target: micDot
+                    property: "scale"
+                    from: 0
+                    to: 1
+                    duration: 180
+                    easing.type: Easing.OutCubic
+                }
+
+                NumberAnimation {
+                    target: micDot
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 180
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            Connections {
+                function onMicActiveChanged() {
+                    if (root.micActive)
+                        micPop.restart();
+                }
+
+                target: root
+            }
         }
 
-        // Camera: small PURPLE indicator, only while held.
+        // Camera: small PURPLE indicator, only while held. Same treatment.
         Rectangle {
+            id: camDot
             anchors.verticalCenter: parent.verticalCenter
             width: 8
             height: 8
             radius: 4
             visible: root.camActive
             color: "#c678dd"
+            transformOrigin: Item.Center
+
+            ParallelAnimation {
+                id: camPop
+
+                NumberAnimation {
+                    target: camDot
+                    property: "scale"
+                    from: 0
+                    to: 1
+                    duration: 180
+                    easing.type: Easing.OutCubic
+                }
+
+                NumberAnimation {
+                    target: camDot
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 180
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            Connections {
+                function onCamActiveChanged() {
+                    if (root.camActive)
+                        camPop.restart();
+                }
+
+                target: root
+            }
         }
 
         // Bluetooth connect/disconnect: icon slides+fades in on connect,
@@ -446,6 +582,45 @@ Item {
             id: volRow
             anchors.centerIn: parent
             spacing: 5
+            transformOrigin: Item.Center
+
+            // Swap pop: icon/%-text changes (incl. mute) punch in lightly.
+            // Coalesced via restart; gated to the exclusive volume window.
+            ParallelAnimation {
+                id: volPop
+
+                NumberAnimation {
+                    target: volRow
+                    property: "scale"
+                    from: 0.85
+                    to: 1
+                    duration: 120
+                    easing.type: Easing.OutCubic
+                }
+
+                NumberAnimation {
+                    target: volRow
+                    property: "opacity"
+                    from: 0.4
+                    to: 1
+                    duration: 120
+                    easing.type: Easing.OutCubic
+                }
+            }
+
+            Connections {
+                function onVolumeTextChanged() {
+                    if (root.volumeActive)
+                        volPop.restart();
+                }
+
+                function onVolumeMutedChanged() {
+                    if (root.volumeActive)
+                        volPop.restart();
+                }
+
+                target: root
+            }
 
             ShellText {
                 anchors.verticalCenter: parent.verticalCenter

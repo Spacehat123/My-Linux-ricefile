@@ -46,6 +46,8 @@ FocusScope {
     function activateSelection() {
         if (hasAnswer) {
             Quickshell.clipboardText = String(answer);
+            // Only confirmation: the panel closes immediately.
+            IslandHub.showTransient("Copied to clipboard", 1500);
             ShellState.close();
             return ;
         }

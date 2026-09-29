@@ -267,15 +267,16 @@ Singleton {
         }
     }
 
-    // -- screenshot watcher: brief white flash overriding current border --
+    // -- screenshot watcher: tick-driven (never the path string — same-second
+    // shots share a filename and would not emit Changed). Covers own
+    // captures AND external Print-bind shots via the clipboard poll. --
     Connections {
         target: Backend
-        function onLastCaptureChanged() {
-            if (Backend.lastCapture) {
-                root.flashBorder("white", 700);
-                root.burst();
-                root.sweep();
-            }
+        function onCaptureTickChanged() {
+            root.showTransient("Screenshot captured", 1500);
+            root.flashBorder("white", 700);
+            root.burst();
+            root.sweep();
         }
     }
 }

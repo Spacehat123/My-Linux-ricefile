@@ -242,6 +242,35 @@ PanelWindow {
                     }
                 }
             }
+
+            // Shelf absorb proxy: lightweight visual stand-in for the dropped
+            // file. Purely visual — filesystem semantics live in ShelfState
+            // and run before this is ever shown. Flies from the drop point
+            // to the pill center while shrinking/fading (see absorbFly).
+            Rectangle {
+                id: absorbProxy
+
+                property string fileName: ""
+                width: Math.min(notchBody.width - 16, proxyLabel.implicitWidth + 30)
+                height: 20
+                radius: 10
+                color: Theme.primary
+                visible: false
+                z: 10
+
+                ShellText {
+                    id: proxyLabel
+
+                    anchors.centerIn: parent
+                    width: Math.min(implicitWidth, notchBody.width - 46)
+                    elide: Text.ElideRight
+                    horizontalAlignment: Text.AlignHCenter
+                    text: "⧉ " + absorbProxy.fileName
+                    font.pixelSize: 10
+                    font.weight: Font.Bold
+                    color: "#000000"
+                }
+            }
         }
 
         Item {
@@ -599,8 +628,17 @@ PanelWindow {
                     if (added > 0) {
                         IslandHub.showTransient(ShelfState.lastEvent, 3000);
                         IslandHub.flashBorder(Theme.primary, 600);
-                        IslandHub.burst();
-                        absorbPop.restart();
+                        // Visual absorption only — the files are already
+                        // shelved above; this proxy just flies the drop point
+                        // into the pill center, then bursts + rebounds.
+                        absorbFly.stop();
+                        absorbProxy.fileName = String(ShelfState.lastEvent).replace(/^Saved /, "");
+                        absorbProxy.x = Math.max(4, Math.min(notchBody.width - absorbProxy.width - 4, drop.x - absorbProxy.width / 2));
+                        absorbProxy.y = Math.max(2, Math.min(notchBody.height - absorbProxy.height - 2, drop.y - absorbProxy.height / 2));
+                        absorbProxy.scale = 1;
+                        absorbProxy.opacity = 1;
+                        absorbProxy.visible = true;
+                        absorbFly.restart();
                         return ;
                     }
                 }
@@ -797,6 +835,63 @@ PanelWindow {
             }
         }
 
+        // Shelf absorb flight: proxy pulls from the drop point to the pill
+        // center while shrinking/fading, island contracts toward it; on
+        // arrival the proxy vanishes INTO the island, burst fires, and
+        // absorbPop gives the compression/rebound. Restart coalesces rapid
+        // drops (latest file wins).
+        ParallelAnimation {
+            id: absorbFly
+
+            NumberAnimation {
+                target: absorbProxy
+                property: "x"
+                to: notchBody.width / 2 - absorbProxy.width / 2
+                duration: 300
+                easing.type: Easing.OutCubic
+            }
+
+            NumberAnimation {
+                target: absorbProxy
+                property: "y"
+                to: notchBody.height / 2 - absorbProxy.height / 2
+                duration: 300
+                easing.type: Easing.OutCubic
+            }
+
+            NumberAnimation {
+                target: absorbProxy
+                property: "scale"
+                to: 0.4
+                duration: 300
+                easing.type: Easing.OutCubic
+            }
+
+            NumberAnimation {
+                target: absorbProxy
+                property: "opacity"
+                to: 0.15
+                duration: 300
+                easing.type: Easing.OutCubic
+            }
+
+            NumberAnimation {
+                target: notchBody
+                property: "scale"
+                to: 0.96
+                duration: 280
+                easing.type: Easing.OutCubic
+            }
+
+            onFinished: {
+                absorbProxy.visible = false;
+                absorbProxy.scale = 1;
+                absorbProxy.opacity = 1;
+                IslandHub.burst();
+                absorbPop.restart();
+            }
+        }
+
         // Shelf absorb pop: bounce on successful drop, then settle.
         // absorbPop chains into shelfRelease on finish (no concurrent
         // scale drivers).
@@ -912,10 +1007,16 @@ PanelWindow {
         }
     }
 
+    // Timer completion: compact attention sequence on REAL zero-crossings
+    // only (TimerState raises doneTick solely in its finish branches).
+    // snapPop dips, burst fires dots, noticeFlash double-pulses the border.
+    // All converge to resting values; nothing loops.
     Connections {
         target: TimerState
         function onDoneTickChanged() {
             snapPop.restart();
+            burstAnim.restart();
+            noticeFlash.restart();
         }
     }
 
@@ -923,7 +1024,8 @@ PanelWindow {
         target: PowerState
         function onPlugEventTickChanged() {
             IslandHub.showTransient(PowerState.lastPlugEvent, 3000);
-            IslandHub.flashBorder(PowerState.charging ? Theme.primary : Theme.foreground, 800);
+            IslandHub.flashBorder(PowerState.charging ? Theme.primary : Theme.foreground, 500);
+            arrivalPop.restart();
         }
     }
 

@@ -20,6 +20,19 @@ Singleton {
     property string clipboardContentsRequestedId: ""
     property string clipboardContentsInFlightId: ""
     property string lastCapture: ""
+    // One-shot tick: IslandHub watches this (never the path string — two
+    // shots within the same second produce identical filenames, which would
+    // never emit Changed). Bumped on EVERY successful capture completion,
+    // own or external.
+    property int captureTick: 0
+    // Clipboard-image fingerprint for EXTERNAL screenshots (the live Print
+    // bind runs `grim | wl-copy` directly and bypasses capture() entirely).
+    // Seeded silently on first poll so reload never fires a false sweep.
+    property string lastClipImageSig: ""
+    property bool clipSigSeeded: false
+    // Suppression window: our own publish_capture does `wl-copy`, which
+    // would echo back through the clipboard poll as a phantom second shot.
+    property double ownCaptureAt: 0
     property string lastError: ""
     property var windowCandidates: []
     property string captureSelectionMode: ""
@@ -115,6 +128,7 @@ Singleton {
 
     function capture(mode) {
         lastError = "";
+        root.ownCaptureAt = Date.now();
         if (mode === "window") {
             windowCandidatesProcess.exec([helper, "window-list"]);
             return ;
@@ -309,9 +323,13 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 const output = text.trim();
-                if (output)
+                if (output) {
                     root.lastCapture = output;
-
+                    // publish_capture just did `wl-copy`: stamp suppression
+                    // AND tick (tick, not path, is what IslandHub watches).
+                    root.ownCaptureAt = Date.now();
+                    root.captureTick += 1;
+                }
             }
         }
 
@@ -324,6 +342,44 @@ Singleton {
             }
         }
 
+    }
+
+    // External screenshot detector: the live Print bind pipes grim straight
+    // to wl-copy, never touching capture(). Poll the clipboard for a NEW
+    // image fingerprint (first 16KB hashed — cheap, no full download).
+    // Own captures are suppressed via ownCaptureAt; first poll only seeds.
+    Process {
+        id: clipSigProcess
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const sig = text.trim();
+                if (!sig)
+                    return ;
+                if (!root.clipSigSeeded) {
+                    root.clipSigSeeded = true;
+                    root.lastClipImageSig = sig;
+                    return ;
+                }
+                // Always adopt the new fingerprint so a suppressed echo can
+                // never fire late; only count it when outside our window.
+                const isNew = sig !== root.lastClipImageSig;
+                root.lastClipImageSig = sig;
+                if (isNew && Date.now() - root.ownCaptureAt > 4000)
+                    root.captureTick += 1;
+            }
+        }
+    }
+
+    Timer {
+        interval: 2000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            if (!clipSigProcess.running)
+                clipSigProcess.exec(["sh", "-c", "wl-paste -l 2>/dev/null | grep -q image/png && wl-paste --type image/png 2>/dev/null | head -c 16384 | md5sum | cut -d' ' -f1"]);
+        }
     }
 
     Process {
