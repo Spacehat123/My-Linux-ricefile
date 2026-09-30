@@ -354,34 +354,6 @@ PanelWindow {
         }
 
         Item {
-            id: mediaFillClip
-
-            x: notchBody.x + 2
-            y: notchBody.y + 2
-            width: notchBody.width - 4
-            height: notchBody.height - 4
-            clip: true
-            visible: window.mediaActive && !IslandHub.volumeActive && !IslandHub.recordingActive
-
-            Rectangle {
-                width: parent.width * window.mediaFraction
-                height: parent.height
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                radius: Math.max(0, notchBody.radius - 2)
-                color: Theme.primary
-                opacity: 0.22
-
-                Behavior on width {
-                    NumberAnimation {
-                        duration: 250
-                        easing.type: Easing.OutCubic
-                    }
-                }
-            }
-        }
-
-        Item {
             id: volumeFillClip
 
             // Inset by the border width so the fill stays strictly inside
@@ -625,28 +597,41 @@ PanelWindow {
             }
         }
 
-        Item {
-            id: mediaRingClip
+        Canvas {
+            id: mediaRing
 
             x: notchBody.x
             y: notchBody.y
-            width: notchBody.width * window.mediaFraction
+            width: notchBody.width
             height: notchBody.height
-            clip: true
-            visible: window.mediaActive && !IslandHub.volumeActive
+            visible: !window.isExpanded && window.mediaActive && !IslandHub.volumeActive
+            opacity: 1
 
-            Behavior on width {
+            property real animatedFraction: window.mediaFraction
+            property color strokeColor: Theme.primary
+
+            Behavior on animatedFraction {
                 NumberAnimation {
                     duration: 250
                     easing.type: Easing.OutCubic
                 }
             }
 
+            onAnimatedFractionChanged: requestPaint()
+            onStrokeColorChanged: requestPaint()
+            onWidthChanged: requestPaint()
+            onHeightChanged: requestPaint()
+            onVisibleChanged: {
+                if (visible)
+                    requestPaint();
+            }
+            Component.onCompleted: requestPaint()
+
             SequentialAnimation {
                 id: ringDip
 
                 NumberAnimation {
-                    target: mediaRingClip
+                    target: mediaRing
                     property: "opacity"
                     to: 0
                     duration: 150
@@ -654,7 +639,7 @@ PanelWindow {
                 }
 
                 NumberAnimation {
-                    target: mediaRingClip
+                    target: mediaRing
                     property: "opacity"
                     to: 1
                     duration: 200
@@ -666,19 +651,108 @@ PanelWindow {
             // near 100%), dip the ring; it restarts for the next track.
             Connections {
                 target: window.islandPlayer
+                enabled: target !== null && target !== undefined
+                ignoreUnknownSignals: true
                 function onIsPlayingChanged() {
                     if (window.islandPlayer && !window.islandPlayer.isPlaying && window.mediaFraction > 0.95)
                         ringDip.restart();
                 }
             }
 
-            Rectangle {
-                width: notchBody.width
-                height: notchBody.height
-                radius: notchBody.radius
-                color: "transparent"
-                border.width: 3
-                border.color: Theme.primary
+            onPaint: {
+                const ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+
+                const fraction = Math.max(0, Math.min(1, animatedFraction));
+                if (fraction <= 0.0001 || width <= 0 || height <= 0)
+                    return;
+
+                const lw = 2;
+                const offset = lw / 2;
+                const w = width - lw;
+                const h = height - lw;
+                const r = Math.min(h / 2, Math.max(0.1, w / 2));
+                const x0 = offset;
+                const y0 = offset;
+
+                const L1 = Math.max(0, (w / 2) - r);
+                const L2 = Math.PI * r;
+                const L3 = Math.max(0, w - 2 * r);
+                const L4 = Math.PI * r;
+                const L5 = Math.max(0, (w / 2) - r);
+                const P = L1 + L2 + L3 + L4 + L5;
+                if (P <= 0)
+                    return;
+
+                let rem = P * fraction;
+
+                ctx.save();
+                ctx.lineWidth = lw;
+                ctx.strokeStyle = "" + strokeColor;
+                ctx.lineCap = "round";
+                ctx.lineJoin = "round";
+                ctx.beginPath();
+
+                const startX = x0 + w / 2;
+                const startY = y0 + h;
+                ctx.moveTo(startX, startY);
+
+                // Segment 1: Bottom center to right corner
+                if (rem <= L1) {
+                    ctx.lineTo(startX + rem, startY);
+                    rem = 0;
+                } else {
+                    ctx.lineTo(x0 + w - r, startY);
+                    rem -= L1;
+
+                    // Segment 2: Right semicircle (clockwise: bottom -> right tip -> top)
+                    const cx_r = x0 + w - r;
+                    const cy_r = y0 + r;
+                    if (rem <= L2) {
+                        const angle = Math.PI / 2 - (rem / L2) * Math.PI;
+                        ctx.arc(cx_r, cy_r, r, Math.PI / 2, angle, true);
+                        rem = 0;
+                    } else {
+                        ctx.arc(cx_r, cy_r, r, Math.PI / 2, -Math.PI / 2, true);
+                        rem -= L2;
+
+                        // Segment 3: Top straight line (moving right to left)
+                        if (rem <= L3) {
+                            ctx.lineTo(x0 + w - r - rem, y0);
+                            rem = 0;
+                        } else {
+                            ctx.lineTo(x0 + r, y0);
+                            rem -= L3;
+
+                            // Segment 4: Left semicircle (clockwise: top -> left tip -> bottom)
+                            const cx_l = x0 + r;
+                            const cy_l = y0 + r;
+                            if (rem <= L4) {
+                                const angle = -Math.PI / 2 - (rem / L4) * Math.PI;
+                                ctx.arc(cx_l, cy_l, r, -Math.PI / 2, angle, true);
+                                rem = 0;
+                            } else {
+                                ctx.arc(cx_l, cy_l, r, -Math.PI / 2, -3 * Math.PI / 2, true);
+                                rem -= L4;
+
+                                // Segment 5: Bottom straight line from left back to center
+                                if (rem <= L5) {
+                                    ctx.lineTo(x0 + r + rem, startY);
+                                    rem = 0;
+                                } else {
+                                    ctx.lineTo(startX, startY);
+                                    rem = 0;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (fraction >= 0.999)
+                    ctx.closePath();
+
+                ctx.stroke();
+                ctx.restore();
             }
         }
 
