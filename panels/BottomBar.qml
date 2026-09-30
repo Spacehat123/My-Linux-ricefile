@@ -4,6 +4,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
+import Quickshell.Networking
 import "../island" as Island
 
 // Waybar replica: bottom bar, width 1000, margin-bottom 10.
@@ -84,36 +85,31 @@ PanelWindow {
         return "";
     }
 
-    // Network: waybar monitors wlp4s0; bar shows wifi/ethernet/disconnected icon.
-    property string netIcon: ""
-    Process {
-        id: netProc
-        command: ["nmcli", "-t", "-f", "TYPE,STATE", "device", "status"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                let wifi = false, eth = false;
-                const lines = text.trim().split("\n");
-                for (let i = 0; i < lines.length; ++i) {
-                    const parts = lines[i].split(":");
-                    if (parts.length < 2 || parts[1] !== "connected") continue;
-                    if (parts[0] === "wifi") wifi = true;
-                    else if (parts[0] === "ethernet") eth = true;
-                }
-                // format-wifi "" / format-ethernet "{ifname} " / disconnected ""
-                root.netIcon = wifi ? "" : (eth ? "" : "");
-            }
+    // Network: native NetworkManager / D-Bus properties via Quickshell.Networking (zero process forks/polling)
+    readonly property var wifiDevice: Networking.devices.values.find((device) => device.type === DeviceType.Wifi) || null
+    readonly property var connectedWifi: {
+        if (!wifiDevice)
+            return null;
+        if (wifiDevice.networks) {
+            const found = wifiDevice.networks.values.find((network) => network.connected);
+            if (found)
+                return found;
         }
+        return wifiDevice.connected ? wifiDevice : null;
     }
-    Timer {
-        interval: 10000
-        running: root.open
-        repeat: true
-        onTriggered: {
-            if (!netProc.running) netProc.running = true;
-        }
-    }
-    Component.onCompleted: {
-        netProc.running = true;
+    readonly property var ethernetDevice: Networking.devices.values.find((device) => {
+        return device.type === DeviceType.Wired && (device.connected || device.hasLink === true);
+    }) || null
+
+    readonly property string netIcon: {
+        if (connectedWifi)
+            return "";
+        if (ethernetDevice)
+            return "";
+        const anyConnected = Networking.devices.values.find((device) => device.connected);
+        if (anyConnected)
+            return anyConnected.type === DeviceType.Wifi ? "" : "";
+        return "";
     }
 
     Item {

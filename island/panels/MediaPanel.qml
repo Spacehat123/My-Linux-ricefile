@@ -58,7 +58,7 @@ FocusScope {
 
             width: parent.width
             height: 190
-            radius: Theme.radius
+            radius: 24
             clip: true
 
             Image {
@@ -77,7 +77,7 @@ FocusScope {
                     maskSource: Rectangle {
                         width: mediaArtwork.width
                         height: mediaArtwork.height
-                        radius: Theme.radius
+                        radius: 24
                         layer.enabled: mediaArtwork.status === Image.Ready
                     }
 

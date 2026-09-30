@@ -16,11 +16,28 @@ PanelWindow {
     readonly property int topGap: 10
     readonly property int canvasWidth: 552
     readonly property int canvasHeight: 600
-    readonly property int requestedTopPadding: ShellState.panel === "launcher" ? 10 : contentPadding
-    readonly property int requestedBottomPadding: ShellState.panel === "launcher" ? 4 : contentPadding
-    readonly property int displayedTopPadding: displayedPanel === "launcher" ? 10 : contentPadding
-    readonly property bool isCurrentScreen: !Hyprland.focusedMonitor ? (window.screen === Quickshell.screens[0]) : (window.screen && window.screen.name === Hyprland.focusedMonitor.name)
+    readonly property int requestedTopPadding: ShellState.panel === "launcher" ? 10 : (ShellState.panel === "power" ? 8 : contentPadding)
+    readonly property int requestedBottomPadding: ShellState.panel === "launcher" ? 4 : (ShellState.panel === "power" ? 8 : contentPadding)
+    readonly property int displayedTopPadding: displayedPanel === "launcher" ? 10 : (displayedPanel === "power" ? 8 : contentPadding)
+    readonly property int displayedBottomPadding: displayedPanel === "launcher" ? 4 : (displayedPanel === "power" ? 8 : contentPadding)
+    readonly property HyprlandMonitor activeMonitor: {
+        if (typeof Hyprland !== "undefined") {
+            if (Hyprland.focusedWorkspace && Hyprland.focusedWorkspace.monitor)
+                return Hyprland.focusedWorkspace.monitor;
+            if (Hyprland.focusedMonitor)
+                return Hyprland.focusedMonitor;
+        }
+        return null;
+    }
+    readonly property bool isCurrentScreen: {
+        if (ShellState.activeScreenName !== "")
+            return window.screen && window.screen.name === ShellState.activeScreenName;
+        if (activeMonitor && window.screen)
+            return window.screen.name === activeMonitor.name;
+        return window.screen === Quickshell.screens[0];
+    }
     readonly property bool isExpanded: ShellState.expanded && isCurrentScreen
+    readonly property real targetRadius: isExpanded ? (ShellState.panelRadii[ShellState.panel] || Theme.radius) : (collapsedHeight / 2)
     readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : 145) + cornerWing * 2
     readonly property real targetVisualHeight: isExpanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : collapsedHeight
     readonly property real panelContentHeight: isExpanded ? Math.max(ShellState.panelHeights[ShellState.panel] || 0, requestedPanel ? requestedPanel.implicitHeight : 0) : 0
@@ -108,7 +125,7 @@ PanelWindow {
 
     }
 
-    margins.left: Math.round((screen.width - canvasWidth) / 2)
+    margins.left: screen ? Math.round((screen.width - canvasWidth) / 2) : 0
     implicitWidth: canvasWidth
     implicitHeight: canvasHeight
     color: "transparent"
@@ -201,8 +218,16 @@ PanelWindow {
             y: 0
             width: parent.width - window.cornerWing * 2
             height: parent.height
-            radius: Math.min(Theme.radius, height / 2)
+            radius: window.targetRadius
             color: Theme.shellBackground
+
+            Behavior on radius {
+                SpringAnimation {
+                    spring: 4.0
+                    damping: 0.32
+                    epsilon: 0.2
+                }
+            }
 
             // Timer countdown: thin progress line along the pill bottom.
             Rectangle {
@@ -780,15 +805,17 @@ PanelWindow {
             onClicked: (mouse) => {
                 if (mouse.button !== Qt.LeftButton)
                     return ;
+                // Intelligent click routing: target clicked screen and open active activity
+                ShellState.activeScreenName = window.screen ? window.screen.name : "";
                 // Awaiting-acknowledgement timer DONE: tap confirms it and
                 // lands on the timer panel; the blink holds until this tap.
                 if (TimerState.completionHold) {
                     TimerState.clearCompletionHold();
-                    ShellState.show("timer");
+                    ShellState.show("timer", window.screen ? window.screen.name : "");
                     return ;
                 }
-                // Plain click always opens control center
-                ShellState.show("control");
+                // Plain click opens control center
+                ShellState.show("control", window.screen ? window.screen.name : "");
             }
         }
 
@@ -808,7 +835,7 @@ PanelWindow {
             onDropped: (drop) => {
                 shelfRelease.stop();
                 shelfStretch.stop();
-                if (drop.hasUrls && window.screen === Quickshell.screens[0]) {
+                if (drop.hasUrls) {
                     const added = ShelfState.addUrls(drop.urls);
                     if (added > 0) {
                         IslandHub.showTransient(ShelfState.lastEvent, 3000);
@@ -835,24 +862,26 @@ PanelWindow {
         SequentialAnimation {
             id: shelfStretch
 
-            PropertyAnimation {
+            SpringAnimation {
                 target: notchBody
                 property: "scale"
                 to: 1.08
-                duration: 140
-                easing.type: Easing.OutCubic
+                spring: 4.0
+                damping: 0.3
+                epsilon: 0.005
             }
         }
 
         SequentialAnimation {
             id: shelfRelease
 
-            PropertyAnimation {
+            SpringAnimation {
                 target: notchBody
                 property: "scale"
                 to: 1
-                duration: 180
-                easing.type: Easing.OutCubic
+                spring: 3.5
+                damping: 0.32
+                epsilon: 0.005
             }
         }
 
@@ -876,9 +905,10 @@ PanelWindow {
                 y: window.contentStaged ? 0 : 8
 
                 Behavior on y {
-                    NumberAnimation {
-                        duration: 180
-                        easing.type: Easing.OutCubic
+                    SpringAnimation {
+                        spring: 4.0
+                        damping: 0.35
+                        epsilon: 0.2
                     }
                 }
             }
@@ -1076,7 +1106,7 @@ PanelWindow {
                 absorbPop.restart();
                 // Absorbed: open the shelf on the result, then auto-close
                 // once the user has seen it land.
-                ShellState.show("shelf");
+                ShellState.show("shelf", window.screen ? window.screen.name : "");
                 shelfAutoClose.restart();
             }
         }
@@ -1107,45 +1137,49 @@ PanelWindow {
         SequentialAnimation {
             id: absorbPop
 
-            PropertyAnimation {
+            SpringAnimation {
                 target: notchBody
                 property: "scale"
                 to: 1.12
-                duration: 100
-                easing.type: Easing.OutCubic
+                spring: 5.0
+                damping: 0.75
+                epsilon: 0.01
             }
 
-            PropertyAnimation {
+            SpringAnimation {
                 target: notchBody
                 property: "scale"
                 to: 1
-                duration: 140
-                easing.type: Easing.OutCubic
+                spring: 4.0
+                damping: 0.32
+                epsilon: 0.005
             }
 
             onFinished: shelfRelease.stop()
         }
 
-        // Snap: 100% -> 80% -> 100% micro-overshoot on EVERY island
+        // Snap: physical gel-like spring overshoot on EVERY island
         // open/collapse/switch (visual only, geometry untouched).
         // Top-center origin keeps the top edge fixed (screen-edge gap constant).
         SequentialAnimation {
             id: snapPop
 
-            PropertyAnimation {
+            SpringAnimation {
                 target: notchSurface
                 property: "scale"
-                to: ShellState.expanded ? 0.98 : 0.94
-                duration: 130
-                easing.type: Easing.OutCubic
+                to: ShellState.expanded ? 0.97 : 0.94
+                spring: 5.0
+                damping: 0.75
+                epsilon: 0.01
             }
 
-            PropertyAnimation {
+            SpringAnimation {
                 target: notchSurface
                 property: "scale"
                 to: 1
-                duration: 140
-                easing.type: Easing.OutCubic
+                spring: 4.0
+                damping: 0.32
+                epsilon: 0.005
             }
         }
 
@@ -1153,39 +1187,41 @@ PanelWindow {
         SequentialAnimation {
             id: arrivalPop
 
-            PropertyAnimation {
+            SpringAnimation {
                 target: notchSurface
                 property: "scale"
                 to: 1.04
-                duration: 140
-                easing.type: Easing.OutCubic
+                spring: 5.0
+                damping: 0.75
+                epsilon: 0.01
             }
 
-            PropertyAnimation {
+            SpringAnimation {
                 target: notchSurface
                 property: "scale"
                 to: 1
-                duration: 120
-                easing.type: Easing.OutCubic
+                spring: 4.0
+                damping: 0.32
+                epsilon: 0.005
             }
         }
 
         Behavior on width {
-            NumberAnimation {
-                duration: Theme.animationNormal
-                easing.type: Easing.OutCubic
+            SpringAnimation {
+                spring: 4.2
+                damping: 0.32
+                epsilon: 0.5
             }
-
         }
 
         Behavior on height {
             enabled: !clipboardPanel.previewTransitionActive
 
-            NumberAnimation {
-                duration: Theme.animationNormal
-                easing.type: Easing.OutCubic
+            SpringAnimation {
+                spring: 4.2
+                damping: 0.32
+                epsilon: 0.5
             }
-
         }
 
     }

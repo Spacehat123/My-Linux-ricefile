@@ -29,8 +29,27 @@ FocusScope {
             width: parent.width
             spacing: 8
 
+            // Circular timer dial motif
+            Rectangle {
+                width: 34
+                height: 34
+                radius: 17
+                anchors.verticalCenter: parent.verticalCenter
+                color: (TimerState.swRunning || TimerState.hasActive) ? Theme.primaryContainer : Theme.bg1
+                border.color: (TimerState.swRunning || TimerState.hasActive) ? Theme.primary : Theme.bg2
+                border.width: 1.5
+
+                ShellText {
+                    anchors.centerIn: parent
+                    text: "\uf017"
+                    font.family: Theme.iconFontFamily
+                    font.pixelSize: 14
+                    color: (TimerState.swRunning || TimerState.hasActive) ? Theme.primary : Theme.muted
+                }
+            }
+
             ShellText {
-                width: 90
+                width: 75
                 anchors.verticalCenter: parent.verticalCenter
                 text: IslandHub.formatElapsed(TimerState.swElapsedSec)
                 font.pixelSize: 20

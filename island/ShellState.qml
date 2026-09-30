@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 pragma Singleton
 
 Singleton {
@@ -16,7 +17,7 @@ Singleton {
         "wallpaper": 500,
         "capture": 395,
         "power": 380,
-        "media": 520,
+        "media": 460,
         "notifications": 365,
         "timer": 380,
         "shelf": 420,
@@ -32,12 +33,29 @@ Singleton {
         "wallpaper": 382,
         "capture": 208,
         "power": 56,
-        "media": 280,
+        "media": 220,
         "notifications": 80,
-        "timer": 120,
+        "timer": 220,
         "shelf": 120,
         "weather": 120
     })
+    readonly property var panelRadii: ({
+        "control": 20,
+        "launcher": 22,
+        "clipboard": 20,
+        "todo": 20,
+        "notes": 18,
+        "theme": 20,
+        "wallpaper": 20,
+        "capture": 22,
+        "power": 28,
+        "media": 32,
+        "notifications": 24,
+        "timer": 42,
+        "shelf": 24,
+        "weather": 22
+    })
+    property string activeScreenName: ""
     property string panel: "collapsed"
     property int noticeTick: 0
     readonly property bool expanded: panel !== "collapsed" && panel !== "clock"
@@ -61,9 +79,11 @@ Singleton {
     function setPanel(name) {
         if (name === "clock") name = "collapsed";
         panel = name;
+        if (panel === "collapsed")
+            activeScreenName = "";
     }
 
-    function show(name) {
+    function show(name, screenName) {
         if (name === "clock" || name === "collapsed") {
             close();
             return;
@@ -71,10 +91,25 @@ Singleton {
         if (panelWidths[name] === undefined)
             return;
 
+        if (screenName !== undefined && screenName !== null && screenName !== "") {
+            activeScreenName = screenName;
+        } else if (activeScreenName === "") {
+            // Lock to active compositor monitor so island does not drift across monitors mid-interaction
+            if (typeof Hyprland !== "undefined") {
+                if (Hyprland.focusedWorkspace && Hyprland.focusedWorkspace.monitor && Hyprland.focusedWorkspace.monitor.name)
+                    activeScreenName = Hyprland.focusedWorkspace.monitor.name;
+                else if (Hyprland.focusedMonitor && Hyprland.focusedMonitor.name)
+                    activeScreenName = Hyprland.focusedMonitor.name;
+            }
+            if (activeScreenName === "" && Quickshell.screens.length > 0 && Quickshell.screens[0])
+                activeScreenName = Quickshell.screens[0].name || "";
+        }
+
         setPanel(panel === name ? "collapsed" : name);
     }
 
     function close() {
+        activeScreenName = "";
         setPanel("collapsed");
     }
 
