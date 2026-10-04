@@ -10,6 +10,7 @@ import "desktop"
 import "island" // bare `Theme` in this file = island singleton (do NOT add `import "theme"` here)
 import "island/components"
 import "panels"
+import "wallpaper"
 
 ShellRoot {
     id: shellRoot
@@ -136,28 +137,27 @@ ShellRoot {
     // island/scripts/theme-system.sh). wallpaperEnabled is retained for the
     // sidebar toggle UI; rendering is owned by awww, not a QML layer.
     property bool wallpaperEnabled: true
-    property string wallpaperMediaType: "image"
+    property string wallpaperMediaType: "video"
     property string wallpaperMediaSource: ""
 
     readonly property string islandThemeHelper: Quickshell.shellPath("island/scripts/theme-system.sh").toString().replace(/^file:\/\//, "")
 
     function islandSetWallpaper(path) {
-        // theme-system.sh requires a plain path inside ~/Pictures/Wallpapers/<theme>/,
-        // so strip any file:// prefix IPC callers may send (it dies otherwise).
-        let cleanPath = path.trim().replace(/^file:\/\//, "");
+        let cleanPath = (path || "").trim().replace(/^file:\/\//, "");
         setWallpaperProc.exec([shellRoot.islandThemeHelper, "wallpaper", cleanPath]);
-        shellRoot.wallpaperMediaType = "image";
-        shellRoot.wallpaperMediaSource = "file://" + cleanPath;
-        console.log("[pranc-shell] Wallpaper set via island system: " + shellRoot.wallpaperMediaSource);
-        return JSON.stringify({ success: true, mediaType: "image", mediaSource: shellRoot.wallpaperMediaSource });
+        let isVid = !!cleanPath.match(/\.(mp4|webm|mkv|mov)$/i);
+        shellRoot.wallpaperMediaType = isVid ? "video" : "image";
+        shellRoot.wallpaperMediaSource = isVid ? ("file://" + cleanPath) : "";
+        console.log("[pranc-shell] Wallpaper set via island system: " + cleanPath + " (" + shellRoot.wallpaperMediaType + ")");
+        return JSON.stringify({ success: true, mediaType: shellRoot.wallpaperMediaType, mediaSource: shellRoot.wallpaperMediaSource });
     }
 
     function islandClearWallpaper() {
         setWallpaperProc.exec(["awww", "clear", "000000"]);
-        shellRoot.wallpaperMediaType = "procedural";
+        shellRoot.wallpaperMediaType = "none";
         shellRoot.wallpaperMediaSource = "";
         console.log("[pranc-shell] Wallpaper cleared via awww");
-        return JSON.stringify({ success: true, mediaType: "procedural" });
+        return JSON.stringify({ success: true, mediaType: "none" });
     }
 
     function openMediaPicker() {
@@ -218,10 +218,48 @@ ShellRoot {
         }
     }
 
-    // NOTE: the old `wallpaper` IPC target lived here. Wallpaper is now owned
-    // by the ported dotarch system: `qs ipc call notch toggle wallpaper`
-    // opens the picker, `wallpaper-set PATH` applies, `theme ...` manages
-    // themes. See island/ and the `control` target below.
+    // =========================================================================
+    // Headless IPC Verification: Dedicated Wallpaper Target
+    // =========================================================================
+    IpcHandler {
+        target: "wallpaper"
+
+        property bool enabled: shellRoot.wallpaperEnabled
+        property string mediaType: shellRoot.wallpaperMediaType
+        property string mediaSource: shellRoot.wallpaperMediaSource
+
+        onEnabledChanged: {
+            if (shellRoot.wallpaperEnabled !== enabled) {
+                shellRoot.wallpaperEnabled = enabled;
+            }
+        }
+
+        function toggle(): string {
+            shellRoot.wallpaperEnabled = !shellRoot.wallpaperEnabled;
+            return JSON.stringify({ success: true, enabled: shellRoot.wallpaperEnabled });
+        }
+
+        function setEnabled(val: bool): string {
+            shellRoot.wallpaperEnabled = val;
+            return JSON.stringify({ success: true, enabled: shellRoot.wallpaperEnabled });
+        }
+
+        function setMedia(path: string, type: string): string {
+            let cleanPath = (path || "").trim().replace(/^file:\/\//, "");
+            shellRoot.wallpaperMediaSource = cleanPath ? "file://" + cleanPath : "";
+            if (type && type.length > 0) {
+                shellRoot.wallpaperMediaType = type;
+            } else {
+                shellRoot.wallpaperMediaType = cleanPath.match(/\.(mp4|webm|mkv|mov)$/i) ? "video" : "image";
+            }
+            console.log("[pranc-shell] IPC setMedia:", shellRoot.wallpaperMediaType, shellRoot.wallpaperMediaSource);
+            return JSON.stringify({
+                success: true,
+                mediaType: shellRoot.wallpaperMediaType,
+                mediaSource: shellRoot.wallpaperMediaSource
+            });
+        }
+    }
 
     // =========================================================================
     // Headless IPC Verification: Workspace Intelligence
@@ -1453,6 +1491,15 @@ ShellRoot {
             property bool leftSidebarOpen: false
             property bool rightSidebarOpen: false
             property bool bottomBarOpen: false
+
+            // GPU-Accelerated Live MP4 Video Wallpaper (WlrLayer.Background)
+            Wallpaper {
+                id: wallpaper
+                screen: monitorScope.modelData
+                enabled: shellRoot.wallpaperEnabled && !ShellState.gameMode
+                mediaType: shellRoot.wallpaperMediaType
+                mediaSource: shellRoot.wallpaperMediaSource
+            }
 
             // Desktop Ambient HUD layer (WlrLayer.Bottom)
             AmbientLayer {

@@ -54,8 +54,57 @@ FocusScope {
             }
 
             Item {
-                width: parent.width - wallpaperNav.width - folderButton.width - parent.spacing * 2
+                width: parent.width - wallpaperNav.width - folderButton.width - liveFolderButton.width - parent.spacing * 3
                 height: 1
+            }
+
+            FocusScope {
+                id: liveFolderButton
+
+                implicitWidth: liveFolderContent.implicitWidth + 14
+                width: implicitWidth
+                height: 30
+                activeFocusOnTab: true
+                Keys.onReturnPressed: AppearanceState.openLiveWallpaperFolder()
+                Keys.onEnterPressed: AppearanceState.openLiveWallpaperFolder()
+                Keys.onSpacePressed: AppearanceState.openLiveWallpaperFolder()
+                Accessible.role: Accessible.Button
+                Accessible.name: "Open live wallpaper folder"
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Theme.radiusSmall
+                    color: liveFolderButton.activeFocus || liveFolderPointer.containsMouse ? Theme.bg1 : "transparent"
+                }
+
+                Row {
+                    id: liveFolderContent
+
+                    anchors.centerIn: parent
+                    spacing: 5
+
+                    ShellText {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "󰿎"
+                        color: Theme.primary
+                        font.pixelSize: 12
+                    }
+
+                    ShellText {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "Live"
+                        color: Theme.primary
+                        font.pixelSize: 10
+                    }
+                }
+
+                MouseArea {
+                    id: liveFolderPointer
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: AppearanceState.openLiveWallpaperFolder()
+                }
             }
 
             FocusScope {
@@ -150,13 +199,29 @@ FocusScope {
 
                     Image {
                         anchors.fill: parent
-                        source: encodeURI("file://" + wallpaperTile.modelData.path)
+                        source: encodeURI("file://" + (wallpaperTile.modelData.thumbnail || wallpaperTile.modelData.path))
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                         cache: true
                     }
 
-                    
+                    Rectangle {
+                        visible: !!wallpaperTile.modelData.isVideo
+                        anchors.bottom: parent.bottom
+                        anchors.right: parent.right
+                        anchors.margins: 4
+                        width: 22
+                        height: 18
+                        radius: 4
+                        color: Qt.rgba(0, 0, 0, 0.7)
+
+                        ShellText {
+                            anchors.centerIn: parent
+                            text: "󰿎"
+                            font.pixelSize: 11
+                            color: Theme.primary
+                        }
+                    }
                 }
 
                 MouseArea {

@@ -41,6 +41,11 @@ Singleton {
             folderProcess.exec([helper, "open-wallpapers"]);
     }
 
+    function openLiveWallpaperFolder() {
+        if (!folderProcess.running)
+            folderProcess.exec([helper, "open-live-wallpapers"]);
+    }
+
     Component.onCompleted: {
         refreshThemes();
         refreshWallpapers();

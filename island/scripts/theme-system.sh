@@ -15,6 +15,8 @@ state_dir=${XDG_STATE_HOME:-"$HOME/.local/state"}/vyeos
 # PICTURES to $HOME when XDG user directories have not been configured.
 pictures_dir=${XDG_PICTURES_DIR:-"$HOME/Pictures"}
 wallpaper_root=$pictures_dir/Wallpapers
+live_wallpaper_dir=$wallpaper_root/live
+thumbnail_cache_dir=${XDG_CACHE_HOME:-"$HOME/.cache"}/cool-shell/thumbnails
 sddm_cache_dir=${VYEOS_SDDM_CACHE_DIR:-/var/cache/vyeos-sddm}
 
 die() {
@@ -44,17 +46,60 @@ list_themes() {
   jq -s 'map({name, slug, appearance, colors}) | sort_by(.name)' "$theme_dir"/*.json
 }
 
+is_video_file() {
+  local file=$1
+  case "${file,,}" in
+    *.mp4|*.webm|*.mkv|*.mov) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+get_video_thumbnail() {
+  local video_path=$1
+  mkdir -p "$thumbnail_cache_dir"
+  local mtime size hash thumb_path
+  mtime=$(stat -c '%Y' "$video_path" 2>/dev/null || date +%s)
+  size=$(stat -c '%s' "$video_path" 2>/dev/null || echo 0)
+  hash=$(printf '%s:%s:%s' "$video_path" "$mtime" "$size" | md5sum | cut -d' ' -f1)
+  thumb_path="$thumbnail_cache_dir/${hash}.jpg"
+  if [[ ! -s "$thumb_path" ]] && command -v ffmpeg >/dev/null; then
+    ffmpeg -loglevel error -y -ss 00:00:01 -i "$video_path" -vf "scale=480:-1" -update 1 -frames:v 1 -q:v 3 "$thumb_path" >/dev/null 2>&1 || true
+  fi
+  if [[ -s "$thumb_path" ]]; then
+    printf '%s' "$thumb_path"
+  else
+    printf '%s' "$video_path"
+  fi
+}
+
 list_wallpapers() {
   local slug=${1:-$(current_theme)} directory path first=true
   theme_file "$slug" >/dev/null
   directory=$wallpaper_root/$slug
+  mkdir -p "$live_wallpaper_dir"
+
+  local search_dirs=()
+  [[ -d "$directory" ]] && search_dirs+=("$directory")
+  [[ -d "$live_wallpaper_dir" && "$directory" != "$live_wallpaper_dir" ]] && search_dirs+=("$live_wallpaper_dir")
+
   printf '['
-  if [[ -d $directory ]]; then
+  if [[ ${#search_dirs[@]} -gt 0 ]]; then
     while IFS= read -r -d '' path; do
       $first || printf ','
       first=false
-      jq -cn --arg path "$path" --arg name "$(basename "$path")" '{name:$name,path:$path}'
-    done < <(find "$directory" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' \) -print0 | sort -z)
+      path=$(realpath -- "$path")
+      local is_video=false thumb="$path"
+      if is_video_file "$path"; then
+        is_video=true
+        thumb=$(get_video_thumbnail "$path")
+      fi
+      jq -cn \
+        --arg path "$path" \
+        --arg name "$(basename "$path")" \
+        --arg thumb "$thumb" \
+        --argjson isVideo "$is_video" \
+        '{name:$name,path:$path,thumbnail:$thumb,isVideo:$isVideo}'
+    done < <(find "${search_dirs[@]}" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' -o -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mkv' -o -iname '*.mov' \) -print0 | sort -z -u)
   fi
   printf ']\n'
 }
@@ -67,6 +112,11 @@ open_wallpaper_folder() {
   xdg-open "$directory" >/dev/null 2>&1
 }
 
+open_live_wallpaper_folder() {
+  mkdir -p "$live_wallpaper_dir"
+  xdg-open "$live_wallpaper_dir" >/dev/null 2>&1
+}
+
 wallpaper_for_theme() {
   local slug=$1 directory saved=
   directory=$wallpaper_root/$slug
@@ -75,12 +125,17 @@ wallpaper_for_theme() {
   elif [[ -s $state_dir/current-wallpaper ]]; then
     IFS= read -r saved < "$state_dir/current-wallpaper"
   fi
-  if [[ -n $saved && -f $saved && $(realpath -- "$saved") == "$(realpath -m -- "$directory")/"* ]]; then
-    printf '%s\n' "$saved"
-    return
+  if [[ -n $saved && -f $saved ]]; then
+    local real_saved
+    real_saved=$(realpath -- "$saved")
+    if [[ $real_saved == "$(realpath -m -- "$directory")/"* || $real_saved == "$(realpath -m -- "$live_wallpaper_dir")/"* ]]; then
+      printf '%s\n' "$real_saved"
+      return
+    fi
   fi
-  find "$directory" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' \) -print -quit 2>/dev/null || true
+  find "$directory" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' -o -iname '*.mp4' \) -print -quit 2>/dev/null || true
 }
+
 
 write_sddm_theme() {
   local file=$1 output=$2 use_wallpaper=$3
@@ -352,8 +407,24 @@ set_wallpaper() {
   directory=$wallpaper_root/$slug
   [[ -f $path ]] || die "wallpaper does not exist: $path"
   resolved=$(realpath -- "$path")
-  [[ $resolved == "$(realpath -m -- "$directory")/"* ]] || die "wallpaper is not in the $slug theme folder"
-  display_wallpaper "$resolved"
+  mkdir -p "$live_wallpaper_dir"
+
+  local in_theme=false in_live=false
+  [[ $resolved == "$(realpath -m -- "$directory")/"* ]] && in_theme=true
+  [[ $resolved == "$(realpath -m -- "$live_wallpaper_dir")/"* ]] && in_live=true
+
+  if [[ $in_theme != true && $in_live != true ]]; then
+    die "wallpaper is not in the $slug theme folder or live folder"
+  fi
+
+  if is_video_file "$resolved"; then
+    qs -c cool-shell ipc call wallpaper setMedia "$resolved" "video" >/dev/null 2>&1 || qs ipc call wallpaper setMedia "$resolved" "video" >/dev/null 2>&1 || true
+    awww clear "000000" >/dev/null 2>&1 || true
+  else
+    qs -c cool-shell ipc call wallpaper setMedia "" "image" >/dev/null 2>&1 || qs ipc call wallpaper setMedia "" "image" >/dev/null 2>&1 || true
+    display_wallpaper "$resolved"
+  fi
+
   mkdir -p "$state_dir"
   printf '%s\n' "$resolved" > "$state_dir/current-wallpaper"
   mkdir -p "$state_dir/wallpapers"
@@ -377,17 +448,31 @@ restore_wallpaper() {
   local slug directory saved first
   slug=$(current_theme)
   directory=$wallpaper_root/$slug
+  mkdir -p "$live_wallpaper_dir"
   saved=
   if [[ -s $state_dir/wallpapers/$slug ]]; then
     IFS= read -r saved < "$state_dir/wallpapers/$slug"
   elif [[ -s $state_dir/current-wallpaper ]]; then
     IFS= read -r saved < "$state_dir/current-wallpaper"
   fi
-  if [[ -n $saved && -f $saved && $(realpath -- "$saved") == "$(realpath -m -- "$directory")/"* ]]; then
-    display_wallpaper "$saved"
-    return
+  if [[ -n $saved && -f $saved ]]; then
+    local real_saved
+    real_saved=$(realpath -- "$saved")
+    if [[ $real_saved == "$(realpath -m -- "$directory")/"* || $real_saved == "$(realpath -m -- "$live_wallpaper_dir")/"* ]]; then
+      if is_video_file "$real_saved"; then
+        qs -c cool-shell ipc call wallpaper setMedia "$real_saved" "video" >/dev/null 2>&1 || qs ipc call wallpaper setMedia "$real_saved" "video" >/dev/null 2>&1 || true
+        awww clear "000000" >/dev/null 2>&1 || true
+      else
+        qs -c cool-shell ipc call wallpaper setMedia "" "image" >/dev/null 2>&1 || qs ipc call wallpaper setMedia "" "image" >/dev/null 2>&1 || true
+        display_wallpaper "$real_saved"
+      fi
+      return
+    fi
   fi
-  first=$(find "$directory" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' \) -print -quit 2>/dev/null || true)
+  first=$(find "$directory" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' -o -iname '*.mp4' \) -print -quit 2>/dev/null || true)
+  if [[ -z $first ]]; then
+    first=$(find "$live_wallpaper_dir" -type f \( -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mkv' -o -iname '*.mov' \) -print -quit 2>/dev/null || true)
+  fi
   if [[ -n $first ]]; then
     set_wallpaper "$first" false
   else
@@ -421,9 +506,11 @@ case ${1:-} in
   list) list_themes ;;
   wallpapers) list_wallpapers "${2:-}" ;;
   open-wallpapers) open_wallpaper_folder "${2:-}" ;;
+  open-live-wallpapers) open_live_wallpaper_folder ;;
   wallpaper) set_wallpaper "${2:?wallpaper path required}" ;;
   restore-wallpaper) restore_wallpaper ;;
   sync-sddm-latest) sync_sddm_latest ;;
   generate) write_generated_files "$(theme_file "${2:-$(current_theme)}")" ;;
-  *) die "usage: $0 {apply THEME|current|current-json|list|wallpapers [THEME]|open-wallpapers [THEME]|wallpaper PATH|restore-wallpaper|generate [THEME]}" ;;
+  *) die "usage: $0 {apply THEME|current|current-json|list|wallpapers [THEME]|open-wallpapers [THEME]|open-live-wallpapers|wallpaper PATH|restore-wallpaper|generate [THEME]}" ;;
 esac
+
