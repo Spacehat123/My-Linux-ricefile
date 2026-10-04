@@ -8,12 +8,17 @@ Item {
     id: root
 
     required property var notification
-    readonly property bool critical: notification.urgency === NotificationUrgency.Critical
-    readonly property bool batteryNotification: (notification.appName || "").toLowerCase() === "power"
+    property bool isPopup: false
+    signal dismissToastRequested()
+
+    readonly property bool critical: notification && notification.urgency === NotificationUrgency.Critical
+    readonly property bool batteryNotification: notification && (
+        (notification.appName || "").toLowerCase() === "power"
         || (notification.summary || "").toLowerCase().includes("battery")
-    readonly property color accent: critical ? Theme.red : (notification.urgency === NotificationUrgency.Low ? Theme.mutedDark : Theme.primary)
+    )
+    readonly property color accent: critical ? Theme.red : (notification && notification.urgency === NotificationUrgency.Low ? Theme.mutedDark : Theme.primary)
     readonly property int timeout: {
-        if (critical || notification.expireTimeout === 0)
+        if (!notification || critical || notification.expireTimeout === 0)
             return 0;
         if (notification.expireTimeout > 0)
             return notification.expireTimeout;
@@ -63,8 +68,8 @@ Item {
                 IconImage {
                     anchors.fill: parent
                     anchors.margins: 6
-                    visible: !root.batteryNotification
-                    source: root.notification.image || (root.notification.appIcon ? Quickshell.iconPath(root.notification.appIcon) : "")
+                    visible: !root.batteryNotification && !!(root.notification && (root.notification.image || root.notification.appIcon))
+                    source: root.notification ? (root.notification.image || (root.notification.appIcon ? Quickshell.iconPath(root.notification.appIcon) : "")) : ""
                 }
             }
 
@@ -74,7 +79,7 @@ Item {
 
                 ShellText {
                     width: parent.width
-                    text: root.notification.appName || "Notification"
+                    text: (root.notification && root.notification.appName) ? root.notification.appName : "Notification"
                     color: root.accent
                     font.pixelSize: 10
                     font.weight: Font.DemiBold
@@ -83,7 +88,7 @@ Item {
 
                 ShellText {
                     width: parent.width
-                    text: root.notification.summary
+                    text: (root.notification && root.notification.summary) ? root.notification.summary : ""
                     font.pixelSize: 13
                     font.weight: Font.Bold
                     wrapMode: Text.Wrap
@@ -104,14 +109,21 @@ Item {
                 foregroundColor: Theme.muted
                 hoverBackgroundColor: Qt.rgba(root.accent.r, root.accent.g, root.accent.b, 0.18)
                 hoverForegroundColor: root.accent
-                onClicked: root.notification.dismiss()
+                onClicked: {
+                    if (root.isPopup) {
+                        root.dismissToastRequested();
+                    }
+                    if (root.notification && root.notification.dismiss) {
+                        root.notification.dismiss();
+                    }
+                }
             }
         }
 
         ShellText {
             width: parent.width
             visible: text.length > 0
-            text: root.notification.body
+            text: (root.notification && root.notification.body) ? root.notification.body : ""
             color: Theme.muted
             font.pixelSize: 11
             wrapMode: Text.Wrap
@@ -127,7 +139,7 @@ Item {
             Repeater {
                 id: actionRepeater
 
-                model: root.notification.actions
+                model: (root.notification && root.notification.actions) ? root.notification.actions : []
 
                 delegate: Rectangle {
                     required property var modelData
@@ -155,7 +167,14 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: modelData.invoke()
+                        onClicked: {
+                            if (root.isPopup) {
+                                root.dismissToastRequested();
+                            }
+                            if (modelData && modelData.invoke) {
+                                modelData.invoke();
+                            }
+                        }
                     }
                 }
             }
@@ -170,11 +189,14 @@ Item {
         hoverEnabled: true
     }
 
+    // Auto-expire ONLY applies to on-screen popup toasts, NEVER to notifications in the center
     Timer {
         interval: root.timeout
-        running: root.timeout > 0 && !hoverArea.containsMouse
-        onTriggered: root.notification.expire()
+        running: root.isPopup && root.timeout > 0 && !hoverArea.containsMouse
+        onTriggered: {
+            if (root.isPopup) {
+                root.dismissToastRequested();
+            }
+        }
     }
-
-    Component.onDestruction: notification.tracked = false
 }

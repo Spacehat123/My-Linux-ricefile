@@ -1246,11 +1246,12 @@ ShellRoot {
             ShellState.noticeTick = ShellState.noticeTick + 1;
             IslandHub.notifModel = notificationServer.trackedNotifications;
             IslandHub.notifyArrived();
+            notificationPopups.showToast(notification);
         }
     }
 
     NotificationPopups {
-        notificationModel: notificationServer.trackedNotifications
+        id: notificationPopups
         screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
     }
 
@@ -1382,7 +1383,8 @@ ShellRoot {
                 shelfFiles: ShelfState.files.length,
                 downloads: ShelfState.activeDownloads.length,
                 weather: WeatherState.tempC,
-                primaryPanel: IslandHub.primaryPanel()
+                primaryPanel: IslandHub.primaryPanel(),
+                trackedCount: notificationServer.trackedNotifications && notificationServer.trackedNotifications.values ? notificationServer.trackedNotifications.values.length : 0
             });
         }
 

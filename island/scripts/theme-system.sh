@@ -32,12 +32,14 @@ theme_file() {
 }
 
 current_theme() {
-  local slug=everforest
+  local slug=cherry
   if [[ -s $state_dir/current-theme ]]; then
     IFS= read -r slug < "$state_dir/current-theme"
   fi
   if [[ ! -f $theme_dir/$slug.json ]]; then
-    slug=everforest
+    local first_theme
+    first_theme=$(basename "$(ls -1 "$theme_dir"/*.json 2>/dev/null | head -n 1)" .json 2>/dev/null || echo "cherry")
+    slug=${first_theme:-cherry}
   fi
   printf '%s\n' "$slug"
 }
@@ -63,7 +65,7 @@ get_video_thumbnail() {
   hash=$(printf '%s:%s:%s' "$video_path" "$mtime" "$size" | md5sum | cut -d' ' -f1)
   thumb_path="$thumbnail_cache_dir/${hash}.jpg"
   if [[ ! -s "$thumb_path" ]] && command -v ffmpeg >/dev/null; then
-    ffmpeg -loglevel error -y -ss 00:00:01 -i "$video_path" -vf "scale=480:-1" -update 1 -frames:v 1 -q:v 3 "$thumb_path" >/dev/null 2>&1 || true
+    ffmpeg -nostdin -loglevel error -y -ss 00:00:01 -i "$video_path" -vf "scale=480:-1" -update 1 -frames:v 1 -q:v 3 "$thumb_path" </dev/null >/dev/null 2>&1 || true
   fi
   if [[ -s "$thumb_path" ]]; then
     printf '%s' "$thumb_path"

@@ -7,16 +7,16 @@ Singleton {
     id: root
 
     property var palette: ({
-        "bg_dim": "#232a2e", "bg0": "#2d353b", "bg1": "#343f44",
-        "bg2": "#3d484d", "bg3": "#475258", "bg4": "#4f585e",
-        "primary_container": "#3c4841", "secondary_container": "#45443c",
-        "foreground": "#d3c6aa", "muted": "#9da9a0", "muted_dark": "#7a8478",
-        "red": "#e67e80", "yellow": "#dbbc7f", "green": "#a7c080",
-        "primary": "#a7c080", "blue": "#7fbbb3", "aqua": "#83c092",
-        "orange": "#e69875", "purple": "#d699b6"
+        "bg_dim": "#160d14", "bg0": "#1f121b", "bg1": "#281723",
+        "bg2": "#3b1f32", "bg3": "#522b46", "bg4": "#6e395e",
+        "primary_container": "#4a1e36", "secondary_container": "#361933",
+        "foreground": "#fce8f0", "muted": "#cda3b8", "muted_dark": "#8a6279",
+        "red": "#e04b73", "yellow": "#f6c48e", "green": "#9bc892",
+        "primary": "#e8799e", "blue": "#a098d6", "aqua": "#cca8dd",
+        "orange": "#ea9381", "purple": "#b868b4"
     })
-    property string name: "Everforest"
-    property string slug: "everforest"
+    property string name: "Cherry"
+    property string slug: "cherry"
     readonly property string helper: Quickshell.shellPath("island/scripts/theme-system.sh")
 
     readonly property color bgDim: palette.bg_dim

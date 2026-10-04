@@ -5,14 +5,29 @@ import Quickshell.Wayland
 PanelWindow {
     id: window
 
-    required property var notificationModel
+    property var activeToasts: []
+
+    function showToast(notification) {
+        if (!notification)
+            return;
+        let list = (activeToasts || []).slice();
+        // Avoid duplicate toasts for the same notification id
+        list = list.filter(n => n && n.id !== notification.id);
+        list.push(notification);
+        activeToasts = list;
+    }
+
+    function dismissToast(id) {
+        let list = (activeToasts || []).slice();
+        activeToasts = list.filter(n => n && n.id !== id);
+    }
 
     implicitWidth: 390
     implicitHeight: screen ? screen.height - 28 : popupStack.implicitHeight
     color: "transparent"
     aboveWindows: true
     exclusionMode: ExclusionMode.Ignore
-    visible: !IslandHub.dnd
+    visible: !IslandHub.dnd && activeToasts.length > 0
     WlrLayershell.namespace: "vyeos-notifications"
 
     anchors {
@@ -32,13 +47,17 @@ PanelWindow {
         spacing: 8
 
         Repeater {
-            model: window.notificationModel
+            model: window.activeToasts
 
             delegate: NotificationCard {
                 required property var modelData
 
                 width: popupStack.width
                 notification: modelData
+                isPopup: true
+                onDismissToastRequested: {
+                    window.dismissToast(modelData.id);
+                }
             }
         }
     }
