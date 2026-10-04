@@ -8,6 +8,7 @@ import "components"
 import "core"
 import "desktop"
 import "island" // bare `Theme` in this file = island singleton (do NOT add `import "theme"` here)
+import "island/components"
 import "panels"
 
 ShellRoot {
@@ -26,6 +27,12 @@ ShellRoot {
     SurfaceManager {
         id: surfaceManager
     }
+
+    WindowRecovery {
+        id: windowRecovery
+        surfaceManager: surfaceManager
+    }
+
 
     // Spatial Workspace Foundation model (compositor-wide lifetime)
     WorkspaceModel {
@@ -1079,6 +1086,17 @@ ShellRoot {
             desktopState.setBottomBarOpen(val);
             return JSON.stringify({ success: true, bottomBarOpen: desktopState.bottomBarOpen });
         }
+
+        property bool gameMode: ShellState.gameMode
+        function toggleGameMode(): string {
+            ShellState.toggleGameMode();
+            return JSON.stringify({ success: true, gameMode: ShellState.gameMode });
+        }
+
+        function setGameMode(val: bool): string {
+            ShellState.setGameMode(val);
+            return JSON.stringify({ success: true, gameMode: val });
+        }
     }
 
     // =========================================================================
@@ -1176,6 +1194,17 @@ ShellRoot {
         imageSupported: true
         onNotification: (notification) => {
             notification.tracked = true;
+            // Feature 4: Enforce 50-item bounded ring buffer & pixmap decoupling
+            const tracked = notificationServer.trackedNotifications ? notificationServer.trackedNotifications.values : [];
+            if (tracked && tracked.length > 50) {
+                const oldest = tracked[0];
+                if (oldest) {
+                    try {
+                        oldest.dismiss();
+                    } catch (e) {}
+                }
+                gc();
+            }
             ShellState.noticeTick = ShellState.noticeTick + 1;
             IslandHub.notifModel = notificationServer.trackedNotifications;
             IslandHub.notifyArrived();
@@ -1206,6 +1235,70 @@ ShellRoot {
             required property var modelData
 
             screen: modelData
+        }
+    }
+
+    PanelWindow {
+        id: onboardingWindow
+        visible: onboardingManager.visible
+        color: "transparent"
+        aboveWindows: true
+        exclusionMode: ExclusionMode.Ignore
+        WlrLayershell.namespace: "vyeos-onboarding"
+
+        anchors {
+            top: true
+        }
+        margins {
+            top: 70
+        }
+
+        implicitWidth: onboardingManager.width
+        implicitHeight: onboardingManager.height
+
+        OnboardingManager {
+            id: onboardingManager
+            anchors.centerIn: parent
+        }
+    }
+
+    SettingsWindow {
+        id: settingsWindow
+    }
+
+    Connections {
+        target: ShellState
+        function onOpenSettingsRequested(category) {
+            if (!ShellState.gameMode) {
+                if (category && category !== "") {
+                    settingsWindow.openCategory(category);
+                } else {
+                    settingsWindow.toggle();
+                }
+            }
+        }
+        function onGameModeToggled(active) {
+            if (active) settingsWindow.hide();
+        }
+    }
+
+    IpcHandler {
+        target: "settings"
+
+        function toggle(): void {
+            settingsWindow.toggle();
+        }
+
+        function open(category: string): void {
+            if (category && category !== "") {
+                settingsWindow.openCategory(category);
+            } else {
+                settingsWindow.show();
+            }
+        }
+
+        function close(): void {
+            settingsWindow.hide();
         }
     }
 
@@ -1366,7 +1459,7 @@ ShellRoot {
                 id: ambientLayer
                 screen: monitorScope.modelData
                 idle: shellRoot.idle
-                enabled: shellRoot.ambientEnabled
+                enabled: shellRoot.ambientEnabled && !ShellState.gameMode
             }
 
             // Spatial Workspace Transition HUD (WlrLayer.Top, ephemeral)
@@ -1379,6 +1472,7 @@ ShellRoot {
             // Edge trigger overlay window
             PanelWindow {
                 id: triggerWindow
+                visible: !ShellState.gameMode
 
                 screen: monitorScope.modelData
 
@@ -1464,7 +1558,7 @@ ShellRoot {
                 desktopState: shellRoot.desktopState
                 wallpaperEnabled: shellRoot.wallpaperEnabled
                 ambientEnabled: shellRoot.ambientEnabled
-                open: monitorScope.leftSidebarOpen || (shellRoot.desktopState && shellRoot.desktopState.leftSidebarOpen)
+                open: (monitorScope.leftSidebarOpen || (shellRoot.desktopState && shellRoot.desktopState.leftSidebarOpen)) && !ShellState.gameMode
 
                 onToggleWallpaper: shellRoot.wallpaperEnabled = !shellRoot.wallpaperEnabled
                 onToggleAmbient: shellRoot.ambientEnabled = !shellRoot.ambientEnabled
@@ -1484,7 +1578,7 @@ ShellRoot {
                 desktopModel: shellRoot.desktopModel
                 surfaceModel: shellRoot.surfaceModel
                 interactionModel: shellRoot.interactionModel
-                open: monitorScope.rightSidebarOpen || (shellRoot.desktopState && shellRoot.desktopState.rightSidebarOpen)
+                open: (monitorScope.rightSidebarOpen || (shellRoot.desktopState && shellRoot.desktopState.rightSidebarOpen)) && !ShellState.gameMode
 
                 onHoveredChanged: {
                     if (!hovered && !rightTrigger.active) {
@@ -1501,7 +1595,7 @@ ShellRoot {
                 desktopModel: shellRoot.desktopModel
                 interactionModel: shellRoot.interactionModel
                 desktopState: shellRoot.desktopState
-                open: monitorScope.bottomBarOpen || (shellRoot.desktopState && shellRoot.desktopState.bottomBarOpen)
+                open: (monitorScope.bottomBarOpen || (shellRoot.desktopState && shellRoot.desktopState.bottomBarOpen)) && !ShellState.gameMode
 
                 onHoveredChanged: {
                     if (!hovered && !centerTrigger.active) {

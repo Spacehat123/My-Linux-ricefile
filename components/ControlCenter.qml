@@ -1,5 +1,9 @@
 import QtQuick
-import "../theme"
+import Quickshell
+import Quickshell.Io
+import Quickshell.Services.Pipewire
+import "../island" as Island
+import "../island/components"
 
 Item {
     id: root
@@ -13,6 +17,14 @@ Item {
     property bool wallpaperEnabled: true
     property bool ambientEnabled: true
 
+    // Game Mode State directly synchronized with Island.ShellState single source of truth
+    readonly property bool gameModeActive: Island.ShellState ? Island.ShellState.gameMode : false
+    readonly property int gameModeKilledCount: Island.ShellState ? Island.ShellState.gameModeKilledCount : 0
+
+    function toggleGameMode() {
+        if (Island.ShellState) Island.ShellState.toggleGameMode();
+    }
+
     // Action Signals (Unidirectional Event Flow to shellRoot)
     signal toggleWallpaper()
     signal toggleAmbient()
@@ -24,384 +36,543 @@ Item {
 
     readonly property bool hovered: rootHoverHandler.hovered
 
-    Theme {
-        id: theme
+    // PipeWire native audio binding
+    readonly property var sinkAudio: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio : null
+    readonly property bool audioMuted: sinkAudio ? sinkAudio.muted : false
+    readonly property real currentVolume: sinkAudio ? sinkAudio.volume : 0.0
+
+    SystemClock {
+        id: sysClock
+        precision: SystemClock.Minutes
     }
 
     Column {
         anchors.fill: parent
-        spacing: 12
+        spacing: 16
 
         // =====================================================================
-        // SECTION 1: Cyber-Tactical Header
+        // SECTION 1: HEADER & GREETING
         // =====================================================================
         Item {
             width: parent.width
-            height: theme.surfaceHeaderHeight
+            height: 48
 
-            Row {
+            Column {
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
+                spacing: 2
 
                 Text {
-                    text: "// CONTROL CENTER"
-                    font.pixelSize: 11
+                    text: Qt.formatDateTime(sysClock.date, "hh:mm")
+                    font.pixelSize: 22
                     font.bold: true
-                    font.family: "monospace"
-                    font.letterSpacing: 1.5
-                    color: theme.primaryTextColor
+                    font.family: Island.Theme.fontFamily
+                    color: Island.Theme.foreground
+                }
+
+                Text {
+                    text: Qt.formatDateTime(sysClock.date, "dddd, dd MMMM")
+                    font.pixelSize: 11
+                    font.family: Island.Theme.fontFamily
+                    color: Island.Theme.muted
                 }
             }
 
-            Row {
+            // Settings Gear Icon
+            Rectangle {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
+                width: 34
+                height: 34
+                radius: 17
+                color: gearHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard
+                border.color: gearHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle
+                border.width: 1
+                scale: gearTap.pressed ? 0.94 : 1.0
 
-                Rectangle {
-                    width: 6
-                    height: 6
-                    radius: 3
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: {
-                        if (root.desktopState && root.desktopState.currentWorkspaceIsUrgent) return "#ff3366";
-                        if (root.desktopState && root.desktopState.currentWorkspaceHasFullscreen) return "#ffb700";
-                        return "#00ff88";
-                    }
-                }
+                Behavior on scale { NumberAnimation { duration: 90 } }
+                Behavior on color { ColorAnimation { duration: 120 } }
 
                 Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "SYS.ONLINE"
-                    font.pixelSize: 8
-                    font.bold: true
-                    font.family: "monospace"
-                    color: theme.secondaryTextColor
+                    anchors.centerIn: parent
+                    text: "󰒓"
+                    font.family: Island.Theme.iconFontFamily
+                    font.pixelSize: 15
+                    color: gearHover.hovered ? Island.Theme.primary : Island.Theme.muted
+                }
+
+                HoverHandler { id: gearHover }
+                TapHandler {
+                    id: gearTap
+                    onTapped: {
+                        Island.ShellState.close();
+                        Island.ShellState.openSettingsRequested();
+                    }
                 }
             }
         }
 
-        // Hairline Divider
-        Rectangle {
-            width: parent.width
-            height: 1
-            color: theme.surfaceDividerColor
-        }
-
         // =====================================================================
-        // SECTION 2: Desktop Environment Controls (Wallpaper & Ambient)
+        // SECTION 2: QUICK CONTROLS GRID (2x2 SQUIRCLE TILES)
         // =====================================================================
-        Text {
-            text: "// SYSTEM MODES"
-            font.pixelSize: 8
-            font.bold: true
-            font.family: "monospace"
-            font.letterSpacing: 1.5
-            color: theme.mutedTextColor
-        }
-
-        // 1. Wallpaper Engine Toggle Card
-        Rectangle {
-            id: wallpaperCard
+        Grid {
             width: parent.width
-            height: 52
-            radius: theme.surfaceCardCornerRadius
-            color: wallpaperTap.pressed
-                ? theme.surfaceCardFocusedBackground
-                : (wallpaperHover.hovered ? theme.surfaceCardHoverBackground : theme.surfaceCardBackground)
-            border.color: root.wallpaperEnabled ? theme.actionActiveBorder : theme.surfaceCardBorder
-            border.width: 1
+            columns: 2
+            spacing: 10
 
-            HoverHandler {
-                id: wallpaperHover
-                cursorShape: Qt.PointingHandCursor
-            }
+            // 1. Wallpaper Toggle
+            Rectangle {
+                width: (parent.width - 10) / 2
+                height: 72
+                radius: 16
+                color: root.wallpaperEnabled
+                    ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.16)
+                    : (wpTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
+                border.color: root.wallpaperEnabled ? Island.Theme.primary : (wpTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+                border.width: root.wallpaperEnabled ? 1.5 : 1
+                scale: wpTileTap.pressed ? 0.96 : 1.0
 
-            TapHandler {
-                id: wallpaperTap
-                acceptedButtons: Qt.LeftButton
-                onTapped: root.toggleWallpaper()
-            }
+                Behavior on scale { NumberAnimation { duration: 80 } }
+                Behavior on color { ColorAnimation { duration: 120 } }
+                Behavior on border.color { ColorAnimation { duration: 120 } }
 
-            Row {
-                anchors.fill: parent
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
+                HoverHandler { id: wpTileHover }
+                TapHandler {
+                    id: wpTileTap
+                    onTapped: root.toggleWallpaper()
+                }
 
                 Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 3
-                    width: parent.width - 50
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 4
 
                     Text {
-                        text: "WALLPAPER ENGINE"
-                        font.pixelSize: 10
+                        text: "󰸉"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 18
+                        color: root.wallpaperEnabled ? Island.Theme.primary : Island.Theme.muted
+                    }
+
+                    Text {
+                        text: "Wallpaper"
+                        font.pixelSize: 11
                         font.bold: true
-                        font.family: "monospace"
-                        color: theme.primaryTextColor
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.foreground
                     }
 
                     Text {
-                        text: root.wallpaperEnabled ? "ACTIVE // 60 FPS VSYNC" : "INACTIVE // DISABLED"
-                        font.pixelSize: 8
-                        font.family: "monospace"
-                        color: root.wallpaperEnabled ? theme.actionActiveText : theme.mutedTextColor
-                    }
-                }
-
-                // Tactical Capsule Switch
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 40
-                    height: 20
-                    radius: 10
-                    color: root.wallpaperEnabled ? theme.actionActiveBackground : theme.workspaceEmptyBackground
-                    border.color: root.wallpaperEnabled ? theme.actionActiveBorder : theme.surfaceBadgeBorder
-                    border.width: 1
-
-                    Rectangle {
-                        anchors.verticalCenter: parent.verticalCenter
-                        x: root.wallpaperEnabled ? 23 : 3
-                        width: 14
-                        height: 14
-                        radius: 7
-                        color: root.wallpaperEnabled ? theme.actionActiveText : theme.mutedTextColor
-
-                        Behavior on x {
-                            NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
-                        }
+                        text: root.wallpaperEnabled ? "Dynamic" : "Paused"
+                        font.pixelSize: 9
+                        font.family: Island.Theme.fontFamily
+                        color: root.wallpaperEnabled ? Island.Theme.primary : Island.Theme.muted
                     }
                 }
             }
-        }
 
-        // 2. Ambient Overlay Toggle Card
-        Rectangle {
-            id: ambientCard
-            width: parent.width
-            height: 52
-            radius: theme.surfaceCardCornerRadius
-            color: ambientTap.pressed
-                ? theme.surfaceCardFocusedBackground
-                : (ambientHover.hovered ? theme.surfaceCardHoverBackground : theme.surfaceCardBackground)
-            border.color: root.ambientEnabled ? theme.actionActiveBorder : theme.surfaceCardBorder
-            border.width: 1
+            // 2. Ambient Overlay Toggle
+            Rectangle {
+                width: (parent.width - 10) / 2
+                height: 72
+                radius: 16
+                color: root.ambientEnabled
+                    ? Qt.rgba(Island.Theme.blue.r, Island.Theme.blue.g, Island.Theme.blue.b, 0.16)
+                    : (ambTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
+                border.color: root.ambientEnabled ? Island.Theme.blue : (ambTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+                border.width: root.ambientEnabled ? 1.5 : 1
+                scale: ambTileTap.pressed ? 0.96 : 1.0
 
-            HoverHandler {
-                id: ambientHover
-                cursorShape: Qt.PointingHandCursor
-            }
+                Behavior on scale { NumberAnimation { duration: 80 } }
+                Behavior on color { ColorAnimation { duration: 120 } }
+                Behavior on border.color { ColorAnimation { duration: 120 } }
 
-            TapHandler {
-                id: ambientTap
-                acceptedButtons: Qt.LeftButton
-                onTapped: root.toggleAmbient()
-            }
-
-            Row {
-                anchors.fill: parent
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
+                HoverHandler { id: ambTileHover }
+                TapHandler {
+                    id: ambTileTap
+                    onTapped: root.toggleAmbient()
+                }
 
                 Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 3
-                    width: parent.width - 50
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 4
 
                     Text {
-                        text: "AMBIENT OVERLAY"
-                        font.pixelSize: 10
-                        font.bold: true
-                        font.family: "monospace"
-                        color: theme.primaryTextColor
+                        text: "󰍹"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 18
+                        color: root.ambientEnabled ? Island.Theme.blue : Island.Theme.muted
                     }
 
                     Text {
-                        text: {
-                            if (!root.ambientEnabled) return "OFFLINE // SUPPRESSED";
-                            if (root.desktopState && root.desktopState.ambientActive) return "ENGAGED // IDLE DETECTED";
-                            return "ARMED // MONITORING IDLE";
-                        }
-                        font.pixelSize: 8
-                        font.family: "monospace"
-                        color: {
-                            if (!root.ambientEnabled) return "#60ffffff";
-                            if (root.desktopState && root.desktopState.ambientActive) return "#00e5ff";
-                            return theme.mutedTextColor;
+                        text: "Ambient HUD"
+                        font.pixelSize: 11
+                        font.bold: true
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.foreground
+                    }
+
+                    Text {
+                        text: root.ambientEnabled ? "Monitoring" : "Disabled"
+                        font.pixelSize: 9
+                        font.family: Island.Theme.fontFamily
+                        color: root.ambientEnabled ? Island.Theme.blue : Island.Theme.muted
+                    }
+                }
+            }
+
+            // 3. Do Not Disturb Toggle
+            Rectangle {
+                width: (parent.width - 10) / 2
+                height: 72
+                radius: 16
+                readonly property bool dndActive: Island.IslandHub ? Island.IslandHub.dnd : false
+                color: dndActive
+                    ? Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.16)
+                    : (dndTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
+                border.color: dndActive ? Island.Theme.purple : (dndTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+                border.width: dndActive ? 1.5 : 1
+                scale: dndTileTap.pressed ? 0.96 : 1.0
+
+                Behavior on scale { NumberAnimation { duration: 80 } }
+                Behavior on color { ColorAnimation { duration: 120 } }
+                Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                HoverHandler { id: dndTileHover }
+                TapHandler {
+                    id: dndTileTap
+                    onTapped: {
+                        if (Island.IslandHub)
+                            Island.IslandHub.dnd = !Island.IslandHub.dnd;
+                    }
+                }
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 4
+
+                    Text {
+                        text: "󰂛"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 18
+                        color: parent.parent.dndActive ? Island.Theme.purple : Island.Theme.muted
+                    }
+
+                    Text {
+                        text: "Do Not Disturb"
+                        font.pixelSize: 11
+                        font.bold: true
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.foreground
+                    }
+
+                    Text {
+                        text: parent.parent.dndActive ? "Silenced" : "Alerts On"
+                        font.pixelSize: 9
+                        font.family: Island.Theme.fontFamily
+                        color: parent.parent.dndActive ? Island.Theme.purple : Island.Theme.muted
+                    }
+                }
+            }
+
+            // 4. Night Light Toggle
+            Rectangle {
+                width: (parent.width - 10) / 2
+                height: 72
+                radius: 16
+                readonly property bool nightLightActive: Island.ShellState ? Island.ShellState.nightLightTemperature < 6500 : false
+                color: nightLightActive
+                    ? Qt.rgba(Island.Theme.orange.r, Island.Theme.orange.g, Island.Theme.orange.b, 0.16)
+                    : (nlTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
+                border.color: nightLightActive ? Island.Theme.orange : (nlTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+                border.width: nightLightActive ? 1.5 : 1
+                scale: nlTileTap.pressed ? 0.96 : 1.0
+
+                Behavior on scale { NumberAnimation { duration: 80 } }
+                Behavior on color { ColorAnimation { duration: 120 } }
+                Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                HoverHandler { id: nlTileHover }
+                TapHandler {
+                    id: nlTileTap
+                    onTapped: {
+                        if (Island.ShellState) {
+                            Island.ShellState.nightLightTemperature = nightLightActive ? 6500 : 4200;
                         }
                     }
                 }
 
-                // Tactical Capsule Switch
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 40
-                    height: 20
-                    radius: 10
-                    color: root.ambientEnabled ? theme.actionActiveBackground : theme.workspaceEmptyBackground
-                    border.color: root.ambientEnabled ? theme.actionActiveBorder : theme.surfaceBadgeBorder
-                    border.width: 1
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 4
 
-                    Rectangle {
-                        anchors.verticalCenter: parent.verticalCenter
-                        x: root.ambientEnabled ? 23 : 3
-                        width: 14
-                        height: 14
-                        radius: 7
-                        color: root.ambientEnabled ? theme.actionActiveText : theme.mutedTextColor
+                    Text {
+                        text: "󰖔"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 18
+                        color: parent.parent.nightLightActive ? Island.Theme.orange : Island.Theme.muted
+                    }
 
-                        Behavior on x {
-                            NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
-                        }
+                    Text {
+                        text: "Night Light"
+                        font.pixelSize: 11
+                        font.bold: true
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.foreground
+                    }
+
+                    Text {
+                        text: parent.parent.nightLightActive ? "Warm 4200K" : "Standard 6500K"
+                        font.pixelSize: 9
+                        font.family: Island.Theme.fontFamily
+                        color: parent.parent.nightLightActive ? Island.Theme.orange : Island.Theme.muted
                     }
                 }
             }
         }
 
         // =====================================================================
-        // SECTION 3: Focused Workspace Telemetry Context
+        // SECTION 2B: GAME MODE (HIGH-PERFORMANCE BLOAT KILLER)
         // =====================================================================
-        Text {
-            text: "// FOCUSED WORKSPACE"
-            font.pixelSize: 8
-            font.bold: true
-            font.family: "monospace"
-            font.letterSpacing: 1.5
-            color: theme.mutedTextColor
-        }
-
         Rectangle {
             width: parent.width
             height: 64
-            radius: theme.surfaceCardCornerRadius
-            color: theme.surfaceCardBackground
-            border.color: theme.surfaceCardBorder
+            radius: 16
+            color: root.gameModeActive
+                ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.16)
+                : (gameTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
+            border.color: root.gameModeActive 
+                ? Island.Theme.red 
+                : (gameTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+            border.width: root.gameModeActive ? 1.5 : 1
+
+            Behavior on color { ColorAnimation { duration: 120 } }
+            Behavior on border.color { ColorAnimation { duration: 120 } }
+
+            HoverHandler { id: gameTileHover }
+
+            Row {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 10
+
+                // Main clickable toggle zone (Badge + Text)
+                Item {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - 84
+                    height: parent.height
+
+                    scale: mainTap.pressed ? 0.98 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 80 } }
+
+                    HoverHandler { id: mainHover }
+                    TapHandler {
+                        id: mainTap
+                        onTapped: root.toggleGameMode()
+                    }
+
+                    Row {
+                        anchors.fill: parent
+                        spacing: 10
+
+                        // Glowing controller badge
+                        Rectangle {
+                            width: 36
+                            height: 36
+                            radius: 10
+                            color: root.gameModeActive 
+                                ? Island.Theme.red 
+                                : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰊴"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 18
+                                color: root.gameModeActive ? "#0a0a0f" : Island.Theme.primary
+                            }
+                        }
+
+                        // Text labels
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width - 46
+                            spacing: 2
+
+                            Text {
+                                text: "Game Mode"
+                                font.pixelSize: 13
+                                font.bold: true
+                                font.family: Island.Theme.fontFamily
+                                color: Island.Theme.foreground
+                            }
+
+                            Text {
+                                text: root.gameModeActive
+                                    ? "Active • " + root.gameModeKilledCount + " killed"
+                                    : "Kill bloat • 0 latency"
+                                font.pixelSize: 10
+                                font.family: Island.Theme.fontFamily
+                                color: root.gameModeActive ? Island.Theme.red : Island.Theme.muted
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
+
+                // Action controls (Exceptions gear + Toggle switch)
+                Row {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 6
+
+                    // Exceptions settings button
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 28
+                        height: 28
+                        radius: 14
+                        color: exceptHover.hovered ? Island.Theme.glassCardHover : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.12)
+                        border.color: exceptHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle
+                        border.width: 1
+                        scale: exceptTap.pressed ? 0.92 : 1.0
+
+                        Behavior on scale { NumberAnimation { duration: 80 } }
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰒓"
+                            font.family: Island.Theme.iconFontFamily
+                            font.pixelSize: 13
+                            color: exceptHover.hovered ? Island.Theme.primary : Island.Theme.muted
+                        }
+
+                        HoverHandler { id: exceptHover }
+                        TapHandler {
+                            id: exceptTap
+                            onTapped: {
+                                Island.ShellState.close();
+                                Island.ShellState.openSettingsRequested("gamemode");
+                            }
+                        }
+                    }
+
+                    // Toggle pill switch
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 40
+                        height: 22
+                        radius: 11
+                        color: root.gameModeActive ? Island.Theme.red : Island.Theme.glassCardHover
+                        border.color: root.gameModeActive ? Island.Theme.red : Island.Theme.glassBorderSubtle
+                        border.width: 1
+
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: root.gameModeActive ? parent.width - width - 2 : 2
+                            width: 18
+                            height: 18
+                            radius: 9
+                            color: root.gameModeActive ? "#0a0a0f" : Island.Theme.muted
+
+                            Behavior on x {
+                                NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                            }
+                        }
+
+                        TapHandler {
+                            onTapped: root.toggleGameMode()
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // SECTION 3: SOUND & VOLUME CONTROL CARD
+        // =====================================================================
+        Rectangle {
+            width: parent.width
+            height: 74
+            radius: 16
+            color: Island.Theme.glassCard
+            border.color: Island.Theme.glassBorderSubtle
             border.width: 1
 
             Column {
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: 14
                 spacing: 8
 
-                // Row 1: WS Identifier & Surface Count
                 Item {
                     width: parent.width
                     height: 18
 
-                    Row {
+                    Text {
                         anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 8
-
-                        Rectangle {
-                            height: 18
-                            implicitWidth: wsBadgeText.implicitWidth + 10
-                            radius: theme.surfaceTagCornerRadius
-                            color: theme.workspaceFocusedBackground
-                            border.color: theme.workspaceFocusedBorder
-                            border.width: 1
-
-                            Text {
-                                id: wsBadgeText
-                                anchors.centerIn: parent
-                                text: {
-                                    const id = root.desktopState ? root.desktopState.currentWorkspaceId : -1;
-                                    return id !== -1 ? "WS " + id : "WS --";
-                                }
-                                font.pixelSize: 9
-                                font.bold: true
-                                font.family: "monospace"
-                                color: theme.workspaceFocusedText
-                            }
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: {
-                                const name = root.desktopState && root.desktopState.currentWorkspace
-                                    ? (root.desktopState.currentWorkspace.name || "")
-                                    : "";
-                                return name ? "NAME: \"" + name + "\"" : "";
-                            }
-                            font.pixelSize: 8
-                            font.family: "monospace"
-                            color: theme.secondaryTextColor
-                        }
+                        text: "Master Volume"
+                        font.pixelSize: 11
+                        font.bold: true
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.foreground
                     }
 
                     Text {
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
-                        text: {
-                            const count = root.desktopState ? root.desktopState.currentSurfaceCount : 0;
-                            if (count === 0) return "EMPTY";
-                            return count === 1 ? "1 SURFACE" : count + " SURFACES";
-                        }
-                        font.pixelSize: 9
+                        text: root.audioMuted ? "Muted" : Math.round(root.currentVolume * 100) + "%"
+                        font.pixelSize: 11
                         font.bold: true
-                        font.family: "monospace"
-                        color: theme.workspaceHudValueText
+                        font.family: Island.Theme.fontFamily
+                        color: root.audioMuted ? Island.Theme.red : Island.Theme.primary
                     }
                 }
 
-                // Row 2: Status Indicators (Fullscreen & Urgent)
                 Row {
-                    spacing: 6
+                    width: parent.width
+                    spacing: 10
 
-                    // Fullscreen Indicator
                     Rectangle {
-                        height: 16
-                        implicitWidth: fsText.implicitWidth + 8
-                        radius: 3
-                        color: (root.desktopState && root.desktopState.currentWorkspaceHasFullscreen)
-                            ? theme.workspaceHudFullscreenBackground
-                            : theme.workspaceEmptyBackground
-                        border.color: (root.desktopState && root.desktopState.currentWorkspaceHasFullscreen)
-                            ? theme.workspaceHudFullscreenBadge
-                            : theme.workspaceEmptyBorder
+                        width: 26
+                        height: 26
+                        radius: 13
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: muteHover.hovered ? Island.Theme.glassCardHover : "transparent"
+                        border.color: muteHover.hovered ? Island.Theme.glassBorder : "transparent"
                         border.width: 1
 
                         Text {
-                            id: fsText
                             anchors.centerIn: parent
-                            text: (root.desktopState && root.desktopState.currentWorkspaceHasFullscreen)
-                                ? "⛶ FULLSCREEN ACTIVE"
-                                : "WINDOWED"
-                            font.pixelSize: 7
-                            font.bold: true
-                            font.family: "monospace"
-                            color: (root.desktopState && root.desktopState.currentWorkspaceHasFullscreen)
-                                ? theme.workspaceHudFullscreenBadge
-                                : theme.mutedTextColor
+                            text: root.audioMuted ? "󰖁" : "󰕾"
+                            font.family: Island.Theme.iconFontFamily
+                            font.pixelSize: 14
+                            color: root.audioMuted ? Island.Theme.red : Island.Theme.muted
+                        }
+
+                        HoverHandler { id: muteHover }
+                        TapHandler {
+                            onTapped: {
+                                if (root.sinkAudio)
+                                    root.sinkAudio.muted = !root.sinkAudio.muted;
+                            }
                         }
                     }
 
-                    // Urgency Indicator
-                    Rectangle {
-                        height: 16
-                        implicitWidth: urgText.implicitWidth + 8
-                        radius: 3
-                        color: (root.desktopState && root.desktopState.currentWorkspaceIsUrgent)
-                            ? theme.workspaceHudUrgentBackground
-                            : theme.workspaceEmptyBackground
-                        border.color: (root.desktopState && root.desktopState.currentWorkspaceIsUrgent)
-                            ? theme.workspaceHudUrgentBadge
-                            : theme.workspaceEmptyBorder
-                        border.width: 1
-
-                        Text {
-                            id: urgText
-                            anchors.centerIn: parent
-                            text: (root.desktopState && root.desktopState.currentWorkspaceIsUrgent)
-                                ? "! URGENT DETECTED"
-                                : "NOMINAL"
-                            font.pixelSize: 7
-                            font.bold: true
-                            font.family: "monospace"
-                            color: (root.desktopState && root.desktopState.currentWorkspaceIsUrgent)
-                                ? theme.workspaceHudUrgentBadge
-                                : theme.mutedTextColor
+                    // Interactive Volume Slider
+                    StyledSlider {
+                        width: parent.width - 36
+                        height: 20
+                        anchors.verticalCenter: parent.verticalCenter
+                        value: root.currentVolume
+                        onMoved: {
+                            if (root.sinkAudio) {
+                                root.sinkAudio.volume = value;
+                            }
                         }
                     }
                 }
@@ -409,140 +580,191 @@ Item {
         }
 
         // =====================================================================
-        // SECTION 4: Desktop Topology Summary
+        // SECTION 4: DISPLAY & WORKSPACE TELEMETRY
         // =====================================================================
-        Text {
-            text: "// DESKTOP TOPOLOGY"
-            font.pixelSize: 8
-            font.bold: true
-            font.family: "monospace"
-            font.letterSpacing: 1.5
-            color: theme.mutedTextColor
-        }
-
         Rectangle {
             width: parent.width
-            height: 94
-            radius: theme.surfaceCardCornerRadius
-            color: theme.surfaceCardBackground
-            border.color: theme.surfaceCardBorder
+            height: 84
+            radius: 16
+            color: Island.Theme.glassCard
+            border.color: Island.Theme.glassBorderSubtle
             border.width: 1
 
             Column {
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: 14
                 spacing: 8
 
-                // Row A: Workspaces Total / Occupied
-                Item {
-                    width: parent.width
-                    height: 16
+                Row {
+                    spacing: 8
+                    Rectangle {
+                        height: 20
+                        width: wsLabel.implicitWidth + 14
+                        radius: 10
+                        color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.2)
+                        border.color: Island.Theme.glassBorderActive
+                        border.width: 1
 
-                    Text {
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "WORKSPACES:"
-                        font.pixelSize: 8
-                        font.family: "monospace"
-                        color: theme.mutedTextColor
+                        Text {
+                            id: wsLabel
+                            anchors.centerIn: parent
+                            text: "Workspace " + (root.desktopState ? root.desktopState.currentWorkspaceId : "1")
+                            font.pixelSize: 10
+                            font.bold: true
+                            font.family: Island.Theme.fontFamily
+                            color: Island.Theme.primary
+                        }
                     }
 
                     Text {
-                        anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
                         text: {
-                            const tot = root.desktopModel ? root.desktopModel.workspaceCount : 0;
-                            const occ = root.desktopModel ? root.desktopModel.occupiedWorkspaceCount : 0;
-                            return tot + " TOTAL (" + occ + " OCCUPIED)";
+                            const count = root.desktopState ? root.desktopState.currentSurfaceCount : 0;
+                            if (count === 0) return "No windows open";
+                            return count === 1 ? "1 active window" : count + " active windows";
                         }
-                        font.pixelSize: 8
-                        font.bold: true
-                        font.family: "monospace"
-                        color: theme.primaryTextColor
+                        font.pixelSize: 10
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.muted
                     }
                 }
 
-                // Row B: Active Surfaces / Apps
-                Item {
-                    width: parent.width
-                    height: 16
-
+                Row {
+                    spacing: 6
                     Text {
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "ACTIVE SURFACES:"
-                        font.pixelSize: 8
-                        font.family: "monospace"
-                        color: theme.mutedTextColor
+                        text: "🖥️ " + (root.screen ? root.screen.name : "Display") + ":"
+                        font.pixelSize: 10
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.muted
                     }
-
                     Text {
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: {
-                            const surfs = root.desktopModel ? root.desktopModel.surfaceCount : 0;
-                            const apps = root.desktopModel ? root.desktopModel.applicationCount : 0;
-                            return surfs + " SURFACES (" + apps + " APPS)";
-                        }
-                        font.pixelSize: 8
+                        text: (root.screen ? root.screen.width + "×" + root.screen.height : "1920×1080") + " @ 60Hz"
+                        font.pixelSize: 10
                         font.bold: true
-                        font.family: "monospace"
-                        color: theme.primaryTextColor
-                    }
-                }
-
-                // Row C: Screen Output Identity
-                Item {
-                    width: parent.width
-                    height: 16
-
-                    Text {
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "DISPLAY OUTPUT:"
-                        font.pixelSize: 8
-                        font.family: "monospace"
-                        color: theme.mutedTextColor
-                    }
-
-                    Text {
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: {
-                            const mon = root.screen ? root.screen.name : "PRIMARY";
-                            const w = root.screen ? root.screen.width : 1920;
-                            const h = root.screen ? root.screen.height : 1080;
-                            return mon + " (" + w + "x" + h + ")";
-                        }
-                        font.pixelSize: 8
-                        font.bold: true
-                        font.family: "monospace"
-                        color: theme.actionActiveText
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.foreground
                     }
                 }
             }
         }
 
         // =====================================================================
-        // SECTION 5: Footer Status Branding
+        // SECTION 5: ACTION SHORTCUTS (SCREENSHOT, RECORD, TOUR)
         // =====================================================================
-        Rectangle {
+        Row {
             width: parent.width
-            height: 1
-            color: theme.surfaceDividerColor
-        }
+            spacing: 8
 
-        Item {
-            width: parent.width
-            height: 16
+            Rectangle {
+                width: (parent.width - 16) / 3
+                height: 36
+                radius: 12
+                color: scHover.hovered ? Island.Theme.primaryContainer : Island.Theme.glassCard
+                border.color: scHover.hovered ? Island.Theme.glassBorderActive : Island.Theme.glassBorderSubtle
+                border.width: 1
+                scale: scTap.pressed ? 0.95 : 1.0
+                Behavior on scale { NumberAnimation { duration: 80 } }
 
-            Text {
-                anchors.centerIn: parent
-                text: "SYS // PRANC.SHELL v0.27"
-                font.pixelSize: 8
-                font.family: "monospace"
-                font.letterSpacing: 1.5
-                color: theme.mutedTextColor
+                HoverHandler { id: scHover }
+                TapHandler {
+                    id: scTap
+                    onTapped: {
+                        Quickshell.execDetached(["sh", "-c", "sleep 0.2; quickshell ipc -c cool-shell call capture screenshot region"]);
+                    }
+                }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
+                    Text {
+                        text: "󰄀"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 13
+                        color: Island.Theme.foreground
+                    }
+                    Text {
+                        text: "Capture"
+                        font.pixelSize: 10
+                        font.bold: true
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.foreground
+                    }
+                }
+            }
+
+            Rectangle {
+                width: (parent.width - 16) / 3
+                height: 36
+                radius: 12
+                color: recHover.hovered ? Island.Theme.primaryContainer : Island.Theme.glassCard
+                border.color: recHover.hovered ? Island.Theme.glassBorderActive : Island.Theme.glassBorderSubtle
+                border.width: 1
+                scale: recTap.pressed ? 0.95 : 1.0
+                Behavior on scale { NumberAnimation { duration: 80 } }
+
+                HoverHandler { id: recHover }
+                TapHandler {
+                    id: recTap
+                    onTapped: {
+                        Quickshell.execDetached(["sh", "-c", "sleep 0.2; quickshell ipc -c cool-shell call capture toggleRecording"]);
+                    }
+                }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
+                    Text {
+                        text: "󰑋"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 13
+                        color: Island.Theme.red
+                    }
+                    Text {
+                        text: "Record"
+                        font.pixelSize: 10
+                        font.bold: true
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.foreground
+                    }
+                }
+            }
+
+            Rectangle {
+                width: (parent.width - 16) / 3
+                height: 36
+                radius: 12
+                color: prefHover.hovered ? Island.Theme.primaryContainer : Island.Theme.glassCard
+                border.color: prefHover.hovered ? Island.Theme.glassBorderActive : Island.Theme.glassBorderSubtle
+                border.width: 1
+                scale: prefTap.pressed ? 0.95 : 1.0
+                Behavior on scale { NumberAnimation { duration: 80 } }
+
+                HoverHandler { id: prefHover }
+                TapHandler {
+                    id: prefTap
+                    onTapped: {
+                        Island.ShellState.close();
+                        Island.ShellState.openSettingsRequested();
+                    }
+                }
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
+                    Text {
+                        text: "󰒓"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 13
+                        color: Island.Theme.primary
+                    }
+                    Text {
+                        text: "Settings"
+                        font.pixelSize: 10
+                        font.bold: true
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.foreground
+                    }
+                }
             }
         }
     }

@@ -61,6 +61,28 @@ FocusScope {
 
         return (left.description || left.nickname || left.name).localeCompare(right.description || right.nickname || right.name);
     })
+    property var appAudioStreams: []
+    property string audioOutputTab: "devices"
+
+    Timer {
+        id: streamCoalesceTimer
+        interval: 100
+        running: true
+        repeat: false
+        onTriggered: {
+            root.appAudioStreams = Pipewire.nodes.values.filter((node) => {
+                return node.isStream && node.audio && !node.isSink;
+            }).slice();
+        }
+    }
+
+    Connections {
+        target: Pipewire.nodes
+        function onValuesChanged() {
+            if (!streamCoalesceTimer.running)
+                streamCoalesceTimer.start();
+        }
+    }
     readonly property var bluetoothDevices: adapter ? adapter.devices.values.filter((device) => {
         return device.name || device.deviceName;
     }).slice().sort((left, right) => {
@@ -408,10 +430,30 @@ FocusScope {
         width: parent.width
         spacing: 8
 
-        PanelHeader {
-            title: "Control Center"
-            showCloseButton: false
-            onCloseRequested: ShellState.close()
+        Item {
+            width: parent.width
+            height: 32
+
+            PanelHeader {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                title: "Control Center"
+                showCloseButton: false
+                onCloseRequested: ShellState.close()
+            }
+
+            IconButton {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                width: 28
+                height: 28
+                icon: "󰒓"
+                accessibleName: "Settings"
+                onClicked: {
+                    ShellState.close();
+                    ShellState.openSettingsRequested();
+                }
+            }
         }
 
         Row {
@@ -892,16 +934,71 @@ FocusScope {
 
             }
 
+            Row {
+                id: outputTabRow
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: outputVolumeSlider.bottom
+                anchors.margins: 7
+                anchors.topMargin: 4
+                height: 26
+                visible: root.displayedSection === "output"
+                spacing: 6
+
+                Rectangle {
+                    width: (parent.width - 6) / 2
+                    height: parent.height
+                    radius: Theme.radiusSmall
+                    color: root.audioOutputTab === "devices" ? Theme.primaryContainer : Theme.bg1
+
+                    ShellText {
+                        anchors.centerIn: parent
+                        text: "Devices (" + root.audioSinks.length + ")"
+                        font.pixelSize: 10
+                        font.weight: root.audioOutputTab === "devices" ? Font.Bold : Font.Normal
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.audioOutputTab = "devices"
+                    }
+                }
+
+                Rectangle {
+                    width: (parent.width - 6) / 2
+                    height: parent.height
+                    radius: Theme.radiusSmall
+                    color: root.audioOutputTab === "apps" ? Theme.primaryContainer : Theme.bg1
+
+                    ShellText {
+                        anchors.centerIn: parent
+                        text: "App Streams (" + root.appAudioStreams.length + ")"
+                        font.pixelSize: 10
+                        font.weight: root.audioOutputTab === "apps" ? Font.Bold : Font.Normal
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.audioOutputTab = "apps";
+                            streamCoalesceTimer.start();
+                        }
+                    }
+                }
+            }
+
             ListView {
                 id: outputAudioList
 
                 anchors.left: parent.left
                 anchors.right: parent.right
-                anchors.top: outputVolumeSlider.bottom
+                anchors.top: outputTabRow.bottom
                 anchors.bottom: parent.bottom
                 anchors.margins: 7
                 anchors.topMargin: 5
-                visible: root.displayedSection === "output"
+                visible: root.displayedSection === "output" && root.audioOutputTab === "devices"
                 clip: true
                 spacing: 4
                 model: root.audioSinks
@@ -920,6 +1017,128 @@ FocusScope {
                     onClicked: Pipewire.preferredDefaultAudioSink = modelData
                 }
 
+            }
+
+            ListView {
+                id: appStreamList
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: outputTabRow.bottom
+                anchors.bottom: parent.bottom
+                anchors.margins: 7
+                anchors.topMargin: 5
+                visible: root.displayedSection === "output" && root.audioOutputTab === "apps"
+                clip: true
+                spacing: 6
+                model: root.appAudioStreams
+
+                delegate: Rectangle {
+                    id: streamRow
+                    required property var modelData
+                    readonly property var audioObj: modelData.audio
+                    readonly property string appName: modelData.description || modelData.name || "App Stream"
+
+                    width: appStreamList.width
+                    height: 48
+                    radius: Theme.radiusSmall
+                    color: Theme.bg1
+
+                    Row {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        anchors.topMargin: 5
+                        height: 16
+
+                        ShellText {
+                            text: streamRow.appName
+                            font.pixelSize: 11
+                            font.weight: Font.DemiBold
+                            color: Theme.foreground
+                            elide: Text.ElideRight
+                            width: parent.width - 50
+                        }
+
+                        ShellText {
+                            text: (streamRow.audioObj && streamRow.audioObj.muted) ? "Muted" : (Math.round((streamRow.audioObj ? streamRow.audioObj.volume : 0) * 100) + "%")
+                            font.pixelSize: 10
+                            color: Theme.muted
+                            horizontalAlignment: Text.AlignRight
+                            width: 50
+                        }
+                    }
+
+                    Item {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        anchors.bottomMargin: 6
+                        height: 16
+
+                        Rectangle {
+                            id: streamRail
+                            anchors.left: parent.left
+                            anchors.right: streamMuteBtn.left
+                            anchors.rightMargin: 8
+                            anchors.verticalCenter: parent.verticalCenter
+                            height: 6
+                            radius: 3
+                            color: Theme.bg2
+
+                            Rectangle {
+                                width: Math.max(0, Math.min(parent.width, parent.width * (streamRow.audioObj ? streamRow.audioObj.volume : 0)))
+                                height: parent.height
+                                radius: 3
+                                color: (streamRow.audioObj && streamRow.audioObj.muted) ? Theme.muted : Theme.primary
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: (mouse) => {
+                                    if (streamRow.audioObj) {
+                                        streamRow.audioObj.volume = Math.max(0, Math.min(1.0, mouse.x / width));
+                                        streamRow.audioObj.muted = false;
+                                    }
+                                }
+                                onPositionChanged: (mouse) => {
+                                    if (pressed && streamRow.audioObj) {
+                                        streamRow.audioObj.volume = Math.max(0, Math.min(1.0, mouse.x / width));
+                                        streamRow.audioObj.muted = false;
+                                    }
+                                }
+                            }
+                        }
+
+                        IconButton {
+                            id: streamMuteBtn
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 20
+                            height: 20
+                            icon: (streamRow.audioObj && streamRow.audioObj.muted) ? "󰝟" : "󰕾"
+                            foregroundColor: (streamRow.audioObj && streamRow.audioObj.muted) ? Theme.error : Theme.muted
+                            onClicked: {
+                                if (streamRow.audioObj) {
+                                    streamRow.audioObj.muted = !streamRow.audioObj.muted;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            ShellText {
+                anchors.centerIn: parent
+                visible: root.displayedSection === "output" && root.audioOutputTab === "apps" && root.appAudioStreams.length === 0
+                text: "No active application audio streams."
+                color: Theme.muted
+                font.pixelSize: 11
             }
 
             Row {
@@ -1121,7 +1340,7 @@ FocusScope {
             id: panelNavGrid
 
             width: parent.width
-            columns: 4
+            columns: 5
             spacing: 6
 
             Repeater {
@@ -1138,23 +1357,29 @@ FocusScope {
                     key: "capture",
                     label: "Capture"
                 }, {
+                    key: "shelf",
+                    label: "Shelf"
+                }, {
                     key: "notifications",
                     label: "Notifs"
                 }, {
                     key: "timer",
                     label: "Timer"
                 }, {
-                    key: "shelf",
-                    label: "Shelf"
-                }, {
                     key: "weather",
                     label: "Weather"
+                }, {
+                    key: "theme",
+                    label: "Theme"
+                }, {
+                    key: "settings",
+                    label: "Settings"
                 }]
 
                 delegate: Rectangle {
                     required property var modelData
 
-                    width: (panelNavGrid.width - panelNavGrid.spacing * 3) / 4
+                    width: (panelNavGrid.width - panelNavGrid.spacing * 4) / 5
                     height: 30
                     radius: 15
                     color: navMouse.containsMouse ? Theme.primaryContainer : Theme.bg1
@@ -1184,6 +1409,23 @@ FocusScope {
 
             }
 
+        }
+
+        Row {
+            id: displayInfoRow
+            width: parent.width
+            spacing: 12
+            visible: root.expandedSection === ""
+
+            Repeater {
+                model: Quickshell.screens
+                delegate: ShellText {
+                    required property var modelData
+                    text: "󰍹 " + modelData.name + ": " + modelData.width + "×" + modelData.height
+                    color: Theme.mutedDark
+                    font.pixelSize: 10
+                }
+            }
         }
 
     }

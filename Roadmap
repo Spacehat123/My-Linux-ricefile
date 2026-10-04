@@ -1,0 +1,1108 @@
+
+Comprehensive UI/UX Review & Improvement Recommendations
+Current Strengths
+Your shell already has several excellent foundations:
+
+✅ Reactive, unidirectional architecture (predictable state flow)
+✅ Clean layering (observation/mutation pipeline separation)
+✅ Comprehensive IPC API (13+ headless interfaces)
+✅ Idle-aware ambient system (performant, non-polling)
+✅ Spatial workspace navigation with visual feedback
+✅ GPU-accelerated procedural wallpaper (60 FPS VSync)
+Critical UI/UX Improvements for Mainstream Adoption
+1. 🎯 Onboarding & First-Time Setup (HIGHEST PRIORITY)
+Current Gap: The README assumes technical proficiency. Non-technical users will struggle.
+
+Improvements:
+
+QML
+// Add FirstRunWizard.qml component
+FirstRunWizard {
+    id: setupWizard
+
+    WizardStep {
+        title: "Welcome to Pranc Shell"
+        description: "A modern, safe Wayland desktop"
+        content: Text {
+            text: "This is your new desktop. Let's get you familiar with it."
+        }
+    }
+
+    WizardStep {
+        title: "Workspace Navigation"
+        description: "Workspaces are like virtual desktops"
+        content: Column {
+            Text { text: "• Hover bottom-center to see your workspaces" }
+            Text { text: "• Click any workspace to switch to it" }
+            Text { text: "• Keyboard: Super+Number to jump directly" }
+            HighlightedRegion { region: bottomBar } // Visual highlight
+        }
+    }
+
+    WizardStep {
+        title: "Control Center"
+        description: "Your settings hub"
+        content: Column {
+            Text { text: "• Hover bottom-left corner" }
+            Text { text: "• Toggle wallpaper and ambient mode" }
+            Text { text: "• See real-time system stats" }
+            HighlightedRegion { region: leftSidebar }
+        }
+    }
+
+    WizardStep {
+        title: "Application Manager"
+        description: "Manage your open apps"
+        content: Column {
+            Text { text: "• Hover bottom-right corner" }
+            Text { text: "• See all running applications" }
+            Text { text: "• Close or focus apps easily" }
+            HighlightedRegion { region: rightSidebar }
+        }
+    }
+}
+Add to Control Center:
+
+"Getting Started" Button → Triggers wizard at any time
+"Help" Tooltip System → Context-sensitive tooltips on hover
+"Keyboard Shortcuts" Card → Quick reference guide
+2. 🛡️ Safety Features (Critical for Migration from Windows)
+Current Gap: No confirmation dialogs, no undo system, no app crash recovery.
+
+Improvements:
+
+QML
+// Add ConfirmationDialog.qml for destructive actions
+ConfirmationDialog {
+    id: closeAppDialog
+    title: "Close Application?"
+    message: "Are you sure you want to close {appName}?"
+    primaryButton: "Close"
+    secondaryButton: "Cancel"
+
+    onAccepted: {
+        compositorActionLayer.closeSurface(surfaceAddress);
+    }
+}
+
+// Add UndoManager singleton in core/
+UndoManager {
+    id: undoManager
+    maxHistory: 20
+
+    function recordAction(action: Object) {
+        // Record workspace switches, window moves, etc.
+        // Undo with Ctrl+Z
+    }
+}
+
+// Crash recovery: Auto-save desktop state every 30 seconds
+CrashRecoveryManager {
+    id: recoveryManager
+
+    Timer {
+        interval: 30000
+        running: true
+        repeat: true
+        onTriggered: recoveryManager.saveDesktopState()
+    }
+
+    Component.onCompleted: {
+        if (recoveryManager.hasRecoveryPoint()) {
+            showRecoveryDialog();
+        }
+    }
+}
+Specific Safety Actions:
+
+Close button → "Are you sure?" confirmation
+Workspace delete (if enabled) → Confirmation + recovery
+Fullscreen toggle → Show tooltip: "Press Esc to exit"
+Surface move → Show path visually (animated highlight)
+3. 🎨 Visual Feedback & Discoverability (UX Gold)
+Current Gap: Edge triggers are invisible; users don't know where to hover.
+
+Improvements:
+
+QML
+// Add HoverIndicators.qml - Visual guides showing interactive regions
+HoverIndicators {
+    id: hoverGuides
+    opacity: 0.3
+
+    // Show on first login or when idle for 30s without interaction
+    IndicatorRegion {
+        region: leftEdgeTrigger
+        icon: "⚙️"
+        label: "Control Center"
+        animation: shimmer // Subtle pulsing glow
+    }
+
+    IndicatorRegion {
+        region: centerEdgeTrigger
+        icon: "📍"
+        label: "Workspaces"
+    }
+
+    IndicatorRegion {
+        region: rightEdgeTrigger
+        icon: "🪟"
+        label: "Applications"
+    }
+
+    // Fade out after 3 interactions (user learned)
+    autoHideAfterInteractions: 3
+    canBeReshownViaShortcut: Shortcut { sequences: ["?"] } // Help key
+}
+
+// Enhanced hover state for panels
+LeftSidebar {
+    id: leftSidebar
+    onHoverEnter: {
+        openAnimation.start();
+        pulseGlow.start(); // Glow effect on entry
+    }
+    onHoverExit: {
+        if (!containsMouse) {
+            closeAnimation.start();
+        }
+    }
+}
+
+// Add breadcrumb-style context at top
+DesktopContextBreadcrumb {
+    text: `${workspaceManager.focusedWorkspaceName} / ${surfaceManager.activeTitle}`
+    truncate: true
+    position: top-center
+    opacity: desktopState.hoverProgress // Fade with hover
+}
+Visual Enhancements:
+
+Animated entry/exit for all panels (ease-out, 280ms)
+Glow effects on hover regions (neon cyan outline, pulsing)
+Tooltip system for all interactive elements
+Breadcrumb path showing active context
+Progress indicators for long operations (e.g., closing app)
+4. 📱 Accessibility & Inclusive Design
+Current Gap: No keyboard-only navigation, no screen reader support, no high-contrast mode.
+
+Improvements:
+
+QML
+// Add AccessibilityManager.qml
+AccessibilityManager {
+    id: a11y
+    property bool highContrastMode: false
+    property bool reduceAnimations: false
+    property bool screenReaderMode: false
+    property int keyboardFocusSize: 3 // px
+
+    function toggleHighContrast() {
+        highContrastMode = !highContrastMode;
+        Theme.updateForContrast(highContrastMode);
+        // Increase border radius, bold fonts, higher saturation
+    }
+}
+
+// Keyboard navigation shortcuts (discoverable in Help menu)
+GlobalShortcut {
+    name: "focusLeftSidebar"
+    sequences: ["Alt+1"]
+    onPressed: { leftSidebar.open = true; leftSidebar.setFocus(); }
+}
+
+GlobalShortcut {
+    name: "focusBottomBar"
+    sequences: ["Alt+2"]
+    onPressed: { bottomBar.open = true; bottomBar.setFocus(); }
+}
+
+GlobalShortcut {
+    name: "focusRightSidebar"
+    sequences: ["Alt+3"]
+    onPressed: { rightSidebar.open = true; rightSidebar.setFocus(); }
+}
+
+GlobalShortcut {
+    name: "cycleWorkspaces"
+    sequences: ["Alt+Tab"] // Standard Windows behavior
+    onPressed: {
+        const next = workspaceModel.getAdjacentWorkspace(
+            workspaceManager.focusedWorkspaceId, 1, true
+        );
+        compositorActionLayer.switchWorkspace(next.id);
+    }
+}
+
+GlobalShortcut {
+    name: "toggleAmbient"
+    sequences: ["Alt+A"]
+    onPressed: { ambientEnabled = !ambientEnabled; }
+}
+
+// Keyboard-only app switching (like Windows Alt+Tab)
+AppSwitcher {
+    id: appSwitcher
+    visible: false
+
+    GlobalShortcut {
+        sequences: ["Alt+Tab"]
+        onPressed: {
+            appSwitcher.show();
+            appSwitcher.selectNext();
+        }
+    }
+
+    GlobalShortcut {
+        sequences: ["Alt+Shift+Tab"]
+        onPressed: appSwitcher.selectPrev();
+    }
+
+    KeyNavigation.onReleased: {
+        if (event.key === Qt.Key_Return) {
+            appSwitcher.selectCurrent();
+            appSwitcher.hide();
+        }
+    }
+}
+
+// Screen reader announcements
+ScreenReaderHelper {
+    function announce(message: string) {
+        if (a11y.screenReaderMode) {
+            Quickshell.Io.Process.exec(["espeak-ng", message]);
+        }
+    }
+}
+Keyboard Shortcuts Reference Card:
+
+Text
+┌─────────────────────────────────────────────┐
+│ KEYBOARD SHORTCUTS                          │
+├─────────────────────────────────────────────┤
+│ Super (Windows key)     → Open app launcher │
+│ Super + 1–9            → Jump to workspace  │
+│ Alt + Tab              → Cycle workspaces   │
+│ Alt + 1/2/3            → Open panels        │
+│ Ctrl + Alt + Q         → Close window       │
+│ Ctrl + Alt + F         → Toggle fullscreen  │
+│ Ctrl + Alt + M         → Move to workspace  │
+│ Alt + ?                → Show this help     │
+└─────────────────────────────────────────────┘
+Accessibility Settings (Control Center):
+
+☐ High Contrast Mode
+☐ Reduce Animations
+☐ Increase Font Size
+☐ Screen Reader Mode
+☐ Sticky Keys
+☐ Larger Cursor
+5. 🔍 Application Discovery & Search
+Current Gap: Users don't know what applications are available; no integrated search.
+
+Improvements:
+
+QML
+// Add ApplicationLauncher.qml (Spotlight-like interface)
+ApplicationLauncher {
+    id: appLauncher
+
+    GlobalShortcut {
+        sequences: ["Super"]
+        onPressed: appLauncher.toggle()
+    }
+
+    SearchBox {
+        id: search
+        placeholder: "Search apps, workspaces, documents…"
+        onTextChanged: {
+            results.update(search.text);
+        }
+    }
+
+    Results {
+        Repeater {
+            model: appLauncher.results
+
+            AppCard {
+                name: modelData.appName
+                icon: modelData.appIcon
+                description: modelData.description
+                category: modelData.category
+
+                onClicked: {
+                    appLauncher.launch(modelData);
+                    appLauncher.close();
+                }
+            }
+        }
+    }
+
+    RecentlyUsed {
+        title: "Recent Applications"
+        items: appLauncher.getRecentApps(5)
+    }
+
+    Categories {
+        title: "Browse by Category"
+        Repeater {
+            model: ["System", "Office", "Media", "Development", "Graphics"]
+            CategoryPill {
+                text: modelData
+                onClicked: appLauncher.filterByCategory(modelData)
+            }
+        }
+    }
+}
+
+// Desktop icon grid (optional, for users coming from Windows/macOS)
+DesktopIconGrid {
+    id: desktopIcons
+    enabled: desktopState.showDesktopIcons // Toggle in settings
+
+    Repeater {
+        model: appLauncher.favoriteApps
+
+        DesktopIcon {
+            appName: modelData.appName
+            appIcon: modelData.appIcon
+            onDoubleClicked: appLauncher.launch(modelData)
+        }
+    }
+}
+
+// Quick-access dock (like macOS)
+TaskbarDock {
+    id: dock
+    position: "bottom" // Configurable
+    autoHide: true
+
+    Repeater {
+        model: surfaceModel.runningApplications
+
+        DockIcon {
+            icon: modelData.appIcon
+            label: modelData.appName
+            isActive: modelData.isFocused
+            windowCount: modelData.count
+            onClicked: {
+                if (modelData.isFocused) {
+                    // Minimize or cycle windows
+                } else {
+                    compositorActionLayer.focusSurface(modelData.primarySurface);
+                }
+            }
+        }
+    }
+}
+6. 💻 System Tray & Status Integration
+Current Gap: Users can't see battery, volume, WiFi, or time without opening panels.
+
+Improvements:
+
+QML
+// Add SystemTray.qml (always visible in top bar)
+SystemTray {
+    id: tray
+    position: "top-right"
+
+    TimeDisplay {
+        format: "HH:mm:ss"
+        font.pixelSize: 14
+        color: Theme.foreground
+    }
+
+    NetworkStatus {
+        icon: networkManager.isConnected ? "📡" : "❌"
+        tooltip: networkManager.connectionName
+    }
+
+    BatteryIndicator {
+        percentage: powerManager.batteryPercent
+        isCharging: powerManager.isCharging
+        icon: {
+            if (powerManager.isCharging) return "🔌";
+            if (powerManager.batteryPercent > 80) return "🔋";
+            if (powerManager.batteryPercent > 40) return "🪫";
+            return "🔴"; // Low battery
+        }
+        onClicked: showPowerMenu()
+    }
+
+    VolumeControl {
+        volume: audioManager.volume
+        isMuted: audioManager.isMuted
+        onVolumeChanged: audioManager.setVolume(value)
+    }
+
+    NotificationIcon {
+        unreadCount: notificationServer.unreadCount
+        onClicked: showNotificationCenter()
+    }
+}
+Top Bar Layout:
+
+Code
+┌─────────────────────────────────────────────────┐
+│ 🎯 Active App Title  |  ☑️ Workspace 1/5  📡 🔋 🔊 │
+└─────────────────────────────────────────────────┘
+7. 🎮 Smooth Animations & Easing
+Current Gap: Animations use NumberAnimation with linear easing (feels robotic).
+
+Improvements:
+
+QML
+// Update Theme.qml with easing presets
+Theme {
+    // Easing functions for consistency
+    enum Easing {
+        EaseOutCubic
+        EaseInOutCubic
+        EaseOutExpo
+        EaseOutBack
+        Elastic
+    }
+
+    // Animation durations
+    readonly int animFast: 150      // Micro-interactions
+    readonly int animNormal: 280    // Panel slides
+    readonly int animSlow: 500      // Ambient fade
+
+    readonly int animBounce: 350    // Spring effects
+}
+
+// Apply smooth easing to all panel transitions
+LeftSidebar {
+    open: false
+
+    PropertyAnimation on x {
+        duration: Theme.animNormal
+        easing.type: Easing.OutCubic  // Natural deceleration
+    }
+
+    PropertyAnimation on opacity {
+        duration: Theme.animNormal
+        easing.type: Easing.InOutCubic
+    }
+
+    // On hover enter: spring bounce
+    SequentialAnimationGroup on scale {
+        PropertyAnimation {
+            to: 1.02
+            duration: 150
+            easing.type: Easing.OutBack
+        }
+        PropertyAnimation {
+            to: 1.0
+            duration: 100
+            easing.type: Easing.OutBack
+        }
+    }
+}
+
+// Workspace transition indicator with smooth easing
+DesktopTransition {
+    duration: Theme.animSlow
+    easing: Easing.OutCubic
+
+    // Visual indicator: arrow pointing in switch direction
+    ArrowIndicator {
+        from: previousWorkspaceId
+        to: nextWorkspaceId
+        direction: {
+            const diff = nextWorkspaceId - previousWorkspaceId;
+            return diff > 0 ? "→" : "←";
+        }
+    }
+}
+8. 📊 Performance & Resource Monitoring
+Current Gap: Users don't know if the shell is responsive or consuming resources.
+
+Improvements:
+
+QML
+// Add SystemMonitor.qml (visible in Control Center)
+SystemMonitor {
+    id: sysMonitor
+    updateInterval: 1000 // 1 second
+
+    CpuMonitor {
+        usage: systemStats.cpuPercent
+        cores: systemStats.cpuCores
+
+        TextualGraph {
+            values: systemStats.cpuHistory  // Last 30 samples
+            height: 30
+            width: 200
+        }
+    }
+
+    MemoryMonitor {
+        used: systemStats.memoryUsedMB
+        total: systemStats.memoryTotalMB
+        percent: (used / total) * 100
+
+        ProgressBar {
+            value: percent
+            warningThreshold: 70
+            criticalThreshold: 90
+        }
+    }
+
+    GPUMonitor {
+        usage: systemStats.gpuPercent
+        memory: systemStats.gpuMemoryMB
+    }
+
+    TemperatureMonitor {
+        cpu: systemStats.cpuTempC
+        gpu: systemStats.gpuTempC
+
+        WarningIndicator {
+            visible: cpu > 85 || gpu > 80
+            color: "orange"
+        }
+    }
+
+    FPS {
+        shell: desktopState.averageFPS
+        wallpaper: wallpaperEnabled ? desktopState.wallpaperFPS : 0
+        indicator: Text {
+            text: `Shell: ${shell}fps | Wallpaper: ${wallpaper}fps`
+            color: (shell < 50) ? "orange" : "lime"
+        }
+    }
+}
+
+// Performance alerts
+PerformanceAlert {
+    id: perfAlert
+
+    onHighCpuUsage: {
+        notificationServer.send({
+            icon: "⚠️",
+            title: "High CPU Usage",
+            body: `CPU at ${systemStats.cpuPercent}%`,
+            timeout: 5000
+        });
+    }
+
+    onHighMemoryUsage: {
+        notificationServer.send({
+            icon: "⚠️",
+            title: "Memory Pressure",
+            body: `${systemStats.memoryUsedMB}MB / ${systemStats.memoryTotalMB}MB`,
+            actions: [
+                { label: "Open Task Manager", action: openTaskManager }
+            ]
+        });
+    }
+
+    onLowFPS: {
+        notificationServer.send({
+            icon: "⚡",
+            title: "Performance Degradation",
+            body: `Shell FPS dropped to ${desktopState.averageFPS}fps`,
+            actions: [
+                { label: "Disable Wallpaper", action: toggleWallpaper }
+            ]
+        });
+    }
+}
+9. 🔧 Settings & Customization (Control Center Expansion)
+Current Gap: Settings are scattered; no centralized preferences UI.
+
+Improvements:
+
+QML
+// Add SettingsPanel.qml (tabbed interface)
+SettingsPanel {
+    id: settings
+
+    TabBar {
+        Tab { title: "Appearance"; icon: "🎨" }
+        Tab { title: "Behavior"; icon: "⚙️" }
+        Tab { title: "Keyboard"; icon: "⌨️" }
+        Tab { title: "System"; icon: "💻" }
+        Tab { title: "About"; icon: "ℹ️" }
+    }
+
+    // Tab 1: Appearance
+    AppearanceTab {
+        SectionHeader { text: "Theme" }
+
+        RadioGroup {
+            label: "Color Theme"
+            options: ["Light", "Dark", "Auto"]
+            value: Theme.darkMode ? "Dark" : "Light"
+            onChanged: Theme.setDarkMode(value === "Dark")
+        }
+
+        SliderControl {
+            label: "UI Scale"
+            min: 0.8; max: 1.5; step: 0.1
+            value: Theme.uiScale
+            onChanged: Theme.setUIScale(value)
+        }
+
+        SliderControl {
+            label: "Panel Opacity"
+            min: 0.5; max: 1.0; step: 0.1
+            value: Theme.panelOpacity
+            onChanged: Theme.setPanelOpacity(value)
+        }
+
+        ToggleSwitch {
+            label: "Animations"
+            value: !a11y.reduceAnimations
+            onToggled: a11y.reduceAnimations = !value
+        }
+
+        ToggleSwitch {
+            label: "Blur Effects"
+            value: Theme.blurEnabled
+            onToggled: Theme.blurEnabled = value
+        }
+
+        ColorPicker {
+            label: "Accent Color"
+            value: Theme.accentColor
+            onChanged: Theme.setAccentColor(value)
+        }
+
+        FileSelector {
+            label: "Wallpaper"
+            defaultDir: "~/Pictures/Wallpapers"
+            onSelected: shellRoot.islandSetWallpaper(path)
+        }
+    }
+
+    // Tab 2: Behavior
+    BehaviorTab {
+        ToggleSwitch {
+            label: "Show Desktop Icons"
+            value: desktopState.showDesktopIcons
+            onToggled: desktopState.showDesktopIcons = value
+        }
+
+        ToggleSwitch {
+            label: "Ambient Mode (Idle Overlay)"
+            value: shellRoot.ambientEnabled
+            onToggled: shellRoot.ambientEnabled = value
+        }
+
+        ToggleSwitch {
+            label: "Procedural Wallpaper Engine"
+            value: shellRoot.wallpaperEnabled
+            onToggled: shellRoot.wallpaperEnabled = value
+        }
+
+        SliderControl {
+            label: "Idle Timeout (seconds)"
+            min: 30; max: 600; step: 30
+            value: idleManager.idleSeconds
+            onChanged: idleManager.setIdleSeconds(value)
+        }
+
+        RadioGroup {
+            label: "Workspace Switching"
+            options: ["Instant", "Smooth Slide", "Animated Fade"]
+            value: Theme.workspaceTransition
+            onChanged: Theme.workspaceTransition = value
+        }
+
+        ToggleSwitch {
+            label: "Focus Follows Mouse"
+            value: compositorSettings.focusFollowsMouse
+            onToggled: compositorSettings.focusFollowsMouse = value
+        }
+    }
+
+    // Tab 3: Keyboard
+    KeyboardTab {
+        SectionHeader { text: "Shortcuts" }
+
+        Repeater {
+            model: [
+                { action: "Switch Workspace Left", keys: "Super+Left" },
+                { action: "Switch Workspace Right", keys: "Super+Right" },
+                { action: "Close Window", keys: "Super+Q" },
+                { action: "Toggle Fullscreen", keys: "Super+F" },
+                { action: "Open Launcher", keys: "Super" }
+            ]
+
+            KeybindRow {
+                label: modelData.action
+                currentKeys: modelData.keys
+                onRecorded: updateKeybind(modelData.action, newKeys)
+            }
+        }
+    }
+
+    // Tab 4: System
+    SystemTab {
+        SectionHeader { text: "System Information" }
+
+        InfoRow { label: "OS"; value: Quickshell.osVersion }
+        InfoRow { label: "Kernel"; value: systemStats.kernelVersion }
+        InfoRow { label: "Desktop"; value: "Pranc Shell 1.0" }
+        InfoRow { label: "Wayland"; value: Quickshell.waylandVersion }
+
+        Button {
+            text: "System Settings"
+            onClicked: Quickshell.exec(["gnome-control-center"]) // or KDE Settings
+        }
+    }
+}
+10. 📢 Notifications & User Feedback
+Current Gap: No notification center; alerts disappear; easy to miss important events.
+
+Improvements:
+
+QML
+// Enhanced NotificationCenter.qml
+NotificationCenter {
+    id: notCenter
+    position: "top-right"
+    maxNotifications: 5
+
+    NotificationQueue {
+        // Auto-dismiss after 5 seconds (or never, if marked important)
+    }
+
+    Notification {
+        id: sampleNotif
+        icon: "ℹ️"
+        title: "System Update Available"
+        body: "Update to Arch Linux latest packages?"
+        timeout: 0 // Don't auto-dismiss
+
+        ActionButton {
+            label: "Update"
+            onClicked: Quickshell.exec(["sudo", "pacman", "-Syu"])
+        }
+
+        ActionButton {
+            label: "Later"
+            onClicked: sampleNotif.dismiss()
+        }
+    }
+
+    // Notification history (accessible via Control Center)
+    NotificationHistory {
+        id: history
+        maxItems: 50
+
+        Repeater {
+            model: history.notifications
+
+            HistoryItem {
+                icon: modelData.icon
+                title: modelData.title
+                body: modelData.body
+                timestamp: modelData.timestamp
+                onClicked: history.replay(modelData)
+            }
+        }
+    }
+}
+
+// Toast notifications for quick feedback
+ToastNotification {
+    id: toast
+
+    // Example usage:
+    // toast.show("✅ Workspace switched to Development");
+    // toast.show("⚠️ 2 windows unsaved", 5000);
+
+    function show(message: string, duration: int = 3000) {
+        toast.text = message;
+        toast.open();
+        dismissTimer.interval = duration;
+        dismissTimer.start();
+    }
+}
+
+// App crash notifications
+CrashNotification {
+    id: crashNotif
+
+    onAppCrashed: (appName, signal) => {
+        notCenter.notify({
+            icon: "💥",
+            title: `${appName} Crashed`,
+            body: `Signal ${signal}. Would you like to reopen it?`,
+            actions: [
+                { label: "Reopen", action: () => appLauncher.launch(appName) },
+                { label: "Report", action: () => openBugReporter(appName) }
+            ]
+        });
+    }
+}
+11. 🖱️ Advanced Window Management
+Current Gap: Users can only focus/close/move windows; no window snapping, tiling, or split-screen.
+
+Improvements:
+
+QML
+// Add WindowSnapping.qml
+WindowSnapper {
+    id: snapper
+
+    // Snap zones (edges and corners)
+    property var snapZones: [
+        { name: "Left Half", rect: Qt.rect(0, 0, screen.width/2, screen.height) },
+        { name: "Right Half", rect: Qt.rect(screen.width/2, 0, screen.width/2, screen.height) },
+        { name: "Top Half", rect: Qt.rect(0, 0, screen.width, screen.height/2) },
+        { name: "Bottom Half", rect: Qt.rect(0, screen.height/2, screen.width, screen.height/2) },
+        { name: "Top-Left", rect: Qt.rect(0, 0, screen.width/2, screen.height/2) },
+        { name: "Top-Right", rect: Qt.rect(screen.width/2, 0, screen.width/2, screen.height/2) },
+        { name: "Bottom-Left", rect: Qt.rect(0, screen.height/2, screen.width/2, screen.height/2) },
+        { name: "Bottom-Right", rect: Qt.rect(screen.width/2, screen.height/2, screen.width/2, screen.height/2) }
+    ]
+
+    function snapWindow(window: Toplevel, zone: Object) {
+        window.geometry = zone.rect;
+        window.notify(`Snapped to ${zone.name}`);
+    }
+}
+
+// Window arrangement presets
+WindowArrangements {
+    id: arrangements
+
+    Preset {
+        name: "Single Focus"
+        description: "One app fullscreen"
+        layout: (apps) => {
+            apps[0].fullscreen = true;
+        }
+    }
+
+    Preset {
+        name: "Side-by-Side"
+        description: "Two apps split 50/50"
+        layout: (apps) => {
+            if (apps.length >= 2) {
+                apps[0].snapTo("LeftHalf");
+                apps[1].snapTo("RightHalf");
+            }
+        }
+    }
+
+    Preset {
+        name: "Picture-in-Picture"
+        description: "Main + small floating window"
+        layout: (apps) => {
+            if (apps.length >= 2) {
+                apps[0].fullscreen = true;
+                apps[1].floating = true;
+                apps[1].resize(400, 300);
+                apps[1].position(screen.width - 420, screen.height - 320);
+            }
+        }
+    }
+
+    Preset {
+        name: "3-Column"
+        description: "Three apps in columns"
+        layout: (apps) => {
+            if (apps.length >= 3) {
+                apps[0].snapTo("LeftThird");
+                apps[1].snapTo("MiddleThird");
+                apps[2].snapTo("RightThird");
+            }
+        }
+    }
+}
+
+// Keyboard shortcuts for window management
+GlobalShortcut {
+    sequences: ["Super+Left"]
+    onPressed: snapper.snapWindow(surfaceManager.activeToplevel, "LeftHalf")
+}
+
+GlobalShortcut {
+    sequences: ["Super+Right"]
+    onPressed: snapper.snapWindow(surfaceManager.activeToplevel, "RightHalf")
+}
+
+GlobalShortcut {
+    sequences: ["Super+Up"]
+    onPressed: {
+        const w = surfaceManager.activeToplevel;
+        w.maximized = !w.maximized;
+    }
+}
+
+GlobalShortcut {
+    sequences: ["Super+Shift+Right"]
+    onPressed: {
+        const next = workspaceModel.getAdjacentWorkspace(
+            surfaceManager.activeWorkspaceId, 1, true
+        );
+        compositorActionLayer.moveSurfaceToWorkspace(
+            surfaceManager.activeAddress, next.id
+        );
+    }
+}
+12. 🌐 Multi-Monitor Support (Explicit Handling)
+Current Gap: Limited multi-monitor guidance; users don't know how workspaces map to monitors.
+
+Improvements:
+
+QML
+// Add MultiMonitorManager.qml
+MultiMonitorManager {
+    id: multimon
+
+    // Per-monitor workspace assignment
+    property var monitorAssignments: ({})
+
+    WorkspaceLayoutVisualizer {
+        id: visualizer
+
+        Repeater {
+            model: desktopModel.monitors
+
+            MonitorCard {
+                name: modelData.name
+                width: 200
+                height: 150
+
+                Text {
+                    text: modelData.name
+                    font.bold: true
+                }
+
+                Text {
+                    text: `${modelData.workspaceCount} workspaces`
+                    font.pixelSize: 12
+                    color: Theme.foreground
+                }
+
+                WorkspaceGrid {
+                    Repeater {
+                        model: modelData.workspaces
+
+                        WorkspacePill {
+                            text: modelData.id
+                            isActive: modelData.active
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Settings for multi-monitor workflow
+MultiMonitorSettings {
+    id: mmSettings
+
+    ToggleSwitch {
+        label: "Independent Workspaces per Monitor"
+        value: multimon.independentWorkspaces
+        onToggled: multimon.independentWorkspaces = value
+    }
+
+    ToggleSwitch {
+        label: "Mirror Workspaces Across Monitors"
+        value: !multimon.independentWorkspaces
+        onToggled: multimon.independentWorkspaces = !value
+    }
+
+    RadioGroup {
+        label: "Mouse Movement"
+        options: ["Stay on Monitor", "Wrap Around", "Jump to Nearest"]
+        value: multimon.mouseMovement
+        onChanged: multimon.mouseMovement = value
+    }
+}
+13. 🚀 Quick Tips & Dynamic Help
+Current Gap: Users discover features by accident; no contextual guidance.
+
+Improvements:
+
+QML
+// Add DynamicTips.qml
+DynamicTips {
+    id: tips
+
+    TipQueue {
+        id: tipQueue
+
+        Tip {
+            condition: { return workspaceModel.count > 1 }
+            message: "💡 Tip: Use Alt+Tab to cycle between workspaces"
+            dismissible: true
+            showAfterIdleSeconds: 60
+        }
+
+        Tip {
+            condition: { return surfaceModel.count > 3 }
+            message: "💡 Tip: Right-sidebar shows all open apps. Hover bottom-right!"
+            dismissible: true
+            showAfterIdleSeconds: 120
+        }
+
+        Tip {
+            condition: { return surfaceModel.getFullscreenSurfaces().length > 0 }
+            message: "💡 Tip: Press Esc to exit fullscreen"
+            dismissible: false
+            duration: 5000
+        }
+    }
+
+    FloatingTip {
+        id: floatingTip
+        position: "bottom-center"
+        backgroundColor: Theme.accentColor + "aa"
+        textColor: Theme.background
+
+        Timer {
+            interval: tipQueue.nextTipDelay
+            running: true
+            onTriggered: floatingTip.show(tipQueue.next())
+        }
+    }
+}
+
+// Weekly tips recap
+WeeklyTipsRecap {
+    id: recap
+
+    Timer {
+        interval: 7 * 24 * 60 * 60 * 1000  // 1 week
+        running: true
+        repeat: true
+        onTriggered: recap.show()
+    }
+}
+Summary: UI/UX Roadmap
+Priority	Feature	Impact	Effort
+🔴 Critical	Onboarding Wizard	High (new users)	Medium
+🔴 Critical	Safety Confirmations	High (user trust)	Low
+🔴 Critical	Visual Hover Indicators	High (discoverability)	Medium
+🟡 High	Accessibility (keyboard nav, high contrast)	High (inclusive)	High
+🟡 High	App Launcher/Search	High (productivity)	Medium
+🟡 High	System Tray + Status Bar	High (UX completeness)	Medium
+🟡 High	Settings Panel	Medium (customization)	Medium
+🟡 High	Notification Center	Medium (awareness)	Low
+🟡 High	Performance Monitoring	Medium (transparency)	Low
+🟡 High	Keyboard Shortcuts Reference	Medium (learnability)	Low
+🟢 Medium	Advanced Window Management	Medium (power users)	High
+🟢 Medium	Multi-Monitor Visualizer	Medium (multi-setup)	Medium
+🟢 Medium	Dynamic Tips & Help	Low (engagement)	Low
+Why These Changes Make It "Safer & Easier" Than Windows
+Explicit Confirmations → No accidental clicks destroying work
+Keyboard-Only Navigation → Never trapped by mouse
+Visual Feedback → Always know what's happening
+Accessible by Default → Inclusive from day one
+Responsive & Fast → No frozen UI
+Transparent State → Real-time system monitoring
+Discoverable Features → Users learn naturally, not by accident
+Open-Source → Users control their own system
+Wayland Native → Modern, secure graphics stack
+Productivity First → Built for focus, not distraction
+Next Step: Would you like me to create a detailed implementation plan for any of these features, or draft pull request templates to guide community contributions?

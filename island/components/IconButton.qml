@@ -11,6 +11,7 @@ FocusScope {
     property color hoverBackgroundColor: Theme.primaryContainer
     property color hoverForegroundColor: Theme.foreground
     readonly property bool hovered: pointer.containsMouse
+    readonly property bool pressed: pointer.pressed
 
     signal clicked()
 
@@ -22,7 +23,7 @@ FocusScope {
     Keys.onSpacePressed: root.clicked()
     Accessible.role: Accessible.Button
     Accessible.name: accessibleName
-    scale: hovered ? 1.06 : 1
+    scale: pressed ? 0.94 : (hovered ? 1.06 : 1.0)
 
     Behavior on scale {
         NumberAnimation {

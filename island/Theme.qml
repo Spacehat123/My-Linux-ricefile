@@ -41,10 +41,28 @@ Singleton {
     readonly property color purple: palette.purple
     readonly property color shellBackground: "#000000"
     readonly property color shellForeground: "#ffffff"
+
+    // Master Smoked Glass Materials & Sheen Highlights
+    readonly property color glassBackground: Qt.rgba(bg0.r, bg0.g, bg0.b, 0.90)
+    readonly property color glassBackgroundSubtle: Qt.rgba(bgDim.r, bgDim.g, bgDim.b, 0.80)
+    readonly property color glassCard: Qt.rgba(1.0, 1.0, 1.0, 0.04)
+    readonly property color glassCardHover: Qt.rgba(1.0, 1.0, 1.0, 0.08)
+    readonly property color glassBorder: Qt.rgba(1.0, 1.0, 1.0, 0.12)
+    readonly property color glassBorderSubtle: Qt.rgba(1.0, 1.0, 1.0, 0.07)
+    readonly property color glassBorderActive: Qt.rgba(primary.r, primary.g, primary.b, 0.75)
+    readonly property int glassBorderWidth: 1
+
     readonly property string fontFamily: "Geist"
     readonly property string iconFontFamily: "JetBrainsMonoNL Nerd Font"
+
+    // Master Geometry Radii
     readonly property int radiusSmall: 10
     readonly property int radius: 15
+    readonly property int radiusCard: 16
+    readonly property int radiusSquircle: 14
+    readonly property int radiusWindow: 24
+    readonly property int radiusPill: 999
+
     readonly property int animationFast: 140
     readonly property int animationNormal: 260
 

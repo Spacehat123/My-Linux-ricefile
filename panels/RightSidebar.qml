@@ -1,7 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import "../theme"
+import "../island" as Island
 import "../components"
 
 PanelWindow {
@@ -16,19 +16,20 @@ PanelWindow {
     property var interactionModel: null
 
     // Dual-layer hover guard ensuring unbreakable hover continuity
-    readonly property bool hovered: mouseArea.containsMouse || (appOverview && appOverview.hovered)
-
-    Theme {
-        id: theme
-    }
+    readonly property bool hovered: mouseArea.containsMouse || (todayCenter && todayCenter.hovered)
 
     anchors {
         top: true
         bottom: true
         right: true
     }
+    margins {
+        top: 12
+        bottom: 12
+        right: 12
+    }
 
-    implicitWidth: 320
+    implicitWidth: 400
     exclusionMode: ExclusionMode.Ignore
     aboveWindows: true
     focusable: false
@@ -45,25 +46,29 @@ PanelWindow {
 
         transform: Translate {
             id: contentTranslate
-            x: 40
+            x: 420
         }
 
-        PanelSurface {
+        // =====================================================================
+        // FLOATING SMOKED GLASS DRAWER BODY
+        // =====================================================================
+        Rectangle {
             anchors.fill: parent
+            radius: Island.Theme.radiusWindow
+            color: Island.Theme.glassBackground
+            border.color: Island.Theme.glassBorder
+            border.width: Island.Theme.glassBorderWidth
+            clip: true
 
-            PanelContent {
+            // Personal Daily Dashboard & Today Hub
+            TodayCenter {
+                id: todayCenter
                 anchors.fill: parent
-                orientation: Qt.Vertical
-
-                // Integrated live Application Surface Overview HUD
-                ApplicationOverview {
-                    id: appOverview
-                    anchors.fill: parent
-                    desktopModel: root.desktopModel
-                    surfaceModel: root.surfaceModel
-                    interactionModel: root.interactionModel
-                    screen: root.screen
-                }
+                anchors.margins: 16
+                desktopModel: root.desktopModel
+                surfaceModel: root.surfaceModel
+                interactionModel: root.interactionModel
+                screen: root.screen
             }
         }
     }
@@ -73,9 +78,6 @@ PanelWindow {
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.NoButton
-
-        onEntered: console.log("[pranc-shell] RightSidebar mouse ENTERED")
-        onExited: console.log("[pranc-shell] RightSidebar mouse EXITED")
     }
 
     ParallelAnimation {
@@ -84,14 +86,14 @@ PanelWindow {
             target: contentTranslate
             property: "x"
             to: 0
-            duration: theme.animDurationOpen
-            easing.type: Easing.OutCubic
+            duration: 240
+            easing.type: Easing.OutBack
         }
         NumberAnimation {
             target: content
             property: "opacity"
             to: 1.0
-            duration: theme.animDurationOpen
+            duration: 200
             easing.type: Easing.OutCubic
         }
     }
@@ -101,26 +103,26 @@ PanelWindow {
         NumberAnimation {
             target: contentTranslate
             property: "x"
-            to: 40
-            duration: theme.animDurationClose
+            to: 420
+            duration: 180
             easing.type: Easing.InCubic
         }
         NumberAnimation {
             target: content
             property: "opacity"
             to: 0.0
-            duration: theme.animDurationClose
+            duration: 180
             easing.type: Easing.InCubic
         }
     }
 
     onOpenChanged: {
         if (open) {
-            closeAnim.stop()
-            openAnim.start()
+            closeAnim.stop();
+            openAnim.start();
         } else {
-            openAnim.stop()
-            closeAnim.start()
+            openAnim.stop();
+            closeAnim.start();
         }
     }
 }

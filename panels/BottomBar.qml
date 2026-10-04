@@ -7,11 +7,6 @@ import Quickshell.Services.UPower
 import Quickshell.Networking
 import "../island" as Island
 
-// Waybar replica: bottom bar, width 1000, margin-bottom 10.
-// Source of truth: ~/.config/waybar/config.jsonc + style.css
-// Left: hyprland/workspaces | Center: clock | Right: network, pulseaudio, battery
-// Visibility (start hidden, 2px edge reveal, hide on leave) is driven by
-// shell.qml via `open` + `hovered`, backed by the bottom-center EdgeTrigger.
 PanelWindow {
     id: root
 
@@ -23,26 +18,15 @@ PanelWindow {
     property var interactionModel: null
     property var desktopState: null
 
-    // Hover continuity: full-fill hover guard (same convention as the sidebars).
-    // Child pill MouseAreas use hoverEnabled clicks; hover propagates to all
-    // MouseAreas under the cursor, so shell.qml can hide the bar only when the
-    // pointer truly leaves it.
+    // Hover continuity: full-fill hover guard ensures shell.qml doesn't prematurely close the dock
     MouseArea {
         id: barMouse
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.NoButton
     }
-    readonly property bool hovered: barMouse.containsMouse || wsHover.containsMouse || netMouse.containsMouse || volMouse.containsMouse || batMouse.containsMouse
 
-    // ---- Unified Theme Palette ----
-    readonly property color wbBg: Qt.rgba(Island.Theme.bgDim.r, Island.Theme.bgDim.g, Island.Theme.bgDim.b, 0.78)
-    readonly property color wbBgHover: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25)
-    readonly property color wbText: Island.Theme.foreground
-    readonly property color wbTextHover: Island.Theme.primary
-    readonly property color wbBorder: Qt.rgba(Island.Theme.mutedDark.r, Island.Theme.mutedDark.g, Island.Theme.mutedDark.b, 0.35)
-    readonly property string wbFont: Island.Theme.iconFontFamily || "JetBrainsMono Nerd Font Propo"
-    readonly property int wbFontSize: 12
+    readonly property bool hovered: barMouse.containsMouse || wsHover.containsMouse || netMouse.containsMouse || volMouse.containsMouse || batMouse.containsMouse
 
     anchors {
         bottom: true
@@ -51,8 +35,8 @@ PanelWindow {
         bottom: 10
     }
 
-    implicitWidth: Math.min(1000, (screen ? screen.width : 1040) - 40)
-    implicitHeight: 30
+    implicitWidth: Math.min(980, (screen ? screen.width : 1040) - 40)
+    implicitHeight: 44
     exclusionMode: ExclusionMode.Ignore
     aboveWindows: true
     focusable: false
@@ -119,171 +103,277 @@ PanelWindow {
 
         transform: Translate {
             id: contentTranslate
-            y: 10
+            y: 16
         }
 
-        // Covers the workspace Repeater (delegate MouseAreas aren't addressable
-        // as a single id); NoButton so workspace clicks pass through.
-        MouseArea {
-            id: wsHover
-            anchors.fill: wsRow
-            hoverEnabled: true
-            acceptedButtons: Qt.NoButton
-        }
+        // =====================================================================
+        // FLOATING LIQUID GLASS DOCK CAPSULE
+        // =====================================================================
+        Rectangle {
+            id: dockBody
+            anchors.fill: parent
+            radius: 22
+            color: Island.Theme.glassBackground
+            border.color: Island.Theme.glassBorder
+            border.width: Island.Theme.glassBorderWidth
+            clip: true
 
-        // ---- Left: workspaces (format "{name}") ----
-        Row {
-            id: wsRow
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 4 // margin 0 2px per button
+            // Covers the workspace Repeater for hover tracking continuity
+            MouseArea {
+                id: wsHover
+                anchors.fill: wsRow
+                hoverEnabled: true
+                acceptedButtons: Qt.NoButton
+            }
 
-            Repeater {
-                model: root.desktopModel && root.desktopModel.workspaces ? root.desktopModel.workspaces : []
+            // ---- Left: Liquid Workspace Capsules ----
+            Row {
+                id: wsRow
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 6
 
-                delegate: Rectangle {
-                    id: wsBtn
-                    required property var modelData
+                Repeater {
+                    model: root.desktopModel && root.desktopModel.workspaces ? root.desktopModel.workspaces : []
 
-                    readonly property int wsId: modelData ? modelData.id : -1
-                    readonly property bool isActive: modelData ? Boolean(modelData.focused) : false
-                    readonly property string wsLabel: modelData ? (modelData.name || String(modelData.id)) : ""
+                    delegate: Rectangle {
+                        id: wsBtn
+                        required property var modelData
 
-                    height: 20
-                    width: Math.max(isActive ? 35 : 0, wsLabelText.implicitWidth + 20) // padding 0 5px
-                    radius: isActive ? 15 : 10
-                    color: wsMouse.containsMouse ? root.wbBgHover : (isActive ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.28) : root.wbBg)
-                    border.color: isActive ? Island.Theme.primary : root.wbBorder
+                        readonly property int wsId: modelData ? modelData.id : -1
+                        readonly property bool isActive: modelData ? Boolean(modelData.focused) : false
+                        readonly property bool isOccupied: modelData ? (Boolean(modelData.occupied) || (modelData.surfaceCount && modelData.surfaceCount > 0)) : false
+                        readonly property string wsLabel: modelData ? (modelData.name || String(modelData.id)) : ""
+
+                        height: 28
+                        width: isActive ? Math.max(46, wsLabelText.implicitWidth + 24) : (isOccupied ? 30 : 22)
+                        radius: 14
+
+                        Behavior on width {
+                            SpringAnimation {
+                                spring: 4.2
+                                damping: 0.35
+                                epsilon: 0.5
+                            }
+                        }
+
+                        color: wsMouse.containsMouse
+                            ? Island.Theme.glassCardHover
+                            : (isActive
+                                ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.22)
+                                : (isOccupied ? Island.Theme.glassCard : "transparent"))
+
+                        border.color: isActive
+                            ? Island.Theme.primary
+                            : (wsMouse.containsMouse ? Island.Theme.glassBorder : (isOccupied ? Island.Theme.glassBorderSubtle : "transparent"))
+                        border.width: isActive ? 1.5 : 1
+
+                        scale: wsMouse.pressed ? 0.94 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 80 } }
+                        Behavior on color { ColorAnimation { duration: 120 } }
+                        Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 4
+
+                            // Small occupied dot indicator if not active but occupied
+                            Rectangle {
+                                visible: !wsBtn.isActive && wsBtn.isOccupied
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 4
+                                height: 4
+                                radius: 2
+                                color: Island.Theme.muted
+                            }
+
+                            Text {
+                                id: wsLabelText
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: wsBtn.wsLabel
+                                font.family: Island.Theme.fontFamily
+                                font.pixelSize: 11
+                                font.bold: wsBtn.isActive || wsMouse.containsMouse
+                                color: wsBtn.isActive ? Island.Theme.primary : (wsMouse.containsMouse ? Island.Theme.foreground : (wsBtn.isOccupied ? Island.Theme.foreground : Island.Theme.muted))
+                            }
+                        }
+
+                        MouseArea {
+                            id: wsMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (root.interactionModel && wsBtn.wsId !== -1)
+                                    root.interactionModel.requestWorkspaceSwitch(wsBtn.wsId);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ---- Center: Typographic Clock & Date ----
+            Column {
+                id: clockBlock
+                anchors.centerIn: parent
+                spacing: 1
+
+                Text {
+                    id: timeText
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: Qt.formatDateTime(sysClock.date, "hh:mm")
+                    font.family: Island.Theme.fontFamily
+                    font.pixelSize: 13
+                    font.bold: true
+                    color: Island.Theme.foreground
+                }
+
+                Text {
+                    id: dateText
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: Qt.formatDateTime(sysClock.date, "ddd, dd MMM")
+                    font.family: Island.Theme.fontFamily
+                    font.pixelSize: 9
+                    color: Island.Theme.muted
+                }
+            }
+
+            // ---- Right: System Status Module Cluster ----
+            Row {
+                id: sysRow
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 8
+
+                // Network Pill
+                Rectangle {
+                    id: netPill
+                    height: 28
+                    width: Math.max(34, netRow.implicitWidth + 16)
+                    radius: 14
+                    color: netMouse.containsMouse ? Island.Theme.glassCardHover : Island.Theme.glassCard
+                    border.color: netMouse.containsMouse ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle
                     border.width: 1
+                    scale: netMouse.pressed ? 0.95 : 1.0
 
-                    Text {
-                        id: wsLabelText
+                    Behavior on scale { NumberAnimation { duration: 80 } }
+                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                    Row {
+                        id: netRow
                         anchors.centerIn: parent
-                        text: wsBtn.wsLabel
-                        font.family: root.wbFont
-                        font.pixelSize: root.wbFontSize
-                        font.bold: wsBtn.isActive || wsMouse.containsMouse
-                        font.weight: (wsBtn.isActive || wsMouse.containsMouse) ? Font.Bold : Font.Normal
-                        color: (wsBtn.isActive || wsMouse.containsMouse) ? root.wbTextHover : root.wbText
+                        spacing: 5
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.netIcon
+                            font.family: Island.Theme.iconFontFamily
+                            font.pixelSize: 13
+                            color: netMouse.containsMouse ? Island.Theme.primary : Island.Theme.foreground
+                        }
                     }
 
                     MouseArea {
-                        id: wsMouse
+                        id: netMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                    }
+                }
+
+                // PipeWire Audio Pill
+                Rectangle {
+                    id: volPill
+                    height: 28
+                    width: Math.max(54, volRow.implicitWidth + 18)
+                    radius: 14
+                    color: volMouse.containsMouse ? Island.Theme.glassCardHover : Island.Theme.glassCard
+                    border.color: volMouse.containsMouse ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle
+                    border.width: 1
+                    scale: volMouse.pressed ? 0.95 : 1.0
+
+                    Behavior on scale { NumberAnimation { duration: 80 } }
+                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                    Row {
+                        id: volRow
+                        anchors.centerIn: parent
+                        spacing: 5
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.audioMuted ? "󰖁" : (root.sinkAudio && root.sinkAudio.volume > 0.5 ? "󰕾" : "󰖀")
+                            font.family: Island.Theme.iconFontFamily
+                            font.pixelSize: 13
+                            color: root.audioMuted ? Island.Theme.red : (volMouse.containsMouse ? Island.Theme.primary : Island.Theme.foreground)
+                        }
+
+                        Text {
+                            id: volLabel
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.audioMuted ? "Mute" : root.volText
+                            font.family: Island.Theme.fontFamily
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: volMouse.containsMouse ? Island.Theme.primary : Island.Theme.foreground
+                        }
+                    }
+
+                    MouseArea {
+                        id: volMouse
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (root.interactionModel && wsBtn.wsId !== -1)
-                                root.interactionModel.requestWorkspaceSwitch(wsBtn.wsId);
+                        onClicked: Quickshell.execDetached(["pavucontrol"])
+                        onWheel: (wheel) => {
+                            if (root.sinkAudio) {
+                                const step = wheel.angleDelta.y > 0 ? 0.02 : -0.02;
+                                root.sinkAudio.volume = Math.max(0.0, Math.min(1.5, root.sinkAudio.volume + step));
+                            }
                         }
                     }
                 }
-            }
-        }
 
-        // ---- Center: clock (format-alt "%a, %d. %b  %H:%M", bold) ----
-        Text {
-            id: clockText
-            anchors.centerIn: parent
-            text: Qt.formatDateTime(sysClock.date, "ddd, dd. MMM  hh:mm")
-            font.family: root.wbFont
-            font.pixelSize: root.wbFontSize
-            font.bold: true
-            font.weight: Font.Bold
-            color: Island.Theme.foreground
-        }
+                // UPower Battery Pill
+                Rectangle {
+                    id: batPill
+                    visible: root.batReady && root.batPct >= 0
+                    height: 28
+                    width: Math.max(56, batRow.implicitWidth + 18)
+                    radius: 14
+                    color: batMouse.containsMouse ? Island.Theme.glassCardHover : Island.Theme.glassCard
+                    border.color: batMouse.containsMouse ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle
+                    border.width: 1
 
-        // ---- Right: network, pulseaudio, battery pills ----
-        Row {
-            id: sysRow
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 20 // margin 0 10px per module
+                    Row {
+                        id: batRow
+                        anchors.centerIn: parent
+                        spacing: 5
 
-            // Network (no on-click in waybar)
-            Rectangle {
-                id: netPill
-                height: 22
-                width: Math.max(30, netLabel.implicitWidth + 10)
-                radius: 11
-                color: netMouse.containsMouse ? root.wbBgHover : root.wbBg
-                border.color: root.wbBorder
-                border.width: 1
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: root.batteryIcon(root.batPct)
+                            font.family: Island.Theme.iconFontFamily
+                            font.pixelSize: 13
+                            color: root.batPct <= 20 ? Island.Theme.red : (batMouse.containsMouse ? Island.Theme.primary : Island.Theme.foreground)
+                        }
 
-                Text {
-                    id: netLabel
-                    anchors.centerIn: parent
-                    text: root.netIcon
-                    font.family: root.wbFont
-                    font.pixelSize: root.wbFontSize
-                    font.bold: netMouse.containsMouse
-                    color: netMouse.containsMouse ? root.wbTextHover : root.wbText
-                }
-                MouseArea {
-                    id: netMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                }
-            }
-
-            // Pulseaudio: "{volume}%" / muted "󰸈", click -> pavucontrol, scroll -> volume
-            Rectangle {
-                id: volPill
-                height: 22
-                width: Math.max(30, volLabel.implicitWidth + 10)
-                radius: 11
-                color: volMouse.containsMouse ? root.wbBgHover : root.wbBg
-                border.color: root.wbBorder
-                border.width: 1
-
-                Text {
-                    id: volLabel
-                    anchors.centerIn: parent
-                    text: root.audioMuted ? "󰸈" : root.volText
-                    font.family: root.wbFont
-                    font.pixelSize: root.wbFontSize
-                    font.bold: volMouse.containsMouse
-                    color: volMouse.containsMouse ? root.wbTextHover : root.wbText
-                }
-                MouseArea {
-                    id: volMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: Quickshell.execDetached(["pavucontrol"])
-                    onWheel: (wheel) => {
-                        if (root.sinkAudio) {
-                            const step = wheel.angleDelta.y > 0 ? 0.02 : -0.02;
-                            root.sinkAudio.volume = Math.max(0.0, Math.min(1.5, root.sinkAudio.volume + step));
+                        Text {
+                            id: batLabel
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: Math.round(root.batPct) + "%"
+                            font.family: Island.Theme.fontFamily
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: batMouse.containsMouse ? Island.Theme.primary : Island.Theme.foreground
                         }
                     }
-                }
-            }
 
-            // Battery: "{capacity} {icon}"
-            Rectangle {
-                id: batPill
-                visible: root.batReady && root.batPct >= 0
-                height: 22
-                width: Math.max(30, batLabel.implicitWidth + 10)
-                radius: 11
-                color: batMouse.containsMouse ? root.wbBgHover : root.wbBg
-                border.color: root.wbBorder
-                border.width: 1
-
-                Text {
-                    id: batLabel
-                    anchors.centerIn: parent
-                    text: Math.round(root.batPct) + " " + root.batteryIcon(root.batPct)
-                    font.family: root.wbFont
-                    font.pixelSize: root.wbFontSize
-                    font.bold: batMouse.containsMouse
-                    color: batMouse.containsMouse ? root.wbTextHover : root.wbText
-                }
-                MouseArea {
-                    id: batMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
+                    MouseArea {
+                        id: batMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                    }
                 }
             }
         }
@@ -295,8 +385,8 @@ PanelWindow {
             target: contentTranslate
             property: "y"
             to: 0
-            duration: 200
-            easing.type: Easing.OutCubic
+            duration: 220
+            easing.type: Easing.OutBack
         }
         NumberAnimation {
             target: content
@@ -312,7 +402,7 @@ PanelWindow {
         NumberAnimation {
             target: contentTranslate
             property: "y"
-            to: 10
+            to: 16
             duration: 160
             easing.type: Easing.InCubic
         }
@@ -329,7 +419,6 @@ PanelWindow {
         if (open) {
             closeAnim.stop();
             openAnim.start();
-            if (!netProc.running) netProc.running = true;
         } else {
             openAnim.stop();
             closeAnim.start();

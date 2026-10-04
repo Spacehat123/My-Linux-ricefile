@@ -21,7 +21,8 @@ Singleton {
         "notifications": 365,
         "timer": 380,
         "shelf": 420,
-        "weather": 380
+        "weather": 380,
+        "gamemode": 300
     })
     readonly property var panelHeights: ({
         "control": 386,
@@ -37,7 +38,8 @@ Singleton {
         "notifications": 80,
         "timer": 220,
         "shelf": 120,
-        "weather": 120
+        "weather": 120,
+        "gamemode": 84
     })
     readonly property var panelRadii: ({
         "control": 20,
@@ -53,14 +55,69 @@ Singleton {
         "notifications": 24,
         "timer": 42,
         "shelf": 24,
-        "weather": 22
+        "weather": 22,
+        "gamemode": 20
     })
+    signal openSettingsRequested(string category)
     property string activeScreenName: ""
     property string panel: "collapsed"
     property int noticeTick: 0
     readonly property bool expanded: panel !== "collapsed" && panel !== "clock"
     readonly property int targetWidth: expanded ? (panelWidths[panel] || 145) : 145
     property alias nightLightTemperature: persistence.nightLightTemperature
+
+    // Game Mode State & Process Mediation
+    property bool gameMode: false
+    property int gameModeKilledCount: 0
+
+    signal gameModeToggled(bool active)
+
+    function toggleGameMode() {
+        if (!gameModeProc.running) {
+            gameModeProc.command = ["python3", Quickshell.shellPath("island/scripts/game-mode.py"), "toggle"];
+            gameModeProc.running = true;
+        }
+    }
+
+    function setGameMode(enabled) {
+        if (gameMode !== enabled && !gameModeProc.running) {
+            gameModeProc.command = ["python3", Quickshell.shellPath("island/scripts/game-mode.py"), enabled ? "enable" : "disable"];
+            gameModeProc.running = true;
+        }
+    }
+
+    Process {
+        id: gameModeProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const res = JSON.parse(text);
+                    root.gameMode = res.gameMode === true;
+                    if (res.killedCount !== undefined) root.gameModeKilledCount = res.killedCount;
+                    root.close();
+                    gc();
+                    root.gameModeToggled(root.gameMode);
+                } catch (e) {
+                    console.warn("[ShellState] gameMode error:", e);
+                }
+            }
+        }
+    }
+
+    Process {
+        id: gameModeInitProc
+        command: ["python3", Quickshell.shellPath("island/scripts/game-mode.py"), "status"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const res = JSON.parse(text);
+                    root.gameMode = res.gameMode === true;
+                    if (res.killedCount !== undefined) root.gameModeKilledCount = res.killedCount;
+                } catch (e) {}
+            }
+        }
+    }
 
     // Compatibility forwarders to dedicated TodoState singleton
     property var todos: TodoState.todos
@@ -84,6 +141,15 @@ Singleton {
     }
 
     function show(name, screenName) {
+        if (gameMode) {
+            setPanel(panel === "gamemode" ? "collapsed" : "gamemode");
+            return;
+        }
+        if (name === "settings") {
+            close();
+            openSettingsRequested();
+            return;
+        }
         if (name === "clock" || name === "collapsed") {
             close();
             return;
@@ -114,6 +180,10 @@ Singleton {
     }
 
     function cycle(offset) {
+        if (gameMode) {
+            setPanel(panel === "gamemode" ? "collapsed" : "gamemode");
+            return;
+        }
         const panels = ["collapsed", "control", "launcher", "clipboard", "todo", "notes", "theme", "wallpaper", "capture", "power", "media", "notifications", "timer", "shelf", "weather"];
         const current = Math.max(0, panels.indexOf(panel));
         setPanel(panels[(current + offset + panels.length) % panels.length]);

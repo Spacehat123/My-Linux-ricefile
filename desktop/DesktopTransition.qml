@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import "../theme"
+import "../island" as Island
 
 PanelWindow {
     id: root
@@ -105,60 +106,44 @@ PanelWindow {
         }
     }
 
-    // Central Tactical Transition Reticle
+    // Central Floating Glass Transition Pill HUD
     Item {
         id: hudContainer
         anchors.centerIn: parent
-        width: theme.spatialTransitionReticleWidth
-        height: theme.spatialTransitionReticleHeight
+        width: 280
+        height: 50
         opacity: 0.0
 
-        // Backdrop capsule
+        // Backdrop floating glass capsule
         Rectangle {
             anchors.fill: parent
-            radius: 8
-            color: theme.panelBackground
-            border.color: theme.spatialTransitionBorder
-            border.width: 1
-            opacity: 0.95
-        }
-
-        // Hairline boundary brackets
-        Rectangle {
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            width: 2
-            color: theme.spatialTransitionBorder
-        }
-        Rectangle {
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            width: 2
-            color: theme.spatialTransitionBorder
+            radius: height / 2
+            color: Island.Theme.glassBackground
+            border.color: Island.Theme.glassBorder
+            border.width: Island.Theme.glassBorderWidth
         }
 
         Row {
             anchors.centerIn: parent
-            spacing: 12
+            spacing: 14
 
             // Origin Workspace Slot
             Item {
                 id: prevWorkspaceSlot
-                width: 44
+                width: 40
                 height: 32
                 anchors.verticalCenter: parent.verticalCenter
 
                 Column {
                     anchors.centerIn: parent
+                    spacing: 1
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "FROM"
-                        font.pixelSize: 7
+                        font.pixelSize: 8
                         font.bold: true
-                        font.family: "monospace"
-                        color: theme.workspaceHudMutedText
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.mutedDark
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -167,48 +152,43 @@ PanelWindow {
                             if (id < 0) return "--";
                             return id < 10 ? "0" + id : String(id);
                         }
-                        font.pixelSize: 15
+                        font.pixelSize: 16
                         font.bold: true
-                        font.family: "monospace"
-                        color: theme.workspaceOccupiedText
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.muted
                     }
                 }
             }
 
-            // Directional Vector Indicator
-            Row {
+            // Directional Vector Arrow
+            Text {
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 4
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: {
-                        const sign = desktopState ? desktopState.workspaceTransitionDirectionSign : 1;
-                        return sign >= 0 ? "──►" : "◄──";
-                    }
-                    font.pixelSize: 12
-                    font.bold: true
-                    font.family: "monospace"
-                    color: theme.spatialTransitionBorder
+                text: {
+                    const sign = desktopState ? desktopState.workspaceTransitionDirectionSign : 1;
+                    return sign >= 0 ? "󰁔" : "󰁍";
                 }
+                font.pixelSize: 18
+                font.family: Island.Theme.iconFontFamily
+                color: Island.Theme.primary
             }
 
             // Destination Workspace Slot
             Item {
                 id: currWorkspaceSlot
-                width: 44
+                width: 40
                 height: 32
                 anchors.verticalCenter: parent.verticalCenter
 
                 Column {
                     anchors.centerIn: parent
+                    spacing: 1
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "DEST"
-                        font.pixelSize: 7
+                        font.pixelSize: 8
                         font.bold: true
-                        font.family: "monospace"
-                        color: theme.workspaceHudLabelText
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.primary
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -217,10 +197,10 @@ PanelWindow {
                             if (id < 0) return "--";
                             return id < 10 ? "0" + id : String(id);
                         }
-                        font.pixelSize: 15
+                        font.pixelSize: 16
                         font.bold: true
-                        font.family: "monospace"
-                        color: theme.spatialTransitionBorder
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.foreground
                     }
                 }
             }
@@ -229,8 +209,8 @@ PanelWindow {
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 1
-                height: 20
-                color: theme.surfaceDividerColor
+                height: 22
+                color: Island.Theme.glassBorderSubtle
             }
 
             // Context Telemetry Badges
@@ -241,50 +221,52 @@ PanelWindow {
                 Text {
                     text: {
                         const count = desktopState ? desktopState.currentSurfaceCount : 0;
-                        if (count === 0) return "EMPTY";
-                        return count === 1 ? "1 SURFACE" : count + " SURFACES";
+                        if (count === 0) return "Empty";
+                        return count === 1 ? "1 Window" : count + " Windows";
                     }
-                    font.pixelSize: 9
+                    font.pixelSize: 10
                     font.bold: true
-                    font.family: "monospace"
-                    color: theme.workspaceHudValueText
+                    font.family: Island.Theme.fontFamily
+                    color: Island.Theme.foreground
                 }
 
                 Row {
                     spacing: 4
                     Rectangle {
                         visible: desktopState ? desktopState.currentWorkspaceHasFullscreen : false
-                        width: 22
-                        height: 11
-                        radius: 2
-                        color: theme.workspaceHudFullscreenBackground
-                        border.color: theme.workspaceHudFullscreenBadge
+                        height: 14
+                        implicitWidth: fsText.implicitWidth + 8
+                        radius: 4
+                        color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.2)
+                        border.color: Island.Theme.primary
                         border.width: 1
                         Text {
+                            id: fsText
                             anchors.centerIn: parent
-                            text: "FS"
-                            font.pixelSize: 7
+                            text: "FULL"
+                            font.pixelSize: 8
                             font.bold: true
-                            font.family: "monospace"
-                            color: theme.workspaceHudFullscreenBadge
+                            font.family: Island.Theme.fontFamily
+                            color: Island.Theme.primary
                         }
                     }
 
                     Rectangle {
                         visible: desktopState ? desktopState.currentWorkspaceIsUrgent : false
-                        width: 26
-                        height: 11
-                        radius: 2
-                        color: theme.workspaceHudUrgentBackground
-                        border.color: theme.workspaceHudUrgentBadge
+                        height: 14
+                        implicitWidth: critText.implicitWidth + 8
+                        radius: 4
+                        color: Qt.rgba(1, 0.3, 0.3, 0.2)
+                        border.color: "#ff5555"
                         border.width: 1
                         Text {
+                            id: critText
                             anchors.centerIn: parent
-                            text: "CRIT"
-                            font.pixelSize: 7
+                            text: "ALERT"
+                            font.pixelSize: 8
                             font.bold: true
-                            font.family: "monospace"
-                            color: theme.workspaceHudUrgentBadge
+                            font.family: Island.Theme.fontFamily
+                            color: "#ff5555"
                         }
                     }
                 }

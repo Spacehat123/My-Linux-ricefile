@@ -4,11 +4,18 @@ import "../island" as Island
 QtObject {
     id: root
 
-    // Panel surface constants
-    readonly property color panelBackground: Qt.rgba(Island.Theme.bg0.r, Island.Theme.bg0.g, Island.Theme.bg0.b, 0.88)
-    readonly property color panelBorder: Qt.rgba(Island.Theme.muted.r, Island.Theme.muted.g, Island.Theme.muted.b, 0.2)
-    readonly property int panelBorderWidth: 1
-    readonly property int panelCornerRadius: 12
+    // Master Smoked Glass Surface Constants (bound directly to Island.Theme)
+    readonly property color panelBackground: Island.Theme.glassBackground
+    readonly property color panelBorder: Island.Theme.glassBorder
+    readonly property int panelBorderWidth: Island.Theme.glassBorderWidth
+    readonly property int panelCornerRadius: Island.Theme.radiusWindow
+    readonly property color glassCard: Island.Theme.glassCard
+    readonly property color glassCardHover: Island.Theme.glassCardHover
+    readonly property color glassBorderSubtle: Island.Theme.glassBorderSubtle
+    readonly property color glassBorderActive: Island.Theme.glassBorderActive
+    readonly property int radiusCard: Island.Theme.radiusCard
+    readonly property int radiusSquircle: Island.Theme.radiusSquircle
+    readonly property int radiusPill: Island.Theme.radiusPill
 
     // Layout and spacing constants
     readonly property int panelPadding: 16

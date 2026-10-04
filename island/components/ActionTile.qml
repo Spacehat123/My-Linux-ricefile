@@ -15,6 +15,17 @@ FocusScope {
     signal clicked()
     signal detailClicked()
 
+    readonly property bool hovered: tileMouseArea.containsMouse
+    readonly property bool pressed: tileMouseArea.pressed
+    scale: pressed ? 0.97 : (hovered ? 1.02 : 1.0)
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: Theme.animationFast
+            easing.type: Easing.OutCubic
+        }
+    }
+
     implicitHeight: 58
     activeFocusOnTab: true
     Keys.onReturnPressed: root.clicked()
@@ -90,10 +101,12 @@ FocusScope {
     }
 
     MouseArea {
+        id: tileMouseArea
         anchors.left: parent.left
         anchors.right: detailButton.visible ? detailButton.left : parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: root.clicked()
     }

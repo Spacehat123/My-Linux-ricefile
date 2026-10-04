@@ -74,7 +74,8 @@ PanelWindow {
             "notifications": notifCenterPanel,
             "timer": timerPanel,
             "shelf": shelfPanel,
-            "weather": weatherPanel
+            "weather": weatherPanel,
+            "gamemode": gameModePanel
         };
         return panels[displayedPanel] || null;
     }
@@ -93,7 +94,8 @@ PanelWindow {
             "notifications": notifCenterPanel,
             "timer": timerPanel,
             "shelf": shelfPanel,
-            "weather": weatherPanel
+            "weather": weatherPanel,
+            "gamemode": gameModePanel
         };
         return panels[ShellState.panel] || null;
     }
@@ -540,8 +542,8 @@ PanelWindow {
             radius: notchBody.radius
             color: "transparent"
             border.width: 2
-            border.color: IslandHub.flashActive ? IslandHub.flashColor : (IslandHub.recordingActive ? Theme.red : Theme.foreground)
-            opacity: IslandHub.flashActive ? 1 : (IslandHub.recordingActive ? (recBlinkOn ? 1 : 0) : 0)
+            border.color: ShellState.gameMode ? Theme.red : (IslandHub.flashActive ? IslandHub.flashColor : (IslandHub.recordingActive ? Theme.red : Theme.foreground))
+            opacity: ShellState.gameMode ? 0.9 : (IslandHub.flashActive ? 1 : (IslandHub.recordingActive ? (recBlinkOn ? 1 : 0) : 0))
 
             Behavior on opacity {
                 NumberAnimation {
@@ -843,7 +845,7 @@ PanelWindow {
             anchors.right: notchBody.right
             anchors.top: parent.top
             height: window.collapsedHeight
-            visible: opacity > 0
+            visible: opacity > 0 && !ShellState.gameMode
             opacity: window.clockRevealed ? 1 : 0
             unread: IslandHub.unreadCount
             label: IslandHub.primaryLabel(window.islandPlayer ? (window.islandPlayer.trackTitle || "") : "", window.islandPlayer ? (window.islandPlayer.trackArtist || "") : "")
@@ -866,6 +868,30 @@ PanelWindow {
             }
         }
 
+        // Dedicated Game Mode collapsed status pill
+        Row {
+            anchors.centerIn: notchBody
+            spacing: 6
+            visible: window.clockRevealed && ShellState.gameMode
+
+            Text {
+                text: "󰊴"
+                font.family: Theme.iconFontFamily
+                font.pixelSize: 13
+                color: Theme.red
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Text {
+                text: "GAME MODE"
+                font.family: Theme.fontFamily
+                font.pixelSize: 10
+                font.bold: true
+                color: Theme.red
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+
         MouseArea {
             anchors.fill: parent
             enabled: !window.isExpanded
@@ -881,6 +907,10 @@ PanelWindow {
                     return ;
                 // Intelligent click routing: target clicked screen and open active activity
                 ShellState.activeScreenName = window.screen ? window.screen.name : "";
+                if (ShellState.gameMode) {
+                    ShellState.show("gamemode", window.screen ? window.screen.name : "");
+                    return;
+                }
                 // Awaiting-acknowledgement timer DONE: tap confirms it and
                 // lands on the timer panel; the blink holds until this tap.
                 if (TimerState.completionHold) {
@@ -1087,6 +1117,14 @@ PanelWindow {
 
                 width: parent.width
                 visible: window.displayedPanel === "weather"
+            }
+
+            GameModePanel {
+                id: gameModePanel
+
+                width: parent.width
+                height: parent.height
+                visible: window.displayedPanel === "gamemode"
             }
 
             Behavior on opacity {

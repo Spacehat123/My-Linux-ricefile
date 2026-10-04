@@ -74,6 +74,7 @@ FocusScope {
                         } catch (e) {
                         }
                     }
+                    gc();
                     IslandHub.markSeen();
                 }
             }

@@ -9,10 +9,11 @@ Rectangle {
     }
 
     // Visual surface styling bound to Theme tokens
+    property int cornerRadius: theme.panelCornerRadius
     color: theme.panelBackground
     border.color: theme.panelBorder
     border.width: theme.panelBorderWidth
-    radius: 0
+    radius: cornerRadius
 
     // Optional clipping for rounded surfaces
     property bool clipContent: false

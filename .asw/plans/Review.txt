@@ -1,0 +1,947 @@
+DETAILED REVIEW: Implementation Plan vs. Original Roadmap
+Now reviewing both documents, here's what's missing or needs clarification:
+
+CRITICAL GAPS IN THE IMPLEMENTATION PLAN
+🔴 Domain 1: Onboarding Wizard
+Mentioned in Roadmap:
+
+WizardStep highlighting screen regions
+Step-by-step interactive tour with aperture masks
+"Getting Started" button in Control Center
+Help tooltip system
+Keyboard shortcuts reference card
+In Implementation Plan (Task 2.3): ✅ Covered: Multi-step wizard, aperture masks via Region inverted masks ❌ MISSING:
+
+No IPC exposure for headless first-run trigger (should be accessible via quickshell ipc call wizard start)
+No persistent dismissal tracking beyond QSettings (should store user preferences, wizard completion version, etc.)
+No accessibility scaffolding for keyboard-only navigation through wizard steps
+No regression handling: What if a user downgrades? Should wizard re-trigger?
+No tutorial video/GIF embedding in wizard steps (just static text/highlights)
+ADD TO TASK 2.3:
+
+QML
+// FirstRunWizard.qml additions
+IpcHandler {
+    target: "wizard"
+
+    function startWizard(): bool {
+        setupWizard.show();
+        return true;
+    }
+
+    function getCurrentStep(): int {
+        return setupWizard.currentStepIndex;
+    }
+
+    function skipWizard(): bool {
+        setupWizard.markCompleted();
+        return true;
+    }
+}
+
+// Version-aware completion tracking
+readonly property string currentWizardVersion: "1.0"
+
+QSettings {
+    group: "wizard"
+    property string completedVersion: ""
+
+    onValueChanged: {
+        if (completedVersion !== currentWizardVersion) {
+            wizard.show(); // Re-trigger on version bump
+        }
+    }
+}
+🔴 Domain 2: Safety & Recovery Features
+Mentioned in Roadmap:
+
+Confirmation dialogs for all destructive actions (close app, workspace delete, etc.)
+Undo system with Ctrl+Z
+Crash recovery with auto-save every 30s
+Recovery banner on startup
+In Implementation Plan (Task 1.2): ✅ Covered: UndoManager, CrashRecoveryManager, ConfirmationDialog ❌ MISSING:
+
+No Window-State Snapshotting: Only workspace state is saved; should also save:
+Per-window geometry (position, size, fullscreen state)
+Per-window properties (opacity, decorations, layer assignment)
+Pinned/sticky window flags
+No Cross-Workspace Undo Context: Undo is local to a workspace; should track context changes
+No User-Facing Crash Report UI: Just banner; no report submission or logging to disk
+No Confirmation Dialog Timeout Fallback: Modal without timeout can trap user
+No Partial Recovery: If 1 of 5 apps crashes, should recover the other 4
+ADD TO TASK 1.2:
+
+QML
+// core/UndoManager.qml additions
+property int maxUndoSteps: 20
+
+function recordSnapshot(context: string) {
+    // {
+    //   timestamp: now(),
+    //   workspace: { id, name },
+    //   surfaces: [{ address, geom: { x, y, w, h }, fullscreen, urgent }],
+    //   clipboard: clipboardContent
+    // }
+}
+
+// core/CrashRecoveryManager.qml additions
+function saveWindowGeometries() {
+    // Per-window snapshots, not just workspace list
+    const geometries = [];
+    for (let i = 0; i < surfaceModel.surfaces.length; ++i) {
+        geometries.push({
+            address: surfaceModel.surfaces[i].address,
+            title: surfaceModel.surfaces[i].title,
+            geometry: { x, y, width, height },
+            fullscreen: surfaceModel.surfaces[i].fullscreen,
+            sticky: surfaceModel.surfaces[i].sticky
+        });
+    }
+    QSettings.setValue("crash-recovery/geometries", JSON.stringify(geometries));
+}
+
+// ConfirmationDialog.qml additions
+property int autoRejectTimeout: 0  // 0 = never auto-reject
+
+Timer {
+    interval: autoRejectTimeout
+    running: autoRejectTimeout > 0 && dialogVisible
+    onTriggered: dialog.reject()
+}
+
+Text {
+    visible: autoRejectTimeout > 0
+    text: `Auto-rejecting in ${Math.ceil((autoRejectTimeout - timer.elapsed) / 1000)}s`
+}
+🔴 Domain 3: Visual Feedback & Discoverability
+Mentioned in Roadmap:
+
+Edge hover indicators with pulsing glow
+Animated entry/exit for panels
+Glow effects on hover regions
+Tooltip system for all interactive elements
+Breadcrumb path showing active context
+Progress indicators for long operations
+In Implementation Plan (Task 2.1, 2.2): ✅ Covered: Edge indicators, breadcrumb, tooltips ❌ MISSING:
+
+No progress indicators for long operations (app launch, workspace switch, file copy)
+No animated "pulse" glow on indicators (only breathing opacity mentioned)
+No per-panel entry animation specs (LeftSidebar, RightSidebar timing/easing)
+No context-aware tooltip positioning logic (near edge? move right; near corner? move up)
+No voice/audio feedback option (for accessibility: "Control Center opened")
+No gesture indicators on first-time edge hover (arrow pointing inward?)
+ADD TO TASK 2.1:
+
+QML
+// components/HoverIndicators.qml additions
+ParallelAnimationGroup {
+    id: pulseGlowAnimation
+    running: hoverIndicators.visible
+    loops: Animation.Infinite
+
+    SequentialAnimationGroup {
+        PropertyAnimation { target: glow; property: "opacity"; to: 0.55; duration: 600; easing.type: Easing.InOutQuad }
+        PropertyAnimation { target: glow; property: "opacity"; to: 0.25; duration: 600; easing.type: Easing.InOutQuad }
+    }
+
+    SequentialAnimationGroup {
+        PropertyAnimation { target: glow; property: "scale"; to: 1.15; duration: 600; easing.type: Easing.InOutQuad }
+        PropertyAnimation { target: glow; property: "scale"; to: 1.0; duration: 600; easing.type: Easing.InOutQuad }
+    }
+}
+
+// Add animated entry arrow (caret pointing into screen edge)
+AnimatedArrow {
+    direction: "inward"  // → ← ↑ ↓
+    opacity: hoverGuides.opacity
+    animation: slide_bounce  // Bounces in 200ms on first visibility
+}
+
+// components/ProgressIndicator.qml (NEW)
+ProgressIndicator {
+    operation: "workspace_switch"  // or "app_launch", "window_close"
+    progress: 0.0  // 0.0 to 1.0
+    estimatedMs: 500
+
+    ProgressBar {
+        value: parent.progress
+        height: 4
+        width: 200
+        color: Theme.accentColor
+    }
+
+    Text {
+        text: parent.operation.replace(/_/g, " ")
+        opacity: (parent.progress < 1.0) ? 1.0 : 0.0
+        Behavior on opacity { PropertyAnimation { duration: 300 } }
+    }
+}
+
+// Add progress tracking to all async operations
+onWorkspaceSwitchStart: {
+    progress.show("workspace_switch", 500);
+}
+
+onWorkspaceSwitchComplete: {
+    progress.hide();
+}
+🔴 Domain 4: Accessibility
+Mentioned in Roadmap:
+
+High-contrast mode (bold fonts, borders, >7:1 contrast)
+Reduce animations toggle
+Screen reader mode (espeak-ng)
+Keyboard-only navigation (Alt+1/2/3, Alt+Tab)
+Sticky keys support
+Larger cursor
+In Implementation Plan (Task 1.1, 3.1): ✅ Covered: Accessibility engine, Alt+Tab, keyboard shortcuts ❌ MISSING:
+
+No sticky keys implementation (mentioned in roadmap, absent from plan)
+No larger cursor size/color configuration (mentioned in roadmap, absent from plan)
+No focus ring styling (should be configurable: 2px vs 4px, color, dashed vs solid)
+No voice feedback for non-text elements (e.g., "Button: Close Window" when focused)
+No keyboard navigation for modal dialogs (ConfirmationDialog has focus trapping, but not full nav)
+No visual indicators for keyboard focus in AppSwitcher carousel
+No text-scaling option beyond Theme.uiScale (should support OS-level font settings)
+No color-blindness mode (deuteranopia, protanopia, tritanopia presets)
+ADD TO TASK 1.1:
+
+QML
+// core/AccessibilityManager.qml additions
+AccessibilityManager {
+    // Sticky keys
+    property bool stickyKeysEnabled: false
+    property string stickyKeysState: ""  // "ctrl", "alt", "shift", etc.
+
+    // Cursor
+    property int cursorSize: 24  // pixels
+    property string cursorColor: Theme.foreground
+    property string cursorStyle: "arrow"  // "arrow", "hand", "crosshair"
+
+    // Focus ring
+    property int focusRingWidth: 2
+    property string focusRingStyle: "solid"  // "solid", "dashed", "dotted"
+    property string focusRingColor: Theme.accentColor
+
+    // Color blindness
+    property string colorBlindMode: "none"  // "none", "deuteranopia", "protanopia", "tritanopia"
+
+    function applyColorBlindMode(mode: string) {
+        if (mode === "deuteranopia") {
+            Theme.accentColor = "#0173B2";  // Deuteranopia-safe blue
+            Theme.errorColor = "#DE8F05";   // Deuteranopia-safe orange
+            Theme.successColor = "#CC78BC"; // Deuteranopia-safe magenta
+        } else if (mode === "protanopia") {
+            Theme.accentColor = "#005F73";
+            Theme.errorColor = "#D62828";
+            Theme.successColor = "#F77F00";
+        }
+        // Tritanopia, etc.
+    }
+}
+
+// Focus ring helper for all interactive elements
+FocusRing {
+    anchors.fill: parent
+    anchors.margins: -a11y.focusRingWidth
+    color: a11y.focusRingColor
+    width: a11y.focusRingWidth
+    style: a11y.focusRingStyle
+    visible: activeFocus && a11y.highContrastMode
+}
+
+// Sticky keys state machine
+GlobalShortcut {
+    sequences: ["Shift"]
+    onPressed: {
+        if (a11y.stickyKeysEnabled) {
+            a11y.stickyKeysState = (a11y.stickyKeysState === "shift") ? "" : "shift";
+        }
+    }
+}
+
+// Screen reader for focus changes
+Connections {
+    target: parent
+    function onActiveFocusChanged() {
+        if (activeFocus && a11y.screenReaderMode) {
+            const label = getAccessibilityLabel();
+            a11y.announce(`${label}, button`);
+        }
+    }
+}
+🔴 Domain 5: Application Discovery & Search
+Mentioned in Roadmap:
+
+Spotlight-style launcher with instant fuzzy search
+Desktop icon grid (optional)
+Task dock with pinned favorites + running apps
+Recent apps section
+Category browsing
+In Implementation Plan (Task 3.2): ✅ Covered: Application launcher, dock, recent apps, categories ❌ MISSING:
+
+No calculation/expression support (mentioned in roadmap, not in plan)
+No file/web search integration (roadmap mentions but plan doesn't)
+No app history/frecency (MRU vs frecency sorting)
+No keyboard navigation in launcher (search box → results navigation with arrows, not just typing)
+No custom app alias system (e.g., type chrome to launch google-chrome)
+No pinning/unpinning UI in dock or launcher results
+No app update notification in dock/launcher (badge on app icon if update available)
+ADD TO TASK 3.2:
+
+QML
+// components/ApplicationLauncher.qml additions
+SearchBox {
+    // Support for calculations & filters
+    onTextChanged: {
+        if (search.text.match(/^\d+[\+\-\*\/]\d+/)) {
+            // Evaluate math: 5+3 → "8"
+            results.addCalculationResult(eval(search.text));
+        } else if (search.text.startsWith("web:")) {
+            // Web search: web:coffee → DuckDuckGo results
+            results.fetchWebResults(search.text.substring(4));
+        } else if (search.text.startsWith("file:")) {
+            // File search: file:*.pdf
+            results.searchFilesystem(search.text.substring(5));
+        }
+    }
+}
+
+// File search integration
+FilesystemSearchEngine {
+    rootPath: "~"
+    supportedFormats: ["*.pdf", "*.doc*", "*.zip"]
+
+    onResultsReady: {
+        launcher.results.addFileResults(results);
+    }
+}
+
+// App aliasing
+property var appAliases: ({
+    "code": "visual-studio-code",
+    "chrome": "google-chrome",
+    "ff": "firefox",
+    "mail": "thunderbird"
+})
+
+// Frecency tracking (not just MRU)
+AppUsageTracker {
+    property var appLaunches: ({})  // { appId: { count, lastLaunchTime, score } }
+
+    function recordLaunch(appId: string) {
+        const now = Date.now();
+        if (!appLaunches[appId]) {
+            appLaunches[appId] = { count: 0, lastLaunchTime: 0, score: 0 };
+        }
+        appLaunches[appId].count++;
+        appLaunches[appId].lastLaunchTime = now;
+        // Frecency score = frequency * time_decay
+        appLaunches[appId].score = appLaunches[appId].count * Math.exp(-0.001 * (now - appLaunches[appId].lastLaunchTime));
+    }
+}
+
+// Dock pinning UI
+DockIcon {
+    onRightClicked: {
+        contextMenu.show([
+            { label: "Pin to Dock", action: () => dock.pin(app) },
+            { label: "Unpin from Dock", action: () => dock.unpin(app) }
+        ]);
+    }
+}
+🔴 Domain 6: System Status & Tray
+Mentioned in Roadmap:
+
+Time display
+Network status
+Battery indicator with charging state
+Volume control
+Notification count
+Integrated top bar
+In Implementation Plan (Task 4.3): ✅ Covered: System tray, network, battery, volume ❌ MISSING:
+
+No WiFi network selection UI (just icon showing connected/disconnected)
+No volume mixer (per-app volume control, mute individual apps)
+No Bluetooth status/pairing (mentioned in roadmap as sysstat, not in implementation)
+No power/system menu (power profiles, suspend, reboot options)
+No quick-toggle buttons (WiFi, Bluetooth, Do Not Disturb)
+No tray click actions (click battery → power settings; click volume → mixer)
+ADD TO TASK 4.3:
+
+QML
+// components/SystemTray.qml additions
+BluetoothStatus {
+    icon: bluetoothManager.enabled ? "🔵" : "⚪"
+    tooltip: bluetoothManager.enabled
+        ? `Connected: ${bluetoothManager.connectedDevices.map(d => d.name).join(", ")}`
+        : "Bluetooth Off"
+    onClicked: showBluetoothMenu()
+}
+
+VolumeMixer {
+    id: volumeMixer
+    visible: false
+
+    Repeater {
+        model: audioManager.applications
+
+        AppVolumeRow {
+            appName: modelData.name
+            appIcon: modelData.icon
+            volume: modelData.volume
+            onVolumeChanged: audioManager.setAppVolume(modelData.id, value)
+            onMuteToggled: audioManager.muteApp(modelData.id)
+        }
+    }
+}
+
+PowerMenu {
+    id: powerMenu
+    visible: false
+
+    Row {
+        RadioButton {
+            text: "Performance"
+            value: "performance"
+            checked: powerManager.profile === "performance"
+            onClicked: powerManager.setProfile("performance")
+        }
+        RadioButton {
+            text: "Balanced"
+            value: "balanced"
+            checked: powerManager.profile === "balanced"
+            onClicked: powerManager.setProfile("balanced")
+        }
+        RadioButton {
+            text: "Power Saver"
+            value: "power-saver"
+            checked: powerManager.profile === "power-saver"
+            onClicked: powerManager.setProfile("power-saver")
+        }
+    }
+
+    Button {
+        text: "Suspend"
+        onClicked: powerManager.suspend()
+    }
+
+    Button {
+        text: "Reboot"
+        onClicked: powerManager.reboot()
+    }
+
+    Button {
+        text: "Shutdown"
+        onClicked: powerManager.shutdown()
+    }
+}
+
+NetworkSelector {
+    id: networkSelector
+    visible: false
+
+    Repeater {
+        model: networkManager.availableNetworks
+
+        NetworkItem {
+            ssid: modelData.ssid
+            strength: modelData.strength
+            isSecured: modelData.isSecured
+            onClicked: networkManager.connect(modelData)
+        }
+    }
+}
+
+// Tray click handlers
+TrayIcon {
+    id: batteryIcon
+    onClicked: powerMenu.show()
+}
+
+TrayIcon {
+    id: volumeIcon
+    onClicked: volumeMixer.show()
+}
+
+TrayIcon {
+    id: networkIcon
+    onClicked: networkSelector.show()
+}
+
+TrayIcon {
+    id: bluetoothIcon
+    onClicked: showBluetoothDevices()
+}
+🔴 Domain 7: Settings Panel
+Mentioned in Roadmap:
+
+Appearance tab (dark/light, scale, opacity, blur, accent color, wallpaper)
+Behavior tab (desktop icons, ambient, wallpaper engine, idle timeout, workspace transition, focus-follows-mouse)
+Keyboard tab (shortcuts reference, custom keybinds)
+System tab (OS info, settings launcher)
+In Implementation Plan (Task 5.1): ✅ Covered: All 4 tabs ❌ MISSING:
+
+No theme management (custom theme creation, import/export)
+No keybind conflict detection (warn if shortcut already bound)
+No workspace naming UI (only settings for behavior, not creating/renaming workspaces)
+No panel position/size settings (hardcoded; should be configurable)
+No tile/window snap zone presets (Swiss grid, golden ratio, etc.)
+No startup applications list (auto-launch apps on shell startup)
+No display/monitor settings (resolution, refresh rate, rotation per monitor)
+ADD TO TASK 5.1:
+
+QML
+// components/tabs/AppearanceTab.qml additions
+ThemeManager {
+    id: themeManager
+
+    Button {
+        text: "Create Custom Theme"
+        onClicked: customThemeDialog.open()
+    }
+
+    Repeater {
+        model: themeManager.customThemes
+
+        ThemeCard {
+            name: modelData.name
+            preview: modelData.previewColors
+            onSelected: Theme.loadCustomTheme(modelData)
+            onDeleted: themeManager.deleteTheme(modelData)
+            onExported: themeManager.exportTheme(modelData)
+        }
+    }
+}
+
+// components/tabs/BehaviorTab.qml additions
+WorkspaceManagement {
+    SectionHeader { text: "Workspaces" }
+
+    Repeater {
+        model: workspaceManager.workspaceList
+
+        Row {
+            TextField {
+                text: modelData.name
+                onTextChanged: workspaceManager.renameWorkspace(modelData.id, text)
+            }
+
+            Button {
+                text: "Delete"
+                onClicked: workspaceManager.deleteWorkspace(modelData.id)
+            }
+        }
+    }
+
+    Button {
+        text: "+ Add Workspace"
+        onClicked: workspaceManager.createWorkspace()
+    }
+}
+
+StartupApplications {
+    SectionHeader { text: "Launch on Startup" }
+
+    Repeater {
+        model: startupAppsManager.autoLaunchApps
+
+        Row {
+            Text { text: modelData.appName }
+            Toggle {
+                checked: modelData.enabled
+                onToggled: startupAppsManager.setAutoLaunch(modelData.appId, checked)
+            }
+        }
+    }
+
+    Button {
+        text: "+ Add App to Startup"
+        onClicked: appLauncher.showStartupSelector()
+    }
+}
+
+// components/tabs/DisplayTab.qml (NEW)
+DisplaySettings {
+    SectionHeader { text: "Monitors" }
+
+    Repeater {
+        model: desktopModel.monitors
+
+        MonitorSettings {
+            name: modelData.name
+
+            ComboBox {
+                label: "Resolution"
+                model: modelData.availableModes
+                currentIndex: modelData.currentModeIndex
+                onActivated: displayManager.setResolution(modelData, index)
+            }
+
+            ComboBox {
+                label: "Refresh Rate"
+                model: modelData.availableRefreshRates
+                currentIndex: modelData.currentRefreshRateIndex
+                onActivated: displayManager.setRefreshRate(modelData, index)
+            }
+
+            ComboBox {
+                label: "Rotation"
+                model: ["0°", "90°", "180°", "270°"]
+                currentIndex: modelData.rotationIndex
+                onActivated: displayManager.setRotation(modelData, index)
+            }
+        }
+    }
+}
+🔴 Domain 8: Notifications & Feedback
+Mentioned in Roadmap:
+
+Notification center with categories/history
+Actionable notification cards
+Toast notifications (3-second, auto-dismiss)
+Crash notification with reopen/report actions
+In Implementation Plan (Task 5.2, 5.3): ✅ Covered: Notification center, toasts, crash notifications ❌ MISSING:
+
+No notification grouping (collapse similar notifications)
+No notification priority levels (critical, high, normal, low with different timeouts)
+No do-not-disturb mode (silence all but critical notifications)
+No notification customization per app (mute specific app notifications)
+No notification sound selection (custom sound for different notification types)
+No notification action callbacks (e.g., "Delete" notification action → actually deletes file)
+ADD TO TASK 5.2:
+
+QML
+// components/NotificationCenter.qml additions
+NotificationGrouping {
+    property var groupedNotifications: ({})  // { key: [notifications] }
+
+    function groupNotifications(notif: Object) {
+        const key = `${notif.appId}_${notif.category}`;
+        if (!groupedNotifications[key]) {
+            groupedNotifications[key] = [];
+        }
+        groupedNotifications[key].push(notif);
+    }
+}
+
+NotificationPriority {
+    enum Priority {
+        Low = 0,        // 2 seconds
+        Normal = 1,     // 5 seconds
+        High = 2,       // 10 seconds, always show
+        Critical = 3    // Never auto-dismiss
+    }
+}
+
+DoNotDisturbMode {
+    property bool enabled: false
+    property list<string> criticalApps: ["org.gnome.Nautilus", "org.kde.kwin"]  // Allow through
+
+    function shouldShow(notif: Object): bool {
+        if (!enabled) return true;
+        if (notif.priority === Priority.Critical) return true;
+        if (criticalApps.includes(notif.appId)) return true;
+        return false;
+    }
+}
+
+PerAppNotificationSettings {
+    id: appNotifSettings
+
+    Repeater {
+        model: notificationServer.registeredApps
+
+        Row {
+            Text { text: modelData.appName }
+
+            Toggle {
+                label: "Enabled"
+                checked: appNotifSettings.isAppEnabled(modelData.appId)
+                onToggled: appNotifSettings.setAppEnabled(modelData.appId, checked)
+            }
+
+            ComboBox {
+                label: "Sound"
+                model: soundManager.availableSounds
+                currentIndex: appNotifSettings.getSoundIndex(modelData.appId)
+                onActivated: appNotifSettings.setSound(modelData.appId, currentIndex)
+            }
+        }
+    }
+}
+
+NotificationSound {
+    id: notificationSound
+
+    function play(notifType: string) {
+        if (doNotDisturbMode.enabled) return;
+        const soundPath = soundManager.getSoundPath(notifType);
+        audioPlayer.source = soundPath;
+        audioPlayer.play();
+    }
+}
+
+// Notification action execution
+Notification {
+    actions: [
+        {
+            label: "Delete",
+            action: () => {
+                const result = fileManager.delete(this.filePath);
+                if (result.success) {
+                    notificationCenter.show({
+                        icon: "✅",
+                        title: "File Deleted",
+                        body: `${this.filePath} has been deleted`
+                    });
+                } else {
+                    notificationCenter.show({
+                        icon: "❌",
+                        title: "Delete Failed",
+                        body: result.error
+                    });
+                }
+            }
+        }
+    ]
+}
+🔴 Domain 9: Window Management
+Mentioned in Roadmap:
+
+Window snapping (edges + quadrants)
+Layout presets (single, side-by-side, PiP, 3-column)
+Keyboard shortcuts
+In Implementation Plan (Task 3.3): ✅ Covered: Window snapper, layout presets, keybinds ❌ MISSING:
+
+No smart gaps (configurable margins between snapped windows)
+No persistent window positions (restore window layout on restart)
+No custom snap zones (define custom grid e.g. 2/3 + 1/3 split)
+No keyboard navigation for layouts (cycle through presets with Super+Tab)
+No visual snap guides (crosshair showing snap zones on drag)
+No window resize handles (drag window edge to resize)
+ADD TO TASK 3.3:
+
+QML
+// core/WindowSnapper.qml additions
+property int windowGapPixels: 8  // Margin between snapped windows
+
+WindowSnapGuides {
+    id: snapGuides
+    visible: (windowSnapper.isDragging || windowSnapper.showGuides)
+
+    // Render semi-transparent snap zone grid
+    GridLayout {
+        columns: 3
+        rows: 3
+
+        Repeater {
+            model: 9
+
+            Rectangle {
+                color: Theme.accentColor
+                opacity: 0.15
+                border.color: Theme.accentColor
+                border.width: 2
+            }
+        }
+    }
+}
+
+// core/WindowArrangements.qml additions
+property var customSnapZones: [
+    { name: "Left 2/3", rect: Qt.rect(0, 0, screen.width * 2/3, screen.height) },
+    { name: "Right 1/3", rect: Qt.rect(screen.width * 2/3, 0, screen.width * 1/3, screen.height) },
+    { name: "Golden Ratio (1.618)", rect: calculateGoldenRect() }
+]
+
+WindowLayoutCycler {
+    GlobalShortcut {
+        sequences: ["Super+Tab"]
+        onPressed: {
+            const nextLayout = (currentLayoutIndex + 1) % arrangements.length;
+            applyLayout(arrangements[nextLayout]);
+            showLayoutNotification(arrangements[nextLayout].name);
+        }
+    }
+}
+
+// Persistent window positions (store in recovery file)
+WindowGeometryPersistence {
+    onApplicationClosed: (app, window) => {
+        const record = {
+            appId: app.appId,
+            appName: app.appName,
+            geometry: window.geometry,
+            workspace: workspaceManager.focusedWorkspaceId,
+            timestamp: Date.now()
+        };
+        QSettings.addToArray("window-geometries", record);
+    }
+
+    onShellStartup: {
+        const saved = QSettings.getArray("window-geometries");
+        for (let i = 0; i < saved.length; ++i) {
+            if (saved[i].timestamp > Date.now() - 86400000) {  // < 24h old
+                compositorActionLayer.restoreWindowGeometry(saved[i]);
+            }
+        }
+    }
+}
+
+// Inline resize handles (visible on hover)
+WindowResizeHandles {
+    property bool visible: window.hovered || window.focused
+
+    Repeater {
+        model: ["left", "right", "top", "bottom", "top-left", "top-right", "bottom-left", "bottom-right"]
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: {
+                if (modelData === "left" || modelData === "right") return Qt.SizeHorCursor;
+                if (modelData === "top" || modelData === "bottom") return Qt.SizeVerCursor;
+                // Diagonal
+                return Qt.SizeFDiagCursor;
+            }
+
+            onMouseXChanged: {
+                if (pressed) {
+                    const delta = mouseX - lastX;
+                    lastX = mouseX;
+
+                    if (modelData.includes("left")) {
+                        window.x += delta;
+                        window.width -= delta;
+                    } else if (modelData.includes("right")) {
+                        window.width += delta;
+                    }
+                }
+            }
+        }
+    }
+}
+🔴 Domain 10-13: Performance, Multi-Monitor, Tips
+Mentioned in Roadmap:
+
+Real-time system monitor with graphs
+Performance alerts (CPU, memory, FPS)
+Multi-monitor workspace visualizer
+Dynamic contextual tips
+In Implementation Plan (Tasks 4.1, 4.2, 6.1, 6.2): ✅ Covered: All major components ❌ MISSING:
+
+No GPU temperature monitoring (only CPU/system temp)
+No FPS graphs per component (distinguish shell FPS vs wallpaper FPS vs app FPS)
+No memory profiling per app (show top memory consumers)
+No performance profiles (e.g., "Presentation Mode" disables animations)
+No tips persistence (don't repeat tips; track dismissed tips across sessions)
+No multi-monitor drag-and-drop to rearrange in visualizer
+No per-monitor workspace assignment UI (currently just read-only visualization)
+ADD TO TASK 4.1:
+
+QML
+// components/SystemMonitor.qml additions
+GPUTemperature {
+    // Read from /sys/class/drm/card*/device/hwmon/hwmonX/temp*_input
+    reading: systemStats.gpuTempC
+    warning: reading > 80
+    critical: reading > 90
+}
+
+PerApplicationMemory {
+    id: appMemory
+
+    Repeater {
+        model: systemStats.processMemory.sort((a, b) => b.memory - a.memory).slice(0, 5)
+
+        MemoryRow {
+            appName: modelData.name
+            memoryMB: modelData.memory
+            memoryPercent: (modelData.memory / systemStats.memoryTotalMB) * 100
+        }
+    }
+}
+
+FPSGraphs {
+    ShellFPSGraph {
+        values: desktopState.fpsHistory.shell
+        label: "Shell"
+    }
+
+    WallpaperFPSGraph {
+        values: desktopState.fpsHistory.wallpaper
+        label: "Wallpaper"
+        visible: wallpaperEnabled
+    }
+
+    AppFPSGraph {
+        values: surfaceManager.activeSurface?.fpsHistory ?? []
+        label: `${surfaceManager.activeTitle} FPS`
+    }
+}
+
+PerformanceProfiles {
+    property var profiles: {
+        "Balanced": { animations: true, wallpaper: true, blur: true },
+        "Presentation": { animations: false, wallpaper: false, blur: false, reducedMotion: true },
+        "Gaming": { animations: false, wallpaper: false, blur: false, focusAlt+Tab: true },
+        "Battery Saver": { animations: false, wallpaper: false, blur: false, cpuThrottle: true }
+    }
+}
+ADD TO TASK 6.2:
+
+QML
+// core/DynamicTips.qml additions
+TipHistory {
+    property var dismissedTips: QSettings.value("tips/dismissed", [])
+    property var viewedTips: QSettings.value("tips/viewed", {})  // { tipId: count }
+
+    function shouldShowTip(tip: Object): bool {
+        if (dismissedTips.includes(tip.id)) return false;
+        if ((viewedTips[tip.id] ?? 0) > 2) return false;  // Max 2 showings
+        if (tip.requiresCondition && !tip.condition()) return false;
+        return true;
+    }
+
+    function recordViewed(tipId: string) {
+        viewedTips[tipId] = (viewedTips[tipId] ?? 0) + 1;
+        QSettings.setValue("tips/viewed", viewedTips);
+    }
+
+    function recordDismissed(tipId: string) {
+        dismissedTips.push(tipId);
+        QSettings.setValue("tips/dismissed", dismissedTips);
+    }
+}
+SUMMARY: Critical Missing Features
+Missing Feature	Roadmap Section	Severity	Effort to Add
+Wizard version tracking & re-trigger	Domain 1	🟡 High	Low
+Window geometry persistence	Domain 2	🔴 Critical	Medium
+Crash reporting UI	Domain 2	🟡 High	Medium
+Progress indicators	Domain 3	🟡 High	Medium
+Color-blindness modes	Domain 4	🟡 High	Low
+Sticky keys & custom focus rings	Domain 4	🟡 High	Low
+File/web search in launcher	Domain 5	🟡 High	High
+Frecency-based app ranking	Domain 5	🟡 High	Low
+WiFi network selector	Domain 6	🟡 High	Medium
+Volume mixer per-app	Domain 6	🟡 High	Medium
+Custom theme management	Domain 7	🟡 High	High
+Workspace creation/renaming UI	Domain 7	🟡 High	Low
+Display settings (resolution, rotation)	Domain 7	🟡 High	Medium
+Notification grouping & DND mode	Domain 8	🟡 High	Medium
+Per-app notification customization	Domain 8	🟡 High	Low
+Notification sounds	Domain 8	🟡 High	Low
+Custom snap zones & golden ratio	Domain 9	🟢 Medium	Low
+Persistent window restoration	Domain 9	🔴 Critical	High
+Window resize handles	Domain 9	🟡 High	Medium
+GPU temp & per-app memory monitor	Domain 8/10	🟡 High	Low
+Performance profiles	Domain 10	🟡 High	Medium
+Tip dismissal persistence	Domain 13	🟢 Medium	Low
+RECOMMENDATION
+The Implementation Plan is ~75% complete. To reach 100%, prioritize:
+
+Wave 1 addition: Window geometry persistence (for crash recovery)
+Wave 3 addition: File search + frecency + WiFi network selector
+Wave 5 addition: Notification grouping + DND + per-app settings
+Wave 6 addition: Tip dismissal history + persistent window restoration
+These additions ensure the shell is production-ready and handles edge cases that power users and regular users will immediately hit.
