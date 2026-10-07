@@ -95,27 +95,48 @@ Singleton {
     }
 
     function mediaNext() {
-        if (player && player.canGoNext) {
-            player.next();
-        } else {
+        let dispatched = false;
+        if (player) {
+            try {
+                if (player.canGoNext || typeof player.next === "function") {
+                    player.next();
+                    dispatched = true;
+                }
+            } catch (e) {}
+        }
+        if (!dispatched) {
             Quickshell.execDetached(["playerctl", "next"]);
         }
         flashBorder(Theme.primary, 300);
     }
 
     function mediaPrevious() {
-        if (player && player.canGoPrevious) {
-            player.previous();
-        } else {
+        let dispatched = false;
+        if (player) {
+            try {
+                if (player.canGoPrevious || typeof player.previous === "function") {
+                    player.previous();
+                    dispatched = true;
+                }
+            } catch (e) {}
+        }
+        if (!dispatched) {
             Quickshell.execDetached(["playerctl", "previous"]);
         }
         flashBorder(Theme.primary, 300);
     }
 
     function mediaPlayPause() {
-        if (player && player.canTogglePlaying) {
-            player.togglePlaying();
-        } else {
+        let dispatched = false;
+        if (player) {
+            try {
+                if (player.canTogglePlaying || typeof player.togglePlaying === "function") {
+                    player.togglePlaying();
+                    dispatched = true;
+                }
+            } catch (e) {}
+        }
+        if (!dispatched) {
             Quickshell.execDetached(["playerctl", "play-pause"]);
         }
         flashBorder(Theme.primary, 300);

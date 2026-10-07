@@ -898,9 +898,10 @@ PanelWindow {
             enabled: !window.isExpanded
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton
 
             property int _wheelDeltaAccum: 0
+            property bool _shiftPressedOnPress: false
 
             onWheel: (wheel) => {
                 let delta = wheel.angleDelta.y !== 0 ? wheel.angleDelta.y : wheel.angleDelta.x;
@@ -915,13 +916,31 @@ PanelWindow {
                 wheel.accepted = true;
             }
 
+            onPressed: (mouse) => {
+                _shiftPressedOnPress = (mouse.modifiers & Qt.ShiftModifier) !== 0;
+            }
+
             onClicked: (mouse) => {
                 if (mouse.button === Qt.RightButton) {
-                    if (mouse.modifiers & Qt.ShiftModifier) {
+                    const hasShift = _shiftPressedOnPress || ((mouse.modifiers & Qt.ShiftModifier) !== 0);
+                    // Shift+Right click ANYWHERE, OR Right-click on left half of pill (⏮): Previous Track
+                    // Right-click on right half of pill (⏭): Next Track
+                    if (hasShift || mouse.x < width / 2) {
                         IslandHub.mediaPrevious();
                     } else {
                         IslandHub.mediaNext();
                     }
+                    _shiftPressedOnPress = false;
+                    return;
+                }
+
+                if (mouse.button === Qt.BackButton) {
+                    IslandHub.mediaPrevious();
+                    return;
+                }
+
+                if (mouse.button === Qt.ForwardButton) {
+                    IslandHub.mediaNext();
                     return;
                 }
 
