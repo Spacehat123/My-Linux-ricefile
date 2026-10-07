@@ -13,9 +13,31 @@ PanelWindow {
     property bool activeRendering: true
     property string mediaType: "video"
     property string mediaSource: ""
+    property bool live: true
 
     // Lifecycle visibility: window is mapped to layer-shell only when active
     visible: enabled && activeRendering && mediaType === "video" && mediaSource !== ""
+
+    onLiveChanged: _syncPlayback()
+    onVisibleChanged: _syncPlayback()
+
+    function _syncPlayback() {
+        if (!root.visible || root.mediaType !== "video" || root.mediaSource === "") {
+            return;
+        }
+
+        if (root.live) {
+            if (mediaPlayer.playbackState === MediaPlayer.PausedState || mediaPlayer.playbackState === MediaPlayer.StoppedState) {
+                mediaPlayer.play();
+            }
+        } else {
+            if (mediaPlayer.playbackState === MediaPlayer.PlayingState) {
+                mediaPlayer.pause();
+            } else if (mediaPlayer.playbackState === MediaPlayer.StoppedState) {
+                mediaPlayer.play();
+            }
+        }
+    }
 
     // Fullscreen monitor coverage
     anchors {
@@ -53,13 +75,15 @@ PanelWindow {
 
         onMediaStatusChanged: {
             if (mediaStatus === MediaPlayer.LoadedMedia && root.visible) {
-                play();
+                root._syncPlayback();
             }
         }
 
         onPlaybackStateChanged: {
             if (playbackState === MediaPlayer.StoppedState && root.visible && source !== "") {
-                play();
+                root._syncPlayback();
+            } else if (playbackState === MediaPlayer.PlayingState && !root.live) {
+                pause();
             }
         }
     }

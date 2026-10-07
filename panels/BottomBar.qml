@@ -204,10 +204,43 @@ PanelWindow {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: {
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            onClicked: (mouse) => {
+                                if (mouse.button === Qt.RightButton) {
+                                    Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "overview", "toggle"]);
+                                    return;
+                                }
                                 if (root.interactionModel && wsBtn.wsId !== -1)
                                     root.interactionModel.requestWorkspaceSwitch(wsBtn.wsId);
                             }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: overviewBtn
+                    height: 28
+                    width: 28
+                    radius: 14
+                    color: overviewMouse.containsMouse ? Island.Theme.glassCardHover : "transparent"
+                    border.color: overviewMouse.containsMouse ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                    border.width: 1
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰕰"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 13
+                        color: overviewMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                    }
+
+                    MouseArea {
+                        id: overviewMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "overview", "toggle"]);
                         }
                     }
                 }

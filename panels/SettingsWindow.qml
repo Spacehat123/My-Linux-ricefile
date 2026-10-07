@@ -88,6 +88,19 @@ PanelWindow {
         }
     }
 
+    Process {
+        id: setDefaultSinkProc
+    }
+
+    function selectDefaultSink(node) {
+        if (!node) return;
+        Pipewire.preferredDefaultAudioSink = node;
+        if (node.id) {
+            setDefaultSinkProc.command = ["wpctl", "set-default", node.id.toString()];
+            setDefaultSinkProc.running = true;
+        }
+    }
+
     // Dismiss on Escape key
     FocusScope {
         id: focusScope
@@ -583,72 +596,213 @@ PanelWindow {
                                 visible: windowCard.activeCategory === "audio"
 
                                 Text {
-                                    text: "Sound & Audio Streams"
+                                    text: "Sound & Audio"
                                     font.pixelSize: 16
                                     font.bold: true
                                     color: Island.Theme.foreground
                                 }
 
                                 Text {
-                                    text: "Per-application audio streams bound directly to PipeWire with zero process polling."
+                                    text: "Manage audio output devices and per-application streams with zero polling."
                                     font.pixelSize: 11
                                     color: Island.Theme.muted
                                 }
 
-                                Repeater {
-                                    model: Pipewire.nodes ? Pipewire.nodes.values.filter(n => n.audio && n.isStream && !n.isSink) : []
+                                // 1. PHYSICAL OUTPUT DEVICES
+                                Text {
+                                    text: "OUTPUT DEVICES"
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    font.letterSpacing: 1
+                                    color: Island.Theme.primary
+                                }
 
-                                    delegate: Rectangle {
-                                        required property var modelData
-                                        width: contentStack.width
-                                        height: 48
-                                        radius: 12
-                                        color: Island.Theme.glassCard
-                                        border.color: Island.Theme.glassBorderSubtle
-                                        border.width: 1
+                                Column {
+                                    width: parent.width
+                                    spacing: 8
 
-                                        Row {
-                                            anchors.fill: parent
-                                            anchors.margins: 12
-                                            spacing: 10
+                                    Repeater {
+                                        model: Pipewire.nodes ? Pipewire.nodes.values.filter(n => n.audio && n.isSink && !n.isStream) : []
 
-                                            Text {
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                text: "󰓃"
-                                                font.family: Island.Theme.iconFontFamily
-                                                font.pixelSize: 14
-                                                color: Island.Theme.primary
-                                            }
+                                        delegate: Rectangle {
+                                            required property var modelData
+                                            readonly property bool isDefault: Pipewire.defaultAudioSink && modelData.id === Pipewire.defaultAudioSink.id
+                                            width: contentStack.width
+                                            height: 52
+                                            radius: 12
+                                            color: isDefault ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.12) : Island.Theme.glassCard
+                                            border.color: isDefault ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                            border.width: isDefault ? 1.5 : 1
 
-                                            Text {
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                width: 130
-                                                text: modelData.name || modelData.description || "Audio Stream"
-                                                font.pixelSize: 11
-                                                font.bold: true
-                                                color: Island.Theme.foreground
-                                                elide: Text.ElideRight
-                                            }
+                                            Row {
+                                                anchors.fill: parent
+                                                anchors.margins: 10
+                                                spacing: 10
 
-                                            // Slider for stream volume
-                                            StyledSlider {
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                width: 240
-                                                height: 18
-                                                value: modelData.audio ? modelData.audio.volume : 0.5
-                                                onMoved: {
-                                                    if (modelData.audio) {
-                                                        modelData.audio.volume = value;
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: (modelData.name && modelData.name.includes("bluez")) ? "󰋋" : ((modelData.description && modelData.description.includes("HDMI")) ? "󰍹" : "󰕾")
+                                                    font.family: Island.Theme.iconFontFamily
+                                                    font.pixelSize: 18
+                                                    color: isDefault ? Island.Theme.primary : Island.Theme.muted
+                                                }
+
+                                                Column {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: 170
+                                                    spacing: 2
+
+                                                    Text {
+                                                        text: modelData.description || modelData.nickname || modelData.name || "Output Device"
+                                                        font.pixelSize: 11
+                                                        font.bold: true
+                                                        color: Island.Theme.foreground
+                                                        elide: Text.ElideRight
+                                                        width: parent.width
+                                                    }
+
+                                                    Text {
+                                                        text: isDefault ? "Active Default Output" : "Available"
+                                                        font.pixelSize: 9
+                                                        font.bold: isDefault
+                                                        color: isDefault ? Island.Theme.primary : Island.Theme.muted
+                                                    }
+                                                }
+
+                                                // Volume slider
+                                                StyledSlider {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: 140
+                                                    height: 18
+                                                    value: modelData.audio ? modelData.audio.volume : 0.5
+                                                    onMoved: (val) => {
+                                                        if (modelData.audio) {
+                                                            modelData.audio.volume = val;
+                                                        }
+                                                    }
+                                                }
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: Math.round((modelData.audio ? modelData.audio.volume : 0) * 100) + "%"
+                                                    font.pixelSize: 10
+                                                    font.bold: true
+                                                    color: Island.Theme.muted
+                                                    width: 32
+                                                }
+
+                                                // Select Button
+                                                Rectangle {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: 64
+                                                    height: 26
+                                                    radius: 8
+                                                    color: isDefault ? Island.Theme.primary : (selMouse.containsMouse ? Island.Theme.glassCardHover : "transparent")
+                                                    border.color: isDefault ? Island.Theme.primary : Island.Theme.glassBorder
+                                                    border.width: 1
+                                                    scale: selMouse.pressed ? 0.94 : 1.0
+
+                                                    Text {
+                                                        anchors.centerIn: parent
+                                                        text: isDefault ? "Active" : "Select"
+                                                        font.pixelSize: 10
+                                                        font.bold: true
+                                                        color: isDefault ? "#0a0a0f" : Island.Theme.foreground
+                                                    }
+
+                                                    MouseArea {
+                                                        id: selMouse
+                                                        anchors.fill: parent
+                                                        hoverEnabled: true
+                                                        cursorShape: isDefault ? Qt.ArrowCursor : Qt.PointingHandCursor
+                                                        onClicked: {
+                                                            root.selectDefaultSink(modelData);
+                                                        }
                                                     }
                                                 }
                                             }
+                                        }
+                                    }
+                                }
 
-                                            Text {
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                text: Math.round((modelData.audio ? modelData.audio.volume : 0) * 100) + "%"
-                                                font.pixelSize: 11
-                                                font.bold: true
-                                                color: Island.Theme.muted
+                                Item { width: parent.width; height: 6 }
+
+                                // 2. APPLICATION STREAMS
+                                Text {
+                                    text: "APPLICATION STREAMS"
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    font.letterSpacing: 1
+                                    color: Island.Theme.primary
+                                }
+
+                                Text {
+                                    text: "No active application audio playback streams found."
+                                    font.pixelSize: 11
+                                    color: Island.Theme.muted
+                                    visible: (Pipewire.nodes ? Pipewire.nodes.values.filter(n => n.audio && n.isStream && !n.isSink).length : 0) === 0
+                                }
+
+                                Column {
+                                    width: parent.width
+                                    spacing: 8
+                                    visible: (Pipewire.nodes ? Pipewire.nodes.values.filter(n => n.audio && n.isStream && !n.isSink).length : 0) > 0
+
+                                    Repeater {
+                                        model: Pipewire.nodes ? Pipewire.nodes.values.filter(n => n.audio && n.isStream && !n.isSink) : []
+
+                                        delegate: Rectangle {
+                                            required property var modelData
+                                            width: contentStack.width
+                                            height: 48
+                                            radius: 12
+                                            color: Island.Theme.glassCard
+                                            border.color: Island.Theme.glassBorderSubtle
+                                            border.width: 1
+
+                                            Row {
+                                                anchors.fill: parent
+                                                anchors.margins: 12
+                                                spacing: 10
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: "󰓃"
+                                                    font.family: Island.Theme.iconFontFamily
+                                                    font.pixelSize: 14
+                                                    color: Island.Theme.primary
+                                                }
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: 140
+                                                    text: modelData.name || modelData.description || "Audio Stream"
+                                                    font.pixelSize: 11
+                                                    font.bold: true
+                                                    color: Island.Theme.foreground
+                                                    elide: Text.ElideRight
+                                                }
+
+                                                // Slider for stream volume
+                                                StyledSlider {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: 220
+                                                    height: 18
+                                                    value: modelData.audio ? modelData.audio.volume : 0.5
+                                                    onMoved: (val) => {
+                                                        if (modelData.audio) {
+                                                            modelData.audio.volume = val;
+                                                        }
+                                                    }
+                                                }
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: Math.round((modelData.audio ? modelData.audio.volume : 0) * 100) + "%"
+                                                    font.pixelSize: 11
+                                                    font.bold: true
+                                                    color: Island.Theme.muted
+                                                }
                                             }
                                         }
                                     }

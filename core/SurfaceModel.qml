@@ -131,7 +131,12 @@ QtObject {
                 urgent: isItemUrgent,
                 fullscreen: isFullscreen,
                 floating: isFloating,
-                pid: pid
+                pid: pid,
+                stableId: (tl.lastIpcObject && tl.lastIpcObject.stableId) ? String(tl.lastIpcObject.stableId) : "",
+                geomX: (tl.lastIpcObject && tl.lastIpcObject.at) ? (tl.lastIpcObject.at[0] || 0) : 0,
+                geomY: (tl.lastIpcObject && tl.lastIpcObject.at) ? (tl.lastIpcObject.at[1] || 0) : 0,
+                geomWidth: (tl.lastIpcObject && tl.lastIpcObject.size) ? (tl.lastIpcObject.size[0] || 1920) : 1920,
+                geomHeight: (tl.lastIpcObject && tl.lastIpcObject.size) ? (tl.lastIpcObject.size[1] || 1080) : 1080
             };
 
             surfaceList.push(item);

@@ -86,6 +86,7 @@ ShellRoot {
     readonly property alias idleManager: idleManager
     readonly property bool idle: idleManager.idle
     property bool ambientEnabled: true
+    property bool overviewOpen: false
     readonly property alias desktopState: desktopState
     readonly property alias workspaceManager: workspaceManager
     readonly property alias surfaceManager: surfaceManager
@@ -139,6 +140,99 @@ ShellRoot {
     property bool wallpaperEnabled: true
     property string wallpaperMediaType: "video"
     property string wallpaperMediaSource: ""
+    property bool autoPauseOnOpaque: true
+
+    readonly property var seeThroughPatterns: [
+        "kitty", "alacritty", "foot", "wezterm", "ghostty",
+        "urxvt", "st", "xterm", "terminal", "console",
+        "cava", "glava", "peaclock"
+    ]
+
+    readonly property int _wallpaperLiveTick: {
+        let wsId = workspaceManager ? workspaceManager.focusedWorkspaceId : 0;
+        let surfCount = surfaceManager ? surfaceManager.count : 0;
+        let activeAddr = surfaceManager ? surfaceManager.activeAddress : "";
+        let wsCount = workspaceManager ? workspaceManager.count : 0;
+        return wsId * 10000 + surfCount * 100 + (activeAddr ? activeAddr.length : 0) + wsCount;
+    }
+
+    function isSurfaceSeeThrough(surface): bool {
+        if (!surface) return false;
+        let cls = "";
+        let initialCls = "";
+        let title = "";
+
+        if (surface.windowClass !== undefined) cls = String(surface.windowClass).toLowerCase();
+        else if (surface.lastIpcObject && surface.lastIpcObject.class) cls = String(surface.lastIpcObject.class).toLowerCase();
+
+        if (surface.appId !== undefined) {
+            let app = String(surface.appId).toLowerCase();
+            if (!cls) cls = app;
+        }
+
+        if (surface.initialClass !== undefined) initialCls = String(surface.initialClass).toLowerCase();
+        else if (surface.lastIpcObject && surface.lastIpcObject.initialClass) initialCls = String(surface.lastIpcObject.initialClass).toLowerCase();
+
+        if (surface.title !== undefined) title = String(surface.title).toLowerCase();
+
+        for (let i = 0; i < shellRoot.seeThroughPatterns.length; ++i) {
+            let pat = shellRoot.seeThroughPatterns[i];
+            if (cls.includes(pat) || initialCls.includes(pat) || title.includes(pat)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function shouldWallpaperBeLiveForMonitor(screen): bool {
+        if (!shellRoot.wallpaperEnabled || ShellState.gameMode) return false;
+        if (shellRoot.wallpaperMediaType !== "video") return false;
+        if (!shellRoot.autoPauseOnOpaque) return true;
+
+        let screenName = (screen && screen.name) ? screen.name : "";
+        let activeWsId = -1;
+
+        if (workspaceModel && workspaceModel.workspaces) {
+            let wsList = workspaceModel.workspaces;
+            for (let i = 0; i < wsList.length; ++i) {
+                let ws = wsList[i];
+                if (!ws) continue;
+                if (screenName === "" || ws.monitorName === screenName || (ws.monitor && ws.monitor.name === screenName)) {
+                    if (ws.active || ws.focused) {
+                        activeWsId = ws.id;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (activeWsId === -1 && workspaceManager) {
+            activeWsId = workspaceManager.focusedWorkspaceId;
+        }
+
+        if (activeWsId === -1) return true;
+
+        let surfaces = [];
+        if (surfaceModel && surfaceModel.surfacesByWorkspace && surfaceModel.surfacesByWorkspace[activeWsId]) {
+            surfaces = surfaceModel.surfacesByWorkspace[activeWsId];
+        } else if (workspaceManager) {
+            surfaces = workspaceManager.getToplevelsForWorkspace(activeWsId) || [];
+        }
+
+        if (!surfaces || surfaces.length === 0) {
+            return true; // Bare desktop: wallpaper is live
+        }
+
+        for (let s = 0; s < surfaces.length; ++s) {
+            let surf = surfaces[s];
+            if (!surf) continue;
+            if (!shellRoot.isSurfaceSeeThrough(surf)) {
+                return false; // Found opaque window on workspace: wallpaper is static
+            }
+        }
+
+        return true; // All windows on workspace are see-through: wallpaper is live
+    }
 
     readonly property string islandThemeHelper: Quickshell.shellPath("island/scripts/theme-system.sh").toString().replace(/^file:\/\//, "")
 
@@ -218,6 +312,14 @@ ShellRoot {
         }
     }
 
+    GlobalShortcut {
+        name: "overviewToggle"
+        description: "Toggle interactive spatial workspace map"
+        onPressed: {
+            shellRoot.overviewOpen = !shellRoot.overviewOpen;
+        }
+    }
+
     // =========================================================================
     // Headless IPC Verification: Dedicated Wallpaper Target
     // =========================================================================
@@ -227,6 +329,11 @@ ShellRoot {
         property bool enabled: shellRoot.wallpaperEnabled
         property string mediaType: shellRoot.wallpaperMediaType
         property string mediaSource: shellRoot.wallpaperMediaSource
+        property bool autoPauseOnOpaque: shellRoot.autoPauseOnOpaque
+        property bool live: {
+            let dummy = shellRoot._wallpaperLiveTick;
+            return shellRoot.shouldWallpaperBeLiveForMonitor(Quickshell.screens.length > 0 ? Quickshell.screens[0] : null);
+        }
 
         onEnabledChanged: {
             if (shellRoot.wallpaperEnabled !== enabled) {
@@ -242,6 +349,23 @@ ShellRoot {
         function setEnabled(val: bool): string {
             shellRoot.wallpaperEnabled = val;
             return JSON.stringify({ success: true, enabled: shellRoot.wallpaperEnabled });
+        }
+
+        function setAutoPause(val: bool): string {
+            shellRoot.autoPauseOnOpaque = val;
+            return JSON.stringify({ success: true, autoPauseOnOpaque: shellRoot.autoPauseOnOpaque });
+        }
+
+        function isLive(): string {
+            let isLiveVal = shellRoot.shouldWallpaperBeLiveForMonitor(Quickshell.screens.length > 0 ? Quickshell.screens[0] : null);
+            return JSON.stringify({
+                success: true,
+                live: isLiveVal,
+                autoPauseOnOpaque: shellRoot.autoPauseOnOpaque,
+                mediaType: shellRoot.wallpaperMediaType,
+                mediaSource: shellRoot.wallpaperMediaSource,
+                focusedWorkspace: workspaceManager.focusedWorkspaceId
+            });
         }
 
         function setMedia(path: string, type: string): string {
@@ -1305,6 +1429,18 @@ ShellRoot {
         id: settingsWindow
     }
 
+    SpatialWorkspaceMap {
+        id: spatialWorkspaceMap
+        open: shellRoot.overviewOpen && !ShellState.gameMode
+        wallpaperSource: shellRoot.wallpaperMediaSource
+        workspaceModel: shellRoot.workspaceModel
+        surfaceModel: shellRoot.surfaceModel
+        compositorActionLayer: shellRoot.compositorActionLayer
+        desktopState: shellRoot.desktopState
+        screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
+        onCloseRequested: shellRoot.overviewOpen = false
+    }
+
     Connections {
         target: ShellState
         function onOpenSettingsRequested(category) {
@@ -1317,7 +1453,35 @@ ShellRoot {
             }
         }
         function onGameModeToggled(active) {
-            if (active) settingsWindow.hide();
+            if (active) {
+                settingsWindow.hide();
+                shellRoot.overviewOpen = false;
+            }
+        }
+    }
+
+    IpcHandler {
+        target: "overview"
+
+        property bool open: shellRoot.overviewOpen
+
+        function toggle(): string {
+            shellRoot.overviewOpen = !shellRoot.overviewOpen;
+            return JSON.stringify({ success: true, open: shellRoot.overviewOpen });
+        }
+
+        function show(): string {
+            shellRoot.overviewOpen = true;
+            return JSON.stringify({ success: true, open: true });
+        }
+
+        function close(): string {
+            shellRoot.overviewOpen = false;
+            return JSON.stringify({ success: true, open: false });
+        }
+
+        function isOpen(): string {
+            return JSON.stringify({ success: true, open: shellRoot.overviewOpen });
         }
     }
 
@@ -1384,8 +1548,31 @@ ShellRoot {
                 downloads: ShelfState.activeDownloads.length,
                 weather: WeatherState.tempC,
                 primaryPanel: IslandHub.primaryPanel(),
-                trackedCount: notificationServer.trackedNotifications && notificationServer.trackedNotifications.values ? notificationServer.trackedNotifications.values.length : 0
+                trackedCount: notificationServer.trackedNotifications && notificationServer.trackedNotifications.values ? notificationServer.trackedNotifications.values.length : 0,
+                volumePercent: IslandHub.volumePercent,
+                volumeActive: IslandHub.volumeActive,
+                volumeMuted: IslandHub.volumeMuted
             });
+        }
+
+        function adjustVolume(delta: int): string {
+            IslandHub.adjustVolume(delta);
+            return JSON.stringify({ success: true, volumePercent: IslandHub.volumePercent });
+        }
+
+        function mediaNext(): string {
+            IslandHub.mediaNext();
+            return JSON.stringify({ success: true, action: "next" });
+        }
+
+        function mediaPrevious(): string {
+            IslandHub.mediaPrevious();
+            return JSON.stringify({ success: true, action: "previous" });
+        }
+
+        function mediaPlayPause(): string {
+            IslandHub.mediaPlayPause();
+            return JSON.stringify({ success: true, action: "play-pause" });
         }
 
         function timerToggle(): string {
@@ -1501,6 +1688,10 @@ ShellRoot {
                 enabled: shellRoot.wallpaperEnabled && !ShellState.gameMode
                 mediaType: shellRoot.wallpaperMediaType
                 mediaSource: shellRoot.wallpaperMediaSource
+                live: {
+                    let dummy = shellRoot._wallpaperLiveTick;
+                    return shellRoot.shouldWallpaperBeLiveForMonitor(monitorScope.modelData);
+                }
             }
 
             // Desktop Ambient HUD layer (WlrLayer.Bottom)

@@ -77,6 +77,49 @@ Singleton {
         volumeActive = true;
         volumeTimer.restart();
     }
+    function adjustVolume(deltaPercent) {
+        if (sinkAudio) {
+            let current = Math.round((sinkAudio.volume || 0) * 100);
+            let target = Math.max(0, Math.min(100, current + deltaPercent));
+            sinkAudio.volume = target / 100.0;
+            if (sinkAudio.muted && deltaPercent > 0) {
+                sinkAudio.muted = false;
+            }
+            showVolume();
+        } else {
+            let sign = deltaPercent > 0 ? "+" : "-";
+            let abs = Math.abs(deltaPercent);
+            Quickshell.execDetached(["wpctl", "set-volume", "-l", "1.0", "@DEFAULT_AUDIO_SINK@", abs + "%" + sign]);
+            showVolume();
+        }
+    }
+
+    function mediaNext() {
+        if (player && player.canGoNext) {
+            player.next();
+        } else {
+            Quickshell.execDetached(["playerctl", "next"]);
+        }
+        flashBorder(Theme.primary, 300);
+    }
+
+    function mediaPrevious() {
+        if (player && player.canGoPrevious) {
+            player.previous();
+        } else {
+            Quickshell.execDetached(["playerctl", "previous"]);
+        }
+        flashBorder(Theme.primary, 300);
+    }
+
+    function mediaPlayPause() {
+        if (player && player.canTogglePlaying) {
+            player.togglePlaying();
+        } else {
+            Quickshell.execDetached(["playerctl", "play-pause"]);
+        }
+        flashBorder(Theme.primary, 300);
+    }
     // -- transient border flash (screenshot white, bt, ...) --
     property color flashColor: "white"
     property bool flashActive: false

@@ -893,18 +893,45 @@ PanelWindow {
         }
 
         MouseArea {
+            id: collapsedMouseArea
             anchors.fill: parent
             enabled: !window.isExpanded
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            // NOTE: Ctrl+click media transport lives in Hyprland
-            // (CTRL + mouse:272/273 -> playerctl previous/next). Handled at
-            // the compositor because layershell delivery of release-time
-            // modifiers proved unreliable; no transport here by design.
+            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+
+            property int _wheelDeltaAccum: 0
+
+            onWheel: (wheel) => {
+                let delta = wheel.angleDelta.y !== 0 ? wheel.angleDelta.y : wheel.angleDelta.x;
+                if (delta === 0) return;
+                _wheelDeltaAccum += delta;
+                const stepThreshold = 40;
+                if (Math.abs(_wheelDeltaAccum) >= stepThreshold) {
+                    let steps = Math.trunc(_wheelDeltaAccum / stepThreshold);
+                    _wheelDeltaAccum = _wheelDeltaAccum % stepThreshold;
+                    IslandHub.adjustVolume(steps * 2);
+                }
+                wheel.accepted = true;
+            }
+
             onClicked: (mouse) => {
+                if (mouse.button === Qt.RightButton) {
+                    if (mouse.modifiers & Qt.ShiftModifier) {
+                        IslandHub.mediaPrevious();
+                    } else {
+                        IslandHub.mediaNext();
+                    }
+                    return;
+                }
+
+                if (mouse.button === Qt.MiddleButton) {
+                    IslandHub.mediaPlayPause();
+                    return;
+                }
+
                 if (mouse.button !== Qt.LeftButton)
-                    return ;
+                    return;
                 // Intelligent click routing: target clicked screen and open active activity
                 ShellState.activeScreenName = window.screen ? window.screen.name : "";
                 if (ShellState.gameMode) {
