@@ -108,12 +108,15 @@ PanelWindow {
     }
 
     Timer {
-        interval: 1000
-        running: root.activePlayer && root.activePlayer.isPlaying
+        interval: 100
+        running: root.open && Boolean(root.activePlayer && root.activePlayer.isPlaying)
         repeat: true
         onTriggered: {
             if (root.activePlayer && root.activePlayer.positionChanged) {
                 root.activePlayer.positionChanged();
+            }
+            if (curvyProgressCanvas) {
+                curvyProgressCanvas.requestPaint();
             }
         }
     }
@@ -121,15 +124,6 @@ PanelWindow {
     Process {
         id: launchSpotifyProc
         command: ["sh", "-c", "spotify-launcher &"]
-    }
-
-    // Dynamic wave animation driver for visualizer
-    property real visualizerTick: 0
-    NumberAnimation on visualizerTick {
-        from: 0; to: 10000
-        duration: 200000
-        loops: Animation.Infinite
-        running: root.open && Boolean(root.activePlayer && root.activePlayer.isPlaying)
     }
 
     // =========================================================================
@@ -218,64 +212,96 @@ PanelWindow {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
-                height: parent.height * 0.90
+                height: parent.height * 0.88
                 clip: true
                 z: 0
-                opacity: (root.activePlayer && root.activePlayer.isPlaying) ? 0.35 : 0.06
+                opacity: (root.activePlayer && root.activePlayer.isPlaying) ? 0.38 : 0.08
 
                 Behavior on opacity {
                     NumberAnimation { duration: 350; easing.type: Easing.OutCubic }
                 }
 
-                Row {
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    anchors.margins: 6
-                    spacing: 3
+                Canvas {
+                    id: visualizerCanvas
+                    anchors.fill: parent
+                    anchors.margins: 4
+                    renderTarget: Canvas.FramebufferObject
+                    renderStrategy: Canvas.Threaded
 
-                    Repeater {
-                        model: 40 // 40 spectrum columns covering the entire widget width
+                    property real animPhase: 0.0
+                    property var barHeights: []
 
-                        delegate: Rectangle {
-                            id: bar
-                            required property int index
+                    Component.onCompleted: {
+                        const arr = [];
+                        for (let i = 0; i < 40; ++i) arr.push(6.0);
+                        barHeights = arr;
+                    }
 
-                            width: Math.max(3, (visualizerLayer.width - 12 - (39 * 3)) / 40)
-                            anchors.bottom: parent.bottom
+                    onPaint: {
+                        const ctx = getContext("2d");
+                        ctx.clearRect(0, 0, width, height);
 
-                            // Real-time PipeWire audio level tap
-                            readonly property real pipewireLevel: {
-                                const lvls = (Island.IslandHub && Island.IslandHub.levels) ? Island.IslandHub.levels : [0, 0, 0, 0];
-                                const slot = Math.min(3, Math.floor(index / 10));
-                                return lvls[slot] || 0.1;
+                        const isPlaying = Boolean(root.activePlayer && root.activePlayer.isPlaying);
+                        const count = 40;
+                        const spacing = 3;
+                        const barW = Math.max(3, (width - (count - 1) * spacing) / count);
+                        const lvls = (Island.IslandHub && Island.IslandHub.levels) ? Island.IslandHub.levels : [0.1, 0.1, 0.1, 0.1];
+
+                        for (let i = 0; i < count; ++i) {
+                            const x = i * (barW + spacing);
+                            const slot = Math.min(3, Math.floor(i / 10));
+                            const audioLvl = lvls[slot] || 0.1;
+
+                            let targetH = 6;
+                            if (isPlaying) {
+                                const h1 = Math.sin((i * 0.28) + animPhase);
+                                const h2 = Math.cos((i * 0.42) - (animPhase * 0.7));
+                                const wave = (h1 * 0.5 + h2 * 0.3 + 0.8) * 0.5;
+                                const amp = Math.max(0.08, Math.min(1.0, (audioLvl * 0.75) + (wave * 0.45)));
+                                targetH = Math.max(8, height * amp);
                             }
 
-                            // Dynamic animated height combining audio amplitude with fluid wave
-                            height: {
-                                if (!root.activePlayer || !root.activePlayer.isPlaying) {
-                                    return 6;
-                                }
-                                const t = root.visualizerTick * 0.15;
-                                const harmonic1 = Math.sin((index * 0.28) + t);
-                                const harmonic2 = Math.cos((index * 0.42) - (t * 0.7));
-                                const wave = (harmonic1 * 0.6 + harmonic2 * 0.4 + 1.0) * 0.5;
-                                const normalizedAmp = Math.max(0.08, Math.min(1.0, (pipewireLevel * 0.7) + (wave * 0.45)));
-                                return Math.max(8, visualizerLayer.height * normalizedAmp);
+                            let currentH = barHeights[i] || 6;
+                            if (targetH > currentH) {
+                                currentH = currentH * 0.45 + targetH * 0.55;
+                            } else {
+                                currentH = currentH * 0.86 + targetH * 0.14;
                             }
+                            barHeights[i] = currentH;
 
-                            radius: width / 2
-                            gradient: Gradient {
-                                orientation: Gradient.Vertical
-                                GradientStop { position: 0.0; color: Island.Theme.aqua }
-                                GradientStop { position: 0.45; color: Island.Theme.primary }
-                                GradientStop { position: 1.0; color: Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.25) }
-                            }
+                            const y = height - currentH;
 
-                            Behavior on height {
-                                NumberAnimation { duration: 65; easing.type: Easing.OutQuad }
-                            }
+                            const grad = ctx.createLinearGradient(0, y, 0, height);
+                            grad.addColorStop(0.0, Island.Theme.aqua);
+                            grad.addColorStop(0.45, Island.Theme.primary);
+                            grad.addColorStop(1.0, "rgba(184, 104, 180, 0.2)");
+
+                            ctx.fillStyle = grad;
+
+                            ctx.beginPath();
+                            const r = barW / 2;
+                            ctx.moveTo(x + r, y);
+                            ctx.lineTo(x + barW - r, y);
+                            ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
+                            ctx.lineTo(x + barW, height);
+                            ctx.lineTo(x, height);
+                            ctx.lineTo(x, y + r);
+                            ctx.quadraticCurveTo(x, y, x + r, y);
+                            ctx.closePath();
+                            ctx.fill();
                         }
+                    }
+                }
+
+                // Smooth 60 FPS animation ticker (16ms)
+                Timer {
+                    id: visualizerTimer
+                    interval: 16 // 60 FPS
+                    running: root.open && Boolean(root.activePlayer && root.activePlayer.isPlaying)
+                    repeat: true
+                    onTriggered: {
+                        visualizerCanvas.animPhase += 0.08;
+                        visualizerCanvas.requestPaint();
                     }
                 }
             }

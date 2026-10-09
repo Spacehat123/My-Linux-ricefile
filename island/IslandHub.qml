@@ -28,14 +28,15 @@ Singleton {
     property bool dnd: false
 
     // -- media mirror (same source as Notch.islandPlayer, no extra deps) --
-    readonly property var player: (() => {
+    readonly property var player: {
         const players = Mpris.players.values;
+        if (!players || players.length === 0) return null;
         for (let i = 0; i < players.length; ++i) {
             if (players[i] && players[i].isPlaying)
                 return players[i];
         }
-        return players.length > 0 ? players[0] : null;
-    })()
+        return players[0] || null;
+    }
     readonly property bool mediaActive: player !== null && player.length > 0
     readonly property bool mediaPlaying: player !== null && player.isPlaying
 

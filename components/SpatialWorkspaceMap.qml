@@ -589,7 +589,7 @@ PanelWindow {
                             anchors.fill: parent
                             visible: cardWallpaper.status !== Image.Ready
                             gradient: Gradient {
-                                orientation: Gradient.Diagonal
+                                orientation: Gradient.Vertical
                                 GradientStop { position: 0.0; color: Island.Theme.bg0 }
                                 GradientStop { position: 0.5; color: Island.Theme.bg1 }
                                 GradientStop { position: 1.0; color: Island.Theme.bg2 }

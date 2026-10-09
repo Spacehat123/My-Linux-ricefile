@@ -233,7 +233,7 @@ QtObject {
     // =========================================================================
 
     // O(1) surface lookup by hex address (supports both raw and 0x-prefixed hex)
-    function getSurfaceByAddress(address) {
+    function getSurfaceByAddress(address): var {
         if (!address || !_projection || !_projection.addressMap) return null;
         let addr = String(address).trim();
         if (addr.startsWith("0x") || addr.startsWith("0X")) addr = addr.slice(2);
@@ -241,13 +241,13 @@ QtObject {
     }
 
     // Retrieve all normalized surfaces belonging to a workspace ID
-    function getSurfacesForWorkspace(workspaceId: int) {
+    function getSurfacesForWorkspace(workspaceId: int): var {
         if (!_projection || !_projection.surfacesByWorkspace) return [];
         return _projection.surfacesByWorkspace[workspaceId] || [];
     }
 
     // Retrieve all normalized surfaces displayed on a monitor
-    function getSurfacesForMonitor(monitor) {
+    function getSurfacesForMonitor(monitor): var {
         if (!_projection || !_projection.surfacesByMonitor) return [];
         if (typeof monitor === "string") {
             return _projection.surfacesByMonitor[monitor] || [];
@@ -261,7 +261,7 @@ QtObject {
     }
 
     // Retrieve all surfaces belonging to an application (by appId or windowClass)
-    function getSurfacesForApplication(appIdOrClass: string) {
+    function getSurfacesForApplication(appIdOrClass: string): var {
         if (!appIdOrClass || !_projection || !_projection.surfacesByApplication) return [];
         const direct = _projection.surfacesByApplication[appIdOrClass];
         if (direct && direct.length > 0) return direct;
@@ -276,18 +276,18 @@ QtObject {
     }
 
     // Retrieve the currently active/focused normalized surface
-    function getFocusedSurface() {
+    function getFocusedSurface(): var {
         return focusedSurface;
     }
 
     // Retrieve all surfaces currently holding the urgent flag
-    function getUrgentSurfaces() {
+    function getUrgentSurfaces(): var {
         if (!surfaces) return [];
         return surfaces.filter(s => s && s.urgent);
     }
 
     // Retrieve composite application summary for a given app ID or class
-    function getApplicationSummary(appIdOrClass: string) {
+    function getApplicationSummary(appIdOrClass: string): var {
         if (!appIdOrClass || !applications) return null;
         const lower = appIdOrClass.toLowerCase();
         for (let i = 0; i < applications.length; ++i) {

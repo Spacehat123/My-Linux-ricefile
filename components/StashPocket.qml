@@ -38,14 +38,14 @@ Scope {
     readonly property bool hasStashed: stashedCount > 0
     readonly property var topStashed: hasStashed ? stashedSurfaces[0] : null
 
-    // Transient drop action states
-    property bool dropTargetHovered: false
+    // Open state for the drawer
+    property bool open: false
     property bool justAbsorbed: false
 
     function stashActiveWindow() {
         justAbsorbed = true;
         Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.window.move({ workspace = 'special:stash', silent = true })"]);
-        dropDebounce.restart();
+        absorbedResetTimer.restart();
     }
 
     function toggleStashWorkspace() {
@@ -60,16 +60,14 @@ Scope {
     }
 
     Timer {
-        id: dropDebounce
-        interval: 800
+        id: absorbedResetTimer
+        interval: 1200
         repeat: false
-        onTriggered: {
-            root.justAbsorbed = false;
-        }
+        onTriggered: root.justAbsorbed = false
     }
 
     // =========================================================================
-    // STASH POCKET & DROP TARGET PANEL WINDOW
+    // FIXED-DIMENSION LAYER SHELL SURFACE (NO DYNAMIC WAYLAND RESIZE JITTER)
     // =========================================================================
     PanelWindow {
         id: pocketWindow
@@ -82,22 +80,13 @@ Scope {
         }
         margins {
             right: 0
-            // Positioned at top 18% to avoid the middle-right MediaWidget
-            top: Math.round(root.screenH * 0.18)
+            // Positioned at top 16% (completely clear of middle-right MediaWidget)
+            top: Math.round(root.screenH * 0.16)
         }
 
-        // Width dynamically adapts:
-        // 1. If hovered during drag / drop: expands to 160px Drop Zone
-        // 2. If hovering existing stashed pocket: expands to 220px Drawer
-        // 3. If idle with stashed windows: collapsed to 34px Pill
-        // 4. If idle with zero stashed windows: 12px invisible sensor strip
-        implicitWidth: {
-            if (root.dropTargetHovered) return 160;
-            if (root.hasStashed) return pocketHover.hovered ? 220 : 34;
-            return 12; // Invisible edge sensor
-        }
-        implicitHeight: root.dropTargetHovered ? 230 : (root.hasStashed ? (pocketHover.hovered ? Math.min(320, 110 + root.stashedCount * 44) : 180) : 220)
-
+        // Fixed dimensions prevent compositor configure storms
+        implicitWidth: 300
+        implicitHeight: 380
         exclusionMode: ExclusionMode.Ignore
         aboveWindows: true
         focusable: false
@@ -107,244 +96,290 @@ Scope {
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-        Behavior on implicitWidth {
-            SpringAnimation { spring: 4.8; damping: 0.36; epsilon: 0.5 }
-        }
-        Behavior on implicitHeight {
-            SpringAnimation { spring: 4.8; damping: 0.36; epsilon: 0.5 }
-        }
-
-        HoverHandler {
-            id: pocketHover
-            onHoveredChanged: {
-                if (hovered && !root.hasStashed) {
-                    root.dropTargetHovered = true;
-                } else if (!hovered) {
-                    root.dropTargetHovered = false;
+        // ---------------------------------------------------------------------
+        // UNBREAKABLE EDGE HOVER CONTINUITY
+        // ---------------------------------------------------------------------
+        Timer {
+            id: closeDebounce
+            interval: 380
+            repeat: false
+            onTriggered: {
+                if (!drawerHover.hovered && !edgeSensorHover.hovered) {
+                    root.open = false;
                 }
             }
         }
 
-        // ---------------------------------------------------------------------
-        // Visual Presentation Container
-        // ---------------------------------------------------------------------
+        // 1. Invisible Edge Trigger Sensor Strip on the right border
+        Item {
+            id: edgeSensor
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: 8
+            z: 10
+
+            HoverHandler {
+                id: edgeSensorHover
+                onHoveredChanged: {
+                    if (hovered) {
+                        closeDebounce.stop();
+                        root.open = true;
+                    } else if (!drawerHover.hovered) {
+                        closeDebounce.restart();
+                    }
+                }
+            }
+        }
+
+        // 2. Closed-State Mini Indicator Pill (only visible when windows are stashed)
         Rectangle {
-            id: pocketBody
-            anchors.fill: parent
-            topLeftRadius: 18
-            bottomLeftRadius: 18
-            clip: true
+            id: closedPill
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            width: 28
+            height: 90
+            topLeftRadius: 14
+            bottomLeftRadius: 14
+            color: "#d00e131d"
+            border.color: Island.Theme.primary
+            border.width: 1
+            visible: root.hasStashed && !root.open
+            opacity: root.hasStashed && !root.open ? 1.0 : 0.0
 
-            // When idle with nothing stashed: 100% invisible!
-            color: {
-                if (root.justAbsorbed) return "#e000ff99";
-                if (root.dropTargetHovered) return "#ea0c121e";
-                if (root.hasStashed) return pocketHover.hovered ? "#ea0a0e16" : "#b8080c14";
-                return "transparent";
-            }
-            border.color: {
-                if (root.justAbsorbed) return "#00ff99";
-                if (root.dropTargetHovered) return Island.Theme.primary;
-                if (root.hasStashed) return pocketHover.hovered ? Island.Theme.primary : "#4033ccff";
-                return "transparent";
-            }
-            border.width: (root.dropTargetHovered || root.justAbsorbed) ? 2 : (root.hasStashed ? 1 : 0)
+            Behavior on opacity { NumberAnimation { duration: 200 } }
 
-            Behavior on color { ColorAnimation { duration: 180 } }
-            Behavior on border.color { ColorAnimation { duration: 180 } }
-
-            // Neon breathing edge line on bezel
-            Rectangle {
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 3
-                color: root.justAbsorbed ? "#00ff99" : Island.Theme.primary
-                visible: root.hasStashed || root.dropTargetHovered || root.justAbsorbed
-            }
-
-            // =================================================================
-            // VIEW A: DROP TARGET MODE (When dragging window or hovering edge sensor)
-            // =================================================================
             ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 14
-                spacing: 10
-                visible: root.dropTargetHovered && !root.hasStashed
+                anchors.centerIn: parent
+                spacing: 4
 
                 Rectangle {
                     Layout.alignment: Qt.AlignHCenter
-                    width: 44
-                    height: 44
-                    radius: 22
-                    color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25)
-                    border.color: Island.Theme.primary
-                    border.width: 1.5
+                    width: 18
+                    height: 18
+                    radius: 5
+                    color: "#20ffffff"
 
-                    Text {
+                    Image {
                         anchors.centerIn: parent
-                        text: "📥"
-                        font.pixelSize: 22
-                        scale: targetPulse.running ? 1.15 : 1.0
-
-                        SequentialAnimation on scale {
-                            id: targetPulse
-                            loops: Animation.Infinite
-                            running: root.dropTargetHovered
-                            NumberAnimation { to: 1.2; duration: 450; easing.type: Easing.InOutQuad }
-                            NumberAnimation { to: 1.0; duration: 450; easing.type: Easing.InOutQuad }
-                        }
+                        width: 13
+                        height: 13
+                        sourceSize: Qt.size(13, 13)
+                        source: root.topStashed ? Quickshell.iconPath(root.topStashed.appId || root.topStashed.windowClass || "", "application-x-executable") : ""
+                        fillMode: Image.PreserveAspectFit
                     }
                 }
 
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "DROP TO STASH"
-                    color: Island.Theme.primary
-                    font.pixelSize: 12
-                    font.bold: true
-                    font.letterSpacing: 1.1
-                }
-
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.fillWidth: true
-                    text: "Release window here\nto tuck into pocket"
-                    color: Island.Theme.muted
-                    font.pixelSize: 10
-                    horizontalAlignment: Text.AlignHCenter
-                    wrapMode: Text.WordWrap
-                }
-
                 Rectangle {
                     Layout.alignment: Qt.AlignHCenter
-                    height: 22
-                    radius: 11
-                    color: "#20ffffff"
-                    implicitWidth: dropLabel.implicitWidth + 14
+                    width: 16
+                    height: 16
+                    radius: 8
+                    color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.3)
+                    border.color: Island.Theme.primary
+                    border.width: 1
 
                     Text {
-                        id: dropLabel
                         anchors.centerIn: parent
-                        text: "Click to Stash Active"
-                        color: Island.Theme.foreground
-                        font.pixelSize: 9
+                        text: String(root.stashedCount)
+                        color: Island.Theme.primary
+                        font.pixelSize: 8
                         font.bold: true
                     }
                 }
+
+                Text {
+                    Layout.alignment: Qt.AlignHCenter
+                    text: "‹"
+                    color: Island.Theme.primary
+                    font.pixelSize: 13
+                    font.bold: true
+                }
+            }
+        }
+
+        // 3. Sliding Internal Drawer (Fixed Window, Smooth Hardware Translation)
+        Rectangle {
+            id: drawer
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: 285
+            topLeftRadius: 20
+            bottomLeftRadius: 20
+            color: Island.Theme.surfaceOpaque
+            border.color: Island.Theme.primary
+            border.width: 1.5
+            clip: true
+
+            transform: Translate {
+                id: drawerTranslate
+                x: root.open ? 0 : 295
+                Behavior on x {
+                    SpringAnimation { spring: 4.5; damping: 0.38; epsilon: 0.5 }
+                }
             }
 
-            // =================================================================
-            // VIEW B: COLLAPSED POCKET PILL (When windows are stashed & idle)
-            // =================================================================
-            Item {
-                anchors.fill: parent
-                visible: root.hasStashed && !pocketHover.hovered && !root.dropTargetHovered
-
-                ColumnLayout {
-                    anchors.centerIn: parent
-                    spacing: 8
-
-                    Rectangle {
-                        Layout.alignment: Qt.AlignHCenter
-                        width: 24
-                        height: 24
-                        radius: 8
-                        color: "#20ffffff"
-
-                        Image {
-                            anchors.centerIn: parent
-                            width: 16
-                            height: 16
-                            sourceSize: Qt.size(16, 16)
-                            source: root.topStashed ? Quickshell.iconPath(root.topStashed.appId || root.topStashed.windowClass || "", "application-x-executable") : ""
-                            fillMode: Image.PreserveAspectFit
-                        }
+            HoverHandler {
+                id: drawerHover
+                onHoveredChanged: {
+                    if (hovered) {
+                        closeDebounce.stop();
+                        root.open = true;
+                    } else if (!edgeSensorHover.hovered) {
+                        closeDebounce.restart();
                     }
+                }
+            }
 
-                    // Count Badge
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 16
+                spacing: 12
+
+                // --- Drawer Header ---
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
                     Rectangle {
-                        Layout.alignment: Qt.AlignHCenter
-                        width: 18
-                        height: 18
-                        radius: 9
-                        color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.3)
+                        width: 32
+                        height: 32
+                        radius: 10
+                        color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25)
                         border.color: Island.Theme.primary
                         border.width: 1
 
                         Text {
                             anchors.centerIn: parent
-                            text: String(root.stashedCount)
+                            text: "📥"
+                            font.pixelSize: 16
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 1
+
+                        Text {
+                            text: "STASH POCKET"
+                            color: Island.Theme.primary
+                            font.pixelSize: 13
+                            font.bold: true
+                            font.letterSpacing: 1.1
+                        }
+
+                        Text {
+                            text: root.hasStashed ? (root.stashedCount + " window" + (root.stashedCount === 1 ? "" : "s") + " stored") : "Drop or click to hide app"
+                            color: Island.Theme.muted
+                            font.pixelSize: 10
+                        }
+                    }
+
+                    Rectangle {
+                        height: 20
+                        radius: 10
+                        color: root.hasStashed ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25) : "#15ffffff"
+                        implicitWidth: headerBadgeText.implicitWidth + 12
+                        visible: root.hasStashed
+
+                        Text {
+                            id: headerBadgeText
+                            anchors.centerIn: parent
+                            text: root.stashedCount + " STASHED"
                             color: Island.Theme.primary
                             font.pixelSize: 9
                             font.bold: true
                         }
                     }
-
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: "›"
-                        color: Island.Theme.primary
-                        font.pixelSize: 14
-                        font.bold: true
-                    }
                 }
-            }
 
-            // =================================================================
-            // VIEW C: EXPANDED POCKET DRAWER (When hovering pocket with stashed windows)
-            // =================================================================
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: 12
-                spacing: 8
-                visible: root.hasStashed && pocketHover.hovered
-
-                // Drawer Header
-                RowLayout {
+                // --- Action Button: Stash Active Window ---
+                Rectangle {
                     Layout.fillWidth: true
-                    spacing: 8
+                    height: 64
+                    radius: 14
+                    color: root.justAbsorbed ? "#3000ff99" : (stashBtnHover.hovered ? "#22ffffff" : "#12ffffff")
+                    border.color: root.justAbsorbed ? "#00ff99" : (stashBtnHover.hovered ? Island.Theme.primary : Island.Theme.glassBorder)
+                    border.width: 1.5
 
-                    Text {
-                        text: "STASH POCKET"
-                        color: Island.Theme.primary
-                        font.pixelSize: 11
-                        font.bold: true
-                        font.letterSpacing: 1.1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    HoverHandler { id: stashBtnHover }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 12
+                        spacing: 12
+
+                        Rectangle {
+                            width: 38
+                            height: 38
+                            radius: 19
+                            color: root.justAbsorbed ? "#00ff99" : (stashBtnHover.hovered ? Island.Theme.primary : "#20ffffff")
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: root.justAbsorbed ? "✓" : "📥"
+                                color: root.justAbsorbed || stashBtnHover.hovered ? "#000000" : Island.Theme.foreground
+                                font.pixelSize: 18
+                            }
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
+
+                            Text {
+                                text: root.justAbsorbed ? "Window Stashed!" : "Stash Current Window"
+                                color: root.justAbsorbed ? "#00ff99" : (stashBtnHover.hovered ? Island.Theme.primary : Island.Theme.foreground)
+                                font.pixelSize: 12
+                                font.bold: true
+                            }
+
+                            Text {
+                                text: root.justAbsorbed ? "Stored in background" : "Click to tuck active window away"
+                                color: Island.Theme.muted
+                                font.pixelSize: 10
+                            }
+                        }
                     }
 
-                    Rectangle {
-                        height: 16
-                        radius: 8
-                        color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25)
-                        implicitWidth: drawerCountText.implicitWidth + 10
-                        Text {
-                            id: drawerCountText
-                            anchors.centerIn: parent
-                            text: root.stashedCount + " App" + (root.stashedCount === 1 ? "" : "s")
-                            color: Island.Theme.primary
-                            font.pixelSize: 8
-                            font.bold: true
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            root.stashActiveWindow();
                         }
                     }
                 }
 
-                // Stashed Items List
+                // --- Stashed Windows Section ---
+                Text {
+                    text: "STASHED WINDOWS"
+                    color: Island.Theme.muted
+                    font.pixelSize: 9
+                    font.bold: true
+                    font.letterSpacing: 1.2
+                    visible: root.hasStashed
+                }
+
                 ListView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     spacing: 6
                     clip: true
                     model: root.stashedSurfaces
+                    visible: root.hasStashed
 
                     delegate: Rectangle {
                         required property var modelData
                         required property int index
 
                         width: ListView.view.width
-                        height: 38
+                        height: 44
                         radius: 10
-                        color: itemHover.hovered ? "#25ffffff" : "#12ffffff"
+                        color: itemHover.hovered ? "#24ffffff" : "#10ffffff"
                         border.color: itemHover.hovered ? Island.Theme.primary : Island.Theme.glassBorder
                         border.width: 1
 
@@ -352,19 +387,20 @@ Scope {
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.margins: 6
-                            spacing: 8
+                            anchors.margins: 8
+                            spacing: 10
 
                             Rectangle {
-                                width: 24
-                                height: 24
-                                radius: 6
+                                width: 26
+                                height: 26
+                                radius: 7
                                 color: "#18ffffff"
+
                                 Image {
                                     anchors.centerIn: parent
-                                    width: 16
-                                    height: 16
-                                    sourceSize: Qt.size(16, 16)
+                                    width: 18
+                                    height: 18
+                                    sourceSize: Qt.size(18, 18)
                                     source: (modelData && modelData.appId) ? Quickshell.iconPath(modelData.appId, "application-x-executable") : ""
                                     fillMode: Image.PreserveAspectFit
                                 }
@@ -373,6 +409,7 @@ Scope {
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 1
+
                                 Text {
                                     Layout.fillWidth: true
                                     text: modelData ? (modelData.appName || "App") : "App"
@@ -381,6 +418,7 @@ Scope {
                                     font.bold: true
                                     elide: Text.ElideRight
                                 }
+
                                 Text {
                                     Layout.fillWidth: true
                                     text: modelData ? (modelData.title || "") : ""
@@ -390,18 +428,18 @@ Scope {
                                 }
                             }
 
-                            // Restore Action Button
+                            // Restore Button (↩)
                             Rectangle {
-                                width: 22
-                                height: 22
-                                radius: 11
-                                color: restoreHover.hovered ? Island.Theme.primary : "#20ffffff"
+                                width: 26
+                                height: 26
+                                radius: 13
+                                color: restoreHover.hovered ? Island.Theme.primary : "#1cffffff"
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: "↩"
                                     color: restoreHover.hovered ? "#000000" : Island.Theme.foreground
-                                    font.pixelSize: 11
+                                    font.pixelSize: 12
                                     font.bold: true
                                 }
 
@@ -426,20 +464,58 @@ Scope {
                     }
                 }
 
-                // Bottom Action Footer
+                // Empty state if nothing stashed
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 26
-                    radius: 13
-                    color: toggleHover.hovered ? Island.Theme.primary : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.2)
+                    Layout.fillHeight: true
+                    radius: 12
+                    color: "#0a000000"
+                    border.color: "#12ffffff"
+                    border.width: 1
+                    visible: !root.hasStashed
+
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        spacing: 8
+
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "📭"
+                            font.pixelSize: 28
+                        }
+
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "Pocket is empty"
+                            color: Island.Theme.foreground
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
+
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "Move your mouse to this edge\nto tuck apps away anytime"
+                            color: Island.Theme.muted
+                            font.pixelSize: 9
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                    }
+                }
+
+                // --- Footer Toggle Workspace Button ---
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 32
+                    radius: 16
+                    color: toggleHover.hovered ? Island.Theme.primary : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.18)
                     border.color: Island.Theme.primary
                     border.width: 1
 
                     Text {
                         anchors.centerIn: parent
-                        text: "Toggle Overlay Workspace"
+                        text: "Toggle Stash Overlay [SUPER + S]"
                         color: toggleHover.hovered ? "#000000" : Island.Theme.primary
-                        font.pixelSize: 9
+                        font.pixelSize: 10
                         font.bold: true
                     }
 
@@ -450,20 +526,6 @@ Scope {
                         onClicked: {
                             root.toggleStashWorkspace();
                         }
-                    }
-                }
-            }
-
-            // Click handling for Drop Zone & Collapsed Pocket
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                visible: !pocketHover.hovered || !root.hasStashed
-                onClicked: {
-                    if (root.dropTargetHovered && !root.hasStashed) {
-                        root.stashActiveWindow();
-                    } else if (root.hasStashed) {
-                        root.toggleStashWorkspace();
                     }
                 }
             }
