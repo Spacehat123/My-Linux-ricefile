@@ -35,7 +35,7 @@ The cinematic motion system has been fully implemented across both the native Hy
 3. **Workspace Transition Synchronization & Latency Compensation**:
    - **Hyprland workspace animation**: Driven by `magneticSpring` with `style = "slide"` (`workspaces`, `workspacesIn`, `workspacesOut`). Workspaces physically slide horizontally across the screen with spring momentum and magnetically snap into resting alignment.
    - **Special workspace (`special:stash`)**: Driven by `magneticSpring` with `style = "slidevert"`, providing a smooth vertical slide.
-   - **Windows entry / exit**: `style = "popin 75%"` with `cinematicSpring` and `cinematicGlide`, making window creation and dismissal physically tangible instead of an imperceptible 8% change.
+   - **Windows entry / exit**: `style = "popin 50%"` driven by `windowBloomSpring` ($m = 1, k = 120, c = 16.0$, ~500ms bloom) on entrance and `cinematicGlide` (400ms) on dismissal. Windows visibly expand into view from 50% scale with gentle physical momentum, and shrink smoothly down to 50% when closed.
    - **Windows movement along tape (`windowsMove`)**: Driven by `magneticSpring`, smoothly gliding the column into focus and magnetically latching it into the center of the viewport.
    - **Quickshell HUD envelope (`DesktopTransition.qml`)**:  
      - Fast entrance: 160ms fade-in while the floating glass capsule scales from `0.88` to `1.0` with an elastic pop.  
