@@ -46,26 +46,45 @@ PanelWindow {
         }
     }
 
-    // Master visual lifecycle envelope (~270ms duration)
+    // Master visual lifecycle envelope (~740ms duration)
     ParallelAnimation {
         id: enterExitAnim
 
         SequentialAnimation {
-            NumberAnimation {
-                target: hudContainer
-                property: "opacity"
-                from: 0.0
-                to: 1.0
-                duration: 40
-                easing.type: Easing.OutCubic
+            ParallelAnimation {
+                NumberAnimation {
+                    target: hudContainer
+                    property: "opacity"
+                    from: 0.0
+                    to: 1.0
+                    duration: 160
+                    easing.type: Easing.OutCubic
+                }
+                NumberAnimation {
+                    target: hudContainer
+                    property: "scale"
+                    from: 0.88
+                    to: 1.0
+                    duration: 220
+                    easing.type: Easing.OutBack
+                }
             }
-            PauseAnimation { duration: 140 }
-            NumberAnimation {
-                target: hudContainer
-                property: "opacity"
-                to: 0.0
-                duration: 90
-                easing.type: Easing.InCubic
+            PauseAnimation { duration: 380 }
+            ParallelAnimation {
+                NumberAnimation {
+                    target: hudContainer
+                    property: "opacity"
+                    to: 0.0
+                    duration: 200
+                    easing.type: Easing.InCubic
+                }
+                NumberAnimation {
+                    target: hudContainer
+                    property: "scale"
+                    to: 0.94
+                    duration: 200
+                    easing.type: Easing.InCubic
+                }
             }
         }
 
@@ -75,7 +94,7 @@ PanelWindow {
             property: "x"
             from: 0
             to: (desktopState ? -desktopState.workspaceTransitionDirectionSign : -1) * theme.spatialTransitionOffset
-            duration: 220
+            duration: 360
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
@@ -83,7 +102,7 @@ PanelWindow {
             property: "opacity"
             from: 1.0
             to: 0.0
-            duration: 160
+            duration: 260
             easing.type: Easing.OutCubic
         }
 
@@ -93,7 +112,7 @@ PanelWindow {
             property: "x"
             from: (desktopState ? desktopState.workspaceTransitionDirectionSign : 1) * theme.spatialTransitionOffset
             to: 0
-            duration: 240
+            duration: 420
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
@@ -101,7 +120,7 @@ PanelWindow {
             property: "opacity"
             from: 0.0
             to: 1.0
-            duration: 180
+            duration: 300
             easing.type: Easing.OutCubic
         }
     }

@@ -233,10 +233,10 @@ QtObject {
     // =========================================================================
     // Spatial Workspace Transition Tokens (Task 25)
     // =========================================================================
-    readonly property int spatialTransitionDuration: 270
+    readonly property int spatialTransitionDuration: 750
     readonly property int spatialTransitionReticleWidth: 260
     readonly property int spatialTransitionReticleHeight: 48
-    readonly property int spatialTransitionOffset: 28
+    readonly property int spatialTransitionOffset: 36
     readonly property color spatialTransitionBorder: Island.Theme.primary
     readonly property color spatialTransitionGlow: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
 }
