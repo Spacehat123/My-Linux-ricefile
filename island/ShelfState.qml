@@ -25,7 +25,14 @@ Singleton {
             return "";
         const d = activeDownloads[0];
         const extra = activeDownloads.length > 1 ? " (+" + (activeDownloads.length - 1) + ")" : "";
-        return "Down " + d.name + " " + d.sizeMB + "MB" + extra;
+        const cleanName = d.name.replace(/\.(crdownload|part|aria2|tmp|downloading)$/i, "");
+        if (d.isRender) {
+            return "🎬 Render: " + cleanName + extra;
+        }
+        const speed = Number(d.rateMBs) > 0 ? "↓ " + d.rateMBs + " MB/s" : "↓ Active";
+        const pctPrefix = (d.percent !== undefined && Number(d.percent) >= 0) ? (d.percent + "% • ") : "";
+        const sizeStr = (d.sizeMB && d.sizeMB !== "Active") ? (" • " + d.sizeMB + " MB") : "";
+        return pctPrefix + speed + sizeStr + extra + "  (" + cleanName + ")";
     }
 
     function baseName(path) {
@@ -135,9 +142,11 @@ Singleton {
                     const size = Number(lines[i].slice(0, tab)) || 0;
                     const name = lines[i].slice(tab + 1);
                     seen[name] = true;
+                    const now = Date.now();
                     const prev = root.sizeMemo[name];
-                    const rate = prev ? Math.max(0, (size - prev.size) / 1024 / 1024 / 5) : 0;
-                    memo[name] = { size: size };
+                    const dt = prev ? Math.max(0.5, (now - prev.time) / 1000) : (root.hasActiveDownload ? 1.5 : 4.0);
+                    const rate = prev ? Math.max(0, (size - prev.size) / 1024 / 1024 / dt) : 0;
+                    memo[name] = { size: size, time: now };
                     next.push({ name: name, sizeMB: (size / 1024 / 1024).toFixed(1), rateMBs: rate.toFixed(1) });
                 }
                 root.sizeMemo = memo;
@@ -154,8 +163,6 @@ Singleton {
                         if (!stillThere) {
                             root.lastEvent = "Download complete " + root.activeDownloads[k].name;
                             root.eventTick += 1;
-                            // Trigger micro particle burst for completed download.
-                            IslandHub.burst();
                         }
                     }
                 }
@@ -179,7 +186,7 @@ Singleton {
     }
 
     Timer {
-        interval: 5000
+        interval: root.hasActiveDownload ? 1500 : 4000
         running: true
         repeat: true
         triggeredOnStart: true
@@ -188,7 +195,7 @@ Singleton {
                 if (!root.downloadsDir)
                     root.downloadsDir = (root.homeDir ? root.homeDir + "/Downloads" : "");
                 if (root.downloadsDir)
-                    downloadProbe.exec(["sh", "-c", "find '" + root.downloadsDir.replace(/'/g, "'\\''") + "' -maxdepth 1 -type f \\( -name '*.part' -o -name '*.crdownload' -o -name '*.aria2' \\) -printf '%s\\t%f\\n' 2>/dev/null"]);
+                    downloadProbe.exec(["sh", "-c", "find '" + root.downloadsDir.replace(/'/g, "'\\''") + "' -maxdepth 1 -type f \\( -name '*.part' -o -name '*.crdownload' -o -name '*.aria2' -o -name '*.tmp' -o -name '*.downloading' \\) -printf '%s\\t%f\\n' 2>/dev/null"]);
             }
         }
     }

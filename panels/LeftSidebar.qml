@@ -15,10 +15,12 @@ PanelWindow {
     property var desktopState: null
     property bool wallpaperEnabled: true
     property bool ambientEnabled: true
+    property bool ambientAlwaysOn: false
 
     // Action signals
     signal toggleWallpaper()
     signal toggleAmbient()
+    signal cycleAmbient()
 
     // Dual-layer hover guard ensuring unbreakable hover continuity
     readonly property bool hovered: mouseArea.containsMouse || (controlCenter && controlCenter.hovered)
@@ -75,9 +77,11 @@ PanelWindow {
                 screen: root.screen
                 wallpaperEnabled: root.wallpaperEnabled
                 ambientEnabled: root.ambientEnabled
+                ambientAlwaysOn: root.ambientAlwaysOn
 
                 onToggleWallpaper: root.toggleWallpaper()
                 onToggleAmbient: root.toggleAmbient()
+                onCycleAmbient: root.cycleAmbient()
             }
         }
     }

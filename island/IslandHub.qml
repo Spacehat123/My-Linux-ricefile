@@ -211,14 +211,14 @@ Singleton {
             return TimerState.compactText;
         if (TimerState.hasActive)
             return TimerState.compactText;
+        if (ShelfState.hasActiveDownload)
+            return ShelfState.compactText;
         if (mediaPlaying && playerTitle)
             return playerTitle + (playerArtist ? " - " + playerArtist : "");
         if (PowerState.charging)
             return "Charging " + Math.round(PowerState.percent * 100) + "%";
         if (unreadCount > 0)
             return unreadCount === 1 ? "1 notification" : unreadCount + " notifications";
-        if (ShelfState.hasActiveDownload)
-            return ShelfState.compactText;
         if (mediaActive && playerTitle)
             return playerTitle;
         return "";

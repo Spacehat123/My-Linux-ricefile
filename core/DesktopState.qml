@@ -30,10 +30,12 @@ QtObject {
     property bool leftSidebarOpen: false
     property bool rightSidebarOpen: false
     property bool bottomBarOpen: false
+    property bool mediaWidgetOpen: false
 
     function setLeftSidebarOpen(val: bool) { leftSidebarOpen = val; }
     function setRightSidebarOpen(val: bool) { rightSidebarOpen = val; }
     function setBottomBarOpen(val: bool) { bottomBarOpen = val; }
+    function setMediaWidgetOpen(val: bool) { mediaWidgetOpen = val; }
 
     // =========================================================================
     // Spatial Workspace Transition Presentation State

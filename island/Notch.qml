@@ -497,8 +497,7 @@ PanelWindow {
             }
         }
 
-        // Micro particle burst: 4 sparse dots for major events only.
-        // Driven by one progress property; delegates bind positions to it.
+        // Celebratory multi-directional particle burst for accomplishments, downloads, and timers
         Item {
             id: burstLayer
 
@@ -507,17 +506,31 @@ PanelWindow {
             visible: burstAnim.running
 
             Repeater {
-                model: [{ dx: -13, dy: 12 }, { dx: 13, dy: 12 }, { dx: -6, dy: 16 }, { dx: 6, dy: 16 }]
+                model: [
+                    { dx: -24, dy: 18, c: "#22c55e", s: 3.5 },
+                    { dx: 24, dy: 18, c: "#38bdf8", s: 3.5 },
+                    { dx: -14, dy: 24, c: "#facc15", s: 3.0 },
+                    { dx: 14, dy: 24, c: "#a855f7", s: 3.0 },
+                    { dx: -28, dy: 6, c: "#ec4899", s: 2.5 },
+                    { dx: 28, dy: 6, c: "#10b981", s: 2.5 },
+                    { dx: -8, dy: 28, c: "#38bdf8", s: 3.0 },
+                    { dx: 8, dy: 28, c: "#f59e0b", s: 3.0 },
+                    { dx: -18, dy: -12, c: "#6366f1", s: 2.5 },
+                    { dx: 18, dy: -12, c: "#14b8a6", s: 2.5 },
+                    { dx: -5, dy: 16, c: "#fb7185", s: 2.0 },
+                    { dx: 5, dy: 16, c: "#4ade80", s: 2.0 }
+                ]
 
                 Rectangle {
                     required property var modelData
-                    width: 3
-                    height: 3
-                    radius: 1.5
-                    color: Theme.primary
-                    x: burstLayer.width / 2 - 1 + modelData.dx * burstLayer.burstT
-                    y: burstLayer.height - 4 + modelData.dy * burstLayer.burstT
-                    opacity: 1 - burstLayer.burstT
+                    width: modelData.s || 3
+                    height: modelData.s || 3
+                    radius: (modelData.s || 3) / 2
+                    color: modelData.c || Theme.primary
+                    x: burstLayer.width / 2 - width / 2 + modelData.dx * burstLayer.burstT
+                    y: burstLayer.height / 2 - height / 2 + modelData.dy * burstLayer.burstT
+                    opacity: Math.max(0, 1 - burstLayer.burstT)
+                    scale: 1 + burstLayer.burstT * 0.5
                 }
             }
 
@@ -527,8 +540,8 @@ PanelWindow {
                 property: "burstT"
                 from: 0
                 to: 1
-                duration: 350
-                easing.type: Easing.OutCubic
+                duration: 480
+                easing.type: Easing.OutBack
             }
         }
 
@@ -1437,6 +1450,10 @@ PanelWindow {
         target: ShelfState
         function onEventTickChanged() {
             IslandHub.showTransient(ShelfState.lastEvent, 3000);
+            if (ShelfState.lastEvent.startsWith("Download complete") || ShelfState.lastEvent.startsWith("Render complete")) {
+                IslandHub.flashBorder("#22c55e", 1000);
+                IslandHub.burst();
+            }
         }
     }
 

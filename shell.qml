@@ -86,7 +86,9 @@ ShellRoot {
     readonly property alias idleManager: idleManager
     readonly property bool idle: idleManager.idle
     property bool ambientEnabled: true
+    property bool ambientAlwaysOn: false
     property bool overviewOpen: false
+    property bool birdsEyeOpen: false
     readonly property alias desktopState: desktopState
     readonly property alias workspaceManager: workspaceManager
     readonly property alias surfaceManager: surfaceManager
@@ -185,7 +187,7 @@ ShellRoot {
     }
 
     function shouldWallpaperBeLiveForMonitor(screen): bool {
-        if (!shellRoot.wallpaperEnabled || ShellState.gameMode) return false;
+        if (!shellRoot.wallpaperEnabled || ShellState.gameMode || ShellState.featherMode) return false;
         if (shellRoot.wallpaperMediaType !== "video") return false;
         if (!shellRoot.autoPauseOnOpaque) return true;
 
@@ -317,6 +319,14 @@ ShellRoot {
         description: "Toggle interactive spatial workspace map"
         onPressed: {
             shellRoot.overviewOpen = !shellRoot.overviewOpen;
+        }
+    }
+
+    GlobalShortcut {
+        name: "birdsEyeToggle"
+        description: "Toggle Bird's Eye View for horizontal scrolling layout"
+        onPressed: {
+            shellRoot.birdsEyeOpen = !shellRoot.birdsEyeOpen;
         }
     }
 
@@ -1166,12 +1176,14 @@ ShellRoot {
         target: "ambient"
 
         property bool enabled: shellRoot.ambientEnabled
-        property bool active: shellRoot.ambientEnabled && shellRoot.idle
+        property bool alwaysOn: shellRoot.ambientAlwaysOn
+        property bool active: shellRoot.ambientEnabled && (shellRoot.ambientAlwaysOn || shellRoot.idle)
 
         function getSummary(): string {
             return JSON.stringify({
                 enabled: shellRoot.ambientEnabled,
-                active: shellRoot.ambientEnabled && shellRoot.idle,
+                alwaysOn: shellRoot.ambientAlwaysOn,
+                active: shellRoot.ambientEnabled && (shellRoot.ambientAlwaysOn || shellRoot.idle),
                 idle: shellRoot.idle
             });
         }
@@ -1179,6 +1191,16 @@ ShellRoot {
         function toggle(): string {
             shellRoot.ambientEnabled = !shellRoot.ambientEnabled;
             return JSON.stringify({ success: true, enabled: shellRoot.ambientEnabled });
+        }
+
+        function toggleAlwaysOn(): string {
+            shellRoot.ambientAlwaysOn = !shellRoot.ambientAlwaysOn;
+            return JSON.stringify({ success: true, alwaysOn: shellRoot.ambientAlwaysOn });
+        }
+
+        function setAlwaysOn(val: bool): string {
+            shellRoot.ambientAlwaysOn = val;
+            return JSON.stringify({ success: true, alwaysOn: shellRoot.ambientAlwaysOn });
         }
 
         function setEnabled(val: bool): string {
@@ -1205,6 +1227,7 @@ ShellRoot {
         property bool leftSidebarOpen: desktopState.leftSidebarOpen
         property bool rightSidebarOpen: desktopState.rightSidebarOpen
         property bool bottomBarOpen: desktopState.bottomBarOpen
+        property bool mediaWidgetOpen: desktopState.mediaWidgetOpen
 
         function getSummary(): string {
             return JSON.stringify({
@@ -1219,7 +1242,8 @@ ShellRoot {
                 ambientActive: desktopState.ambientActive,
                 leftSidebarOpen: desktopState.leftSidebarOpen,
                 rightSidebarOpen: desktopState.rightSidebarOpen,
-                bottomBarOpen: desktopState.bottomBarOpen
+                bottomBarOpen: desktopState.bottomBarOpen,
+                mediaWidgetOpen: desktopState.mediaWidgetOpen
             });
         }
 
@@ -1247,6 +1271,11 @@ ShellRoot {
         function setBottomBarOpen(val: bool): string {
             desktopState.setBottomBarOpen(val);
             return JSON.stringify({ success: true, bottomBarOpen: desktopState.bottomBarOpen });
+        }
+
+        function setMediaWidgetOpen(val: bool): string {
+            desktopState.setMediaWidgetOpen(val);
+            return JSON.stringify({ success: true, mediaWidgetOpen: desktopState.mediaWidgetOpen });
         }
 
         property bool gameMode: ShellState.gameMode
@@ -1427,6 +1456,7 @@ ShellRoot {
 
     SettingsWindow {
         id: settingsWindow
+        screen: (ShellState.activeScreenName ? Quickshell.screens.find(s => s && s.name === ShellState.activeScreenName) : null) || (Quickshell.screens.length > 0 ? Quickshell.screens[0] : null)
     }
 
     SpatialWorkspaceMap {
@@ -1441,14 +1471,29 @@ ShellRoot {
         onCloseRequested: shellRoot.overviewOpen = false
     }
 
+    BirdsEyeOverview {
+        id: birdsEyeOverview
+        open: shellRoot.birdsEyeOpen && !ShellState.gameMode
+        workspaceModel: shellRoot.workspaceModel
+        surfaceModel: shellRoot.surfaceModel
+        compositorActionLayer: shellRoot.compositorActionLayer
+        screen: (ShellState.activeScreenName ? Quickshell.screens.find(s => s && s.name === ShellState.activeScreenName) : null) || (Quickshell.screens.length > 0 ? Quickshell.screens[0] : null)
+        onCloseRequested: shellRoot.birdsEyeOpen = false
+    }
+
     Connections {
         target: ShellState
         function onOpenSettingsRequested(category) {
             if (!ShellState.gameMode) {
+                if (desktopState) {
+                    desktopState.setLeftSidebarOpen(false);
+                    desktopState.setRightSidebarOpen(false);
+                    desktopState.setBottomBarOpen(false);
+                }
                 if (category && category !== "") {
                     settingsWindow.openCategory(category);
                 } else {
-                    settingsWindow.toggle();
+                    settingsWindow.show();
                 }
             }
         }
@@ -1456,7 +1501,40 @@ ShellRoot {
             if (active) {
                 settingsWindow.hide();
                 shellRoot.overviewOpen = false;
+                shellRoot.birdsEyeOpen = false;
             }
+        }
+        function onFeatherModeToggled(active) {
+            if (active) {
+                settingsWindow.hide();
+                shellRoot.overviewOpen = false;
+                shellRoot.birdsEyeOpen = false;
+            }
+        }
+    }
+
+    IpcHandler {
+        target: "feather"
+
+        property bool enabled: ShellState.featherMode
+        property int killedCount: ShellState.featherKilledCount
+
+        function toggle(): string {
+            ShellState.toggleFeatherMode();
+            return JSON.stringify({ success: true, enabled: ShellState.featherMode });
+        }
+
+        function setEnabled(val: bool): string {
+            ShellState.setFeatherMode(val);
+            return JSON.stringify({ success: true, enabled: val });
+        }
+
+        function status(): string {
+            return JSON.stringify({
+                success: true,
+                enabled: ShellState.featherMode,
+                killedCount: ShellState.featherKilledCount
+            });
         }
     }
 
@@ -1482,6 +1560,31 @@ ShellRoot {
 
         function isOpen(): string {
             return JSON.stringify({ success: true, open: shellRoot.overviewOpen });
+        }
+    }
+
+    IpcHandler {
+        target: "birdseye"
+
+        property bool open: shellRoot.birdsEyeOpen
+
+        function toggle(): string {
+            shellRoot.birdsEyeOpen = !shellRoot.birdsEyeOpen;
+            return JSON.stringify({ success: true, open: shellRoot.birdsEyeOpen });
+        }
+
+        function show(): string {
+            shellRoot.birdsEyeOpen = true;
+            return JSON.stringify({ success: true, open: true });
+        }
+
+        function close(): string {
+            shellRoot.birdsEyeOpen = false;
+            return JSON.stringify({ success: true, open: false });
+        }
+
+        function isOpen(): string {
+            return JSON.stringify({ success: true, open: shellRoot.birdsEyeOpen });
         }
     }
 
@@ -1617,6 +1720,11 @@ ShellRoot {
             WeatherState.refresh();
             return JSON.stringify({ success: true });
         }
+
+        function showTransient(text: string, ms: int): string {
+            IslandHub.showTransient(text, ms || 3500);
+            return JSON.stringify({ success: true, text: text });
+        }
     }
 
     IpcHandler {
@@ -1626,6 +1734,40 @@ ShellRoot {
             Theme.reload();
             AppearanceState.refreshThemes();
             AppearanceState.refreshWallpapers();
+        }
+    }
+
+    Process {
+        id: displayCycleProc
+        command: [Quickshell.shellPath("island/scripts/display-switcher.sh"), "cycle"]
+    }
+
+    Process {
+        id: displayConfirmProc
+        command: [Quickshell.shellPath("island/scripts/display-switcher.sh"), "confirm"]
+    }
+
+    Process {
+        id: displayRevertProc
+        command: [Quickshell.shellPath("island/scripts/display-switcher.sh"), "revert"]
+    }
+
+    IpcHandler {
+        target: "displays"
+
+        function cycle(): string {
+            displayCycleProc.running = true;
+            return JSON.stringify({ success: true, action: "cycle" });
+        }
+
+        function confirm(): string {
+            displayConfirmProc.running = true;
+            return JSON.stringify({ success: true, action: "confirm" });
+        }
+
+        function revert(): string {
+            displayRevertProc.running = true;
+            return JSON.stringify({ success: true, action: "revert" });
         }
     }
 
@@ -1680,12 +1822,13 @@ ShellRoot {
             property bool leftSidebarOpen: false
             property bool rightSidebarOpen: false
             property bool bottomBarOpen: false
+            property bool mediaWidgetOpen: false
 
             // GPU-Accelerated Live MP4 Video Wallpaper (WlrLayer.Background)
             Wallpaper {
                 id: wallpaper
                 screen: monitorScope.modelData
-                enabled: shellRoot.wallpaperEnabled && !ShellState.gameMode
+                enabled: shellRoot.wallpaperEnabled && !ShellState.gameMode && !ShellState.featherMode
                 mediaType: shellRoot.wallpaperMediaType
                 mediaSource: shellRoot.wallpaperMediaSource
                 live: {
@@ -1699,7 +1842,8 @@ ShellRoot {
                 id: ambientLayer
                 screen: monitorScope.modelData
                 idle: shellRoot.idle
-                enabled: shellRoot.ambientEnabled && !ShellState.gameMode
+                alwaysOn: shellRoot.ambientAlwaysOn
+                enabled: shellRoot.ambientEnabled && !ShellState.gameMode && !ShellState.featherMode
             }
 
             // Spatial Workspace Transition HUD (WlrLayer.Top, ephemeral)
@@ -1736,6 +1880,7 @@ ShellRoot {
                     Region { item: leftTrigger }
                     Region { item: centerTrigger }
                     Region { item: rightTrigger }
+                    Region { item: mediaTrigger }
                 }
 
                 // 1. Bottom-left -> controls left sidebar opening
@@ -1788,6 +1933,28 @@ ShellRoot {
                         console.log("[pranc-shell] Bottom-right trigger DEACTIVATED")
                     }
                 }
+
+                // 4. Middle-right -> controls independent media widget opening
+                EdgeTrigger {
+                    id: mediaTrigger
+                    edge: "right"
+                    triggerWidth: 3
+                    triggerHeight: 200
+                    debugColor: "#ea9381"
+
+                    onActivated: {
+                        console.log("[pranc-shell] Middle-right media trigger ACTIVATED")
+                        mediaCloseDebounce.stop()
+                        monitorScope.mediaWidgetOpen = true
+                        if (shellRoot.desktopState) shellRoot.desktopState.setMediaWidgetOpen(true)
+                    }
+                    onDeactivated: {
+                        console.log("[pranc-shell] Middle-right media trigger DEACTIVATED")
+                        if (!mediaWidget.hovered) {
+                            mediaCloseDebounce.restart()
+                        }
+                    }
+                }
             }
 
             // Left sidebar container surface
@@ -1798,10 +1965,21 @@ ShellRoot {
                 desktopState: shellRoot.desktopState
                 wallpaperEnabled: shellRoot.wallpaperEnabled
                 ambientEnabled: shellRoot.ambientEnabled
+                ambientAlwaysOn: shellRoot.ambientAlwaysOn
                 open: (monitorScope.leftSidebarOpen || (shellRoot.desktopState && shellRoot.desktopState.leftSidebarOpen)) && !ShellState.gameMode
 
                 onToggleWallpaper: shellRoot.wallpaperEnabled = !shellRoot.wallpaperEnabled
-                onToggleAmbient: shellRoot.ambientEnabled = !shellRoot.ambientEnabled
+                onCycleAmbient: {
+                    if (shellRoot.ambientEnabled && !shellRoot.ambientAlwaysOn) {
+                        shellRoot.ambientAlwaysOn = true;
+                    } else if (shellRoot.ambientEnabled && shellRoot.ambientAlwaysOn) {
+                        shellRoot.ambientEnabled = false;
+                        shellRoot.ambientAlwaysOn = false;
+                    } else {
+                        shellRoot.ambientEnabled = true;
+                        shellRoot.ambientAlwaysOn = false;
+                    }
+                }
 
                 onHoveredChanged: {
                     if (!hovered && !leftTrigger.active) {
@@ -1843,6 +2021,43 @@ ShellRoot {
                         if (shellRoot.desktopState) shellRoot.desktopState.setBottomBarOpen(false)
                     }
                 }
+            }
+
+            // Floating independent media widget surface (middle-right edge trigger)
+            MediaWidget {
+                id: mediaWidget
+                screen: monitorScope.modelData
+                desktopState: shellRoot.desktopState
+                open: (monitorScope.mediaWidgetOpen || (shellRoot.desktopState && shellRoot.desktopState.mediaWidgetOpen)) && !ShellState.gameMode
+
+                Timer {
+                    id: mediaCloseDebounce
+                    interval: 350
+                    repeat: false
+                    onTriggered: {
+                        if (!mediaWidget.hovered && !mediaTrigger.active) {
+                            monitorScope.mediaWidgetOpen = false
+                            if (shellRoot.desktopState) shellRoot.desktopState.setMediaWidgetOpen(false)
+                        }
+                    }
+                }
+
+                onHoveredChanged: {
+                    if (hovered) {
+                        mediaCloseDebounce.stop()
+                    } else if (!mediaTrigger.active) {
+                        mediaCloseDebounce.restart()
+                    }
+                }
+            }
+
+            // Stash Pocket & Drop Zone on the right edge (special:stash)
+            StashPocket {
+                id: stashPocket
+                screen: monitorScope.modelData
+                surfaceModel: shellRoot.surfaceModel
+                workspaceManager: shellRoot.workspaceManager
+                compositorActionLayer: shellRoot.compositorActionLayer
             }
         }
     }

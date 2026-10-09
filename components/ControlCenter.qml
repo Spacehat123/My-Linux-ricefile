@@ -16,6 +16,7 @@ Item {
     property var screen: null
     property bool wallpaperEnabled: true
     property bool ambientEnabled: true
+    property bool ambientAlwaysOn: false
 
     // Game Mode State directly synchronized with Island.ShellState single source of truth
     readonly property bool gameModeActive: Island.ShellState ? Island.ShellState.gameMode : false
@@ -25,9 +26,18 @@ Item {
         if (Island.ShellState) Island.ShellState.toggleGameMode();
     }
 
+    // The Feather Mode State (Absolute Battery Optimization)
+    readonly property bool featherModeActive: Island.ShellState ? Island.ShellState.featherMode : false
+    readonly property int featherModeKilledCount: Island.ShellState ? Island.ShellState.featherKilledCount : 0
+
+    function toggleFeatherMode() {
+        if (Island.ShellState) Island.ShellState.toggleFeatherMode();
+    }
+
     // Action Signals (Unidirectional Event Flow to shellRoot)
     signal toggleWallpaper()
     signal toggleAmbient()
+    signal cycleAmbient()
 
     // Dual-Layer Hover Boundary (Passive root HoverHandler)
     HoverHandler {
@@ -105,8 +115,8 @@ Item {
                 TapHandler {
                     id: gearTap
                     onTapped: {
-                        Island.ShellState.close();
-                        Island.ShellState.openSettingsRequested();
+                        if (root.desktopState) root.desktopState.setLeftSidebarOpen(false);
+                        Island.ShellState.openSettings("");
                     }
                 }
             }
@@ -171,15 +181,16 @@ Item {
                 }
             }
 
-            // 2. Ambient Overlay Toggle
+            // 2. Ambient Overlay Toggle (Cycles Dynamic -> Always On -> Disabled)
             Rectangle {
                 width: (parent.width - 10) / 2
                 height: 72
                 radius: 16
+                readonly property color activeColor: root.ambientAlwaysOn ? Island.Theme.cyan : Island.Theme.blue
                 color: root.ambientEnabled
-                    ? Qt.rgba(Island.Theme.blue.r, Island.Theme.blue.g, Island.Theme.blue.b, 0.16)
+                    ? Qt.rgba(activeColor.r, activeColor.g, activeColor.b, root.ambientAlwaysOn ? 0.22 : 0.16)
                     : (ambTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
-                border.color: root.ambientEnabled ? Island.Theme.blue : (ambTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+                border.color: root.ambientEnabled ? activeColor : (ambTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
                 border.width: root.ambientEnabled ? 1.5 : 1
                 scale: ambTileTap.pressed ? 0.96 : 1.0
 
@@ -190,7 +201,7 @@ Item {
                 HoverHandler { id: ambTileHover }
                 TapHandler {
                     id: ambTileTap
-                    onTapped: root.toggleAmbient()
+                    onTapped: root.cycleAmbient()
                 }
 
                 Column {
@@ -199,10 +210,10 @@ Item {
                     spacing: 4
 
                     Text {
-                        text: "󰍹"
+                        text: root.ambientAlwaysOn ? "󰈈" : "󰍹"
                         font.family: Island.Theme.iconFontFamily
                         font.pixelSize: 18
-                        color: root.ambientEnabled ? Island.Theme.blue : Island.Theme.muted
+                        color: root.ambientEnabled ? parent.parent.activeColor : Island.Theme.muted
                     }
 
                     Text {
@@ -214,10 +225,10 @@ Item {
                     }
 
                     Text {
-                        text: root.ambientEnabled ? "Monitoring" : "Disabled"
+                        text: !root.ambientEnabled ? "Disabled" : (root.ambientAlwaysOn ? "Always On" : "Dynamic")
                         font.pixelSize: 9
                         font.family: Island.Theme.fontFamily
-                        color: root.ambientEnabled ? Island.Theme.blue : Island.Theme.muted
+                        color: root.ambientEnabled ? parent.parent.activeColor : Island.Theme.muted
                     }
                 }
             }
@@ -282,7 +293,7 @@ Item {
                 width: (parent.width - 10) / 2
                 height: 72
                 radius: 16
-                readonly property bool nightLightActive: Island.ShellState ? Island.ShellState.nightLightTemperature < 6500 : false
+                readonly property bool nightLightActive: Island.Backend ? Island.Backend.nightLightStatus === "on" : false
                 color: nightLightActive
                     ? Qt.rgba(Island.Theme.orange.r, Island.Theme.orange.g, Island.Theme.orange.b, 0.16)
                     : (nlTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
@@ -298,8 +309,8 @@ Item {
                 TapHandler {
                     id: nlTileTap
                     onTapped: {
-                        if (Island.ShellState) {
-                            Island.ShellState.nightLightTemperature = nightLightActive ? 6500 : 4200;
+                        if (Island.Backend) {
+                            Island.Backend.toggleNightLight();
                         }
                     }
                 }
@@ -335,7 +346,7 @@ Item {
         }
 
         // =====================================================================
-        // SECTION 2B: GAME MODE (HIGH-PERFORMANCE BLOAT KILLER)
+        // SECTION 2B: PERFORMANCE MODE (HIGH-PERFORMANCE BLOAT KILLER)
         // =====================================================================
         Rectangle {
             width: parent.width
@@ -378,7 +389,7 @@ Item {
                         anchors.fill: parent
                         spacing: 10
 
-                        // Glowing controller badge
+                        // Glowing speedometer / performance badge
                         Rectangle {
                             width: 36
                             height: 36
@@ -390,7 +401,7 @@ Item {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: "󰊴"
+                                text: "󰓅"
                                 font.family: Island.Theme.iconFontFamily
                                 font.pixelSize: 18
                                 color: root.gameModeActive ? "#0a0a0f" : Island.Theme.primary
@@ -404,7 +415,7 @@ Item {
                             spacing: 2
 
                             Text {
-                                text: "Game Mode"
+                                text: "Performance"
                                 font.pixelSize: 13
                                 font.bold: true
                                 font.family: Island.Theme.fontFamily
@@ -487,6 +498,154 @@ Item {
                         TapHandler {
                             onTapped: root.toggleGameMode()
                         }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // SECTION 2C: THE FEATHER (ABSOLUTE BATTERY MODE)
+        // =====================================================================
+        Rectangle {
+            width: parent.width
+            height: 64
+            radius: 16
+            color: root.featherModeActive
+                ? Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.16)
+                : (featherTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
+            border.color: root.featherModeActive 
+                ? Island.Theme.green 
+                : (featherTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+            border.width: root.featherModeActive ? 1.5 : 1
+
+            Behavior on color { ColorAnimation { duration: 120 } }
+            Behavior on border.color { ColorAnimation { duration: 120 } }
+
+            HoverHandler { id: featherTileHover }
+
+            Row {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 10
+
+                // Main clickable toggle zone (Badge + Text)
+                Item {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - 50
+                    height: parent.height
+
+                    scale: featherMainTap.pressed ? 0.98 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 80 } }
+
+                    HoverHandler { id: featherMainHover }
+                    TapHandler {
+                        id: featherMainTap
+                        onTapped: root.toggleFeatherMode()
+                    }
+
+                    Row {
+                        anchors.fill: parent
+                        spacing: 10
+
+                        // Glowing leaf / feather badge
+                        Rectangle {
+                            width: 36
+                            height: 36
+                            radius: 10
+                            color: root.featherModeActive 
+                                ? Island.Theme.green 
+                                : Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.15)
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Behavior on color { ColorAnimation { duration: 120 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰌪"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 18
+                                color: root.featherModeActive ? "#0a0a0f" : Island.Theme.green
+                            }
+                        }
+
+                        // Text labels
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width - 46
+                            spacing: 2
+
+                            Row {
+                                spacing: 6
+                                Text {
+                                    text: "The Feather"
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                    font.family: Island.Theme.fontFamily
+                                    color: Island.Theme.foreground
+                                }
+
+                                Rectangle {
+                                    visible: root.featherModeActive
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 44
+                                    height: 16
+                                    radius: 8
+                                    color: Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.25)
+                                    border.color: Island.Theme.green
+                                    border.width: 1
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "ECO"
+                                        font.pixelSize: 8
+                                        font.bold: true
+                                        font.family: Island.Theme.fontFamily
+                                        color: Island.Theme.green
+                                    }
+                                }
+                            }
+
+                            Text {
+                                text: root.featherModeActive
+                                    ? "Active • " + root.featherModeKilledCount + " pruned • Bare Hyprland"
+                                    : "Absolute battery • Bare-minimum Hyprland"
+                                font.pixelSize: 10
+                                font.family: Island.Theme.fontFamily
+                                color: root.featherModeActive ? Island.Theme.green : Island.Theme.muted
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
+
+                // Toggle pill switch
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 40
+                    height: 22
+                    radius: 11
+                    color: root.featherModeActive ? Island.Theme.green : Island.Theme.glassCardHover
+                    border.color: root.featherModeActive ? Island.Theme.green : Island.Theme.glassBorderSubtle
+                    border.width: 1
+
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                    Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: root.featherModeActive ? parent.width - width - 2 : 2
+                        width: 18
+                        height: 18
+                        radius: 9
+                        color: root.featherModeActive ? "#0a0a0f" : Island.Theme.muted
+
+                        Behavior on x {
+                            NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                        }
+                    }
+
+                    TapHandler {
+                        onTapped: root.toggleFeatherMode()
                     }
                 }
             }
@@ -743,8 +902,8 @@ Item {
                 TapHandler {
                     id: prefTap
                     onTapped: {
-                        Island.ShellState.close();
-                        Island.ShellState.openSettingsRequested();
+                        if (root.desktopState) root.desktopState.setLeftSidebarOpen(false);
+                        Island.ShellState.openSettings("");
                     }
                 }
 

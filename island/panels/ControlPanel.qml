@@ -450,8 +450,7 @@ FocusScope {
                 icon: "󰒓"
                 accessibleName: "Settings"
                 onClicked: {
-                    ShellState.close();
-                    ShellState.openSettingsRequested();
+                    ShellState.openSettings("");
                 }
             }
         }

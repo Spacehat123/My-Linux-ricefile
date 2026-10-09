@@ -42,8 +42,9 @@ Singleton {
     readonly property color shellBackground: "#000000"
     readonly property color shellForeground: "#ffffff"
 
-    // Master Smoked Glass Materials & Sheen Highlights
-    readonly property color glassBackground: Qt.rgba(bg0.r, bg0.g, bg0.b, 0.90)
+    // Master Surface Materials (Solid Opaque Sidebars & Bars)
+    readonly property color surfaceOpaque: Qt.rgba(bg0.r, bg0.g, bg0.b, 1.0)
+    readonly property color glassBackground: surfaceOpaque
     readonly property color glassBackgroundSubtle: Qt.rgba(bgDim.r, bgDim.g, bgDim.b, 0.80)
     readonly property color glassCard: Qt.rgba(1.0, 1.0, 1.0, 0.04)
     readonly property color glassCardHover: Qt.rgba(1.0, 1.0, 1.0, 0.08)

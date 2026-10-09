@@ -111,8 +111,15 @@ case "$action" in
     brightnessctl -d "$device" set "$percentage%" >/dev/null
     ;;
   night-light-status)
-    command -v hyprsunset >/dev/null || { echo unavailable; exit; }
-    pgrep -x hyprsunset >/dev/null && echo on || echo off
+    if command -v hyprsunset >/dev/null 2>&1 && pgrep -x hyprsunset >/dev/null; then
+      echo on
+    elif hyprctl getoption decoration:screen_shader 2>/dev/null | grep -q "blue-light.glsl"; then
+      echo on
+    elif [[ -f "${night_light_state_file%/*}/night-light-active" ]]; then
+      echo on
+    else
+      echo off
+    fi
     ;;
   night-light-temperature-get)
     temperature=4500
@@ -125,25 +132,48 @@ case "$action" in
     printf '%s\n' "$temperature"
     ;;
   night-light-toggle)
-    command -v hyprsunset >/dev/null || exit 1
-    temperature=${2:-4500}
+    temperature=${2:-4200}
     [[ $temperature =~ ^[0-9]+$ ]] && (( temperature >= 2500 && temperature <= 6000 ))
     mkdir -p -- "${night_light_state_file%/*}"
     printf '%s\n' "$temperature" > "$night_light_state_file"
-    if pgrep -x hyprsunset >/dev/null; then
-      pkill -x hyprsunset
+    active_flag="${night_light_state_file%/*}/night-light-active"
+    shader_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/shaders/blue-light.glsl"
+
+    if command -v hyprsunset >/dev/null 2>&1; then
+      if pgrep -x hyprsunset >/dev/null; then
+        pkill -x hyprsunset
+        rm -f -- "$active_flag"
+      else
+        hyprsunset -t "$temperature" >/dev/null 2>&1 &
+        touch "$active_flag"
+      fi
     else
-      hyprsunset -t "$temperature" >/dev/null 2>&1 &
+      # Native Hyprland screen_shader fallback
+      if [[ -f "$active_flag" ]] || hyprctl getoption decoration:screen_shader 2>/dev/null | grep -q "blue-light.glsl"; then
+        hyprctl keyword decoration:screen_shader "" >/dev/null 2>&1
+        rm -f -- "$active_flag"
+      else
+        hyprctl keyword decoration:screen_shader "$shader_path" >/dev/null 2>&1
+        touch "$active_flag"
+      fi
     fi
     ;;
   night-light-set)
-    command -v hyprsunset >/dev/null || exit 1
     temperature=${2:?night light temperature required}
     [[ $temperature =~ ^[0-9]+$ ]] && (( temperature >= 2500 && temperature <= 6000 ))
     mkdir -p -- "${night_light_state_file%/*}"
     printf '%s\n' "$temperature" > "$night_light_state_file"
-    if pgrep -x hyprsunset >/dev/null; then
-      hyprctl hyprsunset temperature "$temperature" >/dev/null
+    active_flag="${night_light_state_file%/*}/night-light-active"
+    shader_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/shaders/blue-light.glsl"
+
+    if command -v hyprsunset >/dev/null 2>&1; then
+      if pgrep -x hyprsunset >/dev/null; then
+        hyprctl hyprsunset temperature "$temperature" >/dev/null 2>&1 || true
+      fi
+    else
+      if [[ -f "$active_flag" ]] || hyprctl getoption decoration:screen_shader 2>/dev/null | grep -q "blue-light.glsl"; then
+        hyprctl keyword decoration:screen_shader "$shader_path" >/dev/null 2>&1
+      fi
     fi
     ;;
   power-profile-status)

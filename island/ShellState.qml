@@ -59,6 +59,11 @@ Singleton {
         "gamemode": 20
     })
     signal openSettingsRequested(string category)
+
+    function openSettings(category) {
+        close();
+        openSettingsRequested(category !== undefined && category !== null ? category : "");
+    }
     property string activeScreenName: ""
     property string panel: "collapsed"
     property int noticeTick: 0
@@ -119,6 +124,59 @@ Singleton {
         }
     }
 
+    // Feather Mode State & Process Mediation ("The Feather" Absolute Battery Mode)
+    property bool featherMode: false
+    property int featherKilledCount: 0
+
+    signal featherModeToggled(bool active)
+
+    function toggleFeatherMode() {
+        if (!featherModeProc.running) {
+            featherModeProc.command = ["python3", Quickshell.shellPath("island/scripts/feather-mode.py"), "toggle"];
+            featherModeProc.running = true;
+        }
+    }
+
+    function setFeatherMode(enabled) {
+        if (featherMode !== enabled && !featherModeProc.running) {
+            featherModeProc.command = ["python3", Quickshell.shellPath("island/scripts/feather-mode.py"), enabled ? "enable" : "disable"];
+            featherModeProc.running = true;
+        }
+    }
+
+    Process {
+        id: featherModeProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const res = JSON.parse(text);
+                    root.featherMode = res.featherMode === true;
+                    if (res.killedCount !== undefined) root.featherKilledCount = res.killedCount;
+                    root.close();
+                    gc();
+                    root.featherModeToggled(root.featherMode);
+                } catch (e) {
+                    console.warn("[ShellState] featherMode error:", e);
+                }
+            }
+        }
+    }
+
+    Process {
+        id: featherModeInitProc
+        command: ["python3", Quickshell.shellPath("island/scripts/feather-mode.py"), "status"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const res = JSON.parse(text);
+                    root.featherMode = res.featherMode === true;
+                    if (res.killedCount !== undefined) root.featherKilledCount = res.killedCount;
+                } catch (e) {}
+            }
+        }
+    }
+
     // Compatibility forwarders to dedicated TodoState singleton
     property var todos: TodoState.todos
     function loadTodos() { TodoState.loadTodos(); }
@@ -146,8 +204,7 @@ Singleton {
             return;
         }
         if (name === "settings") {
-            close();
-            openSettingsRequested();
+            openSettings("");
             return;
         }
         if (name === "clock" || name === "collapsed") {

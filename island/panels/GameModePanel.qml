@@ -27,7 +27,7 @@ Item {
             }
 
             Text {
-                text: "Game Mode Active"
+                text: "Performance Mode Active"
                 font.family: Theme.fontFamily
                 font.pixelSize: 13
                 font.bold: true
@@ -86,7 +86,7 @@ Item {
                 }
 
                 Text {
-                    text: "Turn Game Mode Off"
+                    text: "Turn Performance Mode Off"
                     font.family: Theme.fontFamily
                     font.pixelSize: 12
                     font.bold: true

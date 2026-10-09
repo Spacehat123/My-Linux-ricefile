@@ -11,7 +11,8 @@ PanelWindow {
     // =========================================================================
     property bool idle: false
     property bool enabled: true
-    readonly property bool active: idle && enabled
+    property bool alwaysOn: false
+    readonly property bool active: (alwaysOn || idle) && enabled
 
     // Lifecycle visibility: stays visible while active or while fade-out is running
     visible: active || fadeOutAnim.running
