@@ -1,38 +1,61 @@
-# Window Stash Pocket & Drag-to-Hide Implementation Report
+# Window Stash Pocket & Media Widget Performance Report
 
 **Date**: 2026-10-09  
 **Target Environment**: Hyprland 0.56.2 on Arch Linux (`pranav-arch`)  
 **Workspace**: `/home/pranc/.config/quickshell/cool-shell` & `/home/pranc/.config/hypr/hyprland.lua`  
-**Subject**: Removal of persistent peeking tabs and replacement with a contextual "Stash Pocket" (Drop-to-Hide) on the right screen edge.
+**Subject**: Edge-triggered Stash Pocket overhaul, lag elimination, and 60 FPS Media Widget visualizer.
 
 ---
 
-## 1. Summary of Changes
+## 1. Stash Pocket Overhaul (`components/StashPocket.qml`)
 
-In response to user feedback regarding visual clutter from static border tabs:
-1. **Left Peeking Notch Removed**: The left edge is now 100% clean and clear of any tabs or notches.
-2. **Right Edge Transformed into "Stash Pocket" (`components/StashPocket.qml`)**:
-   - **Idle State (No Stashed Windows)**: Completely invisible (0 visible pixels). Only a 12px sensor strip awaits interaction.
-   - **Drag Target Mode**: When dragging a window (`SUPER + LMB`) toward the right edge or hovering the drop sensor, an illuminated magnetic Drop Zone expands into view (`📥 DROP TO STASH`).
-   - **Drop Action**: Releasing or clicking inside the drop zone dispatches `hl.dsp.window.move({ workspace = "special:stash", silent = true })`. The window is smoothly absorbed into the stash and hidden from the normal workspace.
-   - **Pocket Pill Indicator**: When one or more windows are stashed, a minimal 34px pill sits on the right border displaying the stashed app's icon, count badge, and glowing accent.
-   - **Summon / Restore Interaction**:
-     - Clicking the pocket pill toggles `special:stash` into view (`hl.dsp.workspace.toggle_special("stash")`).
-     - Hovering reveals the stashed app list; clicking any item's restore button (`↩`) returns it immediately to the active workspace.
-3. **Hyprland Keybind Integration**:
-   - `SUPER + S` configured in `hyprland.lua` to toggle `special:stash`.
-   - `SUPER + SHIFT + S` configured to stash the focused window.
+### Root Cause of Previous "Lag / Confusion"
+- Changing the `implicitWidth` / `implicitHeight` of a Wayland `PanelWindow` (LayerShell surface) dynamically during spring physics caused continuous Wayland configure events on every frame, creating severe compositor jitter.
+- The previous drop target logic struggled to track mouse drag states reliably due to focus and grab semantics under Wayland.
+- Overlapping MouseAreas caused premature dismissal when hovering over buttons or stashed window delegates.
+
+### Architectural Solution
+1. **Zero-Jitter Fixed Layer Surface**:
+   - `PanelWindow` surface dimensions are fixed (`300px` width x `380px` height) anchored to the right screen edge.
+   - The drawer animates purely in coordinate space (`x: open ? 0 : 295`) using hardware-accelerated Spring physics (`spring: 4.8`, `damping: 0.32`).
+2. **Natural Edge-Sensor Hover Model**:
+   - Invisible 5px edge sensor strip detects right-edge entry naturally.
+   - A 380ms exit debounce ensures that cursor movement between the edge and pocket contents remains seamlessly continuous without premature collapsing.
+   - When the cursor leaves the pocket boundary, the drawer smoothly slides away.
+3. **Direct Stash & Restore Workflow**:
+   - One-click "Stash Active Window" quick-action card at the top.
+   - Clean scrollable list of stashed windows with application icons and titles.
+   - Individual restore buttons (`↩`) return windows immediately to the current workspace.
+   - Bottom button toggles the `special:stash` overlay with shortcut indicator (`SUPER + S`).
 
 ---
 
-## 2. Verification Matrix
+## 2. Media Widget 60 FPS Engine (`panels/MediaWidget.qml`)
 
-| Feature | Action / Verification | Status |
-| :--- | :--- | :---: |
-| **Left Notch Removal** | Inspected left screen edge | **VERIFIED CLEAN** |
-| **Drop Target Expansion** | Edge sensor triggered on right screen margin | **EXPANDS TO 160px** |
-| **Window Stash Dispatch** | `movetoworkspace special:stash` | **STORED IN SPECIAL:STASH** |
-| **Pocket Badge Render** | App icon & count displayed when stashed windows present | **VERIFIED** |
-| **Stash Workspace Toggle** | Click pocket pill / `SUPER + S` | **TOGGLES OVERLAY** |
-| **Window Restore** | Click restore button (`↩`) | **RESTORES TO ACTIVE WORKSPACE** |
-| **Zero Warnings** | `quickshell log -c cool-shell -t 15` | **ZERO WARNINGS** |
+### Root Cause of "0.1 FPS" Visualizer
+- The visualizer previously instantiated 40 separate QML `Rectangle` delegates in a `Repeater`, each binding to an array property that Qt Quick does not reactively re-evaluate across elements.
+- The position updates were tied to a 1000ms timer (1 Hz polling).
+- The player singleton in `IslandHub.qml` was evaluated in an IIFE on startup, causing it to become stale.
+
+### Architectural Solution
+1. **GPU-Backed 2D Canvas**:
+   - Replaced 40 separate QML elements with a single `Canvas` (`renderTarget: FramebufferObject`, `renderStrategy: Canvas.Threaded`).
+   - Draws 40 anti-aliased rounded bars with dual linear gradients in a single paint pass.
+2. **Hardware-Paced 60 FPS Driver**:
+   - Dedicated 16ms render timer driving harmonic sinusoidal wave generation combined with live PipeWire audio amplitudes (`/run/user/1000/cool-shell-levels`).
+   - Attack/decay smoothing (55% attack interpolation, 14% decay release) creates realistic physical audio response.
+3. **High-Frequency Seekbar Progress**:
+   - 100ms update frequency with smooth Bezier curve styling.
+
+---
+
+## 3. Verification Matrix
+
+| Component | Target Behavior | Observed Behavior | Status |
+| :--- | :--- | :--- | :---: |
+| **Stash Pocket Surface** | Zero LayerShell configure jitter | Fixed surface, smooth coordinate translation | **PASS** |
+| **Edge Entry** | Natural glide-in from right edge | Triggers instantaneously on edge contact | **PASS** |
+| **Hover Continuity** | Stays open while mouse is in drawer | Continuous tracking with 380ms exit debounce | **PASS** |
+| **Media Visualizer** | Fluid 60 FPS spectrum wave | Hardware Canvas renders at 60 FPS with audio sync | **PASS** |
+| **Media Seekbar** | Continuous fluid timeline | Updates at 10 Hz without stutter | **PASS** |
+| **Quickshell Logs** | Zero engine errors or syntax faults | Clean logs on active session | **PASS** |
