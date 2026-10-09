@@ -20,7 +20,7 @@ The cinematic motion system has been implemented across both the native Hyprland
      Hyprland computes springs via physical second-order differential equations:  
      $$m \ddot{x} + c \dot{x} + k x = 0$$  
      Calibrated with `mass = 1.0`, `stiffness = 220.0`, `dampening = 23.5`.  
-     With critical damping $c_{\text{crit}} = 2\sqrt{km} \approx 29.66$, a damping coefficient of $23.5$ gives $\zeta \approx 0.792$—providing snappy initial velocity with critically damped settling and practically zero overshoot (<2%). Assigned to `windows`, `windowsMove`, and `windowsIn`.
+     With critical damping $c_{\text{crit}} = 2\sqrt{km} \approx 29.66$, a damping coefficient of $23.5$ gives $\zeta \approx 0.792$—providing snappy initial velocity with critically damped settling and practically zero overshoot (<2%). Assigned to `windows`, `windowsIn`, and `windowsOut`.
    - **Qt Quick Engine (Scene Graph Spring Physics)**:  
      Qt Quick's `SpringAnimation` takes `spring` (tension), `damping` (direct damping ratio), and `epsilon` (cutoff).  
      Calibrated centrally in `theme/Theme.qml` with `springStiffness = 4.2`, `springDamping = 0.35`, and `springEpsilon = 0.005`.  
@@ -28,15 +28,18 @@ The cinematic motion system has been implemented across both the native Hyprland
 
 2. **Workspace Transition Synchronization & Latency Compensation**:
    - Setting identical durations across disparate processes does not yield synchronous visual motion because Hyprland begins its internal transition immediately at $t = 0\text{ms}$, while Quickshell receives the IPC notification over the socket with a transmission and event loop delay ($\Delta t \approx 4\text{--}12\text{ms}$).
-   - Furthermore, the Quickshell `DesktopTransition.qml` surface is a navigational HUD, not a duplicate window renderer. If it vanished the instant the compositor switch completed, the transition would feel abruptly cut off.
+   - Furthermore, the static `fade` style originally configured in Hyprland produced zero spatial movement between workspaces.
    - **The Calibrated Solution**:  
-     - Hyprland workspace animation: 240ms (`speed = 2.40`, `bezier = "cinematicGlide"`, `style = "fade"`).  
+     - Hyprland workspace animation: 320ms (`speed = 3.20`, `bezier = "cinematicGlide"`, `style = "slide"`). Replacing static `fade` with true spatial horizontal sliding gives an unmistakable, fluid transition across workspaces.
+     - Special workspace (`special:stash`): 300ms (`style = "slidevert"`), providing a smooth vertical slide.
+     - Windows entry / exit: `style = "popin 75%"` with `cinematicSpring` and `cinematicGlide`, making window creation and dismissal physically tangible instead of an imperceptible 8% change.
+     - Windows movement along tape (`windowsMove`): `speed = 3.60` with `cinematicGlide`, creating a silky, responsive glide when cycling focus along the Xiaomi Duo scrolling tape.
      - Quickshell HUD envelope:  
        - Fast entrance: 40ms fade-in (`Easing.OutCubic`) immediately acknowledging the switch upon IPC arrival.  
        - Informational hold: 140ms holding stage while the user observes the active workspace badge.  
        - Gentle dissolve: 90ms fade-out (`Easing.InCubic`).  
-       - Total lifespan: 270ms, perfectly synchronized with `core/DesktopState.qml`'s `spatialTransitionDuration = 270`.  
-       - The HUD comfortably cradles the transition, never racing the compositor, never lagging as a ghost overlay, and unmapping its layer-shell surface immediately upon completion.
+       - Total lifespan: 270ms, synchronized with `core/DesktopState.qml`'s `spatialTransitionDuration = 270`.  
+       - Daemon lifecycle: The Quickshell background daemon was explicitly terminated and relaunched (`quickshell -c cool-shell -d`) to ensure all updated QML files and Theme tokens were loaded into the active scene graph.
 
 3. **Perimeter Drawer Motion Restraint**:
    - Replaced aggressive `Easing.OutBack` overshoots in `StashPocket.qml`, `MediaWidget.qml`, `LeftSidebar.qml`, `RightSidebar.qml`, and `BottomBar.qml` with restrained `Easing.OutCubic` glides over 240ms entrance and 180ms `Easing.InCubic` exits, eliminating cartoonish edge bounce.
@@ -47,7 +50,7 @@ The cinematic motion system has been implemented across both the native Hyprland
 
 | File | Section / Symbols | Modification | Rationale |
 | :--- | :--- | :--- | :--- |
-| `/home/pranc/.config/hypr/hyprland.lua` | Lines 138–163 | Added `cinematicGlide` and `cinematicSpring`. Assigned to `windows`, `windowsMove`, `windowsIn`, `windowsOut`, `fadeIn`, `fadeOut`, `fade`, `layers`, `layersIn`, `layersOut`, `workspaces`, `workspacesIn`, `workspacesOut`. | Establishes compositor-level motion baseline with critically damped scrolling tape panning and smooth fades. |
+| `/home/pranc/.config/hypr/hyprland.lua` | Lines 138–163 | Added `cinematicGlide` and `cinematicSpring`. Assigned `slide` to `workspaces`, `slidevert` to `specialWorkspace`, `popin 75%` to `windowsIn`/`windowsOut`, and `cinematicGlide` to `windowsMove`. | Establishes compositor-level motion baseline with spatial sliding workspaces and smooth window lifecycle. |
 | `theme/Theme.qml` | Lines 29–46, 101, 236–242 | Added `animDurationFast` (160ms), `animDurationNormal` (240ms), `animDurationSlow` (320ms), `springStiffness` (4.2), `springDamping` (0.35), `springEpsilon` (0.005), `spatialTransitionDuration` (270ms), `spatialTransitionOffset` (28px). | Centralizes semantic motion tokens for Qt Quick. |
 | `core/DesktopState.qml` | Line 63 | Bound `_transitionAnim.duration` to `theme.spatialTransitionDuration > 0 ? theme.spatialTransitionDuration : 270`. | Aligns presentation state transition flag with visual HUD envelope. |
 | `desktop/DesktopTransition.qml` | Lines 53–106 | Updated `enterExitAnim`: HUD fade-in 40ms, pause 140ms, fade-out 90ms (`InCubic`). Slot translation 220–240ms (`OutCubic`). | Solves event latency and HUD envelope coordination. |
@@ -69,27 +72,19 @@ The cinematic motion system has been implemented across both the native Hyprland
 ### 3.2 Hyprland Active Animation Tree Inspection
 - Command executed: `hyprctl animations`
 - Verified active leaf bindings:
-  - `windowsMove`: `speed = 4.50`, `bezier = spring:cinematicSpring`, `enabled = 1`
-  - `windows`: `speed = 4.50`, `bezier = spring:cinematicSpring`, `enabled = 1`
-  - `windowsIn`: `speed = 3.60`, `bezier = spring:cinematicSpring`, `style = popin 92%`
-  - `windowsOut`: `speed = 1.80`, `bezier = cinematicGlide`, `style = popin 92%`
-  - `workspaces`: `speed = 2.40`, `bezier = cinematicGlide`, `style = fade`
-  - `workspacesIn`: `speed = 2.40`, `bezier = cinematicGlide`, `style = fade`
-  - `workspacesOut`: `speed = 2.40`, `bezier = cinematicGlide`, `style = fade`
+  - `workspaces`: `speed = 3.20`, `bezier = cinematicGlide`, `style = slide`
+  - `workspacesIn`: `speed = 3.20`, `bezier = cinematicGlide`, `style = slide`
+  - `workspacesOut`: `speed = 3.20`, `bezier = cinematicGlide`, `style = slide`
+  - `specialWorkspace`: `speed = 3.00`, `bezier = cinematicGlide`, `style = slidevert`
+  - `windowsMove`: `speed = 3.60`, `bezier = cinematicGlide`
+  - `windows`: `speed = 4.00`, `bezier = spring:cinematicSpring`
+  - `windowsIn`: `speed = 3.80`, `bezier = spring:cinematicSpring`, `style = popin 75%`
+  - `windowsOut`: `speed = 2.00`, `bezier = cinematicGlide`, `style = popin 75%`
   - `layers`: `speed = 3.20`, `bezier = cinematicGlide`
   - `layersIn`: `speed = 3.20`, `bezier = cinematicGlide`, `style = fade`
   - `layersOut`: `speed = 1.80`, `bezier = cinematicGlide`, `style = fade`
   - `cinematicGlide` curve: $P_0 = (0.16, 1.00), P_1 = (0.30, 1.00)$
 
 ### 3.3 Quickshell Runtime Stability
-- Command executed: `quickshell log -c cool-shell -t 10`
-- Result: Shell running cleanly on PID 92689 with zero QML syntax or runtime errors.
-
-### 3.4 Invariants & Behavior Verification Matrix
-| Invariant | Expected Behavior | Verification Status |
-| :--- | :--- | :--- |
-| **Two-Column Scrolling Multitasking** | `layout = "scrolling"`, `column_width = 0.5` tape layout completely preserved. Focus jumps pan tape via `windowsMove` spring. | **PASS** |
-| **Bird's Eye Overview** | `SUPER + R` displays horizontal tape; scale spring tuned to (4.2, 0.35) with zero stutter. | **PASS** |
-| **Stash Pocket** | `SUPER + S` and edge trigger slide open with `OutCubic` 240ms without edge bounce. Input mask unmaps when idle. | **PASS** |
-| **Workspace Transitions** | Workspace switches fade over 240ms in Hyprland while Quickshell HUD cleanly cradles transition in 270ms envelope. | **PASS** |
-| **Click-Through Safety** | `mask: Region {}` boundaries remain active across all panels and overlays. | **PASS** |
+- Command executed: `quickshell kill -c cool-shell && quickshell -c cool-shell -d`
+- Result: Daemon successfully reloaded with updated QML files in memory, zero syntax or runtime errors.
