@@ -157,7 +157,7 @@ PanelWindow {
             NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
         }
         Behavior on scale {
-            SpringAnimation { spring: 3.5; damping: 0.32; epsilon: 0.005 }
+            SpringAnimation { spring: 4.2; damping: 0.35; epsilon: 0.005 }
         }
 
         // ---------------------------------------------------------------------

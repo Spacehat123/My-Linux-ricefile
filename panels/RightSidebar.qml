@@ -87,7 +87,7 @@ PanelWindow {
             property: "x"
             to: 0
             duration: 240
-            easing.type: Easing.OutBack
+            easing.type: Easing.OutCubic
         }
         NumberAnimation {
             target: content

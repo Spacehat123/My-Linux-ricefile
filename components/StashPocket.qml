@@ -111,8 +111,8 @@ Scope {
                 target: drawerTranslate
                 property: "x"
                 to: 0
-                duration: 220
-                easing.type: Easing.OutBack
+                duration: 240
+                easing.type: Easing.OutCubic
             }
             NumberAnimation {
                 target: drawer
@@ -137,7 +137,7 @@ Scope {
                 property: "opacity"
                 to: 0.0
                 duration: 160
-                easing.type: Easing.InQuad
+                easing.type: Easing.InCubic
             }
         }
 

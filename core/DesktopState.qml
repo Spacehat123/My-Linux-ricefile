@@ -60,7 +60,7 @@ QtObject {
         property: "_progress"
         from: 0.0
         to: 1.0
-        duration: theme.workspaceTransitionDuration > 0 ? (theme.workspaceTransitionDuration + 100) : 280
+        duration: theme.spatialTransitionDuration > 0 ? theme.spatialTransitionDuration : 270
         easing.type: Easing.OutCubic
     }
 

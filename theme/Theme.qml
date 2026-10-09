@@ -26,9 +26,24 @@ QtObject {
     readonly property color secondaryTextColor: Island.Theme.muted
     readonly property color mutedTextColor: secondaryTextColor
 
-    // Animation constants
-    readonly property int animDurationOpen: Island.Theme.animationFast + 60
-    readonly property int animDurationClose: Island.Theme.animationFast + 20
+    // =========================================================================
+    // Cinematic Motion Tokens (Engine-Specific Qt Quick Calibration)
+    // =========================================================================
+    readonly property int animDurationFast: 160
+    readonly property int animDurationNormal: 240
+    readonly property int animDurationSlow: 320
+    readonly property int animDurationOpen: 240
+    readonly property int animDurationClose: 180
+
+    // Qt Quick SpringAnimation calibration (tension & damping ratio)
+    readonly property real springStiffness: 4.2
+    readonly property real springDamping: 0.35
+    readonly property real springEpsilon: 0.005
+    readonly property real springGeometryEpsilon: 0.2
+
+    // Restrained easing curves
+    readonly property int easingEntrance: Easing.OutCubic
+    readonly property int easingExit: Easing.InCubic
 
     // =========================================================================
     // Workspace Navigator Metrics
@@ -83,7 +98,7 @@ QtObject {
     readonly property int workspaceHudWidth: 148
     readonly property int workspaceHudSpacing: 10
     readonly property int workspaceHudCornerRadius: 6
-    readonly property int workspaceTransitionDuration: 180
+    readonly property int workspaceTransitionDuration: 240
     readonly property int workspaceTransitionDistance: 20
 
     // Context HUD Palette
@@ -218,10 +233,10 @@ QtObject {
     // =========================================================================
     // Spatial Workspace Transition Tokens (Task 25)
     // =========================================================================
-    readonly property int spatialTransitionDuration: 280
+    readonly property int spatialTransitionDuration: 270
     readonly property int spatialTransitionReticleWidth: 260
     readonly property int spatialTransitionReticleHeight: 48
-    readonly property int spatialTransitionOffset: 36
+    readonly property int spatialTransitionOffset: 28
     readonly property color spatialTransitionBorder: Island.Theme.primary
     readonly property color spatialTransitionGlow: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
 }

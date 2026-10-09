@@ -46,7 +46,7 @@ PanelWindow {
         }
     }
 
-    // Master visual lifecycle envelope (280ms duration)
+    // Master visual lifecycle envelope (~270ms duration)
     ParallelAnimation {
         id: enterExitAnim
 
@@ -56,16 +56,16 @@ PanelWindow {
                 property: "opacity"
                 from: 0.0
                 to: 1.0
-                duration: 50
+                duration: 40
                 easing.type: Easing.OutCubic
             }
-            PauseAnimation { duration: 130 }
+            PauseAnimation { duration: 140 }
             NumberAnimation {
                 target: hudContainer
                 property: "opacity"
                 to: 0.0
-                duration: 100
-                easing.type: Easing.InQuad
+                duration: 90
+                easing.type: Easing.InCubic
             }
         }
 
@@ -75,7 +75,7 @@ PanelWindow {
             property: "x"
             from: 0
             to: (desktopState ? -desktopState.workspaceTransitionDirectionSign : -1) * theme.spatialTransitionOffset
-            duration: 260
+            duration: 220
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
@@ -83,7 +83,7 @@ PanelWindow {
             property: "opacity"
             from: 1.0
             to: 0.0
-            duration: 200
+            duration: 160
             easing.type: Easing.OutCubic
         }
 
@@ -93,7 +93,7 @@ PanelWindow {
             property: "x"
             from: (desktopState ? desktopState.workspaceTransitionDirectionSign : 1) * theme.spatialTransitionOffset
             to: 0
-            duration: 280
+            duration: 240
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
@@ -101,7 +101,7 @@ PanelWindow {
             property: "opacity"
             from: 0.0
             to: 1.0
-            duration: 220
+            duration: 180
             easing.type: Easing.OutCubic
         }
     }

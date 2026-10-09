@@ -418,8 +418,8 @@ PanelWindow {
             target: contentTranslate
             property: "y"
             to: 0
-            duration: 220
-            easing.type: Easing.OutBack
+            duration: 240
+            easing.type: Easing.OutCubic
         }
         NumberAnimation {
             target: content
