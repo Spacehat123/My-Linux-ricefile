@@ -34,22 +34,29 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
+    // Mask strictly to cardBody so clicks outside the floating card pass through 100% to background windows
+    mask: Region {
+        item: cardBody
+        topLeftRadius: cardBody.radius
+        topRightRadius: cardBody.radius
+        bottomLeftRadius: cardBody.radius
+        bottomRightRadius: cardBody.radius
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.open
+        onActivated: {
+            if (desktopState) desktopState.setMediaWidgetOpen(false)
+            root.open = false
+        }
+    }
+
     // =========================================================================
     // DUAL-LAYER UNBREAKABLE HOVER CONTINUITY
-    // HoverHandler on root ensures hovering buttons/child items never drops hover!
+    // HoverHandler directly on cardBody tracks cursor presence across all child items
     // =========================================================================
-    HoverHandler {
-        id: rootHoverHandler
-    }
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        acceptedButtons: Qt.NoButton
-    }
-
-    readonly property bool hovered: rootHoverHandler.hovered || mouseArea.containsMouse
+    readonly property bool hovered: cardHoverHandler.hovered
 
     // =========================================================================
     // MULTI-MEDIA RESOLUTION & STATE
@@ -202,6 +209,10 @@ PanelWindow {
             border.color: Island.Theme.glassBorder
             border.width: 1
             clip: true
+
+            HoverHandler {
+                id: cardHoverHandler
+            }
 
             // =================================================================
             // FULL-WIDGET BOTTOM-UP AUDIO VISUALIZER

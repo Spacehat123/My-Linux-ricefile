@@ -31,11 +31,13 @@ QtObject {
     property bool rightSidebarOpen: false
     property bool bottomBarOpen: false
     property bool mediaWidgetOpen: false
+    property bool stashPocketOpen: false
 
     function setLeftSidebarOpen(val: bool) { leftSidebarOpen = val; }
     function setRightSidebarOpen(val: bool) { rightSidebarOpen = val; }
     function setBottomBarOpen(val: bool) { bottomBarOpen = val; }
     function setMediaWidgetOpen(val: bool) { mediaWidgetOpen = val; }
+    function setStashPocketOpen(val: bool) { stashPocketOpen = val; }
 
     // =========================================================================
     // Spatial Workspace Transition Presentation State

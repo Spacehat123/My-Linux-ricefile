@@ -41,6 +41,7 @@ Scope {
     // Open state for the drawer
     property bool open: false
     property bool justAbsorbed: false
+    readonly property bool hovered: pocketWindow ? Boolean(pocketWindow.windowHovered) : false
 
     function stashActiveWindow() {
         justAbsorbed = true;
@@ -72,7 +73,8 @@ Scope {
     PanelWindow {
         id: pocketWindow
         screen: root.screen
-        visible: !Island.ShellState.gameMode
+        // Unmaps completely when closed and no windows are stashed (0 pixels blocked)
+        visible: (root.open || root.hasStashed || closeAnim.running) && !Island.ShellState.gameMode
 
         anchors {
             right: true
@@ -96,43 +98,65 @@ Scope {
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-        // ---------------------------------------------------------------------
-        // UNBREAKABLE EDGE HOVER CONTINUITY
-        // ---------------------------------------------------------------------
-        Timer {
-            id: closeDebounce
-            interval: 380
-            repeat: false
-            onTriggered: {
-                if (!drawerHover.hovered && !edgeSensorHover.hovered) {
-                    root.open = false;
+        // Input region strictly masked to the visible drawer when open, or only the 28px indicator pill when closed
+        mask: Region {
+            item: root.open ? drawer : (root.hasStashed ? closedPill : null)
+            topLeftRadius: root.open ? drawer.topLeftRadius : (root.hasStashed ? closedPill.topLeftRadius : 0)
+            bottomLeftRadius: root.open ? drawer.bottomLeftRadius : (root.hasStashed ? closedPill.bottomLeftRadius : 0)
+        }
+
+        ParallelAnimation {
+            id: openAnim
+            NumberAnimation {
+                target: drawerTranslate
+                property: "x"
+                to: 0
+                duration: 220
+                easing.type: Easing.OutBack
+            }
+            NumberAnimation {
+                target: drawer
+                property: "opacity"
+                to: 1.0
+                duration: 180
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        ParallelAnimation {
+            id: closeAnim
+            NumberAnimation {
+                target: drawerTranslate
+                property: "x"
+                to: 295
+                duration: 180
+                easing.type: Easing.InCubic
+            }
+            NumberAnimation {
+                target: drawer
+                property: "opacity"
+                to: 0.0
+                duration: 160
+                easing.type: Easing.InQuad
+            }
+        }
+
+        readonly property bool windowHovered: Boolean((drawerHover && drawerHover.hovered) || (closedPillHover && closedPillHover.hovered))
+
+        Connections {
+            target: root
+            function onOpenChanged() {
+                if (root.open) {
+                    closeAnim.stop();
+                    openAnim.start();
+                } else {
+                    openAnim.stop();
+                    closeAnim.start();
                 }
             }
         }
 
-        // 1. Invisible Edge Trigger Sensor Strip on the right border
-        Item {
-            id: edgeSensor
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            width: 8
-            z: 10
-
-            HoverHandler {
-                id: edgeSensorHover
-                onHoveredChanged: {
-                    if (hovered) {
-                        closeDebounce.stop();
-                        root.open = true;
-                    } else if (!drawerHover.hovered) {
-                        closeDebounce.restart();
-                    }
-                }
-            }
-        }
-
-        // 2. Closed-State Mini Indicator Pill (only visible when windows are stashed)
+        // Mini Indicator Pill (only visible when windows are stashed)
         Rectangle {
             id: closedPill
             anchors.right: parent.right
@@ -148,6 +172,23 @@ Scope {
             opacity: root.hasStashed && !root.open ? 1.0 : 0.0
 
             Behavior on opacity { NumberAnimation { duration: 200 } }
+
+            HoverHandler {
+                id: closedPillHover
+                onHoveredChanged: {
+                    if (hovered) {
+                        root.open = true;
+                    }
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    root.toggleStashWorkspace();
+                }
+            }
 
             ColumnLayout {
                 anchors.centerIn: parent
@@ -198,7 +239,7 @@ Scope {
             }
         }
 
-        // 3. Sliding Internal Drawer (Fixed Window, Smooth Hardware Translation)
+        // Sliding Internal Drawer (Fixed Window, Smooth Hardware Translation)
         Rectangle {
             id: drawer
             anchors.right: parent.right
@@ -211,25 +252,15 @@ Scope {
             border.color: Island.Theme.primary
             border.width: 1.5
             clip: true
+            opacity: 0.0
 
             transform: Translate {
                 id: drawerTranslate
-                x: root.open ? 0 : 295
-                Behavior on x {
-                    SpringAnimation { spring: 4.5; damping: 0.38; epsilon: 0.5 }
-                }
+                x: 295
             }
 
             HoverHandler {
                 id: drawerHover
-                onHoveredChanged: {
-                    if (hovered) {
-                        closeDebounce.stop();
-                        root.open = true;
-                    } else if (!edgeSensorHover.hovered) {
-                        closeDebounce.restart();
-                    }
-                }
             }
 
             ColumnLayout {

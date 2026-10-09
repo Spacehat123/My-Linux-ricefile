@@ -1278,6 +1278,12 @@ ShellRoot {
             return JSON.stringify({ success: true, mediaWidgetOpen: desktopState.mediaWidgetOpen });
         }
 
+        property bool stashPocketOpen: desktopState.stashPocketOpen
+        function setStashPocketOpen(val: bool): string {
+            desktopState.setStashPocketOpen(val);
+            return JSON.stringify({ success: true, stashPocketOpen: desktopState.stashPocketOpen });
+        }
+
         property bool gameMode: ShellState.gameMode
         function toggleGameMode(): string {
             ShellState.toggleGameMode();
@@ -1881,6 +1887,7 @@ ShellRoot {
                     Region { item: centerTrigger }
                     Region { item: rightTrigger }
                     Region { item: mediaTrigger }
+                    Region { item: stashTrigger }
                 }
 
                 // 1. Bottom-left -> controls left sidebar opening
@@ -1952,6 +1959,28 @@ ShellRoot {
                         console.log("[pranc-shell] Middle-right media trigger DEACTIVATED")
                         if (!mediaWidget.hovered) {
                             mediaCloseDebounce.restart()
+                        }
+                    }
+                }
+
+                // 5. Upper-right -> controls stash pocket opening (3px edge strip, 0 clicks blocked)
+                EdgeTrigger {
+                    id: stashTrigger
+                    edge: "top-right"
+                    triggerWidth: 3
+                    triggerHeight: 260
+                    anchors.topMargin: Math.round(parent.height * 0.16)
+                    debugColor: "#b868b4"
+
+                    onActivated: {
+                        console.log("[pranc-shell] Upper-right stash trigger ACTIVATED")
+                        stashCloseDebounce.stop()
+                        stashPocket.open = true
+                    }
+                    onDeactivated: {
+                        console.log("[pranc-shell] Upper-right stash trigger DEACTIVATED")
+                        if (!stashPocket.hovered) {
+                            stashCloseDebounce.restart()
                         }
                     }
                 }
@@ -2058,6 +2087,25 @@ ShellRoot {
                 surfaceModel: shellRoot.surfaceModel
                 workspaceManager: shellRoot.workspaceManager
                 compositorActionLayer: shellRoot.compositorActionLayer
+
+                Timer {
+                    id: stashCloseDebounce
+                    interval: 300
+                    repeat: false
+                    onTriggered: {
+                        if (!stashPocket.hovered && !stashTrigger.active) {
+                            stashPocket.open = false
+                        }
+                    }
+                }
+
+                onHoveredChanged: {
+                    if (hovered) {
+                        stashCloseDebounce.stop()
+                    } else if (!stashTrigger.active) {
+                        stashCloseDebounce.restart()
+                    }
+                }
             }
         }
     }
