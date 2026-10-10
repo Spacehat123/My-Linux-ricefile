@@ -18,6 +18,7 @@ PanelWindow {
     property var desktopModel: null
     property var surfaceModel: null
     property var interactionModel: null
+    property var compositorActionLayer: null
 
     // Navigation Tab state: 0 = Glance, 1 = Spaces, 2 = System
     property int currentTab: 0
@@ -626,16 +627,25 @@ PanelWindow {
                     }
 
                     // ---------------------------------------------------------
-                    // DECK 1: SPACES & WINDOW HUB
+                    // DECK 1: SPACES & WINDOW HUB (Lazy Loaded)
                     // ---------------------------------------------------------
-                    Flickable {
-                        id: spacesDeck
+                    Loader {
+                        id: spacesDeckLoader
                         anchors.fill: parent
-                        visible: root.currentTab === 1
-                        contentWidth: width
-                        contentHeight: spacesCol.implicitHeight + 20
-                        boundsBehavior: Flickable.StopAtBounds
-                        clip: true
+                        active: root.currentTab === 1
+                        sourceComponent: spacesDeckComp
+                    }
+
+                    Component {
+                        id: spacesDeckComp
+
+                        Flickable {
+                            id: spacesDeck
+                            anchors.fill: parent
+                            contentWidth: width
+                            contentHeight: spacesCol.implicitHeight + 20
+                            boundsBehavior: Flickable.StopAtBounds
+                            clip: true
 
                         Column {
                             id: spacesCol
@@ -915,7 +925,11 @@ PanelWindow {
                                                     cursorShape: Qt.PointingHandCursor
                                                     onClicked: {
                                                         if (modelData.address) {
-                                                            Quickshell.execDetached(["hyprctl", "dispatch", "movetoworkspacesilent", "special:stash,address:" + modelData.address]);
+                                                            if (root.compositorActionLayer) {
+                                                                root.compositorActionLayer.executeAction("moveToSpecialWorkspace", modelData.address, { specialWorkspace: "stash", silent: true });
+                                                            } else if (typeof Hyprland !== "undefined" && typeof Hyprland.dispatch === "function") {
+                                                                Hyprland.dispatch("hl.dsp.window.move({ workspace = 'special:stash', window = 'address:" + modelData.address + "', silent = true })");
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -1069,7 +1083,13 @@ PanelWindow {
                                                 cursorShape: Qt.PointingHandCursor
                                                 onClicked: {
                                                     const targetWs = (root.desktopModel && root.desktopModel.focusedWorkspaceId > 0) ? String(root.desktopModel.focusedWorkspaceId) : "1";
-                                                    Quickshell.execDetached(["hyprctl", "dispatch", "movetoworkspace", targetWs + ",address:" + modelData.address]);
+                                                    if (modelData.address) {
+                                                        if (root.compositorActionLayer) {
+                                                            root.compositorActionLayer.executeAction("moveSurfaceToWorkspace", modelData.address, { workspaceId: targetWs });
+                                                        } else if (typeof Hyprland !== "undefined" && typeof Hyprland.dispatch === "function") {
+                                                            Hyprland.dispatch("hl.dsp.window.move({ workspace = " + targetWs + ", window = 'address:" + modelData.address + "' })");
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -1092,18 +1112,28 @@ PanelWindow {
                             }
                         }
                     }
+                    }
 
                     // ---------------------------------------------------------
-                    // DECK 2: SYSTEM TELEMETRY & HARDWARE HUB
+                    // DECK 2: SYSTEM TELEMETRY & HARDWARE HUB (Lazy Loaded)
                     // ---------------------------------------------------------
-                    Flickable {
-                        id: systemDeck
+                    Loader {
+                        id: systemDeckLoader
                         anchors.fill: parent
-                        visible: root.currentTab === 2
-                        contentWidth: width
-                        contentHeight: systemCol.implicitHeight + 20
-                        boundsBehavior: Flickable.StopAtBounds
-                        clip: true
+                        active: root.currentTab === 2
+                        sourceComponent: systemDeckComp
+                    }
+
+                    Component {
+                        id: systemDeckComp
+
+                        Flickable {
+                            id: systemDeck
+                            anchors.fill: parent
+                            contentWidth: width
+                            contentHeight: systemCol.implicitHeight + 20
+                            boundsBehavior: Flickable.StopAtBounds
+                            clip: true
 
                         Column {
                             id: systemCol
@@ -1836,6 +1866,7 @@ PanelWindow {
                         }
                     }
                 }
+            }
             }
         }
     }

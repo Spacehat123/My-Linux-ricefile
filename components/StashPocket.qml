@@ -47,19 +47,32 @@ Scope {
 
     function stashActiveWindow() {
         justAbsorbed = true;
-        Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.window.move({ workspace = 'special:stash', silent = true })"]);
+        if (compositorActionLayer) {
+            compositorActionLayer.executeAction("moveToSpecialWorkspace", null, { specialWorkspace: "stash", silent: true });
+        } else if (typeof Hyprland !== "undefined" && typeof Hyprland.dispatch === "function") {
+            Hyprland.dispatch("hl.dsp.window.move({ workspace = 'special:stash', silent = true })");
+        }
         absorbedResetTimer.restart();
     }
 
     function toggleStashWorkspace() {
-        Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.workspace.toggle_special('stash')"]);
+        if (compositorActionLayer) {
+            compositorActionLayer.executeAction("toggleSpecialWorkspace", "stash", {});
+        } else if (typeof Hyprland !== "undefined" && typeof Hyprland.dispatch === "function") {
+            Hyprland.dispatch("hl.dsp.workspace.toggle_special('stash')");
+        }
     }
 
     function restoreWindow(addr) {
         if (!addr) return;
         const cleanAddr = addr.toString().replace(/^0x/i, "");
-        Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.window.move({ workspace = " + activeWorkspaceId + ", window = 'address:0x" + cleanAddr + "' })"]);
-        Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.focus({ window = 'address:0x" + cleanAddr + "' })"]);
+        if (compositorActionLayer) {
+            compositorActionLayer.executeAction("moveSurfaceToWorkspace", cleanAddr, { workspaceId: activeWorkspaceId });
+            compositorActionLayer.executeAction("focusSurface", cleanAddr, {});
+        } else if (typeof Hyprland !== "undefined" && typeof Hyprland.dispatch === "function") {
+            Hyprland.dispatch("hl.dsp.window.move({ workspace = " + activeWorkspaceId + ", window = 'address:0x" + cleanAddr + "' })");
+            Hyprland.dispatch("hl.dsp.focus({ window = 'address:0x" + cleanAddr + "' })");
+        }
     }
 
     Timer {

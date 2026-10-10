@@ -525,6 +525,8 @@ PanelWindow {
                                 source: root.activePlayer ? (root.activePlayer.trackArtUrl || "") : ""
                                 fillMode: Image.PreserveAspectCrop
                                 asynchronous: true
+                                sourceSize.width: 160
+                                sourceSize.height: 160
                                 visible: status === Image.Ready
                             }
 

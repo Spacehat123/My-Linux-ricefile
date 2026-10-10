@@ -230,6 +230,18 @@ QtObject {
                 return res;
             }
 
+            case "moveToSpecialWorkspace": {
+                res.valid = true;
+                res.reason = "OK";
+                return res;
+            }
+
+            case "toggleSpecialWorkspace": {
+                res.valid = true;
+                res.reason = "OK";
+                return res;
+            }
+
             default:
                 res.reason = "ERR_INVALID_INTENT";
                 return res;
@@ -316,5 +328,13 @@ QtObject {
 
     function requestSurfaceToggleFloating(address: string): bool {
         return requestAction("toggleFloating", address, {});
+    }
+
+    function requestMoveToSpecialWorkspace(targetAddress, specialWorkspace: string, silent: bool): bool {
+        return requestAction("moveToSpecialWorkspace", targetAddress, { specialWorkspace: specialWorkspace, silent: silent });
+    }
+
+    function requestToggleSpecialWorkspace(specialWorkspace: string): bool {
+        return requestAction("toggleSpecialWorkspace", specialWorkspace, {});
     }
 }

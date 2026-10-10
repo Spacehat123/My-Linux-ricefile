@@ -69,7 +69,7 @@ Rectangle {
     // Launch & focus processes
     Process {
         id: launchProcess
-        command: ["sh", "-c", "spotify-launcher &"]
+        command: ["sh", "-c", "spotify-launcher -- --js-flags='--max-old-space-size=256' &"]
     }
 
     Process {
@@ -79,7 +79,11 @@ Rectangle {
 
     function launchOrFocusSpotify() {
         if (root.spotifyPlayer) {
-            focusProcess.running = true;
+            if (typeof Hyprland !== "undefined" && typeof Hyprland.dispatch === "function") {
+                Hyprland.dispatch('hl.dsp.focus({ window = "class:spotify" })');
+            } else {
+                focusProcess.running = true;
+            }
         } else {
             launchProcess.running = true;
         }
@@ -129,6 +133,8 @@ Rectangle {
                     source: root.trackArtUrl
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
+                    sourceSize.width: 128
+                    sourceSize.height: 128
                     visible: status === Image.Ready
                 }
 

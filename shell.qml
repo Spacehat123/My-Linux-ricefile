@@ -2041,6 +2041,7 @@ ShellRoot {
                 desktopModel: shellRoot.desktopModel
                 surfaceModel: shellRoot.surfaceModel
                 interactionModel: shellRoot.interactionModel
+                compositorActionLayer: shellRoot.compositorActionLayer
                 open: (monitorScope.rightSidebarOpen || (shellRoot.desktopState && shellRoot.desktopState.rightSidebarOpen)) && !ShellState.gameMode
 
                 onToggleOverview: shellRoot.overviewOpen = !shellRoot.overviewOpen
@@ -2059,6 +2060,7 @@ ShellRoot {
                 screen: monitorScope.modelData
                 desktopModel: shellRoot.desktopModel
                 interactionModel: shellRoot.interactionModel
+                compositorActionLayer: shellRoot.compositorActionLayer
                 desktopState: shellRoot.desktopState
                 open: (monitorScope.bottomBarOpen || (shellRoot.desktopState && shellRoot.desktopState.bottomBarOpen)) && !ShellState.gameMode
 

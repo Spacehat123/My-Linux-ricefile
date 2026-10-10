@@ -72,7 +72,7 @@ PanelWindow {
             }
             currentIndex = activeIdx;
             animatedIndex = activeIdx;
-            root.forceActiveFocus();
+            keyHandler.forceActiveFocus();
             if (!captureProcess.running) {
                 captureProcess.running = true;
             }
@@ -161,6 +161,7 @@ PanelWindow {
     // Full Keyboard Capture Layer
     // =========================================================================
     Item {
+        id: keyHandler
         focus: root.open
         anchors.fill: parent
 
@@ -211,10 +212,20 @@ PanelWindow {
     // =========================================================================
     // Main Viewport Container
     // =========================================================================
-    Item {
-        id: mainViewport
+    Loader {
+        id: mainViewportLoader
         anchors.fill: parent
-        opacity: root.open ? 1.0 : 0.0
+        active: root.open
+        sourceComponent: mainViewportComp
+    }
+
+    Component {
+        id: mainViewportComp
+
+        Item {
+            id: mainViewport
+            anchors.fill: parent
+            opacity: root.open ? 1.0 : 0.0
 
         Behavior on opacity {
             NumberAnimation {
@@ -579,7 +590,9 @@ PanelWindow {
                             id: cardWallpaper
                             anchors.fill: parent
                             fillMode: Image.PreserveAspectCrop
-                            source: root.wallpaperSource || ""
+                            sourceSize.width: Math.round(mainViewport.cardW)
+                            sourceSize.height: Math.round(mainViewport.cardH)
+                            source: (root.wallpaperSource && !root.wallpaperSource.match(/\.(mp4|webm|mkv|mov|avi)$/i)) ? root.wallpaperSource : ""
                             opacity: 0.75
                             visible: source !== ""
                         }
@@ -774,6 +787,8 @@ PanelWindow {
                                             id: winSnapshot
                                             anchors.fill: parent
                                             fillMode: Image.PreserveAspectCrop
+                                            sourceSize.width: Math.round(parent.width)
+                                            sourceSize.height: Math.round(parent.height)
                                             source: modelData.stableId ? ("file:///tmp/cool-shell-thumbs/" + modelData.stableId + ".jpg?v=" + root.thumbEpoch) : ""
                                             cache: false
                                             asynchronous: true
@@ -1002,5 +1017,6 @@ PanelWindow {
                 }
             }
         }
+    }
     }
 }

@@ -69,7 +69,7 @@ PanelWindow {
                 }
             }
             selectedIndex = focusIdx;
-            root.forceActiveFocus();
+            keyHandler.forceActiveFocus();
         }
     }
 
@@ -78,8 +78,9 @@ PanelWindow {
         const cleanAddr = addr.toString().replace(/^0x/i, "");
         if (compositorActionLayer) {
             compositorActionLayer.focusSurface(cleanAddr);
+        } else if (typeof Hyprland !== "undefined" && typeof Hyprland.dispatch === "function") {
+            Hyprland.dispatch("hl.dsp.focus({ window = \"address:0x" + cleanAddr + "\" })");
         }
-        Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.focus({ window = \"address:0x" + cleanAddr + "\" })"]);
         root.closeRequested();
     }
 
@@ -145,20 +146,30 @@ PanelWindow {
     }
 
     // =========================================================================
-    // Main Viewport Content
+    // Main Viewport Content (Zero-Render when closed via on-demand Loader)
     // =========================================================================
-    Item {
-        id: mainContent
+    Loader {
+        id: mainLoader
         anchors.fill: parent
-        opacity: root.open ? 1.0 : 0.0
-        scale: root.open ? 1.0 : 0.94
+        active: root.open
+        sourceComponent: mainContentComp
+    }
 
-        Behavior on opacity {
-            NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
-        }
-        Behavior on scale {
-            SpringAnimation { spring: 4.2; damping: 0.35; epsilon: 0.005 }
-        }
+    Component {
+        id: mainContentComp
+
+        Item {
+            id: mainContent
+            anchors.fill: parent
+            opacity: root.open ? 1.0 : 0.0
+            scale: root.open ? 1.0 : 0.94
+
+            Behavior on opacity {
+                NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
+            }
+            Behavior on scale {
+                SpringAnimation { spring: 4.2; damping: 0.35; epsilon: 0.005 }
+            }
 
         // ---------------------------------------------------------------------
         // Top Header Pill (Workspace info + controls)
@@ -521,4 +532,5 @@ PanelWindow {
             }
         }
     }
+}
 }

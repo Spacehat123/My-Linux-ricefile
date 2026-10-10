@@ -17,6 +17,7 @@ PanelWindow {
     property var desktopModel: null
     property var interactionModel: null
     property var desktopState: null
+    property var compositorActionLayer: null
 
     // Action signals
     signal toggleOverview()
@@ -396,10 +397,13 @@ PanelWindow {
                                         root.toggleOverview();
                                         return;
                                     }
-                                    if (root.interactionModel && wsSlot.wsId !== -1)
+                                    if (root.interactionModel && wsSlot.wsId !== -1) {
                                         root.interactionModel.requestWorkspaceSwitch(wsSlot.wsId);
-                                    else
-                                        Quickshell.execDetached(["hyprctl", "dispatch", "workspace", String(wsSlot.wsId)]);
+                                    } else if (root.compositorActionLayer && wsSlot.wsId !== -1) {
+                                        root.compositorActionLayer.switchWorkspace(wsSlot.wsId);
+                                    } else if (typeof Hyprland !== "undefined" && typeof Hyprland.dispatch === "function" && wsSlot.wsId !== -1) {
+                                        Hyprland.dispatch("hl.dsp.workspace(" + wsSlot.wsId + ")");
+                                    }
                                 }
                             }
                         }

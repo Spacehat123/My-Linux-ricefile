@@ -119,6 +119,14 @@ QtObject {
                 return toggleFullscreen(String(target ?? ""), p);
             }
 
+            case "moveToSpecialWorkspace": {
+                return moveToSpecialWorkspace(target, p);
+            }
+
+            case "toggleSpecialWorkspace": {
+                return toggleSpecialWorkspace(target, p);
+            }
+
             // Explicitly handled unsupported actions
             case "toggleFloating":
             case "resizeSurface":
@@ -180,6 +188,14 @@ QtObject {
 
         const tl = _findToplevel(clean);
         if (!tl) {
+            if (typeof Hyprland !== "undefined" && typeof Hyprland.dispatch === "function") {
+                try {
+                    Hyprland.dispatch('hl.dsp.focus({ window = "' + _formatWindowSelector(clean) + '" })');
+                    return _result(true, "OK_FALLBACK", "focusSurface", targetAddress, p);
+                } catch (e) {
+                    console.warn("[pranc-shell:action] Hyprland.dispatch focus fallback threw: " + e);
+                }
+            }
             return _result(false, "ERR_TARGET_NOT_FOUND", "focusSurface", targetAddress, p);
         }
 
@@ -207,6 +223,16 @@ QtObject {
                 executed = true;
             } catch (e) {
                 console.warn("[pranc-shell:action] tl.wayland.activate() threw: " + e);
+            }
+        }
+
+        // Secondary call: native in-process Hyprland Lua dispatch
+        if (!executed && typeof Hyprland !== "undefined" && typeof Hyprland.dispatch === "function") {
+            try {
+                Hyprland.dispatch('hl.dsp.focus({ window = "' + _formatWindowSelector(clean) + '" })');
+                executed = true;
+            } catch (e) {
+                console.warn("[pranc-shell:action] Hyprland.dispatch focus threw: " + e);
             }
         }
 
@@ -254,7 +280,7 @@ QtObject {
     // =========================================================================
     // Approved Action 4: Move Surface to Workspace
     // =========================================================================
-    function moveSurfaceToWorkspace(targetAddress: string, targetWorkspaceId: int, payload) {
+    function moveSurfaceToWorkspace(targetAddress: string, targetWorkspaceId, payload) {
         const p = payload ?? {};
         const clean = _cleanAddress(targetAddress);
 
@@ -262,32 +288,25 @@ QtObject {
             return _result(false, "ERR_TARGET_NOT_FOUND", "moveSurfaceToWorkspace", targetAddress, p);
         }
 
-        if (isNaN(targetWorkspaceId) || targetWorkspaceId === undefined || targetWorkspaceId === null) {
+        if (targetWorkspaceId === undefined || targetWorkspaceId === null) {
             return _result(false, "ERR_TARGET_NOT_FOUND", "moveSurfaceToWorkspace", targetAddress, p);
         }
 
         const tl = _findToplevel(clean);
-        if (!tl) {
-            return _result(false, "ERR_TARGET_NOT_FOUND", "moveSurfaceToWorkspace", targetAddress, p);
-        }
-
-        // Resolve target workspace existence
-        const ws = workspaceManager ? workspaceManager.getWorkspaceById(targetWorkspaceId) : null;
-        const modelWs = (!ws && workspaceModel) ? workspaceModel.getWorkspaceById(targetWorkspaceId) : null;
-        if (!ws && !modelWs) {
-            return _result(false, "ERR_TARGET_NOT_FOUND", "moveSurfaceToWorkspace", targetAddress, p);
-        }
+        const selector = _formatWindowSelector(clean);
+        const isSpecial = typeof targetWorkspaceId === "string" && targetWorkspaceId.startsWith("special:");
+        const numWsId = (!isSpecial && !isNaN(parseInt(targetWorkspaceId, 10))) ? parseInt(targetWorkspaceId, 10) : targetWorkspaceId;
 
         // Same-workspace guard
-        if (tl.workspace && tl.workspace.id === targetWorkspaceId) {
+        if (tl && tl.workspace && tl.workspace.id === numWsId) {
             return _result(false, "ERR_ALREADY_ACTIVE", "moveSurfaceToWorkspace", targetAddress, p);
         }
 
         let executed = false;
-        const selector = _formatWindowSelector(clean);
         if (typeof Hyprland !== "undefined" && typeof Hyprland.dispatch === "function") {
             try {
-                const luaCmd = 'hl.dsp.window.move({ workspace = ' + targetWorkspaceId + ', window = "' + selector + '" })';
+                const wsArg = isSpecial ? ('"' + targetWorkspaceId + '"') : String(numWsId);
+                const luaCmd = 'hl.dsp.window.move({ workspace = ' + wsArg + ', window = "' + selector + '" })';
                 Hyprland.dispatch(luaCmd);
                 executed = true;
             } catch (e) {
@@ -356,5 +375,63 @@ QtObject {
     function toggleFloating(targetAddress: string, payload) {
         const p = payload ?? {};
         return _result(false, "ERR_UNSUPPORTED_ACTION", "toggleFloating", targetAddress, p);
+    }
+
+    // =========================================================================
+    // Approved Action 6: Move To Special Workspace (Stash)
+    // =========================================================================
+    function moveToSpecialWorkspace(targetAddress, payload) {
+        const p = payload ?? {};
+        const specialName = p.specialWorkspace ? String(p.specialWorkspace) : "stash";
+        const silent = p.silent !== false;
+        const clean = targetAddress ? _cleanAddress(targetAddress) : "";
+
+        let executed = false;
+        if (typeof Hyprland !== "undefined" && typeof Hyprland.dispatch === "function") {
+            try {
+                let luaCmd = "";
+                if (clean) {
+                    const selector = _formatWindowSelector(clean);
+                    luaCmd = 'hl.dsp.window.move({ workspace = "special:' + specialName + '", window = "' + selector + '", silent = ' + silent + ' })';
+                } else {
+                    luaCmd = 'hl.dsp.window.move({ workspace = "special:' + specialName + '", silent = ' + silent + ' })';
+                }
+                Hyprland.dispatch(luaCmd);
+                executed = true;
+            } catch (e) {
+                console.warn("[pranc-shell:action] Hyprland.dispatch moveToSpecialWorkspace threw: " + e);
+            }
+        }
+
+        if (!executed) {
+            return _result(false, "ERR_NATIVE_API_UNAVAILABLE", "moveToSpecialWorkspace", targetAddress, p);
+        }
+
+        return _result(true, "OK", "moveToSpecialWorkspace", targetAddress, p);
+    }
+
+    // =========================================================================
+    // Approved Action 7: Toggle Special Workspace
+    // =========================================================================
+    function toggleSpecialWorkspace(specialName: string, payload) {
+        const p = payload ?? {};
+        const name = specialName ? String(specialName).replace(/^special:/i, "") : "stash";
+
+        let executed = false;
+        if (typeof Hyprland !== "undefined" && typeof Hyprland.dispatch === "function") {
+            try {
+                const luaCmd = 'hl.dsp.workspace.toggle_special("' + name + '")';
+                Hyprland.dispatch(luaCmd);
+                executed = true;
+            } catch (e) {
+                console.warn("[pranc-shell:action] Hyprland.dispatch toggleSpecialWorkspace threw: " + e);
+            }
+        }
+
+        if (!executed) {
+            return _result(false, "ERR_NATIVE_API_UNAVAILABLE", "toggleSpecialWorkspace", specialName, p);
+        }
+
+        return _result(true, "OK", "toggleSpecialWorkspace", specialName, p);
     }
 }
