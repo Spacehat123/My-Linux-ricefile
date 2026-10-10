@@ -34,18 +34,23 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-    // Mask covers cardBody and the edge hoverBridge so moving across the 12px margin never drops pointer events
-    mask: Region {
-        Region {
-            item: cardBody
-            topLeftRadius: cardBody ? cardBody.radius : 0
-            topRightRadius: cardBody ? cardBody.radius : 0
-            bottomLeftRadius: cardBody ? cardBody.radius : 0
-            bottomRightRadius: cardBody ? cardBody.radius : 0
+    // Root-level full-coverage hover guards (outside content translation)
+    // Ensures cursor entering from the screen edge is captured instantly with zero dead zone
+    Item {
+        id: rootHoverGuard
+        anchors.fill: parent
+
+        HoverHandler {
+            id: rootHoverHandler
+            enabled: root.open
         }
-        Region {
-            item: hoverBridge
-        }
+    }
+
+    MouseArea {
+        id: windowMouseArea
+        anchors.fill: parent
+        hoverEnabled: true
+        acceptedButtons: Qt.NoButton
     }
 
     Shortcut {
@@ -58,12 +63,14 @@ PanelWindow {
     }
 
     // =========================================================================
-    // DUAL-LAYER UNBREAKABLE HOVER CONTINUITY
-    // Full-coverage cardMouseArea + cardHoverHandler + bridgeMouse ensures pointer hover never drops
+    // MULTI-LAYER UNBREAKABLE HOVER CONTINUITY
+    // Root rootHoverHandler + windowMouseArea + cardMouseArea + cardHoverHandler
     // =========================================================================
-    readonly property bool hovered: (cardMouseArea && cardMouseArea.containsMouse)
+    readonly property bool hovered: (rootHoverHandler && rootHoverHandler.hovered)
+        || (windowMouseArea && windowMouseArea.containsMouse)
+        || (cardMouseArea && cardMouseArea.containsMouse)
         || (cardHoverHandler && cardHoverHandler.hovered)
-        || (bridgeMouse && bridgeMouse.containsMouse)
+    readonly property bool isAnimating: openAnim.running || closeAnim.running
 
     // =========================================================================
     // MULTI-MEDIA RESOLUTION & STATE
@@ -886,22 +893,6 @@ PanelWindow {
                         }
                     }
                 }
-            }
-        }
-
-        // Invisible pointer bridge connecting the card to the screen edge
-        Item {
-            id: hoverBridge
-            anchors.right: parent.right
-            anchors.left: cardBody.right
-            anchors.top: cardBody.top
-            anchors.bottom: cardBody.bottom
-
-            MouseArea {
-                id: bridgeMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                acceptedButtons: Qt.NoButton
             }
         }
     }

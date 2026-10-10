@@ -12,6 +12,7 @@ Scope {
     property var surfaceModel: null
     property var workspaceManager: null
     property var compositorActionLayer: null
+    property var desktopState: null
 
     readonly property real screenW: root.screen ? root.screen.width : 1920
     readonly property real screenH: root.screen ? root.screen.height : 1080
@@ -42,6 +43,7 @@ Scope {
     property bool open: false
     property bool justAbsorbed: false
     readonly property bool hovered: pocketWindow ? Boolean(pocketWindow.windowHovered) : false
+    readonly property bool isAnimating: pocketWindow ? Boolean(pocketWindow.isAnimating) : false
 
     function stashActiveWindow() {
         justAbsorbed = true;
@@ -98,11 +100,30 @@ Scope {
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-        // Input region strictly masked to the visible drawer when open, or only the 28px indicator pill when closed
+        Item {
+            id: pocketContent
+            anchors.fill: parent
+
+            HoverHandler {
+                id: rootHoverHandler
+                enabled: root.open
+            }
+        }
+
+        // Input region: full window when open, strictly the 28px indicator pill when closed
         mask: Region {
-            item: root.open ? drawer : (root.hasStashed ? closedPill : null)
-            topLeftRadius: root.open ? drawer.topLeftRadius : (root.hasStashed ? closedPill.topLeftRadius : 0)
-            bottomLeftRadius: root.open ? drawer.bottomLeftRadius : (root.hasStashed ? closedPill.bottomLeftRadius : 0)
+            item: root.open ? pocketContent : (root.hasStashed ? closedPill : null)
+            topLeftRadius: root.open ? 0 : (root.hasStashed ? closedPill.topLeftRadius : 0)
+            bottomLeftRadius: root.open ? 0 : (root.hasStashed ? closedPill.bottomLeftRadius : 0)
+        }
+
+        // Full-coverage root hover boundary outside drawer translation
+        MouseArea {
+            id: windowMouseArea
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
+            enabled: root.open
         }
 
         ParallelAnimation {
@@ -142,10 +163,13 @@ Scope {
         }
 
         readonly property bool windowHovered: Boolean(
+            (rootHoverHandler && rootHoverHandler.hovered) ||
+            (windowMouseArea && windowMouseArea.containsMouse) ||
             (drawerMouseArea && drawerMouseArea.containsMouse) ||
             (drawerHover && drawerHover.hovered) ||
             (closedPillHover && closedPillHover.hovered)
         )
+        readonly property bool isAnimating: openAnim.running || closeAnim.running
 
         Connections {
             target: root
@@ -181,6 +205,7 @@ Scope {
                 id: closedPillHover
                 onHoveredChanged: {
                     if (hovered) {
+                        if (root.desktopState) root.desktopState.setStashPocketOpen(true);
                         root.open = true;
                     }
                 }

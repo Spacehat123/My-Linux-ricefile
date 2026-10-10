@@ -1829,6 +1829,7 @@ ShellRoot {
             property bool rightSidebarOpen: false
             property bool bottomBarOpen: false
             property bool mediaWidgetOpen: false
+            property bool stashPocketOpen: false
 
             // GPU-Accelerated Live MP4 Video Wallpaper (WlrLayer.Background)
             Wallpaper {
@@ -1957,7 +1958,7 @@ ShellRoot {
                     }
                     onDeactivated: {
                         console.log("[pranc-shell] Middle-right media trigger DEACTIVATED")
-                        if (!mediaWidget.hovered) {
+                        if (!mediaWidget.hovered && !mediaWidget.isAnimating) {
                             mediaCloseDebounce.restart()
                         }
                     }
@@ -1975,11 +1976,12 @@ ShellRoot {
                     onActivated: {
                         console.log("[pranc-shell] Upper-right stash trigger ACTIVATED")
                         stashCloseDebounce.stop()
-                        stashPocket.open = true
+                        monitorScope.stashPocketOpen = true
+                        if (shellRoot.desktopState) shellRoot.desktopState.setStashPocketOpen(true)
                     }
                     onDeactivated: {
                         console.log("[pranc-shell] Upper-right stash trigger DEACTIVATED")
-                        if (!stashPocket.hovered) {
+                        if (!stashPocket.hovered && !stashPocket.isAnimating) {
                             stashCloseDebounce.restart()
                         }
                     }
@@ -2061,7 +2063,7 @@ ShellRoot {
 
                 Timer {
                     id: mediaCloseDebounce
-                    interval: 600
+                    interval: 800
                     repeat: false
                     onTriggered: {
                         if (!mediaWidget.hovered && !mediaTrigger.active) {
@@ -2087,14 +2089,17 @@ ShellRoot {
                 surfaceModel: shellRoot.surfaceModel
                 workspaceManager: shellRoot.workspaceManager
                 compositorActionLayer: shellRoot.compositorActionLayer
+                desktopState: shellRoot.desktopState
+                open: (monitorScope.stashPocketOpen || (shellRoot.desktopState && shellRoot.desktopState.stashPocketOpen)) && !ShellState.gameMode
 
                 Timer {
                     id: stashCloseDebounce
-                    interval: 600
+                    interval: 800
                     repeat: false
                     onTriggered: {
                         if (!stashPocket.hovered && !stashTrigger.active) {
-                            stashPocket.open = false
+                            monitorScope.stashPocketOpen = false
+                            if (shellRoot.desktopState) shellRoot.desktopState.setStashPocketOpen(false)
                         }
                     }
                 }
