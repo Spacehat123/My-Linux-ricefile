@@ -2061,7 +2061,7 @@ ShellRoot {
 
                 Timer {
                     id: mediaCloseDebounce
-                    interval: 350
+                    interval: 600
                     repeat: false
                     onTriggered: {
                         if (!mediaWidget.hovered && !mediaTrigger.active) {
@@ -2090,7 +2090,7 @@ ShellRoot {
 
                 Timer {
                     id: stashCloseDebounce
-                    interval: 300
+                    interval: 600
                     repeat: false
                     onTriggered: {
                         if (!stashPocket.hovered && !stashTrigger.active) {

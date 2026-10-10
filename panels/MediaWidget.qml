@@ -34,13 +34,18 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-    // Mask strictly to cardBody so clicks outside the floating card pass through 100% to background windows
+    // Mask covers cardBody and the edge hoverBridge so moving across the 12px margin never drops pointer events
     mask: Region {
-        item: cardBody
-        topLeftRadius: cardBody.radius
-        topRightRadius: cardBody.radius
-        bottomLeftRadius: cardBody.radius
-        bottomRightRadius: cardBody.radius
+        Region {
+            item: cardBody
+            topLeftRadius: cardBody ? cardBody.radius : 0
+            topRightRadius: cardBody ? cardBody.radius : 0
+            bottomLeftRadius: cardBody ? cardBody.radius : 0
+            bottomRightRadius: cardBody ? cardBody.radius : 0
+        }
+        Region {
+            item: hoverBridge
+        }
     }
 
     Shortcut {
@@ -54,9 +59,11 @@ PanelWindow {
 
     // =========================================================================
     // DUAL-LAYER UNBREAKABLE HOVER CONTINUITY
-    // HoverHandler directly on cardBody tracks cursor presence across all child items
+    // Full-coverage cardMouseArea + cardHoverHandler + bridgeMouse ensures pointer hover never drops
     // =========================================================================
-    readonly property bool hovered: cardHoverHandler.hovered
+    readonly property bool hovered: (cardMouseArea && cardMouseArea.containsMouse)
+        || (cardHoverHandler && cardHoverHandler.hovered)
+        || (bridgeMouse && bridgeMouse.containsMouse)
 
     // =========================================================================
     // MULTI-MEDIA RESOLUTION & STATE
@@ -212,6 +219,14 @@ PanelWindow {
 
             HoverHandler {
                 id: cardHoverHandler
+            }
+
+            // Full-coverage non-blocking hover area across entire card
+            MouseArea {
+                id: cardMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                acceptedButtons: Qt.NoButton
             }
 
             // =================================================================
@@ -871,6 +886,22 @@ PanelWindow {
                         }
                     }
                 }
+            }
+        }
+
+        // Invisible pointer bridge connecting the card to the screen edge
+        Item {
+            id: hoverBridge
+            anchors.right: parent.right
+            anchors.left: cardBody.right
+            anchors.top: cardBody.top
+            anchors.bottom: cardBody.bottom
+
+            MouseArea {
+                id: bridgeMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                acceptedButtons: Qt.NoButton
             }
         }
     }

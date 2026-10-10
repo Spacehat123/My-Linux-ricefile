@@ -141,7 +141,11 @@ Scope {
             }
         }
 
-        readonly property bool windowHovered: Boolean((drawerHover && drawerHover.hovered) || (closedPillHover && closedPillHover.hovered))
+        readonly property bool windowHovered: Boolean(
+            (drawerMouseArea && drawerMouseArea.containsMouse) ||
+            (drawerHover && drawerHover.hovered) ||
+            (closedPillHover && closedPillHover.hovered)
+        )
 
         Connections {
             target: root
@@ -261,6 +265,14 @@ Scope {
 
             HoverHandler {
                 id: drawerHover
+            }
+
+            // Full-coverage non-blocking hover area across entire drawer
+            MouseArea {
+                id: drawerMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                acceptedButtons: Qt.NoButton
             }
 
             ColumnLayout {
