@@ -44,7 +44,7 @@ QtObject {
     // =========================================================================
 
     // Lookup workspace by integer ID
-    function getWorkspaceById(id: int) {
+    function getWorkspaceById(id: int): var {
         if (!workspaceList) return null;
         for (let i = 0; i < workspaceList.length; ++i) {
             const ws = workspaceList[i];
@@ -54,7 +54,7 @@ QtObject {
     }
 
     // Lookup workspace by string name
-    function getWorkspaceByName(name: string) {
+    function getWorkspaceByName(name: string): var {
         if (!workspaceList) return null;
         for (let i = 0; i < workspaceList.length; ++i) {
             const ws = workspaceList[i];
@@ -64,14 +64,14 @@ QtObject {
     }
 
     // Retrieve all toplevels residing on a specific workspace ID
-    function getToplevelsForWorkspace(workspaceId: int) {
+    function getToplevelsForWorkspace(workspaceId: int): var {
         const ws = getWorkspaceById(workspaceId);
         if (!ws || !ws.toplevels || !ws.toplevels.values) return [];
         return ws.toplevels.values;
     }
 
     // Retrieve all workspaces bound to a monitor (by ID, name, or HyprlandMonitor reference)
-    function getWorkspacesForMonitor(monitor) {
+    function getWorkspacesForMonitor(monitor): var {
         if (!workspaceList) return [];
         const result = [];
         for (let i = 0; i < workspaceList.length; ++i) {

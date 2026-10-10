@@ -308,7 +308,17 @@ PanelWindow {
                 acceptedButtons: Qt.AllButtons
             }
 
-            property alias activeCategory: root.activeCategory
+            property string activeCategory: root.activeCategory
+            onActiveCategoryChanged: {
+                if (root.activeCategory !== activeCategory) {
+                    root.activeCategory = activeCategory;
+                }
+            }
+            Binding {
+                target: windowCard
+                property: "activeCategory"
+                value: root.activeCategory
+            }
 
             Column {
                 anchors.fill: parent

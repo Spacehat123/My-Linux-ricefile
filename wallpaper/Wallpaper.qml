@@ -22,19 +22,17 @@ PanelWindow {
     onVisibleChanged: _syncPlayback()
 
     function _syncPlayback() {
-        if (!root.visible || root.mediaType !== "video" || root.mediaSource === "") {
+        if (root.mediaType !== "video" || root.mediaSource === "") {
             return;
         }
 
-        if (root.live) {
+        if (root.visible && root.live) {
             if (mediaPlayer.playbackState === MediaPlayer.PausedState || mediaPlayer.playbackState === MediaPlayer.StoppedState) {
                 mediaPlayer.play();
             }
         } else {
             if (mediaPlayer.playbackState === MediaPlayer.PlayingState) {
                 mediaPlayer.pause();
-            } else if (mediaPlayer.playbackState === MediaPlayer.StoppedState) {
-                mediaPlayer.play();
             }
         }
     }
@@ -68,10 +66,7 @@ PanelWindow {
         source: (root.visible && root.mediaType === "video") ? root.mediaSource : ""
         loops: MediaPlayer.Infinite
         videoOutput: videoOutputLayer
-        audioOutput: AudioOutput {
-            muted: true
-            volume: 0.0
-        }
+        audioOutput: null
 
         onMediaStatusChanged: {
             if (mediaStatus === MediaPlayer.LoadedMedia && root.visible) {

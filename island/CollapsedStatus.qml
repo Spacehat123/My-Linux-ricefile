@@ -319,13 +319,6 @@ Item {
                     radius: 1
                     color: Theme.primary
                     opacity: 0.7
-
-                    Behavior on height {
-                        NumberAnimation {
-                            duration: 120
-                            easing.type: Easing.OutCubic
-                        }
-                    }
                 }
             }
         }

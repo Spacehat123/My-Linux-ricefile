@@ -671,17 +671,17 @@ PanelWindow {
             visible: !window.isExpanded && window.mediaActive && !IslandHub.volumeActive
             opacity: 1
 
-            property real animatedFraction: window.mediaFraction
+            property real currentFraction: window.mediaFraction
+            property real lastPaintedFraction: -1
             property color strokeColor: Theme.primary
 
-            Behavior on animatedFraction {
-                NumberAnimation {
-                    duration: 250
-                    easing.type: Easing.OutCubic
+            onCurrentFractionChanged: {
+                if (!visible) return;
+                if (Math.abs(currentFraction - lastPaintedFraction) >= 0.005 || currentFraction <= 0.001 || currentFraction >= 0.999) {
+                    lastPaintedFraction = currentFraction;
+                    requestPaint();
                 }
             }
-
-            onAnimatedFractionChanged: requestPaint()
             onStrokeColorChanged: requestPaint()
             onWidthChanged: requestPaint()
             onHeightChanged: requestPaint()
@@ -727,7 +727,7 @@ PanelWindow {
                 const ctx = getContext("2d");
                 ctx.clearRect(0, 0, width, height);
 
-                const fraction = Math.max(0, Math.min(1, animatedFraction));
+                const fraction = Math.max(0, Math.min(1, currentFraction));
                 if (fraction <= 0.0001 || width <= 0 || height <= 0)
                     return;
 

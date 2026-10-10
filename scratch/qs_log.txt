@@ -1,9 +1,9 @@
 [32m  INFO[0m: Launching config: "/home/pranc/.config/quickshell/cool-shell/shell.qml"
 [32m  INFO[0m: Shell ID: "17d0c95732d7597af119b7a075f377f9" Path ID "17d0c95732d7597af119b7a075f377f9"
-[32m  INFO[0m: Saving logs to "/run/user/1000/quickshell/by-id/hmn5rw8pmt/log.qslog"
+[32m  INFO[0m: Saving logs to "/run/user/1000/quickshell/by-id/3a617gipmt/log.qslog"
 [32m  INFO[0m: QML tooling support enabled
 [32m  INFO[97m qt.multimedia.ffmpeg[0m: Using Qt multimedia with FFmpeg version n9.0.2 GPL version 3 or later
-[33m  WARN[97m scene[0m: QML MouseArea at @panels/BottomBar.qml[310:13]: Cannot anchor to an item that isn't a parent or sibling.
+[33m  WARN[97m scene[0m: QML MouseArea at @panels/BottomBar.qml[315:13]: Cannot anchor to an item that isn't a parent or sibling.
 [33m  WARN[97m scene[0m: QML IpcHandler at @shell.qml[1572:5]: Signal detected: "openChanged"
 [33m  WARN[97m scene[0m: QML IpcHandler at @shell.qml[1547:5]: Signal detected: "openChanged"
 [33m  WARN[97m scene[0m: QML IpcHandler at @shell.qml[1522:5]: Signal detected: "enabledChanged"
@@ -98,4 +98,131 @@
 [33m  WARN[97m scene[0m: QML IpcHandler at @shell.qml[336:5]: Signal detected: "autoPauseOnOpaqueChanged"
 [33m  WARN[97m scene[0m: QML IpcHandler at @shell.qml[336:5]: Signal detected: "liveChanged"
 [32m  INFO[0m: Configuration Loaded
-[31m ERROR[0m: Failed to write daemon exit command with error code 32: "Broken pipe"
+[33m  WARN[0m: Could not load icon "brave-browser?fallback=application-x-executable" at size QSize(20, 20) from request
+[33m  WARN[0m: Could not load icon "Spotify?fallback=application-x-executable" at size QSize(20, 20) from request
+[33m  WARN[0m: Could not load icon "Xdg-desktop-portal-gtk?fallback=application-x-executable" at size QSize(20, 20) from request
+[33m  WARN[0m: Could not load icon "brave-browser" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "brave-browser" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "brave-browser" at size QSize(13, 13) from request
+[33m  WARN[0m: Could not load icon "brave-browser" at size QSize(32, 32) from request
+[33m  WARN[0m: Could not load icon "Spotify" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "Spotify" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "Spotify" at size QSize(13, 13) from request
+[33m  WARN[0m: Could not load icon "Spotify" at size QSize(32, 32) from request
+[33m  WARN[0m: Could not load icon "Xdg-desktop-portal-gtk" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "Xdg-desktop-portal-gtk" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "Xdg-desktop-portal-gtk" at size QSize(13, 13) from request
+[33m  WARN[0m: Could not load icon "Xdg-desktop-portal-gtk" at size QSize(32, 32) from request
+[33m  WARN[0m: QQuickShaderEffectSource::textureProvider: can only be queried on the rendering thread of an exposed window
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000032.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000032.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/1800002e.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/1800002e.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000032.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/1800002e.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000032.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/1800002e.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000032.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/1800003b.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/1800003b.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/1800002e.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000032.jpg?v=0
+[33m  WARN[97m scene[0m: @panels/SettingsWindow.qml[41:-1]: ReferenceError: NetworkDeviceType is not defined
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[34m DEBUG[97m qml[0m: [pranc-shell] IPC setMedia: video file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/1800002e.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000032.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[34m DEBUG[97m qml[0m: [pranc-shell] Middle-right media trigger ACTIVATED
+[34m DEBUG[97m qml[0m: [pranc-shell] Middle-right media trigger DEACTIVATED
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[34m DEBUG[97m qml[0m: [pranc-shell] Middle-right media trigger ACTIVATED
+[34m DEBUG[97m qml[0m: [pranc-shell] Middle-right media trigger DEACTIVATED
+[33m  WARN[0m: Could not load icon "brave-browser" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "brave-browser" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "Spotify" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "Spotify" at size QSize(2, 2) from request
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/1800002e.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000032.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/1800002e.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000032.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[0m: Could not load icon "Xdg-desktop-portal-gtk" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "Xdg-desktop-portal-gtk" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "Xdg-desktop-portal-gtk" at size QSize(13, 13) from request
+[33m  WARN[0m: Could not load icon "Xdg-desktop-portal-gtk" at size QSize(32, 32) from request
+[33m  WARN[0m: Could not load icon "Xdg-desktop-portal-gtk?fallback=application-x-executable" at size QSize(20, 20) from request
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[578:25]: Error decoding: file:///home/pranc/Pictures/Wallpapers/live/86d39f417b_arknights-endfield-sakura-sanctuary-live-wallpaper-wallsflow-com.mp4: Unsupported image format
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[0m: qs:@/qs/components/SpatialWorkspaceMap.qml:773:41: QML Image: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/1800002e.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000032.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[34m DEBUG[97m qml[0m: [pranc-shell] Middle-right media trigger ACTIVATED
+[34m DEBUG[97m qml[0m: [pranc-shell] Middle-right media trigger DEACTIVATED
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[0m: Could not load icon "brave-browser" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "brave-browser" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "Spotify" at size QSize(2, 2) from request
+[33m  WARN[0m: Could not load icon "Spotify" at size QSize(2, 2) from request
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
+[33m  WARN[0m: QQuickShaderEffectSource::textureProvider: can only be queried on the rendering thread of an exposed window
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000002.jpg?v=0
+[33m  WARN[97m scene[0m: QML Image at @components/SpatialWorkspaceMap.qml[773:41]: Cannot open: file:///tmp/cool-shell-thumbs/18000007.jpg?v=0
