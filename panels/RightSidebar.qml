@@ -217,9 +217,27 @@ PanelWindow {
             anchors.fill: parent
             radius: 24
             color: Qt.tint("#07070a", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.08))
-            border.color: Island.Theme.glassBorder
+            border.color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.3)
             border.width: 1
             clip: true
+
+            // Luminous Left Edge Specular Rim
+            Rectangle {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.topMargin: 36
+                anchors.bottomMargin: 36
+                width: 2
+                radius: 1
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: "transparent" }
+                    GradientStop { position: 0.3; color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.45) }
+                    GradientStop { position: 0.5; color: Island.Theme.primary }
+                    GradientStop { position: 0.7; color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.45) }
+                    GradientStop { position: 1.0; color: "transparent" }
+                }
+            }
 
             Column {
                 anchors.fill: parent
@@ -227,102 +245,177 @@ PanelWindow {
                 spacing: 12
 
                 // =============================================================
-                // 1. TOP HEADER & CLOSE BUTTON
+                // 1. TOP HEADER & CLOSE BUTTON (VALENCE BRANDING)
                 // =============================================================
                 Item {
                     width: parent.width
-                    height: 40
+                    height: 44
 
                     Row {
                         anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 8
+                        spacing: 10
 
+                        // Geometric Emblem
                         Rectangle {
-                            width: 8
-                            height: 8
-                            radius: 4
-                            color: Island.Theme.primary
+                            width: 32
+                            height: 32
+                            radius: 8
+                            color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.14)
+                            border.color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.4)
+                            border.width: 1
                             anchors.verticalCenter: parent.verticalCenter
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "◈"
+                                font.pixelSize: 13
+                                color: Island.Theme.primary
+                            }
                         }
 
                         Column {
-                            spacing: 1
-                            Text {
-                                text: "NEXUS HUB"
-                                font.family: Island.Theme.fontFamily
-                                font.pixelSize: 13
-                                font.weight: Font.Bold
-                                font.letterSpacing: 1.2
-                                color: Island.Theme.foreground
+                            spacing: 2
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Row {
+                                spacing: 6
+                                Text {
+                                    text: "V A L E N C E"
+                                    font.family: Island.Theme.fontFamily
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                    font.letterSpacing: 3.5
+                                    color: Island.Theme.foreground
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Rectangle {
+                                    height: 14
+                                    width: 38
+                                    radius: 7
+                                    color: Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.15)
+                                    border.color: Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.35)
+                                    border.width: 1
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "SYNC"
+                                        font.family: Island.Theme.fontFamily
+                                        font.pixelSize: 8
+                                        font.bold: true
+                                        color: Island.Theme.green
+                                    }
+                                }
                             }
+
                             Text {
-                                text: Qt.formatDateTime(new Date(), "ddd d MMM") + (Island.WeatherState.tempC !== "" ? (" • " + Island.WeatherState.tempC) : "")
+                                text: "SURFACE DECK // " + (root.desktopModel && root.desktopModel.focusedWorkspaceName ? ("WORKSPACE " + root.desktopModel.focusedWorkspaceName) : "ACTIVE")
                                 font.family: Island.Theme.fontFamily
-                                font.pixelSize: 9
-                                font.weight: Font.Medium
-                                color: Island.Theme.muted
+                                font.pixelSize: 8
+                                font.letterSpacing: 1.0
+                                color: Island.Theme.mutedDark
                             }
                         }
                     }
 
-                    // Close Button
-                    Rectangle {
+                    // Header Right: Date Pill & Close Button
+                    Row {
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
-                        width: 28
-                        height: 28
-                        radius: 14
-                        color: closeBtnMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.05)
-                        border.color: Island.Theme.glassBorderSubtle
-                        border.width: 1
+                        spacing: 8
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: "✕"
-                            font.family: Island.Theme.fontFamily
-                            font.pixelSize: 11
-                            color: closeBtnMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted
+                        Rectangle {
+                            height: 28
+                            radius: 14
+                            color: Qt.rgba(1, 1, 1, 0.04)
+                            border.color: Island.Theme.glassBorderSubtle
+                            border.width: 1
+                            implicitWidth: headerDateText.implicitWidth + 20
+
+                            Text {
+                                id: headerDateText
+                                anchors.centerIn: parent
+                                text: Qt.formatDateTime(new Date(), "ddd d") + (Island.WeatherState.tempC !== "" ? (" • " + Island.WeatherState.tempC) : "")
+                                font.family: Island.Theme.fontFamily
+                                font.pixelSize: 10
+                                font.bold: true
+                                color: Island.Theme.muted
+                            }
                         }
 
-                        MouseArea {
-                            id: closeBtnMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (root.desktopState) root.desktopState.setRightSidebarOpen(false);
-                                else root.open = false;
+                        // Close Button
+                        Rectangle {
+                            width: 28
+                            height: 28
+                            radius: 14
+                            color: closeBtnMouse.containsMouse ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.25) : Qt.rgba(1, 1, 1, 0.05)
+                            border.color: closeBtnMouse.containsMouse ? Island.Theme.red : Island.Theme.glassBorderSubtle
+                            border.width: 1
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✕"
+                                font.family: Island.Theme.fontFamily
+                                font.pixelSize: 11
+                                color: closeBtnMouse.containsMouse ? Island.Theme.red : Island.Theme.muted
+                            }
+
+                            MouseArea {
+                                id: closeBtnMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (root.desktopState) root.desktopState.setRightSidebarOpen(false);
+                                    else root.open = false;
+                                }
                             }
                         }
                     }
                 }
 
                 // =============================================================
-                // 2. SEGMENTED TAB SWITCHER PILL BAR
+                // 2. MAGNETIC SLIDING PILL TAB RAIL
                 // =============================================================
                 Rectangle {
+                    id: tabTrack
                     width: parent.width
-                    height: 36
-                    radius: 18
-                    color: Qt.rgba(0, 0, 0, 0.35)
+                    height: 38
+                    radius: 19
+                    color: Qt.rgba(0, 0, 0, 0.40)
                     border.color: Island.Theme.glassBorderSubtle
                     border.width: 1
 
+                    // Sliding Active Capsule Highlight
+                    Rectangle {
+                        id: tabHighlight
+                        width: (tabTrack.width - 8) / 3
+                        height: tabTrack.height - 8
+                        y: 4
+                        x: 4 + root.currentTab * width
+                        radius: 15
+                        color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25)
+                        border.color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.65)
+                        border.width: 1
+
+                        Behavior on x {
+                            NumberAnimation {
+                                duration: 250
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                    }
+
                     Row {
                         anchors.fill: parent
-                        anchors.margins: 3
-                        spacing: 3
+                        anchors.margins: 4
 
-                        // Tab 0: Glance
-                        Rectangle {
-                            width: (parent.width - 6) / 3
+                        // Tab 0: Chrono
+                        Item {
+                            width: (parent.width) / 3
                             height: parent.height
-                            radius: 15
-                            color: root.currentTab === 0 ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25) : (tab0Mouse.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : "transparent")
-                            border.color: root.currentTab === 0 ? Island.Theme.primary : "transparent"
-                            border.width: root.currentTab === 0 ? 1 : 0
-
                             Row {
                                 anchors.centerIn: parent
                                 spacing: 6
@@ -334,15 +427,15 @@ PanelWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                                 Text {
-                                    text: "Glance"
+                                    text: "CHRONO"
                                     font.family: Island.Theme.fontFamily
-                                    font.pixelSize: 11
-                                    font.bold: root.currentTab === 0
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    font.letterSpacing: 1.1
                                     color: root.currentTab === 0 ? Island.Theme.foreground : (tab0Mouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted)
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
-
                             MouseArea {
                                 id: tab0Mouse
                                 anchors.fill: parent
@@ -352,15 +445,10 @@ PanelWindow {
                             }
                         }
 
-                        // Tab 1: Spaces
-                        Rectangle {
-                            width: (parent.width - 6) / 3
+                        // Tab 1: Surfaces
+                        Item {
+                            width: (parent.width) / 3
                             height: parent.height
-                            radius: 15
-                            color: root.currentTab === 1 ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25) : (tab1Mouse.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : "transparent")
-                            border.color: root.currentTab === 1 ? Island.Theme.primary : "transparent"
-                            border.width: root.currentTab === 1 ? 1 : 0
-
                             Row {
                                 anchors.centerIn: parent
                                 spacing: 6
@@ -372,15 +460,15 @@ PanelWindow {
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                                 Text {
-                                    text: "Spaces"
+                                    text: "SURFACES"
                                     font.family: Island.Theme.fontFamily
-                                    font.pixelSize: 11
-                                    font.bold: root.currentTab === 1
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    font.letterSpacing: 1.1
                                     color: root.currentTab === 1 ? Island.Theme.foreground : (tab1Mouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted)
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
-
                             MouseArea {
                                 id: tab1Mouse
                                 anchors.fill: parent
@@ -390,35 +478,30 @@ PanelWindow {
                             }
                         }
 
-                        // Tab 2: System
-                        Rectangle {
-                            width: (parent.width - 6) / 3
+                        // Tab 2: Telemetry
+                        Item {
+                            width: (parent.width) / 3
                             height: parent.height
-                            radius: 15
-                            color: root.currentTab === 2 ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25) : (tab2Mouse.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : "transparent")
-                            border.color: root.currentTab === 2 ? Island.Theme.primary : "transparent"
-                            border.width: root.currentTab === 2 ? 1 : 0
-
                             Row {
                                 anchors.centerIn: parent
                                 spacing: 6
                                 Text {
-                                    text: "󰍛"
+                                    text: "󰓅"
                                     font.family: Island.Theme.iconFontFamily
                                     font.pixelSize: 12
                                     color: root.currentTab === 2 ? Island.Theme.primary : (tab2Mouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted)
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                                 Text {
-                                    text: "System"
+                                    text: "TELEMETRY"
                                     font.family: Island.Theme.fontFamily
-                                    font.pixelSize: 11
-                                    font.bold: root.currentTab === 2
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    font.letterSpacing: 1.1
                                     color: root.currentTab === 2 ? Island.Theme.foreground : (tab2Mouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted)
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
-
                             MouseArea {
                                 id: tab2Mouse
                                 anchors.fill: parent
@@ -479,32 +562,53 @@ PanelWindow {
                             // Overview Launch Banner
                             Rectangle {
                                 width: parent.width
-                                height: 50
+                                height: 48
                                 radius: 14
-                                color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.12)
-                                border.color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.35)
+                                color: Qt.rgba(0, 0, 0, 0.35)
+                                border.color: Island.Theme.glassBorderSubtle
                                 border.width: 1
 
                                 Item {
                                     anchors.fill: parent
-                                    anchors.margins: 12
+                                    anchors.margins: 10
 
-                                    Column {
+                                    Row {
                                         anchors.left: parent.left
                                         anchors.verticalCenter: parent.verticalCenter
-                                        spacing: 2
-                                        Text {
-                                            text: (root.activeSurfaces.length) + " Active Windows"
-                                            font.family: Island.Theme.fontFamily
-                                            font.pixelSize: 12
-                                            font.bold: true
-                                            color: Island.Theme.foreground
+                                        spacing: 8
+
+                                        Rectangle {
+                                            width: 28
+                                            height: 28
+                                            radius: 6
+                                            color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "󰕰"
+                                                font.family: Island.Theme.iconFontFamily
+                                                font.pixelSize: 13
+                                                color: Island.Theme.primary
+                                            }
                                         }
-                                        Text {
-                                            text: "Workspace: " + (root.desktopModel && root.desktopModel.focusedWorkspaceName ? root.desktopModel.focusedWorkspaceName : "1")
-                                            font.family: Island.Theme.fontFamily
-                                            font.pixelSize: 10
-                                            color: Island.Theme.muted
+
+                                        Column {
+                                            spacing: 1
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            Text {
+                                                text: root.activeSurfaces.length + " ACTIVE WINDOWS"
+                                                font.family: Island.Theme.fontFamily
+                                                font.pixelSize: 11
+                                                font.bold: true
+                                                font.letterSpacing: 0.8
+                                                color: Island.Theme.foreground
+                                            }
+                                            Text {
+                                                text: "WORKSPACE " + (root.desktopModel && root.desktopModel.focusedWorkspaceName ? root.desktopModel.focusedWorkspaceName : "1")
+                                                font.family: Island.Theme.fontFamily
+                                                font.pixelSize: 8
+                                                color: Island.Theme.muted
+                                            }
                                         }
                                     }
 
@@ -512,29 +616,21 @@ PanelWindow {
                                     Rectangle {
                                         anchors.right: parent.right
                                         anchors.verticalCenter: parent.verticalCenter
-                                        height: 28
-                                        width: 100
-                                        radius: 14
-                                        color: overviewBtnMouse.containsMouse ? Island.Theme.primary : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25)
+                                        height: 26
+                                        width: 86
+                                        radius: 13
+                                        color: overviewBtnMouse.containsMouse ? Island.Theme.primary : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.22)
+                                        border.color: overviewBtnMouse.containsMouse ? Island.Theme.primary : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.45)
+                                        border.width: 1
 
-                                        Row {
+                                        Text {
                                             anchors.centerIn: parent
-                                            spacing: 6
-                                            Text {
-                                                text: "󰕰"
-                                                font.family: Island.Theme.iconFontFamily
-                                                font.pixelSize: 11
-                                                color: overviewBtnMouse.containsMouse ? "#ffffff" : Island.Theme.primary
-                                                anchors.verticalCenter: parent.verticalCenter
-                                            }
-                                            Text {
-                                                text: "Overview"
-                                                font.family: Island.Theme.fontFamily
-                                                font.pixelSize: 10
-                                                font.bold: true
-                                                color: overviewBtnMouse.containsMouse ? "#ffffff" : Island.Theme.primary
-                                                anchors.verticalCenter: parent.verticalCenter
-                                            }
+                                            text: "OVERVIEW"
+                                            font.family: Island.Theme.fontFamily
+                                            font.pixelSize: 9
+                                            font.bold: true
+                                            font.letterSpacing: 1.0
+                                            color: overviewBtnMouse.containsMouse ? "#ffffff" : Island.Theme.primary
                                         }
 
                                         MouseArea {
@@ -549,13 +645,24 @@ PanelWindow {
                             }
 
                             // Active Windows List Header
-                            Text {
-                                text: "ACTIVE SURFACES (" + root.activeSurfaces.length + ")"
-                                font.family: Island.Theme.fontFamily
-                                font.pixelSize: 10
-                                font.bold: true
-                                font.letterSpacing: 1.2
-                                color: Island.Theme.muted
+                            Row {
+                                width: parent.width
+                                spacing: 6
+                                Text {
+                                    text: "◈"
+                                    font.pixelSize: 9
+                                    color: Island.Theme.primary
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    text: "ACTIVE SURFACES (" + root.activeSurfaces.length + ")"
+                                    font.family: Island.Theme.fontFamily
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    font.letterSpacing: 1.2
+                                    color: Island.Theme.muted
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
                             }
 
                             // Active Windows Repeater
@@ -570,6 +677,17 @@ PanelWindow {
                                     color: (modelData.activated || winCardMouse.containsMouse) ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(1, 1, 1, 0.03)
                                     border.color: modelData.activated ? Island.Theme.primary : (winCardMouse.containsMouse ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
                                     border.width: 1
+
+                                    // Left Status Indicator Strip
+                                    Rectangle {
+                                        anchors.left: parent.left
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        anchors.margins: 6
+                                        width: 3
+                                        radius: 1.5
+                                        color: modelData.activated ? Island.Theme.primary : (winCardMouse.containsMouse ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.45) : "transparent")
+                                    }
 
                                     Item {
                                         anchors.fill: parent
@@ -760,13 +878,24 @@ PanelWindow {
                             }
 
                             // Stashed Windows Section
-                            Text {
-                                text: "STASH POCKET (" + root.stashedSurfaces.length + ")"
-                                font.family: Island.Theme.fontFamily
-                                font.pixelSize: 10
-                                font.bold: true
-                                font.letterSpacing: 1.2
-                                color: Island.Theme.muted
+                            Row {
+                                width: parent.width
+                                spacing: 6
+                                Text {
+                                    text: "◈"
+                                    font.pixelSize: 9
+                                    color: Island.Theme.yellow
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    text: "STASH VAULT (" + root.stashedSurfaces.length + " DOCKED)"
+                                    font.family: Island.Theme.fontFamily
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    font.letterSpacing: 1.2
+                                    color: Island.Theme.yellow
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
                             }
 
                             Repeater {
@@ -776,8 +905,8 @@ PanelWindow {
                                     width: spacesCol.width
                                     height: 44
                                     radius: 10
-                                    color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.08)
-                                    border.color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25)
+                                    color: Qt.rgba(Island.Theme.yellow.r, Island.Theme.yellow.g, Island.Theme.yellow.b, 0.08)
+                                    border.color: Qt.rgba(Island.Theme.yellow.r, Island.Theme.yellow.g, Island.Theme.yellow.b, 0.25)
                                     border.width: 1
 
                                     Item {
@@ -795,7 +924,7 @@ PanelWindow {
                                                 text: "󰅍"
                                                 font.family: Island.Theme.iconFontFamily
                                                 font.pixelSize: 13
-                                                color: Island.Theme.primary
+                                                color: Island.Theme.yellow
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
                                             Text {
@@ -815,17 +944,20 @@ PanelWindow {
                                             anchors.right: parent.right
                                             anchors.verticalCenter: parent.verticalCenter
                                             height: 24
-                                            width: 64
+                                            width: 68
                                             radius: 6
-                                            color: restoreMouse.containsMouse ? Island.Theme.primary : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.2)
+                                            color: restoreMouse.containsMouse ? Island.Theme.yellow : Qt.rgba(Island.Theme.yellow.r, Island.Theme.yellow.g, Island.Theme.yellow.b, 0.2)
+                                            border.color: restoreMouse.containsMouse ? Island.Theme.yellow : Qt.rgba(Island.Theme.yellow.r, Island.Theme.yellow.g, Island.Theme.yellow.b, 0.4)
+                                            border.width: 1
 
                                             Text {
                                                 anchors.centerIn: parent
-                                                text: "Restore"
+                                                text: "RESTORE"
                                                 font.family: Island.Theme.fontFamily
-                                                font.pixelSize: 9
+                                                font.pixelSize: 8
                                                 font.bold: true
-                                                color: restoreMouse.containsMouse ? "#ffffff" : Island.Theme.primary
+                                                font.letterSpacing: 0.8
+                                                color: restoreMouse.containsMouse ? "#000000" : Island.Theme.yellow
                                             }
 
                                             MouseArea {
@@ -876,210 +1008,328 @@ PanelWindow {
                             width: parent.width
                             spacing: 14
 
-                            // 1. HARDWARE TELEMETRY GAUGES CARD
+                            // 1. HARDWARE TELEMETRY GAUGES CARD (16-Segment LED VU Arrays)
                             Rectangle {
                                 width: parent.width
-                                height: 146
-                                radius: 14
-                                color: Qt.rgba(0, 0, 0, 0.25)
+                                implicitHeight: hwCol.implicitHeight + 28
+                                radius: 16
+                                color: Qt.rgba(0, 0, 0, 0.35)
                                 border.color: Island.Theme.glassBorderSubtle
                                 border.width: 1
 
                                 Column {
-                                    anchors.fill: parent
+                                    id: hwCol
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.top: parent.top
                                     anchors.margins: 14
-                                    spacing: 12
+                                    spacing: 14
 
-                                    Text {
-                                        text: "HARDWARE TELEMETRY"
-                                        font.family: Island.Theme.fontFamily
-                                        font.pixelSize: 10
-                                        font.bold: true
-                                        font.letterSpacing: 1.2
-                                        color: Island.Theme.muted
+                                    Row {
+                                        width: parent.width
+                                        spacing: 6
+                                        Text {
+                                            text: "◈"
+                                            font.pixelSize: 9
+                                            color: Island.Theme.primary
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                        Text {
+                                            text: "HARDWARE // TELEMETRY ARRAY"
+                                            font.family: Island.Theme.fontFamily
+                                            font.pixelSize: 10
+                                            font.bold: true
+                                            font.letterSpacing: 1.2
+                                            color: Island.Theme.muted
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
                                     }
 
-                                    // CPU Gauge
+                                    // CPU Gauge (16-Segment LED VU-Meter)
                                     Column {
                                         width: parent.width
-                                        spacing: 4
+                                        spacing: 6
+
                                         Item {
                                             width: parent.width
                                             height: 16
-                                            Text {
+                                            Row {
                                                 anchors.left: parent.left
                                                 anchors.verticalCenter: parent.verticalCenter
-                                                text: "CPU Load"
-                                                font.family: Island.Theme.fontFamily
-                                                font.pixelSize: 10
-                                                font.bold: true
-                                                color: Island.Theme.foreground
+                                                spacing: 6
+                                                Text {
+                                                    text: "󰍛"
+                                                    font.family: Island.Theme.iconFontFamily
+                                                    font.pixelSize: 12
+                                                    color: Island.Theme.primary
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+                                                Text {
+                                                    text: "CPU COMPUTE"
+                                                    font.family: Island.Theme.fontFamily
+                                                    font.pixelSize: 10
+                                                    font.bold: true
+                                                    font.letterSpacing: 1.0
+                                                    color: Island.Theme.foreground
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
                                             }
                                             Text {
                                                 anchors.right: parent.right
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: root.cpuPct + "%"
                                                 font.family: Island.Theme.fontFamily
-                                                font.pixelSize: 10
+                                                font.pixelSize: 12
                                                 font.bold: true
                                                 color: root.cpuPct > 80 ? Island.Theme.red : Island.Theme.primary
                                             }
                                         }
-                                        Rectangle {
+
+                                        Row {
                                             width: parent.width
-                                            height: 6
-                                            radius: 3
-                                            color: "#20ffffff"
-                                            Rectangle {
-                                                anchors.left: parent.left
-                                                anchors.top: parent.top
-                                                anchors.bottom: parent.bottom
-                                                width: parent.width * Math.max(0.0, Math.min(1.0, root.cpuPct / 100.0))
-                                                radius: 3
-                                                color: root.cpuPct > 80 ? Island.Theme.red : Island.Theme.primary
-                                                Behavior on width { NumberAnimation { duration: 300 } }
+                                            height: 8
+                                            spacing: 3
+
+                                            Repeater {
+                                                model: 16
+                                                Rectangle {
+                                                    readonly property bool lit: root.cpuPct >= ((index + 1) / 16.0 * 100.0)
+                                                    width: (parent.width - 15 * 3) / 16.0
+                                                    height: parent.height
+                                                    radius: 2
+                                                    color: lit ? (index >= 13 ? Island.Theme.red : (index >= 10 ? Island.Theme.yellow : Island.Theme.primary)) : Qt.rgba(1, 1, 1, 0.06)
+                                                    border.color: lit ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
+                                                    border.width: lit ? 1 : 0
+                                                    Behavior on color { ColorAnimation { duration: 160 } }
+                                                }
                                             }
                                         }
                                     }
 
-                                    // RAM Gauge
+                                    // RAM Gauge (16-Segment LED VU-Meter)
                                     Column {
                                         width: parent.width
-                                        spacing: 4
+                                        spacing: 6
+
                                         Item {
                                             width: parent.width
                                             height: 16
-                                            Text {
+                                            Row {
                                                 anchors.left: parent.left
                                                 anchors.verticalCenter: parent.verticalCenter
-                                                text: "RAM Usage"
-                                                font.family: Island.Theme.fontFamily
-                                                font.pixelSize: 10
-                                                font.bold: true
-                                                color: Island.Theme.foreground
+                                                spacing: 6
+                                                Text {
+                                                    text: "󰘚"
+                                                    font.family: Island.Theme.iconFontFamily
+                                                    font.pixelSize: 12
+                                                    color: Island.Theme.primary
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+                                                Text {
+                                                    text: "RAM POOL"
+                                                    font.family: Island.Theme.fontFamily
+                                                    font.pixelSize: 10
+                                                    font.bold: true
+                                                    font.letterSpacing: 1.0
+                                                    color: Island.Theme.foreground
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
                                             }
                                             Text {
                                                 anchors.right: parent.right
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: (root.memUsedGb > 0 ? (root.memUsedGb.toFixed(1) + " / " + root.memTotalGb.toFixed(1) + " GB (" + root.memPct + "%)") : "Analyzing...")
                                                 font.family: Island.Theme.fontFamily
-                                                font.pixelSize: 9
-                                                color: Island.Theme.muted
+                                                font.pixelSize: 10
+                                                font.bold: true
+                                                color: root.memPct > 85 ? Island.Theme.red : Island.Theme.muted
                                             }
                                         }
-                                        Rectangle {
+
+                                        Row {
                                             width: parent.width
-                                            height: 6
-                                            radius: 3
-                                            color: "#20ffffff"
-                                            Rectangle {
-                                                anchors.left: parent.left
-                                                anchors.top: parent.top
-                                                anchors.bottom: parent.bottom
-                                                width: parent.width * Math.max(0.0, Math.min(1.0, root.memPct / 100.0))
-                                                radius: 3
-                                                color: root.memPct > 85 ? Island.Theme.red : Island.Theme.primary
-                                                Behavior on width { NumberAnimation { duration: 300 } }
+                                            height: 8
+                                            spacing: 3
+
+                                            Repeater {
+                                                model: 16
+                                                Rectangle {
+                                                    readonly property bool lit: root.memPct >= ((index + 1) / 16.0 * 100.0)
+                                                    width: (parent.width - 15 * 3) / 16.0
+                                                    height: parent.height
+                                                    radius: 2
+                                                    color: lit ? (index >= 13 ? Island.Theme.red : (index >= 10 ? Island.Theme.yellow : Island.Theme.primary)) : Qt.rgba(1, 1, 1, 0.06)
+                                                    border.color: lit ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
+                                                    border.width: lit ? 1 : 0
+                                                    Behavior on color { ColorAnimation { duration: 160 } }
+                                                }
                                             }
                                         }
                                     }
 
-                                    // Battery Gauge
-                                    Row {
+                                    // Battery Gauge (16-Segment LED VU-Meter)
+                                    Column {
                                         width: parent.width
-                                        spacing: 8
-                                        Text {
-                                            text: root.batCharging ? "󰂄" : "󰁹"
-                                            font.family: Island.Theme.iconFontFamily
-                                            font.pixelSize: 13
-                                            color: root.batCharging ? Island.Theme.green : Island.Theme.primary
-                                            anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 6
+
+                                        Item {
+                                            width: parent.width
+                                            height: 16
+                                            Row {
+                                                anchors.left: parent.left
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                spacing: 6
+                                                Text {
+                                                    text: root.batCharging ? "󰂄" : "󰁹"
+                                                    font.family: Island.Theme.iconFontFamily
+                                                    font.pixelSize: 12
+                                                    color: root.batCharging ? Island.Theme.green : Island.Theme.primary
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+                                                Text {
+                                                    text: "POWER SOURCE"
+                                                    font.family: Island.Theme.fontFamily
+                                                    font.pixelSize: 10
+                                                    font.bold: true
+                                                    font.letterSpacing: 1.0
+                                                    color: Island.Theme.foreground
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+                                            }
+                                            Text {
+                                                anchors.right: parent.right
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: (root.batPct >= 0 ? (Math.round(root.batPct) + "%") : "AC MAINS") + (root.batCharging ? " // CHARGING" : "")
+                                                font.family: Island.Theme.fontFamily
+                                                font.pixelSize: 10
+                                                font.bold: true
+                                                color: root.batCharging ? Island.Theme.green : Island.Theme.primary
+                                            }
                                         }
-                                        Text {
-                                            text: "Battery: " + (root.batPct >= 0 ? (Math.round(root.batPct) + "%") : "AC Power") + (root.batCharging ? " (Charging)" : "")
-                                            font.family: Island.Theme.fontFamily
-                                            font.pixelSize: 10
-                                            font.bold: true
-                                            color: Island.Theme.foreground
-                                            anchors.verticalCenter: parent.verticalCenter
+
+                                        Row {
+                                            width: parent.width
+                                            height: 8
+                                            spacing: 3
+
+                                            Repeater {
+                                                model: 16
+                                                Rectangle {
+                                                    readonly property real pct: root.batPct >= 0 ? root.batPct : 100
+                                                    readonly property bool lit: pct >= ((index + 1) / 16.0 * 100.0)
+                                                    width: (parent.width - 15 * 3) / 16.0
+                                                    height: parent.height
+                                                    radius: 2
+                                                    color: lit ? (root.batCharging ? Island.Theme.green : (pct < 20 ? Island.Theme.red : Island.Theme.primary)) : Qt.rgba(1, 1, 1, 0.06)
+                                                    border.color: lit ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
+                                                    border.width: lit ? 1 : 0
+                                                    Behavior on color { ColorAnimation { duration: 160 } }
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
 
-                            // 2. PIPEWIRE AUDIO OUTPUT CARD
+                            // 2. PIPEWIRE AUDIO MASTER CHANNEL STRIP
                             Rectangle {
                                 width: parent.width
-                                height: 96
-                                radius: 14
-                                color: Qt.rgba(0, 0, 0, 0.25)
+                                implicitHeight: audioCol.implicitHeight + 28
+                                radius: 16
+                                color: Qt.rgba(0, 0, 0, 0.35)
                                 border.color: Island.Theme.glassBorderSubtle
                                 border.width: 1
 
                                 Column {
-                                    anchors.fill: parent
+                                    id: audioCol
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.top: parent.top
                                     anchors.margins: 14
-                                    spacing: 8
+                                    spacing: 12
 
                                     Item {
                                         width: parent.width
-                                        height: 32
+                                        height: 34
 
-                                        Text {
-                                            id: audioIcon
+                                        Row {
                                             anchors.left: parent.left
                                             anchors.verticalCenter: parent.verticalCenter
-                                            text: root.audioMuted ? "󰖁" : "󰕾"
-                                            font.family: Island.Theme.iconFontFamily
-                                            font.pixelSize: 14
-                                            color: root.audioMuted ? Island.Theme.red : Island.Theme.primary
-                                        }
+                                            spacing: 8
 
-                                        Column {
-                                            anchors.left: audioIcon.right
-                                            anchors.leftMargin: 8
-                                            anchors.right: muteToggleBtn.left
-                                            anchors.rightMargin: 8
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            spacing: 1
+                                            Rectangle {
+                                                width: 32
+                                                height: 32
+                                                radius: 8
+                                                color: root.audioMuted ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.15) : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
+                                                border.color: root.audioMuted ? Island.Theme.red : Island.Theme.primary
+                                                border.width: 1
+                                                anchors.verticalCenter: parent.verticalCenter
 
-                                            Text {
-                                                text: "Audio Output Master"
-                                                font.family: Island.Theme.fontFamily
-                                                font.pixelSize: 10
-                                                font.bold: true
-                                                color: Island.Theme.foreground
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: root.audioMuted ? "󰖁" : "󰕾"
+                                                    font.family: Island.Theme.iconFontFamily
+                                                    font.pixelSize: 14
+                                                    color: root.audioMuted ? Island.Theme.red : Island.Theme.primary
+                                                }
                                             }
-                                            Text {
-                                                text: root.sinkName
-                                                font.family: Island.Theme.fontFamily
-                                                font.pixelSize: 9
-                                                color: Island.Theme.muted
-                                                elide: Text.ElideRight
-                                                width: parent.width
+
+                                            Column {
+                                                spacing: 2
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                Text {
+                                                    text: "AUDIO // MASTER SINK"
+                                                    font.family: Island.Theme.fontFamily
+                                                    font.pixelSize: 10
+                                                    font.bold: true
+                                                    font.letterSpacing: 1.0
+                                                    color: Island.Theme.foreground
+                                                }
+                                                Text {
+                                                    text: root.sinkName
+                                                    font.family: Island.Theme.fontFamily
+                                                    font.pixelSize: 9
+                                                    color: Island.Theme.muted
+                                                    elide: Text.ElideRight
+                                                    width: audioCol.width - 120
+                                                }
                                             }
                                         }
 
                                         // Mute Toggle Button
                                         Rectangle {
-                                            id: muteToggleBtn
                                             anchors.right: parent.right
                                             anchors.verticalCenter: parent.verticalCenter
-                                            height: 24
-                                            width: 48
-                                            radius: 6
-                                            color: root.audioMuted ? Qt.rgba(1, 0, 0, 0.2) : Qt.rgba(1, 1, 1, 0.08)
+                                            height: 26
+                                            width: 58
+                                            radius: 13
+                                            color: root.audioMuted ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.25) : (muteMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.05))
+                                            border.color: root.audioMuted ? Island.Theme.red : Qt.rgba(1, 1, 1, 0.15)
+                                            border.width: 1
 
-                                            Text {
+                                            Row {
                                                 anchors.centerIn: parent
-                                                text: root.audioMuted ? "Unmute" : "Mute"
-                                                font.family: Island.Theme.fontFamily
-                                                font.pixelSize: 8
-                                                font.bold: true
-                                                color: root.audioMuted ? Island.Theme.red : Island.Theme.foreground
+                                                spacing: 4
+                                                Rectangle {
+                                                    width: 6
+                                                    height: 6
+                                                    radius: 3
+                                                    color: root.audioMuted ? Island.Theme.red : Island.Theme.green
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+                                                Text {
+                                                    text: root.audioMuted ? "MUTED" : "ACTIVE"
+                                                    font.family: Island.Theme.fontFamily
+                                                    font.pixelSize: 8
+                                                    font.bold: true
+                                                    color: root.audioMuted ? Island.Theme.red : Island.Theme.foreground
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
                                             }
 
                                             MouseArea {
+                                                id: muteMouse
                                                 anchors.fill: parent
                                                 hoverEnabled: true
                                                 cursorShape: Qt.PointingHandCursor
@@ -1090,45 +1340,90 @@ PanelWindow {
                                         }
                                     }
 
-                                    // Volume Slider / Bar
-                                    Rectangle {
+                                    // Interactive Level Fader Track
+                                    Item {
                                         width: parent.width
-                                        height: 8
-                                        radius: 4
-                                        color: "#20ffffff"
+                                        height: 22
 
                                         Rectangle {
+                                            id: volTrack
                                             anchors.left: parent.left
-                                            anchors.top: parent.top
-                                            anchors.bottom: parent.bottom
-                                            width: parent.width * root.audioVolume
+                                            anchors.right: volPctText.left
+                                            anchors.rightMargin: 12
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            height: 8
                                             radius: 4
-                                            color: root.audioMuted ? Island.Theme.muted : Island.Theme.primary
-                                        }
+                                            color: Qt.rgba(1, 1, 1, 0.08)
 
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: (mouse) => {
-                                                if (root.sinkAudio) {
-                                                    const vol = Math.max(0.0, Math.min(1.0, mouse.x / width));
-                                                    root.sinkAudio.volume = vol;
+                                            Rectangle {
+                                                anchors.left: parent.left
+                                                anchors.top: parent.top
+                                                anchors.bottom: parent.bottom
+                                                width: parent.width * root.audioVolume
+                                                radius: 4
+                                                color: root.audioMuted ? Island.Theme.muted : Island.Theme.primary
+
+                                                Rectangle {
+                                                    anchors.right: parent.right
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: 14
+                                                    height: 14
+                                                    radius: 7
+                                                    color: "#ffffff"
+                                                    border.color: Island.Theme.primary
+                                                    border.width: 2
+                                                    visible: !root.audioMuted
                                                 }
                                             }
+
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: (mouse) => {
+                                                    if (root.sinkAudio) {
+                                                        const vol = Math.max(0.0, Math.min(1.0, mouse.x / width));
+                                                        root.sinkAudio.volume = vol;
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        Text {
+                                            id: volPctText
+                                            anchors.right: parent.right
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: Math.round(root.audioVolume * 100) + "%"
+                                            font.family: Island.Theme.fontFamily
+                                            font.pixelSize: 11
+                                            font.bold: true
+                                            color: root.audioMuted ? Island.Theme.muted : Island.Theme.foreground
+                                            width: 36
+                                            horizontalAlignment: Text.AlignRight
                                         }
                                     }
                                 }
                             }
 
-                            // 3. QUICK SESSION & POWER ACTIONS GRID
-                            Text {
-                                text: "SESSION CONTROLS"
-                                font.family: Island.Theme.fontFamily
-                                font.pixelSize: 10
-                                font.bold: true
-                                font.letterSpacing: 1.2
-                                color: Island.Theme.muted
+                            // 3. EXECUTIVE SESSION MATRIX
+                            Row {
+                                width: parent.width
+                                spacing: 6
+                                Text {
+                                    text: "◈"
+                                    font.pixelSize: 9
+                                    color: Island.Theme.primary
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                Text {
+                                    text: "SESSION // POWER MATRIX"
+                                    font.family: Island.Theme.fontFamily
+                                    font.pixelSize: 10
+                                    font.bold: true
+                                    font.letterSpacing: 1.2
+                                    color: Island.Theme.muted
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
                             }
 
                             Grid {
@@ -1139,29 +1434,50 @@ PanelWindow {
                                 // Action 1: Lock
                                 Rectangle {
                                     width: (systemCol.width - 8) / 2
-                                    height: 44
-                                    radius: 10
+                                    height: 52
+                                    radius: 12
                                     color: actLockMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.04)
-                                    border.color: Island.Theme.glassBorderSubtle
+                                    border.color: actLockMouse.containsMouse ? Island.Theme.primary : Island.Theme.glassBorderSubtle
                                     border.width: 1
 
                                     Row {
-                                        anchors.centerIn: parent
-                                        spacing: 8
-                                        Text {
-                                            text: "󰌾"
-                                            font.family: Island.Theme.iconFontFamily
-                                            font.pixelSize: 14
-                                            color: Island.Theme.foreground
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 12
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 10
+
+                                        Rectangle {
+                                            width: 28
+                                            height: 28
+                                            radius: 6
+                                            color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
                                             anchors.verticalCenter: parent.verticalCenter
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "󰌾"
+                                                font.family: Island.Theme.iconFontFamily
+                                                font.pixelSize: 13
+                                                color: Island.Theme.primary
+                                            }
                                         }
-                                        Text {
-                                            text: "Lock Screen"
-                                            font.family: Island.Theme.fontFamily
-                                            font.pixelSize: 11
-                                            font.bold: true
-                                            color: Island.Theme.foreground
+
+                                        Column {
+                                            spacing: 1
                                             anchors.verticalCenter: parent.verticalCenter
+                                            Text {
+                                                text: "LOCK"
+                                                font.family: Island.Theme.fontFamily
+                                                font.pixelSize: 11
+                                                font.bold: true
+                                                font.letterSpacing: 0.8
+                                                color: Island.Theme.foreground
+                                            }
+                                            Text {
+                                                text: "Secure Session"
+                                                font.family: Island.Theme.fontFamily
+                                                font.pixelSize: 8
+                                                color: Island.Theme.muted
+                                            }
                                         }
                                     }
 
@@ -1177,29 +1493,50 @@ PanelWindow {
                                 // Action 2: Suspend
                                 Rectangle {
                                     width: (systemCol.width - 8) / 2
-                                    height: 44
-                                    radius: 10
+                                    height: 52
+                                    radius: 12
                                     color: actSuspMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.04)
-                                    border.color: Island.Theme.glassBorderSubtle
+                                    border.color: actSuspMouse.containsMouse ? Island.Theme.primary : Island.Theme.glassBorderSubtle
                                     border.width: 1
 
                                     Row {
-                                        anchors.centerIn: parent
-                                        spacing: 8
-                                        Text {
-                                            text: "󰤄"
-                                            font.family: Island.Theme.iconFontFamily
-                                            font.pixelSize: 14
-                                            color: Island.Theme.foreground
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 12
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 10
+
+                                        Rectangle {
+                                            width: 28
+                                            height: 28
+                                            radius: 6
+                                            color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
                                             anchors.verticalCenter: parent.verticalCenter
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "󰤄"
+                                                font.family: Island.Theme.iconFontFamily
+                                                font.pixelSize: 13
+                                                color: Island.Theme.primary
+                                            }
                                         }
-                                        Text {
-                                            text: "Sleep / Suspend"
-                                            font.family: Island.Theme.fontFamily
-                                            font.pixelSize: 11
-                                            font.bold: true
-                                            color: Island.Theme.foreground
+
+                                        Column {
+                                            spacing: 1
                                             anchors.verticalCenter: parent.verticalCenter
+                                            Text {
+                                                text: "SLEEP"
+                                                font.family: Island.Theme.fontFamily
+                                                font.pixelSize: 11
+                                                font.bold: true
+                                                font.letterSpacing: 0.8
+                                                color: Island.Theme.foreground
+                                            }
+                                            Text {
+                                                text: "Suspend Power"
+                                                font.family: Island.Theme.fontFamily
+                                                font.pixelSize: 8
+                                                color: Island.Theme.muted
+                                            }
                                         }
                                     }
 
@@ -1215,29 +1552,50 @@ PanelWindow {
                                 // Action 3: Reboot
                                 Rectangle {
                                     width: (systemCol.width - 8) / 2
-                                    height: 44
-                                    radius: 10
+                                    height: 52
+                                    radius: 12
                                     color: actRebootMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.04)
-                                    border.color: Island.Theme.glassBorderSubtle
+                                    border.color: actRebootMouse.containsMouse ? Island.Theme.yellow : Island.Theme.glassBorderSubtle
                                     border.width: 1
 
                                     Row {
-                                        anchors.centerIn: parent
-                                        spacing: 8
-                                        Text {
-                                            text: "󰜉"
-                                            font.family: Island.Theme.iconFontFamily
-                                            font.pixelSize: 14
-                                            color: Island.Theme.foreground
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 12
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 10
+
+                                        Rectangle {
+                                            width: 28
+                                            height: 28
+                                            radius: 6
+                                            color: Qt.rgba(Island.Theme.yellow.r, Island.Theme.yellow.g, Island.Theme.yellow.b, 0.15)
                                             anchors.verticalCenter: parent.verticalCenter
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "󰜉"
+                                                font.family: Island.Theme.iconFontFamily
+                                                font.pixelSize: 13
+                                                color: Island.Theme.yellow
+                                            }
                                         }
-                                        Text {
-                                            text: "Restart"
-                                            font.family: Island.Theme.fontFamily
-                                            font.pixelSize: 11
-                                            font.bold: true
-                                            color: Island.Theme.foreground
+
+                                        Column {
+                                            spacing: 1
                                             anchors.verticalCenter: parent.verticalCenter
+                                            Text {
+                                                text: "RESTART"
+                                                font.family: Island.Theme.fontFamily
+                                                font.pixelSize: 11
+                                                font.bold: true
+                                                font.letterSpacing: 0.8
+                                                color: Island.Theme.foreground
+                                            }
+                                            Text {
+                                                text: "Warm Reboot"
+                                                font.family: Island.Theme.fontFamily
+                                                font.pixelSize: 8
+                                                color: Island.Theme.muted
+                                            }
                                         }
                                     }
 
@@ -1253,29 +1611,50 @@ PanelWindow {
                                 // Action 4: Power Off
                                 Rectangle {
                                     width: (systemCol.width - 8) / 2
-                                    height: 44
-                                    radius: 10
-                                    color: actPowerMouse.containsMouse ? Qt.rgba(1, 0, 0, 0.25) : Qt.rgba(1, 1, 1, 0.04)
-                                    border.color: Island.Theme.glassBorderSubtle
+                                    height: 52
+                                    radius: 12
+                                    color: actPowerMouse.containsMouse ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.25) : Qt.rgba(1, 1, 1, 0.04)
+                                    border.color: actPowerMouse.containsMouse ? Island.Theme.red : Island.Theme.glassBorderSubtle
                                     border.width: 1
 
                                     Row {
-                                        anchors.centerIn: parent
-                                        spacing: 8
-                                        Text {
-                                            text: "󰐥"
-                                            font.family: Island.Theme.iconFontFamily
-                                            font.pixelSize: 14
-                                            color: actPowerMouse.containsMouse ? Island.Theme.red : Island.Theme.foreground
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 12
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 10
+
+                                        Rectangle {
+                                            width: 28
+                                            height: 28
+                                            radius: 6
+                                            color: Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.15)
                                             anchors.verticalCenter: parent.verticalCenter
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "󰐥"
+                                                font.family: Island.Theme.iconFontFamily
+                                                font.pixelSize: 13
+                                                color: Island.Theme.red
+                                            }
                                         }
-                                        Text {
-                                            text: "Shut Down"
-                                            font.family: Island.Theme.fontFamily
-                                            font.pixelSize: 11
-                                            font.bold: true
-                                            color: actPowerMouse.containsMouse ? Island.Theme.red : Island.Theme.foreground
+
+                                        Column {
+                                            spacing: 1
                                             anchors.verticalCenter: parent.verticalCenter
+                                            Text {
+                                                text: "SHUT DOWN"
+                                                font.family: Island.Theme.fontFamily
+                                                font.pixelSize: 11
+                                                font.bold: true
+                                                font.letterSpacing: 0.8
+                                                color: actPowerMouse.containsMouse ? Island.Theme.red : Island.Theme.foreground
+                                            }
+                                            Text {
+                                                text: "Halt System"
+                                                font.family: Island.Theme.fontFamily
+                                                font.pixelSize: 8
+                                                color: Island.Theme.muted
+                                            }
                                         }
                                     }
 
