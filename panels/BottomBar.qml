@@ -61,7 +61,7 @@ PanelWindow {
 
     Timer {
         id: popoverDismissTimer
-        interval: 280
+        interval: 320
         repeat: false
         onTriggered: {
             activePopover = "";
@@ -72,7 +72,7 @@ PanelWindow {
 
     Timer {
         id: hoverGraceTimer
-        interval: 400
+        interval: 500
         repeat: false
         onTriggered: {
             hoverLatching = false;
@@ -90,6 +90,8 @@ PanelWindow {
 
     readonly property bool hovered: (dockMouse && dockMouse.containsMouse)
         || (dockHover && dockHover.hovered)
+        || (bottomHitMouse && bottomHitMouse.containsMouse)
+        || (bottomHitHover && bottomHitHover.hovered)
         || hoverLatching
         || (activePopover !== "")
         || (wsHover && wsHover.containsMouse)
@@ -97,38 +99,28 @@ PanelWindow {
         || (volMouse && volMouse.containsMouse)
         || (batMouse && batMouse.containsMouse)
 
-    readonly property var workspaceList: {
-        const list = [];
-        const activeId = (root.desktopState && root.desktopState.currentWorkspaceId > 0)
-            ? root.desktopState.currentWorkspaceId
-            : ((root.desktopModel && root.desktopModel.focusedWorkspaceId > 0) ? root.desktopModel.focusedWorkspaceId : 1);
-        let maxId = 4;
-        const existing = {};
+    // Ultra-lightweight static workspace index projection (zero heap object/array churn)
+    readonly property int activeWsId: (root.desktopState && root.desktopState.currentWorkspaceId > 0)
+        ? root.desktopState.currentWorkspaceId
+        : ((root.desktopModel && root.desktopModel.focusedWorkspaceId > 0) ? root.desktopModel.focusedWorkspaceId : 1)
+
+    readonly property int maxWsId: {
+        let m = 4;
         if (root.desktopModel && root.desktopModel.workspaces) {
             for (let i = 0; i < root.desktopModel.workspaces.length; ++i) {
                 const w = root.desktopModel.workspaces[i];
-                existing[w.id] = w;
-                if (w.id > maxId) maxId = w.id;
+                if (w && w.id > m) m = w.id;
             }
         }
-        if (activeId > maxId) maxId = activeId;
-        for (let id = 1; id <= maxId; ++id) {
-            const item = existing[id];
-            list.push({
-                id: id,
-                name: String(id),
-                focused: id === activeId,
-                occupied: item ? Boolean(item.occupied) : false
-            });
-        }
-        return list;
+        if (activeWsId > m) m = activeWsId;
+        return Math.min(m, 10);
     }
 
     anchors {
         bottom: true
     }
     margins {
-        bottom: 10
+        bottom: 0
     }
 
     implicitWidth: Math.min(980, (screen ? screen.width : 1040) - 40)
@@ -149,6 +141,10 @@ PanelWindow {
             topRightRadius: dockBody ? dockBody.radius : 0
             bottomLeftRadius: dockBody ? dockBody.radius : 0
             bottomRightRadius: dockBody ? dockBody.radius : 0
+        }
+
+        Region {
+            item: bottomHitBox
         }
 
         Region {
@@ -214,6 +210,36 @@ PanelWindow {
         return "";
     }
 
+    // =========================================================================
+    // HIT BOX EXPANSION: BAR + PIXELS BELOW TO SCREEN EDGE
+    // Eliminates the floating dead zone between centerTrigger and dockBody
+    // =========================================================================
+    Item {
+        id: bottomHitBox
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: Math.max(dockBody ? dockBody.width + 30 : 320, 320)
+        height: 14
+        visible: root.open || closeAnim.running
+
+        HoverHandler {
+            id: bottomHitHover
+            onHoveredChanged: {
+                if (hovered) pingHover();
+                else releaseHover();
+            }
+        }
+
+        MouseArea {
+            id: bottomHitMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.NoButton
+            onEntered: pingHover()
+            onExited: releaseHover()
+        }
+    }
+
     Item {
         id: content
         anchors.fill: parent
@@ -231,6 +257,7 @@ PanelWindow {
             id: dockBody
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
+            anchors.bottomMargin: 10
             width: dockRow.implicitWidth + 30
             height: 38
             radius: 19
@@ -282,21 +309,28 @@ PanelWindow {
                     spacing: 7
 
                     Repeater {
-                        model: root.workspaceList
+                        model: root.maxWsId
 
                         delegate: Item {
                             id: wsSlot
-                            required property var modelData
-                            readonly property int wsId: modelData ? modelData.id : -1
-                            readonly property bool isActive: modelData ? Boolean(modelData.focused) : false
-                            readonly property bool isOccupied: modelData ? Boolean(modelData.occupied) : false
+                            required property int index
+                            readonly property int wsId: index + 1
+                            readonly property bool isActive: wsId === root.activeWsId
+                            readonly property bool isOccupied: {
+                                if (!root.desktopModel || !root.desktopModel.workspaces) return false;
+                                for (let i = 0; i < root.desktopModel.workspaces.length; ++i) {
+                                    const w = root.desktopModel.workspaces[i];
+                                    if (w && w.id === wsId) return Boolean(w.occupied);
+                                }
+                                return false;
+                            }
 
                             width: isActive ? 18 : 6
                             height: 22
                             anchors.verticalCenter: parent.verticalCenter
 
                             Behavior on width {
-                                NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                                NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
                             }
 
                             Rectangle {
@@ -308,13 +342,13 @@ PanelWindow {
                                 opacity: wsSlot.isActive ? 1.0 : (wsMouse.containsMouse ? 0.8 : (wsSlot.isOccupied ? 0.55 : 0.3))
 
                                 Behavior on width {
-                                    NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                                    NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
                                 }
                                 Behavior on opacity {
-                                    NumberAnimation { duration: 120 }
+                                    NumberAnimation { duration: 180 }
                                 }
                                 Behavior on color {
-                                    ColorAnimation { duration: 120 }
+                                    ColorAnimation { duration: 180 }
                                 }
                             }
 
@@ -433,10 +467,10 @@ PanelWindow {
                             : (expandDotMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted)
                         opacity: root.expanded ? 1.0 : (expandDotMouse.containsMouse ? 0.9 : 0.45)
 
-                        Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                        Behavior on height { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                        Behavior on opacity { NumberAnimation { duration: 150 } }
+                        Behavior on width { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+                        Behavior on height { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                        Behavior on opacity { NumberAnimation { duration: 200 } }
                     }
 
                     MouseArea {
@@ -471,15 +505,14 @@ PanelWindow {
                     visible: width > 0 || opacity > 0.001
 
                     Behavior on width {
-                        SpringAnimation {
-                            spring: 3.8
-                            damping: 0.34
-                            epsilon: 0.5
+                        NumberAnimation {
+                            duration: root.expanded ? 420 : 320
+                            easing.type: Easing.OutCubic
                         }
                     }
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: root.expanded ? 240 : 150
+                            duration: root.expanded ? 320 : 200
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -1082,20 +1115,22 @@ PanelWindow {
             z: 99
 
             x: {
-                if (!root.hoveredTooltipTarget) return (parent.width - width) / 2;
+                if (root.hoveredTooltipText === "" || !root.hoveredTooltipTarget) return (parent.width - width) / 2;
                 const pos = root.hoveredTooltipTarget.mapToItem(content, 0, 0);
                 const targetCenter = pos.x + root.hoveredTooltipTarget.width / 2;
                 return Math.max(12, Math.min(parent.width - width - 12, targetCenter - width / 2));
             }
 
             Behavior on x {
-                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                enabled: tooltipBadge.visible
+                NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
             }
             Behavior on width {
-                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                enabled: tooltipBadge.visible
+                NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
             }
             Behavior on opacity {
-                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
             }
 
             Text {
@@ -1142,7 +1177,7 @@ PanelWindow {
             anchors.bottom: dockBody.top
             anchors.bottomMargin: 8
             x: {
-                if (!volPill) return parent.width - width - 10;
+                if (activePopover !== "vol" || !volPill) return (parent.width - width) / 2;
                 const pos = volPill.mapToItem(content, 0, 0);
                 return Math.max(10, Math.min(parent.width - width - 10, pos.x + (volPill.width - width) / 2));
             }
@@ -1152,7 +1187,7 @@ PanelWindow {
             clip: true
 
             Behavior on opacity {
-                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
             }
 
             MouseArea {
@@ -1260,7 +1295,7 @@ PanelWindow {
             anchors.bottom: dockBody.top
             anchors.bottomMargin: 8
             x: {
-                if (!netPill) return parent.width - width - 10;
+                if (activePopover !== "net" || !netPill) return (parent.width - width) / 2;
                 const pos = netPill.mapToItem(content, 0, 0);
                 return Math.max(10, Math.min(parent.width - width - 10, pos.x + (netPill.width - width) / 2));
             }
@@ -1270,7 +1305,7 @@ PanelWindow {
             clip: true
 
             Behavior on opacity {
-                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
             }
 
             MouseArea {
@@ -1382,7 +1417,7 @@ PanelWindow {
             anchors.bottom: dockBody.top
             anchors.bottomMargin: 8
             x: {
-                if (!batPill) return parent.width - width - 10;
+                if (activePopover !== "bat" || !batPill) return (parent.width - width) / 2;
                 const pos = batPill.mapToItem(content, 0, 0);
                 return Math.max(10, Math.min(parent.width - width - 10, pos.x + (batPill.width - width) / 2));
             }
@@ -1402,7 +1437,7 @@ PanelWindow {
             }
 
             Behavior on opacity {
-                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
             }
 
             MouseArea {
@@ -1506,14 +1541,14 @@ PanelWindow {
             target: contentTranslate
             property: "y"
             to: 0
-            duration: 240
+            duration: 380
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
             target: content
             property: "opacity"
             to: 1.0
-            duration: 200
+            duration: 300
             easing.type: Easing.OutCubic
         }
     }
@@ -1524,14 +1559,14 @@ PanelWindow {
             target: contentTranslate
             property: "y"
             to: 16
-            duration: 160
+            duration: 280
             easing.type: Easing.InCubic
         }
         NumberAnimation {
             target: content
             property: "opacity"
             to: 0.0
-            duration: 160
+            duration: 240
             easing.type: Easing.InCubic
         }
     }
