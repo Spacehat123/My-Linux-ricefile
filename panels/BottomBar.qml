@@ -18,6 +18,37 @@ PanelWindow {
     property var interactionModel: null
     property var desktopState: null
 
+    // Expand/Collapse state: default compact pill (workspaces + clock + expand dot)
+    property bool expanded: false
+
+    // Hover description tooltip system
+    property string hoveredTooltipText: ""
+    property Item hoveredTooltipTarget: null
+
+    function showTooltip(targetItem, text) {
+        hoveredTooltipTarget = targetItem;
+        hoveredTooltipText = text;
+    }
+
+    function hideTooltip() {
+        hoveredTooltipText = "";
+        hoveredTooltipTarget = null;
+    }
+
+    IpcHandler {
+        target: "bottombar"
+
+        function toggle(): string {
+            root.expanded = !root.expanded;
+            return JSON.stringify({ success: true, expanded: root.expanded });
+        }
+
+        function setExpanded(val: bool): string {
+            root.expanded = val;
+            return JSON.stringify({ success: true, expanded: root.expanded });
+        }
+    }
+
     // Hover continuity & Popover system
     property string activePopover: "" // "", "net", "vol", "bat"
 
@@ -242,7 +273,7 @@ PanelWindow {
             Row {
                 id: dockRow
                 anchors.centerIn: parent
-                spacing: 12
+                spacing: 10
 
                 // 1. Minimalist Workspaces (• • • —)
                 Row {
@@ -294,6 +325,14 @@ PanelWindow {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onEntered: {
+                                    pingHover();
+                                    root.showTooltip(wsSlot, wsSlot.isActive ? ("Workspace " + wsSlot.wsId + " (Active)") : ("Workspace " + wsSlot.wsId));
+                                }
+                                onExited: {
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
                                 onClicked: (mouse) => {
                                     if (mouse.button === Qt.RightButton) {
                                         Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "overview", "toggle"]);
@@ -355,11 +394,19 @@ PanelWindow {
                         anchors.margins: -4
                         cursorShape: Qt.PointingHandCursor
                         hoverEnabled: true
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "today"])
+                        onEntered: {
+                            pingHover();
+                            root.showTooltip(clockItem, "Clock & Today Center");
+                        }
+                        onExited: {
+                            releaseHover();
+                            root.hideTooltip();
+                        }
+                        onClicked: Island.ShellState.show("today")
                     }
                 }
 
-                // Divider 2
+                // Divider 2 (between clock and dot button)
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 1
@@ -368,459 +415,697 @@ PanelWindow {
                     opacity: 0.6
                 }
 
-                // 3. Status & Quick Actions Cluster
-                // Weather
+                // 3. Expand / Collapse Dot Button
                 Item {
-                    id: weatherItem
+                    id: expandDot
                     anchors.verticalCenter: parent.verticalCenter
-                    width: weatherRow.implicitWidth
-                    height: weatherRow.implicitHeight
+                    width: 14
+                    height: 22
+
+                    Rectangle {
+                        id: dotVisual
+                        anchors.centerIn: parent
+                        width: root.expanded ? 7 : 5
+                        height: root.expanded ? 7 : 5
+                        radius: width / 2
+                        color: root.expanded
+                            ? Island.Theme.primary
+                            : (expandDotMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted)
+                        opacity: root.expanded ? 1.0 : (expandDotMouse.containsMouse ? 0.9 : 0.45)
+
+                        Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on height { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on opacity { NumberAnimation { duration: 150 } }
+                    }
+
+                    MouseArea {
+                        id: expandDotMouse
+                        anchors.fill: parent
+                        anchors.margins: -5
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onEntered: {
+                            pingHover();
+                            root.showTooltip(expandDot, root.expanded ? "Collapse Status Modules" : "Expand Status Modules");
+                        }
+                        onExited: {
+                            releaseHover();
+                            root.hideTooltip();
+                        }
+                        onClicked: {
+                            root.expanded = !root.expanded;
+                            root.showTooltip(expandDot, root.expanded ? "Collapse Status Modules" : "Expand Status Modules");
+                        }
+                    }
+                }
+
+                // 4. Revealed Status & Action Modules (Animated Cluster)
+                Item {
+                    id: statusCluster
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 28
+                    clip: true
+                    width: root.expanded ? statusRow.implicitWidth : 0
+                    opacity: root.expanded ? 1.0 : 0.0
+                    visible: width > 0 || opacity > 0.001
+
+                    Behavior on width {
+                        SpringAnimation {
+                            spring: 3.8
+                            damping: 0.34
+                            epsilon: 0.5
+                        }
+                    }
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: root.expanded ? 240 : 150
+                            easing.type: Easing.OutCubic
+                        }
+                    }
 
                     Row {
-                        id: weatherRow
-                        anchors.centerIn: parent
-                        spacing: 4
+                        id: statusRow
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 11
 
-                        Text {
+                        // Divider before revealed modules
+                        Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "☁"
-                            font.family: Island.Theme.fontFamily
-                            font.pixelSize: 12
-                            color: weatherMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted
+                            width: 1
+                            height: 18
+                            color: Island.Theme.glassBorder
+                            opacity: 0.6
                         }
 
-                        Text {
+                        // Weather
+                        Item {
+                            id: weatherItem
                             anchors.verticalCenter: parent.verticalCenter
-                            text: (Island.WeatherState.tempC !== "" ? Island.WeatherState.tempC.replace("+", "").replace("C", "").trim() : "29°")
-                            font.family: Island.Theme.fontFamily
-                            font.pixelSize: 11
-                            font.weight: Font.Medium
-                            color: weatherMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted
-                        }
-                    }
+                            width: weatherRow.implicitWidth
+                            height: weatherRow.implicitHeight
 
-                    MouseArea {
-                        id: weatherMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        cursorShape: Qt.PointingHandCursor
-                        hoverEnabled: true
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "weather"])
-                    }
-                }
+                            Row {
+                                id: weatherRow
+                                anchors.centerIn: parent
+                                spacing: 4
 
-                // PipeWire Audio Pill
-                Item {
-                    id: volPill
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    height: 18
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "☁"
+                                    font.family: Island.Theme.fontFamily
+                                    font.pixelSize: 12
+                                    color: weatherMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted
+                                }
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: root.audioMuted ? "󰖁" : (root.sinkAudio && root.sinkAudio.volume > 0.5 ? "󰕾" : "󰖀")
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 14
-                        color: root.audioMuted ? Island.Theme.red : ((volMouse.containsMouse || root.activePopover === "vol") ? Island.Theme.primary : Island.Theme.muted)
-                    }
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: (Island.WeatherState.tempC !== "" ? Island.WeatherState.tempC.replace("+", "").replace("C", "").trim() : "29°")
+                                    font.family: Island.Theme.fontFamily
+                                    font.pixelSize: 11
+                                    font.weight: Font.Medium
+                                    color: weatherMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted
+                                }
+                            }
 
-                    MouseArea {
-                        id: volMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onEntered: {
-                            popoverDismissTimer.stop();
-                            root.activePopover = "vol";
+                            MouseArea {
+                                id: weatherMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                cursorShape: Qt.PointingHandCursor
+                                hoverEnabled: true
+                                onEntered: {
+                                    pingHover();
+                                    root.showTooltip(weatherItem, "Weather Forecast");
+                                }
+                                onExited: {
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: Island.ShellState.show("weather")
+                            }
                         }
-                        onExited: {
-                            popoverDismissTimer.restart();
+
+                        // PipeWire Audio Pill
+                        Item {
+                            id: volPill
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 18
+                            height: 18
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: root.audioMuted ? "󰖁" : (root.sinkAudio && root.sinkAudio.volume > 0.5 ? "󰕾" : "󰖀")
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: root.audioMuted ? Island.Theme.red : ((volMouse.containsMouse || root.activePopover === "vol") ? Island.Theme.primary : Island.Theme.muted)
+                            }
+
+                            MouseArea {
+                                id: volMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    popoverDismissTimer.stop();
+                                    root.activePopover = "vol";
+                                    pingHover();
+                                    root.showTooltip(volPill, "Audio Output (Scroll: Volume / Click: Mute)");
+                                }
+                                onExited: {
+                                    popoverDismissTimer.restart();
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: {
+                                    if (root.sinkAudio) root.sinkAudio.muted = !root.sinkAudio.muted;
+                                }
+                                onWheel: (wheel) => {
+                                    if (root.sinkAudio) {
+                                        const step = wheel.angleDelta.y > 0 ? 0.02 : -0.02;
+                                        root.sinkAudio.volume = Math.max(0.0, Math.min(1.5, root.sinkAudio.volume + step));
+                                    }
+                                }
+                            }
                         }
-                        onClicked: {
-                            if (root.sinkAudio) root.sinkAudio.muted = !root.sinkAudio.muted;
+
+                        // Network Pill
+                        Item {
+                            id: netPill
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 18
+                            height: 18
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: root.netIcon
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: (netMouse.containsMouse || root.activePopover === "net") ? Island.Theme.primary : Island.Theme.muted
+                            }
+
+                            MouseArea {
+                                id: netMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    popoverDismissTimer.stop();
+                                    root.activePopover = "net";
+                                    pingHover();
+                                    root.showTooltip(netPill, "Wi-Fi & Network Settings");
+                                }
+                                onExited: {
+                                    popoverDismissTimer.restart();
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: Island.ShellState.show("control")
+                            }
                         }
-                        onWheel: (wheel) => {
-                            if (root.sinkAudio) {
-                                const step = wheel.angleDelta.y > 0 ? 0.02 : -0.02;
-                                root.sinkAudio.volume = Math.max(0.0, Math.min(1.5, root.sinkAudio.volume + step));
+
+                        // Bluetooth
+                        Item {
+                            id: btPill
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 18
+                            height: 18
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰂯"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: btMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                            }
+
+                            MouseArea {
+                                id: btMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    pingHover();
+                                    root.showTooltip(btPill, "Bluetooth Devices");
+                                }
+                                onExited: {
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: Island.ShellState.show("control")
+                            }
+                        }
+
+                        // UPower Battery Pill
+                        Item {
+                            id: batPill
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: Math.max(18, batLabel.implicitWidth)
+                            height: 18
+                            visible: root.batReady && root.batPct >= 0
+
+                            Text {
+                                id: batLabel
+                                anchors.centerIn: parent
+                                text: Math.round(root.batPct) + "%"
+                                font.family: Island.Theme.fontFamily
+                                font.pixelSize: 11
+                                font.weight: Font.DemiBold
+                                color: root.batPct <= 20
+                                    ? Island.Theme.red
+                                    : ((batMouse.containsMouse || root.activePopover === "bat") ? Island.Theme.primary : "#f5a97f")
+                            }
+
+                            MouseArea {
+                                id: batMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    popoverDismissTimer.stop();
+                                    root.activePopover = "bat";
+                                    pingHover();
+                                    root.showTooltip(batPill, "Battery & Power Details");
+                                }
+                                onExited: {
+                                    popoverDismissTimer.restart();
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: Island.ShellState.show("power")
+                            }
+                        }
+
+                        // Notification Bell
+                        Item {
+                            id: notifPill
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 18
+                            height: 18
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰂚"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: notifMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted
+                            }
+
+                            Rectangle {
+                                visible: Island.IslandHub.unreadCount > 0
+                                anchors.top: parent.top
+                                anchors.right: parent.right
+                                anchors.topMargin: 0
+                                anchors.rightMargin: 0
+                                width: 5
+                                height: 5
+                                radius: 2.5
+                                color: Island.Theme.primary
+                            }
+
+                            MouseArea {
+                                id: notifMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    pingHover();
+                                    root.showTooltip(notifPill, "Notifications" + (Island.IslandHub.unreadCount > 0 ? " (" + Island.IslandHub.unreadCount + " unread)" : ""));
+                                }
+                                onExited: {
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: Island.ShellState.show("notifications")
+                            }
+                        }
+
+                        // Control Center / Quick Sliders
+                        Item {
+                            id: controlPill
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 18
+                            height: 18
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰅒"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: controlMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                            }
+
+                            MouseArea {
+                                id: controlMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    pingHover();
+                                    root.showTooltip(controlPill, "Control Center");
+                                }
+                                onExited: {
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: Island.ShellState.show("control")
+                            }
+                        }
+
+                        // Display Switcher
+                        Item {
+                            id: displayPill
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 18
+                            height: 18
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰍹"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: displayMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                            }
+
+                            MouseArea {
+                                id: displayMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    pingHover();
+                                    root.showTooltip(displayPill, "Display Switcher (Cycle Monitors)");
+                                }
+                                onExited: {
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "displays", "cycle"])
+                            }
+                        }
+
+                        // Screen Recording
+                        Item {
+                            id: recPill
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 18
+                            height: 18
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: Island.Backend.recording ? "󰓛" : "󰕧"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: Island.Backend.recording ? Island.Theme.red : (recMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted)
+                            }
+
+                            MouseArea {
+                                id: recMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    pingHover();
+                                    root.showTooltip(recPill, Island.Backend.recording ? "Screen Recording (Active - Click to Stop)" : "Screen Capture & Recording");
+                                }
+                                onExited: {
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: Island.ShellState.show("capture")
+                            }
+                        }
+
+                        // Wallpaper
+                        Item {
+                            id: wallPill
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 18
+                            height: 18
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰸉"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: wallMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                            }
+
+                            MouseArea {
+                                id: wallMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    pingHover();
+                                    root.showTooltip(wallPill, "Wallpaper Selector");
+                                }
+                                onExited: {
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: Island.ShellState.show("wallpaper")
+                            }
+                        }
+
+                        // Clipboard
+                        Item {
+                            id: clipPill
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 18
+                            height: 18
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰅍"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: clipMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                            }
+
+                            MouseArea {
+                                id: clipMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    pingHover();
+                                    root.showTooltip(clipPill, "Clipboard & Stash Pocket");
+                                }
+                                onExited: {
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: Island.ShellState.show("clipboard")
+                            }
+                        }
+
+                        // App Launcher
+                        Item {
+                            id: launcherPill
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 18
+                            height: 18
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰀻"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: launcherMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                            }
+
+                            MouseArea {
+                                id: launcherMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    pingHover();
+                                    root.showTooltip(launcherPill, "Application Launcher");
+                                }
+                                onExited: {
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: Island.ShellState.show("launcher")
+                            }
+                        }
+
+                        // Settings
+                        Item {
+                            id: settingsPill
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 18
+                            height: 18
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰒓"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: settingsMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                            }
+
+                            MouseArea {
+                                id: settingsMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    pingHover();
+                                    root.showTooltip(settingsPill, "Shell Settings");
+                                }
+                                onExited: {
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "settings", "toggle"])
+                            }
+                        }
+
+                        // Power
+                        Item {
+                            id: powerPill
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 18
+                            height: 18
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰐥"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 14
+                                color: powerMouse.containsMouse ? Island.Theme.red : Island.Theme.muted
+                            }
+
+                            MouseArea {
+                                id: powerMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: {
+                                    pingHover();
+                                    root.showTooltip(powerPill, "Power & Session Menu");
+                                }
+                                onExited: {
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: Island.ShellState.show("power")
+                            }
+                        }
+
+                        // Red Recording Halo Dot
+                        Rectangle {
+                            id: recHalo
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 12
+                            height: 12
+                            radius: 6
+                            color: Island.Backend.recording ? Island.Theme.red : "transparent"
+                            border.color: Island.Backend.recording ? Qt.rgba(1, 0, 0, 0.4) : Island.Theme.glassBorderSubtle
+                            border.width: 1.5
+
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: 6
+                                height: 6
+                                radius: 3
+                                color: Island.Backend.recording ? "#ffffff" : Island.Theme.muted
+                                opacity: Island.Backend.recording ? 1.0 : 0.35
+                            }
+
+                            SequentialAnimation on scale {
+                                running: Island.Backend.recording
+                                loops: Animation.Infinite
+                                NumberAnimation { to: 1.25; duration: 600; easing.type: Easing.InOutQuad }
+                                NumberAnimation { to: 0.95; duration: 600; easing.type: Easing.InOutQuad }
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                cursorShape: Qt.PointingHandCursor
+                                hoverEnabled: true
+                                onEntered: {
+                                    pingHover();
+                                    root.showTooltip(recHalo, Island.Backend.recording ? "Recording Active (Click to Stop)" : "Screen Capture");
+                                }
+                                onExited: {
+                                    releaseHover();
+                                    root.hideTooltip();
+                                }
+                                onClicked: {
+                                    if (Island.Backend.recording) {
+                                        Island.Backend.stopRecording();
+                                    } else {
+                                        Island.ShellState.show("capture");
+                                    }
+                                }
                             }
                         }
                     }
                 }
+            }
+        }
 
-                // Network Pill
-                Item {
-                    id: netPill
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    height: 18
+        // =====================================================================
+        // HOVER DESCRIPTION TOOLTIP BADGE
+        // =====================================================================
+        Rectangle {
+            id: tooltipBadge
+            visible: opacity > 0.001 && root.activePopover === ""
+            opacity: (root.hoveredTooltipText !== "" && root.activePopover === "") ? 1.0 : 0.0
+            anchors.bottom: dockBody.top
+            anchors.bottomMargin: 8
+            height: 24
+            radius: 12
+            width: tooltipText.implicitWidth + 20
+            color: Qt.tint("#0b0c10", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15))
+            border.color: Island.Theme.glassBorder
+            border.width: 1
+            z: 99
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: root.netIcon
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 14
-                        color: (netMouse.containsMouse || root.activePopover === "net") ? Island.Theme.primary : Island.Theme.muted
-                    }
+            x: {
+                if (!root.hoveredTooltipTarget) return (parent.width - width) / 2;
+                const pos = root.hoveredTooltipTarget.mapToItem(content, 0, 0);
+                const targetCenter = pos.x + root.hoveredTooltipTarget.width / 2;
+                return Math.max(12, Math.min(parent.width - width - 12, targetCenter - width / 2));
+            }
 
-                    MouseArea {
-                        id: netMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onEntered: {
-                            popoverDismissTimer.stop();
-                            root.activePopover = "net";
-                        }
-                        onExited: {
-                            popoverDismissTimer.restart();
-                        }
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "control"])
-                    }
-                }
+            Behavior on x {
+                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+            }
+            Behavior on width {
+                NumberAnimation { duration: 160; easing.type: Easing.OutCubic }
+            }
+            Behavior on opacity {
+                NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+            }
 
-                // Bluetooth
-                Item {
-                    id: btPill
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    height: 18
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰂯"
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 14
-                        color: btMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
-                    }
-
-                    MouseArea {
-                        id: btMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "control"])
-                    }
-                }
-
-                // UPower Battery Pill
-                Item {
-                    id: batPill
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: Math.max(18, batLabel.implicitWidth)
-                    height: 18
-                    visible: root.batReady && root.batPct >= 0
-
-                    Text {
-                        id: batLabel
-                        anchors.centerIn: parent
-                        text: Math.round(root.batPct) + "%"
-                        font.family: Island.Theme.fontFamily
-                        font.pixelSize: 11
-                        font.weight: Font.DemiBold
-                        color: root.batPct <= 20
-                            ? Island.Theme.red
-                            : ((batMouse.containsMouse || root.activePopover === "bat") ? Island.Theme.primary : "#f5a97f")
-                    }
-
-                    MouseArea {
-                        id: batMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onEntered: {
-                            popoverDismissTimer.stop();
-                            root.activePopover = "bat";
-                        }
-                        onExited: {
-                            popoverDismissTimer.restart();
-                        }
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "power"])
-                    }
-                }
-
-                // Notification Bell
-                Item {
-                    id: notifPill
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    height: 18
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰂚"
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 14
-                        color: notifMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted
-                    }
-
-                    Rectangle {
-                        visible: Island.IslandHub.unreadCount > 0
-                        anchors.top: parent.top
-                        anchors.right: parent.right
-                        anchors.topMargin: 0
-                        anchors.rightMargin: 0
-                        width: 5
-                        height: 5
-                        radius: 2.5
-                        color: Island.Theme.primary
-                    }
-
-                    MouseArea {
-                        id: notifMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "notifcenter"])
-                    }
-                }
-
-                // Control Center / Quick Sliders
-                Item {
-                    id: controlPill
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    height: 18
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰅒"
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 14
-                        color: controlMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
-                    }
-
-                    MouseArea {
-                        id: controlMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "control"])
-                    }
-                }
-
-                // Display Switcher
-                Item {
-                    id: displayPill
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    height: 18
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰍹"
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 14
-                        color: displayMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
-                    }
-
-                    MouseArea {
-                        id: displayMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "control", "displays"])
-                    }
-                }
-
-                // Screen Recording
-                Item {
-                    id: recPill
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    height: 18
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: Island.Backend.recording ? "󰓛" : "󰕧"
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 14
-                        color: Island.Backend.recording ? Island.Theme.red : (recMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted)
-                    }
-
-                    MouseArea {
-                        id: recMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "capture"])
-                    }
-                }
-
-                // Wallpaper
-                Item {
-                    id: wallPill
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    height: 18
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰸉"
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 14
-                        color: wallMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
-                    }
-
-                    MouseArea {
-                        id: wallMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "wallpaper"])
-                    }
-                }
-
-                // Clipboard
-                Item {
-                    id: clipPill
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    height: 18
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰅍"
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 14
-                        color: clipMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
-                    }
-
-                    MouseArea {
-                        id: clipMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "clipboard"])
-                    }
-                }
-
-                // App Launcher
-                Item {
-                    id: launcherPill
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    height: 18
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰀻"
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 14
-                        color: launcherMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
-                    }
-
-                    MouseArea {
-                        id: launcherMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "launcher"])
-                    }
-                }
-
-                // Settings
-                Item {
-                    id: settingsPill
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    height: 18
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰒓"
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 14
-                        color: settingsMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
-                    }
-
-                    MouseArea {
-                        id: settingsMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "settings", "toggle"])
-                    }
-                }
-
-                // Power
-                Item {
-                    id: powerPill
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 18
-                    height: 18
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰐥"
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 14
-                        color: powerMouse.containsMouse ? Island.Theme.red : Island.Theme.muted
-                    }
-
-                    MouseArea {
-                        id: powerMouse
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "power"])
-                    }
-                }
-
-                // Red Recording Halo Dot
-                Rectangle {
-                    id: recHalo
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 12
-                    height: 12
-                    radius: 6
-                    color: Island.Backend.recording ? Island.Theme.red : "transparent"
-                    border.color: Island.Backend.recording ? Qt.rgba(1, 0, 0, 0.4) : Island.Theme.glassBorderSubtle
-                    border.width: 1.5
-
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 6
-                        height: 6
-                        radius: 3
-                        color: Island.Backend.recording ? "#ffffff" : Island.Theme.muted
-                        opacity: Island.Backend.recording ? 1.0 : 0.35
-                    }
-
-                    SequentialAnimation on scale {
-                        running: Island.Backend.recording
-                        loops: Animation.Infinite
-                        NumberAnimation { to: 1.25; duration: 600; easing.type: Easing.InOutQuad }
-                        NumberAnimation { to: 0.95; duration: 600; easing.type: Easing.InOutQuad }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        anchors.margins: -4
-                        cursorShape: Qt.PointingHandCursor
-                        hoverEnabled: true
-                        onClicked: {
-                            if (Island.Backend.recording) {
-                                Island.Backend.stopRecording();
-                            } else {
-                                Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "capture"]);
-                            }
-                        }
-                    }
-                }
+            Text {
+                id: tooltipText
+                anchors.centerIn: parent
+                text: root.hoveredTooltipText
+                font.family: Island.Theme.fontFamily
+                font.pixelSize: 10
+                font.weight: Font.DemiBold
+                color: Island.Theme.foreground
             }
         }
 
