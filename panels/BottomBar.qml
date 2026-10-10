@@ -18,6 +18,11 @@ PanelWindow {
     property var interactionModel: null
     property var desktopState: null
 
+    // Action signals
+    signal toggleOverview()
+    signal toggleSettings()
+    signal cycleDisplays()
+
     // Expand/Collapse state: default compact pill (workspaces + clock + expand dot)
     property bool expanded: false
 
@@ -388,7 +393,7 @@ PanelWindow {
                                 }
                                 onClicked: (mouse) => {
                                     if (mouse.button === Qt.RightButton) {
-                                        Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "overview", "toggle"]);
+                                        root.toggleOverview();
                                         return;
                                     }
                                     if (root.interactionModel && wsSlot.wsId !== -1)
@@ -860,7 +865,7 @@ PanelWindow {
                                     releaseHover();
                                     root.hideTooltip();
                                 }
-                                onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "displays", "cycle"])
+                                onClicked: root.cycleDisplays()
                             }
                         }
 
@@ -1025,7 +1030,7 @@ PanelWindow {
                                     releaseHover();
                                     root.hideTooltip();
                                 }
-                                onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "settings", "toggle"])
+                                onClicked: root.toggleSettings()
                             }
                         }
 

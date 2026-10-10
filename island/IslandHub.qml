@@ -296,12 +296,19 @@ Singleton {
                 const parts = line.trim().split(/\s+/);
                 if (parts.length >= 4) {
                     const next = [];
+                    let diff = 0;
+                    const prev = root.levels || [0, 0, 0, 0];
                     for (let i = 0; i < 4; ++i) {
                         const v = Number(parts[i]);
-                        next.push(Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0);
+                        const val = Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0;
+                        next.push(val);
+                        diff = Math.max(diff, Math.abs(val - (prev[i] || 0)));
                     }
-                    root.levels = next;
-                    root.levelUpdatedAt = Date.now();
+                    // Only update if difference > 0.012 or both non-zero transitioning to silence
+                    if (diff > 0.012 || (next[0] === 0 && prev[0] !== 0)) {
+                        root.levels = next;
+                        root.levelUpdatedAt = Date.now();
+                    }
                 }
             }
         }
@@ -344,5 +351,9 @@ Singleton {
             root.burst();
             root.sweep();
         }
+    }
+
+    Component.onDestruction: {
+        root.stopLevels();
     }
 }

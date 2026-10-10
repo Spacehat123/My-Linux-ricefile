@@ -2043,6 +2043,8 @@ ShellRoot {
                 interactionModel: shellRoot.interactionModel
                 open: (monitorScope.rightSidebarOpen || (shellRoot.desktopState && shellRoot.desktopState.rightSidebarOpen)) && !ShellState.gameMode
 
+                onToggleOverview: shellRoot.overviewOpen = !shellRoot.overviewOpen
+
                 onHoveredChanged: {
                     if (!hovered && !rightTrigger.active) {
                         monitorScope.rightSidebarOpen = false
@@ -2059,6 +2061,10 @@ ShellRoot {
                 interactionModel: shellRoot.interactionModel
                 desktopState: shellRoot.desktopState
                 open: (monitorScope.bottomBarOpen || (shellRoot.desktopState && shellRoot.desktopState.bottomBarOpen)) && !ShellState.gameMode
+
+                onToggleOverview: shellRoot.overviewOpen = !shellRoot.overviewOpen
+                onToggleSettings: settingsWindow.toggle()
+                onCycleDisplays: Quickshell.execDetached([Quickshell.shellPath("island/scripts/display-switcher.sh"), "cycle"])
 
                 onHoveredChanged: {
                     if (!hovered && !centerTrigger.active) {

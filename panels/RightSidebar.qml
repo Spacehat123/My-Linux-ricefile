@@ -22,6 +22,9 @@ PanelWindow {
     // Navigation Tab state: 0 = Glance, 1 = Spaces, 2 = System
     property int currentTab: 0
 
+    // Action signals
+    signal toggleOverview()
+
     // Dual-layer hover continuity system
     property bool hoverLatching: false
 
@@ -729,7 +732,7 @@ PanelWindow {
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "overview", "toggle"])
+                                            onClicked: root.toggleOverview()
                                         }
                                     }
                                 }

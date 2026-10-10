@@ -9,6 +9,7 @@ discover ports via pw-dump, and pw-link sink monitor_FL/FR to our inputs.
 stdlib only."""
 
 import atexit
+import fcntl
 import json
 import math
 import os
@@ -198,6 +199,33 @@ def main():
     signal.signal(signal.SIGINT, _handle_exit)
     atexit.register(_kill_child)
     runtime = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+
+    # Singleton Process Lock: ensure only ONE level-meter runs across the entire system
+    lock_path = os.path.join(runtime, "cool-shell-level-meter.lock")
+    try:
+        lock_fd = os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600)
+        try:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except (BlockingIOError, OSError):
+            content = os.read(lock_fd, 32).decode().strip()
+            if content.isdigit():
+                existing_pid = int(content)
+                if existing_pid != os.getpid():
+                    try:
+                        os.kill(existing_pid, signal.SIGTERM)
+                        time.sleep(0.2)
+                    except ProcessLookupError:
+                        pass
+            try:
+                fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except (BlockingIOError, OSError):
+                sys.exit(0)
+        os.ftruncate(lock_fd, 0)
+        os.lseek(lock_fd, 0, os.SEEK_SET)
+        os.write(lock_fd, ("%d\n" % os.getpid()).encode())
+    except Exception:
+        pass
+
     out_path = os.path.join(runtime, "cool-shell-levels")
     tag = "cool-shell-levels-%d" % os.getpid()
     last_sink = None

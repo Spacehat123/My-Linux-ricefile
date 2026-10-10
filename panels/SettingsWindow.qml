@@ -65,6 +65,7 @@ PanelWindow {
     property bool keyNumlockDefault: false
     property int idleTimeoutMinutes: 2
     property var gameModeExceptions: ["steam", "discord", "spotify", "obs", "heroic"]
+    property string activeCategory: "network"
 
     // =========================================================================
     // PUBLIC API METHODS
@@ -86,7 +87,7 @@ PanelWindow {
 
     function openCategory(cat) {
         if (cat) {
-            windowCard.activeCategory = cat;
+            root.activeCategory = cat;
         }
         show();
     }
@@ -238,13 +239,23 @@ PanelWindow {
     }
 
     // =========================================================================
-    // DISMISSAL & MODAL BACKDROP
+    // DISMISSAL & MODAL BACKDROP (Zero-Render when closed via on-demand Loader)
     // =========================================================================
 
-    FocusScope {
-        id: focusScope
+    Loader {
+        id: windowLoader
         anchors.fill: parent
-        focus: root.open
+        active: root.open
+        sourceComponent: focusScopeComp
+    }
+
+    Component {
+        id: focusScopeComp
+
+        FocusScope {
+            id: focusScope
+            anchors.fill: parent
+            focus: true
 
         Keys.onEscapePressed: {
             root.hide();
@@ -297,7 +308,7 @@ PanelWindow {
                 acceptedButtons: Qt.AllButtons
             }
 
-            property string activeCategory: "network"
+            property alias activeCategory: root.activeCategory
 
             Column {
                 anchors.fill: parent
@@ -2484,4 +2495,5 @@ PanelWindow {
             }
         }
     }
+}
 }

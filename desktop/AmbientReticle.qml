@@ -21,6 +21,8 @@ Item {
         color: "transparent"
         border.width: theme.ambientLineWidth
         border.color: theme.ambientHudFaint
+        layer.enabled: true
+        layer.smooth: true
 
         // Pure C++ linear drift: 1 revolution every 120 seconds
         NumberAnimation {

@@ -15,8 +15,8 @@ PanelWindow {
     property string mediaSource: ""
     property bool live: true
 
-    // Lifecycle visibility: window is mapped to layer-shell only when active
-    visible: enabled && activeRendering && mediaType === "video" && mediaSource !== ""
+    // Lifecycle visibility: window is mapped to layer-shell only when active and in-view
+    visible: enabled && activeRendering && mediaType === "video" && mediaSource !== "" && live
 
     onLiveChanged: _syncPlayback()
     onVisibleChanged: _syncPlayback()

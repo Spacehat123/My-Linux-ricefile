@@ -828,7 +828,7 @@ Item {
                 TapHandler {
                     id: scTap
                     onTapped: {
-                        Quickshell.execDetached(["sh", "-c", "sleep 0.2; quickshell ipc -c cool-shell call capture screenshot region"]);
+                        Island.Backend.capture("region");
                     }
                 }
 
@@ -865,7 +865,7 @@ Item {
                 TapHandler {
                     id: recTap
                     onTapped: {
-                        Quickshell.execDetached(["sh", "-c", "sleep 0.2; quickshell ipc -c cool-shell call capture toggleRecording"]);
+                        Island.Backend.toggleRecording("region", Island.Backend.recordAudio);
                     }
                 }
 

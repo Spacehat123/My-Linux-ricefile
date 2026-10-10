@@ -280,6 +280,12 @@ PanelWindow {
                         const barW = Math.max(3, (width - (count - 1) * spacing) / count);
                         const lvls = (Island.IslandHub && Island.IslandHub.levels) ? Island.IslandHub.levels : [0.1, 0.1, 0.1, 0.1];
 
+                        const grad = ctx.createLinearGradient(0, 0, 0, height);
+                        grad.addColorStop(0.0, Island.Theme.aqua);
+                        grad.addColorStop(0.45, Island.Theme.primary);
+                        grad.addColorStop(1.0, "rgba(184, 104, 180, 0.2)");
+                        ctx.fillStyle = grad;
+
                         for (let i = 0; i < count; ++i) {
                             const x = i * (barW + spacing);
                             const slot = Math.min(3, Math.floor(i / 10));
@@ -303,13 +309,6 @@ PanelWindow {
                             barHeights[i] = currentH;
 
                             const y = height - currentH;
-
-                            const grad = ctx.createLinearGradient(0, y, 0, height);
-                            grad.addColorStop(0.0, Island.Theme.aqua);
-                            grad.addColorStop(0.45, Island.Theme.primary);
-                            grad.addColorStop(1.0, "rgba(184, 104, 180, 0.2)");
-
-                            ctx.fillStyle = grad;
 
                             ctx.beginPath();
                             const r = barW / 2;
