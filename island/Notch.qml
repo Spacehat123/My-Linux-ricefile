@@ -142,6 +142,53 @@ PanelWindow {
         left: true
     }
 
+    // -------------------------------------------------------------------------
+    // Fullscreen Idle Autohide Intelligence
+    // On full screen the island should be invisible on idle.
+    // -------------------------------------------------------------------------
+    readonly property bool screenHasFullscreen: {
+        if (typeof Hyprland === "undefined") return false;
+        if (activeMonitor && window.screen && window.screen.name === activeMonitor.name) {
+            return Hyprland.focusedWorkspace ? Boolean(Hyprland.focusedWorkspace.hasFullscreen) : false;
+        }
+        if (Hyprland.workspaces) {
+            const list = Hyprland.workspaces.values;
+            for (let i = 0; i < list.length; ++i) {
+                const ws = list[i];
+                if (ws && ws.active && ws.monitor && window.screen && ws.monitor.name === window.screen.name) {
+                    return Boolean(ws.hasFullscreen);
+                }
+            }
+        }
+        return Hyprland.focusedWorkspace ? Boolean(Hyprland.focusedWorkspace.hasFullscreen) : false;
+    }
+
+    IdleMonitor {
+        id: fullscreenIdleMonitor
+        enabled: window.screenHasFullscreen && !window.isExpanded
+        timeout: 3
+        respectInhibitors: false
+    }
+
+    readonly property bool isFullscreenIdle: window.screenHasFullscreen
+        && !window.isExpanded
+        && !(collapsedMouseArea && collapsedMouseArea.containsMouse)
+        && !IslandHub.noticeActive
+        && !IslandHub.flashActive
+        && !IslandHub.recordingActive
+        && Boolean(fullscreenIdleMonitor.isIdle)
+
+    property real islandSurfaceOpacity: isFullscreenIdle ? 0.0 : 1.0
+
+    Behavior on islandSurfaceOpacity {
+        NumberAnimation {
+            duration: 260
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    visible: !window.isFullscreenIdle || islandSurfaceOpacity > 0.001
+
     // Switch dimmer: panel cross-fade on switch/restore (multiplies stage).
     property real switchDim: 1
 
@@ -194,6 +241,8 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         width: window.targetVisualWidth
         height: window.targetVisualHeight
+        opacity: window.islandSurfaceOpacity
+        visible: opacity > 0.001
         focus: true
         Keys.onPressed: (event) => {
             if (event.key === Qt.Key_Escape) {
@@ -1544,11 +1593,11 @@ PanelWindow {
     }
 
     mask: Region {
-        item: notchBody
-        topLeftRadius: notchBody.radius
-        topRightRadius: notchBody.radius
-        bottomLeftRadius: notchBody.radius
-        bottomRightRadius: notchBody.radius
+        item: (window.islandSurfaceOpacity > 0.001) ? notchBody : null
+        topLeftRadius: notchBody ? notchBody.radius : 0
+        topRightRadius: notchBody ? notchBody.radius : 0
+        bottomLeftRadius: notchBody ? notchBody.radius : 0
+        bottomRightRadius: notchBody ? notchBody.radius : 0
     }
 
 }

@@ -5,6 +5,7 @@ set -euo pipefail
 # ensure it is on PATH so Quickshell-launched processes find it regardless
 # of the environment the compositor was started with.
 command -v jq >/dev/null 2>&1 || [[ -x $HOME/.local/bin/jq ]] && export PATH="$HOME/.local/bin:$PATH"
+[[ -d $HOME/.spicetify ]] && export PATH="$HOME/.spicetify:$PATH"
 command -v jq >/dev/null 2>&1 || { printf 'theme-system: jq is required but not installed\n' >&2; exit 1; }
 
 theme_dir=${XDG_CONFIG_HOME:-"$HOME/.config"}/vyeos/themes
@@ -276,6 +277,96 @@ apply_fish_theme() {
   fish -c 'source $argv[1]' "$cache_dir/fish.fish" >/dev/null 2>&1
 }
 
+apply_spicetify_theme() {
+  local file=$1 slug name
+  local xpui_colors="$HOME/.local/share/spotify-launcher/install/usr/share/spotify/Apps/xpui/colors.css"
+  [[ -f "$xpui_colors" ]] || return 0
+
+  name=$(jq -er '.name' "$file")
+  slug=$(jq -er '.slug' "$file")
+
+  local bg0 bg_dim bg1 bg2 fg mut prim red
+  bg0=$(jq -r '.colors.bg0[1:]' "$file")
+  bg_dim=$(jq -r '.colors.bg_dim[1:]' "$file")
+  bg1=$(jq -r '.colors.bg1[1:]' "$file")
+  bg2=$(jq -r '.colors.bg2[1:]' "$file")
+  fg=$(jq -r '.colors.foreground[1:]' "$file")
+  mut=$(jq -r '.colors.muted[1:]' "$file")
+  prim=$(jq -r '.colors.primary[1:]' "$file")
+  red=$(jq -r '.colors.red[1:]' "$file")
+
+  local rgb_bg0 rgb_bg_dim rgb_bg1 rgb_bg2 rgb_fg rgb_mut rgb_prim rgb_red
+  rgb_bg0=$(printf '%d,%d,%d' "0x${bg0:0:2}" "0x${bg0:2:2}" "0x${bg0:4:2}")
+  rgb_bg_dim=$(printf '%d,%d,%d' "0x${bg_dim:0:2}" "0x${bg_dim:2:2}" "0x${bg_dim:4:2}")
+  rgb_bg1=$(printf '%d,%d,%d' "0x${bg1:0:2}" "0x${bg1:2:2}" "0x${bg1:4:2}")
+  rgb_bg2=$(printf '%d,%d,%d' "0x${bg2:0:2}" "0x${bg2:2:2}" "0x${bg2:4:2}")
+  rgb_fg=$(printf '%d,%d,%d' "0x${fg:0:2}" "0x${fg:2:2}" "0x${fg:4:2}")
+  rgb_mut=$(printf '%d,%d,%d' "0x${mut:0:2}" "0x${mut:2:2}" "0x${mut:4:2}")
+  rgb_prim=$(printf '%d,%d,%d' "0x${prim:0:2}" "0x${prim:2:2}" "0x${prim:4:2}")
+  rgb_red=$(printf '%d,%d,%d' "0x${red:0:2}" "0x${red:2:2}" "0x${red:4:2}")
+
+  cat <<EOF > "$xpui_colors"
+:root {
+    --spice-main: #${bg0};
+    --spice-sidebar: #${bg_dim};
+    --spice-player: #${bg_dim};
+    --spice-card: #${bg1};
+    --spice-shadow: #${bg_dim};
+    --spice-main-secondary: #${bg1};
+    --spice-text: #${fg};
+    --spice-subtext: #${mut};
+    --spice-button: #${prim};
+    --spice-button-active: #${prim};
+    --spice-button-secondary: #${mut};
+    --spice-button-disabled: #${bg2};
+    --spice-nav-active: #${prim};
+    --spice-play-button: #${prim};
+    --spice-playback-bar: #${prim};
+    --spice-tab-active: #${bg2};
+    --spice-notification: #${bg2};
+    --spice-notification-error: #${red};
+    --spice-misc: #${fg};
+    --spice-selected-row: #ffffff;
+    --spice-nav-active-text: #${bg0};
+    --spice-main-elevated: #${bg1};
+    --spice-highlight-elevated: #${bg2};
+    --spice-highlight: #${bg1};
+
+    --spice-rgb-main: ${rgb_bg0};
+    --spice-rgb-sidebar: ${rgb_bg_dim};
+    --spice-rgb-player: ${rgb_bg_dim};
+    --spice-rgb-card: ${rgb_bg1};
+    --spice-rgb-shadow: ${rgb_bg_dim};
+    --spice-rgb-main-secondary: ${rgb_bg1};
+    --spice-rgb-text: ${rgb_fg};
+    --spice-rgb-subtext: ${rgb_mut};
+    --spice-rgb-button: ${rgb_prim};
+    --spice-rgb-button-active: ${rgb_prim};
+    --spice-rgb-button-secondary: ${rgb_mut};
+    --spice-rgb-button-disabled: ${rgb_bg2};
+    --spice-rgb-nav-active: ${rgb_prim};
+    --spice-rgb-play-button: ${rgb_prim};
+    --spice-rgb-playback-bar: ${rgb_prim};
+    --spice-rgb-tab-active: ${rgb_bg2};
+    --spice-rgb-notification: ${rgb_bg2};
+    --spice-rgb-notification-error: ${rgb_red};
+    --spice-rgb-misc: ${rgb_fg};
+    --spice-rgb-selected-row: 255,255,255;
+    --spice-rgb-nav-active-text: ${rgb_bg0};
+    --spice-rgb-main-elevated: ${rgb_bg1};
+    --spice-rgb-highlight-elevated: ${rgb_bg2};
+    --spice-rgb-highlight: ${rgb_bg1};
+}
+EOF
+
+  local config_ini="${XDG_CONFIG_HOME:-$HOME/.config}/spicetify/config-xpui.ini"
+  [[ -f "$config_ini" ]] && sed -i "s/^color_scheme *=.*/color_scheme = $name/" "$config_ini"
+
+  if pgrep -x spotify >/dev/null 2>&1; then
+    hyprctl repl "pcall(hl.dsp.send_shortcut, 'CTRL_SHIFT', 'R', 'Spotify')" >/dev/null 2>&1 || true
+  fi
+}
+
 write_generated_files() {
   local file=$1 slug name appearance
   slug=$(jq -er '.slug' "$file")
@@ -490,6 +581,7 @@ apply_theme() {
   apply_alacritty_theme "$file"
   apply_fish_theme
   apply_folder_icons "$file"
+  apply_spicetify_theme "$file" &
   hyprctl reload >/dev/null 2>&1 || true
   qs ipc call theme reload >/dev/null 2>&1 || true
   restore_wallpaper || true

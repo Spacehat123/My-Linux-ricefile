@@ -47,6 +47,25 @@ PanelWindow {
             root.expanded = val;
             return JSON.stringify({ success: true, expanded: root.expanded });
         }
+
+        function getExpanded(): string {
+            return JSON.stringify({ success: true, expanded: root.expanded });
+        }
+    }
+
+    // 5-second expansion state memory:
+    // When the bar closes while expanded, start a 5-second timer.
+    // Re-opening within 5 seconds preserves the state you left it in.
+    // If the bar remains closed for > 5 seconds, auto-collapse to the minimalist small state.
+    Timer {
+        id: expandCollapseMemoryTimer
+        interval: 5000
+        repeat: false
+        onTriggered: {
+            if (!root.open) {
+                root.expanded = false;
+            }
+        }
     }
 
     // Hover continuity & Popover system
@@ -1573,6 +1592,7 @@ PanelWindow {
 
     onOpenChanged: {
         if (open) {
+            expandCollapseMemoryTimer.stop();
             pingHover();
             hoverGraceTimer.restart();
             closeAnim.stop();
@@ -1581,6 +1601,9 @@ PanelWindow {
             hoverLatching = false;
             openAnim.stop();
             closeAnim.start();
+            if (root.expanded) {
+                expandCollapseMemoryTimer.restart();
+            }
         }
     }
 }
