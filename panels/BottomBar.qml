@@ -37,12 +37,61 @@ PanelWindow {
         }
     }
 
+    property bool hoverLatching: false
+
+    Timer {
+        id: hoverGraceTimer
+        interval: 400
+        repeat: false
+        onTriggered: {
+            hoverLatching = false;
+        }
+    }
+
+    function pingHover() {
+        hoverLatching = true;
+        hoverGraceTimer.stop();
+    }
+
+    function releaseHover() {
+        hoverGraceTimer.restart();
+    }
+
     readonly property bool hovered: (dockMouse && dockMouse.containsMouse)
+        || (dockHover && dockHover.hovered)
+        || hoverLatching
         || (activePopover !== "")
         || (wsHover && wsHover.containsMouse)
         || (netMouse && netMouse.containsMouse)
         || (volMouse && volMouse.containsMouse)
         || (batMouse && batMouse.containsMouse)
+
+    readonly property var workspaceList: {
+        const list = [];
+        const activeId = (root.desktopState && root.desktopState.currentWorkspaceId > 0)
+            ? root.desktopState.currentWorkspaceId
+            : ((root.desktopModel && root.desktopModel.focusedWorkspaceId > 0) ? root.desktopModel.focusedWorkspaceId : 1);
+        let maxId = 4;
+        const existing = {};
+        if (root.desktopModel && root.desktopModel.workspaces) {
+            for (let i = 0; i < root.desktopModel.workspaces.length; ++i) {
+                const w = root.desktopModel.workspaces[i];
+                existing[w.id] = w;
+                if (w.id > maxId) maxId = w.id;
+            }
+        }
+        if (activeId > maxId) maxId = activeId;
+        for (let id = 1; id <= maxId; ++id) {
+            const item = existing[id];
+            list.push({
+                id: id,
+                name: String(id),
+                focused: id === activeId,
+                occupied: item ? Boolean(item.occupied) : false
+            });
+        }
+        return list;
+    }
 
     anchors {
         bottom: true
@@ -149,18 +198,26 @@ PanelWindow {
         // =====================================================================
         Rectangle {
             id: dockBody
-            anchors.left: parent.left
-            anchors.right: parent.right
+            anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
-            height: 44
-            radius: 22
+            width: dockRow.implicitWidth + 30
+            height: 38
+            radius: 19
             color: Qt.tint("#07070a", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.08))
             border.color: Island.Theme.glassBorder
-            border.width: Island.Theme.glassBorderWidth
-            clip: true
+            border.width: 1
+            clip: false
 
             Behavior on color {
                 ColorAnimation { duration: 300 }
+            }
+
+            HoverHandler {
+                id: dockHover
+                onHoveredChanged: {
+                    if (hovered) pingHover();
+                    else releaseHover();
+                }
             }
 
             MouseArea {
@@ -168,252 +225,209 @@ PanelWindow {
                 anchors.fill: parent
                 hoverEnabled: true
                 acceptedButtons: Qt.NoButton
+                onEntered: pingHover()
+                onExited: releaseHover()
             }
 
-            // Covers the workspace Repeater for hover tracking continuity
+            // Covers the workspace dots for hover tracking continuity
             MouseArea {
                 id: wsHover
                 anchors.fill: wsRow
                 hoverEnabled: true
                 acceptedButtons: Qt.NoButton
+                onEntered: pingHover()
+                onExited: releaseHover()
             }
 
-            // ---- Left: Liquid Workspace Capsules ----
             Row {
-                id: wsRow
-                anchors.left: parent.left
-                anchors.leftMargin: 10
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 6
+                id: dockRow
+                anchors.centerIn: parent
+                spacing: 12
 
-                Repeater {
-                    model: root.desktopModel && root.desktopModel.workspaces ? root.desktopModel.workspaces : []
+                // 1. Minimalist Workspaces (• • • —)
+                Row {
+                    id: wsRow
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 7
 
-                    delegate: Rectangle {
-                        id: wsBtn
-                        required property var modelData
+                    Repeater {
+                        model: root.workspaceList
 
-                        readonly property int wsId: modelData ? modelData.id : -1
-                        readonly property bool isActive: modelData ? Boolean(modelData.focused) : false
-                        readonly property bool isOccupied: modelData ? (Boolean(modelData.occupied) || (modelData.surfaceCount && modelData.surfaceCount > 0)) : false
-                        readonly property string wsLabel: modelData ? (modelData.name || String(modelData.id)) : ""
+                        delegate: Item {
+                            id: wsSlot
+                            required property var modelData
+                            readonly property int wsId: modelData ? modelData.id : -1
+                            readonly property bool isActive: modelData ? Boolean(modelData.focused) : false
+                            readonly property bool isOccupied: modelData ? Boolean(modelData.occupied) : false
 
-                        height: 28
-                        width: isActive ? Math.max(46, wsLabelText.implicitWidth + 24) : (isOccupied ? 30 : 22)
-                        radius: 14
+                            width: isActive ? 18 : 6
+                            height: 22
+                            anchors.verticalCenter: parent.verticalCenter
 
-                        Behavior on width {
-                            SpringAnimation {
-                                spring: 4.2
-                                damping: 0.35
-                                epsilon: 0.5
+                            Behavior on width {
+                                NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
                             }
-                        }
 
-                        color: wsMouse.containsMouse
-                            ? Island.Theme.glassCardHover
-                            : (isActive
-                                ? Island.Theme.glassCardHover
-                                : (isOccupied ? Island.Theme.glassCard : "transparent"))
-
-                        border.color: isActive
-                            ? Island.Theme.primary
-                            : (wsMouse.containsMouse ? Island.Theme.glassBorder : (isOccupied ? Island.Theme.glassBorderSubtle : "transparent"))
-                        border.width: 1
-
-                        scale: wsMouse.pressed ? 0.94 : 1.0
-                        Behavior on scale { NumberAnimation { duration: 80 } }
-                        Behavior on color { ColorAnimation { duration: 120 } }
-                        Behavior on border.color { ColorAnimation { duration: 120 } }
-
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 4
-
-                            // Small occupied dot indicator if not active but occupied
                             Rectangle {
-                                visible: !wsBtn.isActive && wsBtn.isOccupied
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: 4
-                                height: 4
-                                radius: 2
-                                color: Island.Theme.muted
-                            }
+                                anchors.centerIn: parent
+                                width: wsSlot.isActive ? 18 : 6
+                                height: 6
+                                radius: 3
+                                color: wsSlot.isActive ? Island.Theme.primary : (wsMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted)
+                                opacity: wsSlot.isActive ? 1.0 : (wsMouse.containsMouse ? 0.8 : (wsSlot.isOccupied ? 0.55 : 0.3))
 
-                            Text {
-                                id: wsLabelText
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: wsBtn.wsLabel
-                                font.family: Island.Theme.fontFamily
-                                font.pixelSize: 11
-                                font.bold: wsBtn.isActive || wsMouse.containsMouse
-                                color: wsBtn.isActive ? Island.Theme.primary : (wsMouse.containsMouse ? Island.Theme.foreground : (wsBtn.isOccupied ? Island.Theme.foreground : Island.Theme.muted))
-                            }
-                        }
-
-                        MouseArea {
-                            id: wsMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            acceptedButtons: Qt.LeftButton | Qt.RightButton
-                            onClicked: (mouse) => {
-                                if (mouse.button === Qt.RightButton) {
-                                    Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "overview", "toggle"]);
-                                    return;
+                                Behavior on width {
+                                    NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
                                 }
-                                if (root.interactionModel && wsBtn.wsId !== -1)
-                                    root.interactionModel.requestWorkspaceSwitch(wsBtn.wsId);
+                                Behavior on opacity {
+                                    NumberAnimation { duration: 120 }
+                                }
+                                Behavior on color {
+                                    ColorAnimation { duration: 120 }
+                                }
+                            }
+
+                            MouseArea {
+                                id: wsMouse
+                                anchors.fill: parent
+                                anchors.margins: -4
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onClicked: (mouse) => {
+                                    if (mouse.button === Qt.RightButton) {
+                                        Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "overview", "toggle"]);
+                                        return;
+                                    }
+                                    if (root.interactionModel && wsSlot.wsId !== -1)
+                                        root.interactionModel.requestWorkspaceSwitch(wsSlot.wsId);
+                                    else
+                                        Quickshell.execDetached(["hyprctl", "dispatch", "workspace", String(wsSlot.wsId)]);
+                                }
                             }
                         }
                     }
                 }
 
+                // Divider 1
                 Rectangle {
-                    id: overviewBtn
-                    height: 28
-                    width: 28
-                    radius: 14
-                    color: overviewMouse.containsMouse ? Island.Theme.glassCardHover : "transparent"
-                    border.color: overviewMouse.containsMouse ? Island.Theme.primary : Island.Theme.glassBorderSubtle
-                    border.width: 1
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 1
+                    height: 18
+                    color: Island.Theme.glassBorder
+                    opacity: 0.6
+                }
 
-                    Text {
+                // 2. Stacked Typographic Clock & Date
+                Item {
+                    id: clockItem
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: clockCol.implicitWidth
+                    height: clockCol.implicitHeight
+
+                    Column {
+                        id: clockCol
                         anchors.centerIn: parent
-                        text: "󰕰"
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 13
-                        color: overviewMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                        spacing: 0
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: Qt.formatDateTime(sysClock.date, "hh:mm")
+                            font.family: Island.Theme.fontFamily
+                            font.pixelSize: 14
+                            font.weight: Font.DemiBold
+                            color: Island.Theme.foreground
+                        }
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: Qt.formatDateTime(sysClock.date, "ddd d MMM").toUpperCase()
+                            font.family: Island.Theme.fontFamily
+                            font.pixelSize: 8
+                            font.weight: Font.Medium
+                            font.letterSpacing: 1.4
+                            color: Island.Theme.muted
+                        }
                     }
 
                     MouseArea {
-                        id: overviewMouse
                         anchors.fill: parent
-                        hoverEnabled: true
+                        anchors.margins: -4
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "overview", "toggle"]);
-                        }
+                        hoverEnabled: true
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "today"])
                     }
                 }
-            }
 
-            // ---- Center: Typographic Clock & Date ----
-            Column {
-                id: clockBlock
-                anchors.centerIn: parent
-                spacing: 1
-
-                Text {
-                    id: timeText
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatDateTime(sysClock.date, "hh:mm")
-                    font.family: Island.Theme.fontFamily
-                    font.pixelSize: 13
-                    font.bold: true
-                    color: Island.Theme.foreground
-                }
-
-                Text {
-                    id: dateText
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatDateTime(sysClock.date, "ddd, dd MMM")
-                    font.family: Island.Theme.fontFamily
-                    font.pixelSize: 9
-                    color: Island.Theme.muted
-                }
-            }
-
-            // ---- Right: System Status Module Cluster ----
-            Row {
-                id: sysRow
-                anchors.right: parent.right
-                anchors.rightMargin: 10
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 8
-
-                // Network Pill
+                // Divider 2
                 Rectangle {
-                    id: netPill
-                    height: 28
-                    width: Math.max(34, netRow.implicitWidth + 16)
-                    radius: 14
-                    color: (netMouse.containsMouse || root.activePopover === "net") ? Island.Theme.glassCardHover : Island.Theme.glassCard
-                    border.color: (netMouse.containsMouse || root.activePopover === "net") ? Island.Theme.primary : Island.Theme.glassBorderSubtle
-                    border.width: 1
-                    scale: netMouse.pressed ? 0.95 : 1.0
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 1
+                    height: 18
+                    color: Island.Theme.glassBorder
+                    opacity: 0.6
+                }
 
-                    Behavior on scale { NumberAnimation { duration: 80 } }
-                    Behavior on color { ColorAnimation { duration: 120 } }
+                // 3. Status & Quick Actions Cluster
+                // Weather
+                Item {
+                    id: weatherItem
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: weatherRow.implicitWidth
+                    height: weatherRow.implicitHeight
 
                     Row {
-                        id: netRow
+                        id: weatherRow
                         anchors.centerIn: parent
-                        spacing: 5
+                        spacing: 4
+
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: root.netIcon
-                            font.family: Island.Theme.iconFontFamily
-                            font.pixelSize: 13
-                            color: (netMouse.containsMouse || root.activePopover === "net") ? Island.Theme.primary : Island.Theme.foreground
+                            text: "☁"
+                            font.family: Island.Theme.fontFamily
+                            font.pixelSize: 12
+                            color: weatherMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: (Island.WeatherState.tempC !== "" ? Island.WeatherState.tempC.replace("+", "").replace("C", "").trim() : "29°")
+                            font.family: Island.Theme.fontFamily
+                            font.pixelSize: 11
+                            font.weight: Font.Medium
+                            color: weatherMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted
                         }
                     }
 
                     MouseArea {
-                        id: netMouse
+                        id: weatherMouse
                         anchors.fill: parent
+                        anchors.margins: -4
+                        cursorShape: Qt.PointingHandCursor
                         hoverEnabled: true
-                        onEntered: {
-                            popoverDismissTimer.stop();
-                            root.activePopover = "net";
-                        }
-                        onExited: {
-                            popoverDismissTimer.restart();
-                        }
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "weather"])
                     }
                 }
 
                 // PipeWire Audio Pill
-                Rectangle {
+                Item {
                     id: volPill
-                    height: 28
-                    width: Math.max(54, volRow.implicitWidth + 18)
-                    radius: 14
-                    color: (volMouse.containsMouse || root.activePopover === "vol") ? Island.Theme.glassCardHover : Island.Theme.glassCard
-                    border.color: (volMouse.containsMouse || root.activePopover === "vol") ? Island.Theme.primary : Island.Theme.glassBorderSubtle
-                    border.width: 1
-                    scale: volMouse.pressed ? 0.95 : 1.0
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 18
+                    height: 18
 
-                    Behavior on scale { NumberAnimation { duration: 80 } }
-                    Behavior on color { ColorAnimation { duration: 120 } }
-
-                    Row {
-                        id: volRow
+                    Text {
                         anchors.centerIn: parent
-                        spacing: 5
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: root.audioMuted ? "󰖁" : (root.sinkAudio && root.sinkAudio.volume > 0.5 ? "󰕾" : "󰖀")
-                            font.family: Island.Theme.iconFontFamily
-                            font.pixelSize: 13
-                            color: root.audioMuted ? Island.Theme.red : ((volMouse.containsMouse || root.activePopover === "vol") ? Island.Theme.primary : Island.Theme.foreground)
-                        }
-
-                        Text {
-                            id: volLabel
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: root.audioMuted ? "Mute" : root.volText
-                            font.family: Island.Theme.fontFamily
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: (volMouse.containsMouse || root.activePopover === "vol") ? Island.Theme.primary : Island.Theme.foreground
-                        }
+                        text: root.audioMuted ? "󰖁" : (root.sinkAudio && root.sinkAudio.volume > 0.5 ? "󰕾" : "󰖀")
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 14
+                        color: root.audioMuted ? Island.Theme.red : ((volMouse.containsMouse || root.activePopover === "vol") ? Island.Theme.primary : Island.Theme.muted)
                     }
 
                     MouseArea {
                         id: volMouse
                         anchors.fill: parent
+                        anchors.margins: -4
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onEntered: {
@@ -423,7 +437,9 @@ PanelWindow {
                         onExited: {
                             popoverDismissTimer.restart();
                         }
-                        onClicked: Quickshell.execDetached(["pavucontrol"])
+                        onClicked: {
+                            if (root.sinkAudio) root.sinkAudio.muted = !root.sinkAudio.muted;
+                        }
                         onWheel: (wheel) => {
                             if (root.sinkAudio) {
                                 const step = wheel.angleDelta.y > 0 ? 0.02 : -0.02;
@@ -433,51 +449,375 @@ PanelWindow {
                     }
                 }
 
-                // UPower Battery Pill
-                Rectangle {
-                    id: batPill
-                    visible: root.batReady && root.batPct >= 0
-                    height: 28
-                    width: Math.max(56, batRow.implicitWidth + 18)
-                    radius: 14
-                    color: (batMouse.containsMouse || root.activePopover === "bat") ? Island.Theme.glassCardHover : Island.Theme.glassCard
-                    border.color: (batMouse.containsMouse || root.activePopover === "bat") ? Island.Theme.primary : Island.Theme.glassBorderSubtle
-                    border.width: 1
+                // Network Pill
+                Item {
+                    id: netPill
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 18
+                    height: 18
 
-                    Row {
-                        id: batRow
+                    Text {
                         anchors.centerIn: parent
-                        spacing: 5
+                        text: root.netIcon
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 14
+                        color: (netMouse.containsMouse || root.activePopover === "net") ? Island.Theme.primary : Island.Theme.muted
+                    }
 
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: root.batteryIcon(root.batPct)
-                            font.family: Island.Theme.iconFontFamily
-                            font.pixelSize: 13
-                            color: root.batPct <= 20 ? Island.Theme.red : ((batMouse.containsMouse || root.activePopover === "bat") ? Island.Theme.primary : Island.Theme.foreground)
+                    MouseArea {
+                        id: netMouse
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onEntered: {
+                            popoverDismissTimer.stop();
+                            root.activePopover = "net";
                         }
+                        onExited: {
+                            popoverDismissTimer.restart();
+                        }
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "control"])
+                    }
+                }
 
-                        Text {
-                            id: batLabel
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: Math.round(root.batPct) + "%"
-                            font.family: Island.Theme.fontFamily
-                            font.pixelSize: 11
-                            font.bold: true
-                            color: (batMouse.containsMouse || root.activePopover === "bat") ? Island.Theme.primary : Island.Theme.foreground
-                        }
+                // Bluetooth
+                Item {
+                    id: btPill
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 18
+                    height: 18
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰂯"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 14
+                        color: btMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                    }
+
+                    MouseArea {
+                        id: btMouse
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "control"])
+                    }
+                }
+
+                // UPower Battery Pill
+                Item {
+                    id: batPill
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.max(18, batLabel.implicitWidth)
+                    height: 18
+                    visible: root.batReady && root.batPct >= 0
+
+                    Text {
+                        id: batLabel
+                        anchors.centerIn: parent
+                        text: Math.round(root.batPct) + "%"
+                        font.family: Island.Theme.fontFamily
+                        font.pixelSize: 11
+                        font.weight: Font.DemiBold
+                        color: root.batPct <= 20
+                            ? Island.Theme.red
+                            : ((batMouse.containsMouse || root.activePopover === "bat") ? Island.Theme.primary : "#f5a97f")
                     }
 
                     MouseArea {
                         id: batMouse
                         anchors.fill: parent
+                        anchors.margins: -4
                         hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
                         onEntered: {
                             popoverDismissTimer.stop();
                             root.activePopover = "bat";
                         }
                         onExited: {
                             popoverDismissTimer.restart();
+                        }
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "power"])
+                    }
+                }
+
+                // Notification Bell
+                Item {
+                    id: notifPill
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 18
+                    height: 18
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰂚"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 14
+                        color: notifMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted
+                    }
+
+                    Rectangle {
+                        visible: Island.IslandHub.unreadCount > 0
+                        anchors.top: parent.top
+                        anchors.right: parent.right
+                        anchors.topMargin: 0
+                        anchors.rightMargin: 0
+                        width: 5
+                        height: 5
+                        radius: 2.5
+                        color: Island.Theme.primary
+                    }
+
+                    MouseArea {
+                        id: notifMouse
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "notifcenter"])
+                    }
+                }
+
+                // Control Center / Quick Sliders
+                Item {
+                    id: controlPill
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 18
+                    height: 18
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰅒"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 14
+                        color: controlMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                    }
+
+                    MouseArea {
+                        id: controlMouse
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "control"])
+                    }
+                }
+
+                // Display Switcher
+                Item {
+                    id: displayPill
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 18
+                    height: 18
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰍹"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 14
+                        color: displayMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                    }
+
+                    MouseArea {
+                        id: displayMouse
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "control", "displays"])
+                    }
+                }
+
+                // Screen Recording
+                Item {
+                    id: recPill
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 18
+                    height: 18
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: Island.Backend.recording ? "󰓛" : "󰕧"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 14
+                        color: Island.Backend.recording ? Island.Theme.red : (recMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted)
+                    }
+
+                    MouseArea {
+                        id: recMouse
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "capture"])
+                    }
+                }
+
+                // Wallpaper
+                Item {
+                    id: wallPill
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 18
+                    height: 18
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰸉"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 14
+                        color: wallMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                    }
+
+                    MouseArea {
+                        id: wallMouse
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "wallpaper"])
+                    }
+                }
+
+                // Clipboard
+                Item {
+                    id: clipPill
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 18
+                    height: 18
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰅍"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 14
+                        color: clipMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                    }
+
+                    MouseArea {
+                        id: clipMouse
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "clipboard"])
+                    }
+                }
+
+                // App Launcher
+                Item {
+                    id: launcherPill
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 18
+                    height: 18
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰀻"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 14
+                        color: launcherMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                    }
+
+                    MouseArea {
+                        id: launcherMouse
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "launcher"])
+                    }
+                }
+
+                // Settings
+                Item {
+                    id: settingsPill
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 18
+                    height: 18
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰒓"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 14
+                        color: settingsMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
+                    }
+
+                    MouseArea {
+                        id: settingsMouse
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "settings", "toggle"])
+                    }
+                }
+
+                // Power
+                Item {
+                    id: powerPill
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 18
+                    height: 18
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰐥"
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 14
+                        color: powerMouse.containsMouse ? Island.Theme.red : Island.Theme.muted
+                    }
+
+                    MouseArea {
+                        id: powerMouse
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "power"])
+                    }
+                }
+
+                // Red Recording Halo Dot
+                Rectangle {
+                    id: recHalo
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 12
+                    height: 12
+                    radius: 6
+                    color: Island.Backend.recording ? Island.Theme.red : "transparent"
+                    border.color: Island.Backend.recording ? Qt.rgba(1, 0, 0, 0.4) : Island.Theme.glassBorderSubtle
+                    border.width: 1.5
+
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 6
+                        height: 6
+                        radius: 3
+                        color: Island.Backend.recording ? "#ffffff" : Island.Theme.muted
+                        opacity: Island.Backend.recording ? 1.0 : 0.35
+                    }
+
+                    SequentialAnimation on scale {
+                        running: Island.Backend.recording
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 1.25; duration: 600; easing.type: Easing.InOutQuad }
+                        NumberAnimation { to: 0.95; duration: 600; easing.type: Easing.InOutQuad }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        anchors.margins: -4
+                        cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
+                        onClicked: {
+                            if (Island.Backend.recording) {
+                                Island.Backend.stopRecording();
+                            } else {
+                                Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", "island", "panel", "capture"]);
+                            }
                         }
                     }
                 }
@@ -913,9 +1253,12 @@ PanelWindow {
 
     onOpenChanged: {
         if (open) {
+            pingHover();
+            hoverGraceTimer.restart();
             closeAnim.stop();
             openAnim.start();
         } else {
+            hoverLatching = false;
             openAnim.stop();
             closeAnim.start();
         }
