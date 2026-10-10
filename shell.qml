@@ -1766,6 +1766,14 @@ ShellRoot {
             return JSON.stringify({ success: true, action: "cycle" });
         }
 
+        function setMode(mode: string): string {
+            if (["laptop", "pc", "mirror", "duplicate", "extend", "dual", "external", "second"].includes(mode)) {
+                Quickshell.execDetached([Quickshell.shellPath("island/scripts/display-switcher.sh"), mode]);
+                return JSON.stringify({ success: true, mode: mode });
+            }
+            return JSON.stringify({ success: false, error: "Invalid mode: " + mode });
+        }
+
         function confirm(): string {
             displayConfirmProc.running = true;
             return JSON.stringify({ success: true, action: "confirm" });
