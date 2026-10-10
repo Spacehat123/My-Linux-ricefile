@@ -1807,6 +1807,10 @@ ShellRoot {
             ShellState.close();
             recordingShortcutDelay.restart();
         }
+
+        function cancel() {
+            Backend.cancelCaptureSelection();
+        }
     }
 
     Timer {
@@ -1823,7 +1827,7 @@ ShellRoot {
         id: recordingShortcutDelay
 
         interval: Theme.animationNormal + 100
-        onTriggered: Backend.toggleRecording()
+        onTriggered: Backend.toggleRecording("region", Backend.recordAudio)
     }
 
     Variants {

@@ -239,11 +239,111 @@ case "$action" in
     grim -g "$x,$y ${width}x${height}" "$output"
     publish_capture "$output"
     ;;
+  record-start-geometry)
+    x=${2:?x coordinate required}
+    y=${3:?y coordinate required}
+    width=${4:?width required}
+    height=${5:?height required}
+    audio_flag=${6:-no-audio}
+
+    [[ $x =~ ^-?[0-9]+$ && $y =~ ^-?[0-9]+$ && $width =~ ^[1-9][0-9]*$ && $height =~ ^[1-9][0-9]*$ ]]
+
+    # Enforce even width and height for video codec compliance (prevents odd-dimension encoding errors)
+    width=$(( (width / 2) * 2 ))
+    height=$(( (height / 2) * 2 ))
+    width=$(( width < 2 ? 2 : width ))
+    height=$(( height < 2 ? 2 : height ))
+
+    if pid=$(recording_pid); then
+      kill -INT "$pid" 2>/dev/null || true
+      rm -f -- "$recording_pid_file"
+    fi
+
+    command -v wf-recorder >/dev/null || {
+      printf 'wf-recorder is required for screen recording\n' >&2
+      exit 127
+    }
+
+    directory=${XDG_VIDEOS_DIR:-"$HOME/Videos"}/Recordings
+    mkdir -p "$directory"
+    output="$directory/recording-$(date +%Y%m%d-%H%M%S).mp4"
+
+    args=("-g" "$x,$y ${width}x${height}")
+    if [[ "$audio_flag" == "audio" ]]; then
+      args+=("-a")
+    fi
+
+    wf-recorder "${args[@]}" -f "$output" >/dev/null 2>&1 &
+    rec_pid=$!
+    printf '%s\n' "$rec_pid" > "$recording_pid_file"
+    printf '%s\n' "$output" > "${recording_pid_file}.target"
+    printf 'recording-started\n'
+    if command -v notify-send >/dev/null 2>&1; then
+      notify-send -u low "Screen Recording" "Recording region (${width}x${height})" || true
+    fi
+    ;;
+  record-start)
+    mode=${2:-full}
+    audio_flag=${3:-no-audio}
+
+    if pid=$(recording_pid); then
+      kill -INT "$pid" 2>/dev/null || true
+      rm -f -- "$recording_pid_file"
+    fi
+
+    command -v wf-recorder >/dev/null || {
+      printf 'wf-recorder is required for screen recording\n' >&2
+      exit 127
+    }
+
+    directory=${XDG_VIDEOS_DIR:-"$HOME/Videos"}/Recordings
+    mkdir -p "$directory"
+    output="$directory/recording-$(date +%Y%m%d-%H%M%S).mp4"
+
+    args=()
+    if [[ "$audio_flag" == "audio" ]]; then
+      args+=("-a")
+    fi
+
+    wf-recorder "${args[@]}" -f "$output" >/dev/null 2>&1 &
+    rec_pid=$!
+    printf '%s\n' "$rec_pid" > "$recording_pid_file"
+    printf '%s\n' "$output" > "${recording_pid_file}.target"
+    printf 'recording-started\n'
+    if command -v notify-send >/dev/null 2>&1; then
+      notify-send -u low "Screen Recording" "Full screen recording started" || true
+    fi
+    ;;
+  record-stop)
+    if pid=$(recording_pid); then
+      kill -INT "$pid" 2>/dev/null || true
+      rm -f -- "$recording_pid_file"
+      target_file=""
+      if [[ -r "${recording_pid_file}.target" ]]; then
+        read -r target_file < "${recording_pid_file}.target"
+        rm -f -- "${recording_pid_file}.target"
+      fi
+      printf 'recording-stopped\n'
+      if command -v notify-send >/dev/null 2>&1; then
+        notify-send -u normal "Screen Recording" "Saved to Recordings: ${target_file##*/}" || true
+      fi
+    else
+      printf 'recording-inactive\n'
+    fi
+    ;;
   record-toggle)
     if pid=$(recording_pid); then
-      kill -INT "$pid"
+      kill -INT "$pid" 2>/dev/null || true
       rm -f -- "$recording_pid_file"
+      target_file=""
+      if [[ -r "${recording_pid_file}.target" ]]; then
+        read -r target_file < "${recording_pid_file}.target"
+        rm -f -- "${recording_pid_file}.target"
+      fi
       printf 'recording-stopped\n'
+      if command -v notify-send >/dev/null 2>&1; then
+        notify-send -u normal "Screen Recording" "Saved to Recordings: ${target_file##*/}" || true
+      fi
     else
       command -v wf-recorder >/dev/null || {
         printf 'wf-recorder is required for screen recording\n' >&2
@@ -252,8 +352,14 @@ case "$action" in
       directory=${XDG_VIDEOS_DIR:-"$HOME/Videos"}/Recordings
       mkdir -p "$directory"
       output="$directory/recording-$(date +%Y%m%d-%H%M%S).mp4"
-      wf-recorder -f "$output" >/dev/null 2>&1 &
-      printf '%s\n' "$!" > "$recording_pid_file"
+      args=()
+      if [[ "${2:-}" == "audio" ]]; then
+        args+=("-a")
+      fi
+      wf-recorder "${args[@]}" -f "$output" >/dev/null 2>&1 &
+      rec_pid=$!
+      printf '%s\n' "$rec_pid" > "$recording_pid_file"
+      printf '%s\n' "$output" > "${recording_pid_file}.target"
       printf 'recording-started\n'
     fi
     ;;

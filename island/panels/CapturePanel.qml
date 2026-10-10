@@ -32,18 +32,14 @@ FocusScope {
     }
 
     function takeInitialFocus() {
-        if (recordingMode) {
-            recordControls.itemAt(0).forceActiveFocus(Qt.TabFocusReason);
-            return;
-        }
         const modes = ["full", "window", "region"];
-        focusScreenshotMode(Math.max(0, modes.indexOf(mode)));
+        focusCaptureMode(Math.max(0, modes.indexOf(mode)));
     }
 
-    function focusScreenshotMode(index) {
-        const count = screenshotModes.count;
+    function focusCaptureMode(index) {
+        const count = captureModes.count;
         const next = (index + count) % count;
-        const item = screenshotModes.itemAt(next);
+        const item = captureModes.itemAt(next);
         if (item) {
             mode = item.modelData.key;
             item.forceActiveFocus(Qt.TabFocusReason);
@@ -62,6 +58,13 @@ FocusScope {
 
         interval: Theme.animationNormal + 100
         onTriggered: Backend.capture(root.mode)
+    }
+
+    Timer {
+        id: recordDelay
+
+        interval: Theme.animationNormal + 100
+        onTriggered: Backend.startRecording(root.mode, Backend.recordAudio)
     }
 
     Shortcut {
@@ -197,10 +200,9 @@ FocusScope {
                     anchors.fill: parent
                     anchors.margins: 5
                     spacing: 2
-                    visible: !root.recordingMode
 
                     Repeater {
-                        id: screenshotModes
+                        id: captureModes
 
                         model: [{
                             "key": "full",
@@ -226,18 +228,18 @@ FocusScope {
                             width: parent.width
                             height: 34
                             activeFocusOnTab: true
-                            Keys.onReturnPressed: root.focusScreenshotMode(index)
-                            Keys.onEnterPressed: root.focusScreenshotMode(index)
-                            Keys.onSpacePressed: root.focusScreenshotMode(index)
-                            Keys.onUpPressed: root.focusScreenshotMode(index - 1)
-                            Keys.onDownPressed: root.focusScreenshotMode(index + 1)
+                            Keys.onReturnPressed: root.focusCaptureMode(index)
+                            Keys.onEnterPressed: root.focusCaptureMode(index)
+                            Keys.onSpacePressed: root.focusCaptureMode(index)
+                            Keys.onUpPressed: root.focusCaptureMode(index - 1)
+                            Keys.onDownPressed: root.focusCaptureMode(index + 1)
                             Accessible.role: Accessible.Button
                             Accessible.name: modelData.title
 
                             Rectangle {
                                 anchors.fill: parent
                                 radius: Theme.radiusSmall
-                                color: targetButton.selected ? Theme.primaryContainer : (targetPointer.containsMouse ? Theme.bg1 : "transparent")
+                                color: targetButton.selected ? (root.recordingMode ? Qt.rgba(0.90, 0.49, 0.50, 0.14) : Theme.primaryContainer) : (targetPointer.containsMouse ? Theme.bg1 : "transparent")
                                 border.width: targetButton.activeFocus ? 1 : 0
                                 border.color: root.accent
 
@@ -274,88 +276,7 @@ FocusScope {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: root.focusScreenshotMode(targetButton.index)
-                            }
-                        }
-                    }
-                }
-
-                Column {
-                    anchors.fill: parent
-                    anchors.margins: 5
-                    spacing: 2
-                    visible: root.recordingMode
-
-                    Repeater {
-                        id: recordControls
-
-                        model: [{
-                            "key": "display",
-                            "icon": "󰍹",
-                            "title": "Display"
-                        }, {
-                            "key": "microphone",
-                            "icon": root.source && root.source.audio && root.source.audio.muted ? "󰍭" : "󰍬",
-                            "title": "Mic"
-                        }]
-
-                        delegate: FocusScope {
-                            id: recordControl
-
-                            required property var modelData
-                            required property int index
-                            readonly property bool microphone: modelData.key === "microphone"
-                            readonly property bool enabledState: !microphone || (root.source && root.source.audio && !root.source.audio.muted)
-
-                            width: parent.width
-                            height: 51
-                            activeFocusOnTab: true
-                            Keys.onReturnPressed: activate()
-                            Keys.onEnterPressed: activate()
-                            Keys.onSpacePressed: activate()
-                            Accessible.role: Accessible.Button
-                            Accessible.name: microphone ? "Toggle microphone" : "Full display recording"
-
-                            function activate() {
-                                if (microphone && root.source && root.source.audio)
-                                    root.source.audio.muted = !root.source.audio.muted;
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: Theme.radiusSmall
-                                color: recordPointer.containsMouse ? Theme.bg1 : "transparent"
-                                border.width: recordControl.activeFocus ? 1 : 0
-                                border.color: Theme.red
-                            }
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 2
-
-                                ShellText {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: recordControl.modelData.icon
-                                    color: recordControl.enabledState ? (recordControl.microphone ? Theme.primary : Theme.red) : Theme.mutedDark
-                                    font.pixelSize: 14
-                                }
-
-                                ShellText {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: recordControl.modelData.title
-                                    color: recordControl.enabledState ? Theme.foreground : Theme.mutedDark
-                                    font.pixelSize: 8
-                                    font.weight: Font.DemiBold
-                                }
-                            }
-
-                            MouseArea {
-                                id: recordPointer
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: recordControl.microphone ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                onClicked: recordControl.activate()
+                                onClicked: root.focusCaptureMode(targetButton.index)
                             }
                         }
                     }
@@ -380,23 +301,27 @@ FocusScope {
                     border.color: Qt.rgba(0.12, 0.14, 0.15, 0.18)
                 }
 
-                Row {
+                Item {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    anchors.margins: 10
+                    anchors.leftMargin: 11
+                    anchors.rightMargin: 11
+                    anchors.topMargin: 8
+                    height: 20
 
                     ShellText {
-                        width: parent.width / 2
-                        text: root.recordingMode ? "Display" : root.currentMode.shortTitle
+                        anchors.left: parent.left
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.recordingMode ? (root.currentMode.shortTitle + " Recording") : root.currentMode.shortTitle
                         color: root.accent
                         font.pixelSize: 8
                         font.weight: Font.DemiBold
                     }
 
                     Row {
-                        width: parent.width / 2
-                        layoutDirection: Qt.RightToLeft
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
                         spacing: 5
                         visible: root.recordingMode && Backend.recording
 
@@ -415,6 +340,70 @@ FocusScope {
                             color: Theme.red
                         }
                     }
+
+                    FocusScope {
+                        id: micPill
+
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: root.recordingMode && !Backend.recording
+                        width: micContent.implicitWidth + 14
+                        height: 20
+                        activeFocusOnTab: true
+                        Accessible.role: Accessible.Button
+                        Accessible.name: "Toggle microphone audio"
+
+                        function toggle() {
+                            Backend.recordAudio = !Backend.recordAudio;
+                            if (Backend.recordAudio && root.source && root.source.audio && root.source.audio.muted)
+                                root.source.audio.muted = false;
+                        }
+
+                        Keys.onReturnPressed: toggle()
+                        Keys.onEnterPressed: toggle()
+                        Keys.onSpacePressed: toggle()
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: Theme.radiusSmall
+                            color: micPointer.containsMouse ? Theme.bg2 : (Backend.recordAudio ? Qt.rgba(0.90, 0.49, 0.50, 0.12) : Theme.bg1)
+                            border.width: micPill.activeFocus ? 1 : (Backend.recordAudio ? 1 : 0)
+                            border.color: Backend.recordAudio ? Qt.rgba(0.90, 0.49, 0.50, 0.35) : Theme.bg2
+
+                            Behavior on color {
+                                ColorAnimation { duration: Theme.animationFast }
+                            }
+                        }
+
+                        Row {
+                            id: micContent
+
+                            anchors.centerIn: parent
+                            spacing: 4
+
+                            ShellText {
+                                text: !Backend.recordAudio ? "󰍭" : (root.source && root.source.audio && root.source.audio.muted ? "󰍭" : "󰍬")
+                                color: Backend.recordAudio ? Theme.red : Theme.mutedDark
+                                font.pixelSize: 10
+                            }
+
+                            ShellText {
+                                text: !Backend.recordAudio ? "Mic Off" : (root.source && root.source.audio && root.source.audio.muted ? "Muted" : "Mic On")
+                                color: Backend.recordAudio ? Theme.foreground : Theme.mutedDark
+                                font.pixelSize: 8
+                                font.weight: Font.DemiBold
+                            }
+                        }
+
+                        MouseArea {
+                            id: micPointer
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: micPill.toggle()
+                        }
+                    }
                 }
 
                 Rectangle {
@@ -431,9 +420,9 @@ FocusScope {
 
                     Rectangle {
                         anchors.centerIn: parent
-                        width: root.recordingMode || root.mode === "full" ? parent.width : (root.mode === "window" ? 126 : 111)
-                        height: root.recordingMode || root.mode === "full" ? parent.height : (root.mode === "window" ? 48 : 38)
-                        radius: root.mode === "window" && !root.recordingMode ? 4 : 1
+                        width: root.mode === "full" ? parent.width : (root.mode === "window" ? 126 : 111)
+                        height: root.mode === "full" ? parent.height : (root.mode === "window" ? 48 : 38)
+                        radius: root.mode === "window" ? 4 : 1
                         color: root.recordingMode ? Qt.rgba(0.90, 0.49, 0.50, 0.08) : (root.mode === "window" ? Theme.primaryContainer : Qt.rgba(0.65, 0.75, 0.50, 0.08))
                         border.width: 1
                         border.color: root.accent
@@ -451,7 +440,7 @@ FocusScope {
                             anchors.top: parent.top
                             anchors.margins: 5
                             spacing: 3
-                            visible: root.mode === "window" && !root.recordingMode
+                            visible: root.mode === "window"
 
                             Repeater {
                                 model: 3
@@ -483,7 +472,7 @@ FocusScope {
                         }
 
                         Repeater {
-                            model: root.mode === "region" && !root.recordingMode ? 4 : 0
+                            model: root.mode === "region" ? 4 : 0
 
                             Rectangle {
                                 required property int index
@@ -509,7 +498,7 @@ FocusScope {
 
                     ShellText {
                         width: parent.width
-                        text: root.recordingMode ? (root.source ? (root.source.description || "Default microphone") : "No microphone") : root.currentMode.description
+                        text: root.recordingMode ? (root.currentMode.description + (Backend.recordAudio ? (root.source && root.source.description ? (" · " + root.source.description) : " · Mic audio") : " · Video only")) : root.currentMode.description
                         color: Theme.muted
                         font.pixelSize: 8
                         elide: Text.ElideRight
@@ -523,7 +512,12 @@ FocusScope {
 
             function activate() {
                 if (root.recordingMode) {
-                    Backend.toggleRecording();
+                    if (Backend.recording) {
+                        Backend.stopRecording();
+                    } else {
+                        ShellState.close();
+                        recordDelay.restart();
+                    }
                 } else {
                     ShellState.close();
                     captureDelay.restart();
@@ -571,14 +565,14 @@ FocusScope {
                     spacing: 0
 
                     ShellText {
-                        text: root.recordingMode ? (Backend.recording ? "Stop recording" : "Start recording") : "Capture " + root.currentMode.title.toLowerCase()
+                        text: root.recordingMode ? (Backend.recording ? "Stop recording" : "Record " + root.currentMode.title.toLowerCase()) : "Capture " + root.currentMode.title.toLowerCase()
                         color: Theme.foreground
                         font.pixelSize: 10
                         font.weight: Font.Bold
                     }
 
                     ShellText {
-                        text: root.recordingMode ? "Full display · WebM" : "Saved to Pictures"
+                        text: root.recordingMode ? (Backend.recording ? "Recording in progress" : (root.currentMode.shortTitle + " · " + (Backend.recordAudio ? "MP4 + Audio" : "MP4 video"))) : "Saved to Pictures"
                         color: Theme.mutedDark
                         font.pixelSize: 7
                     }

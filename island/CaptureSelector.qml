@@ -86,9 +86,9 @@ PanelWindow {
                 width: rightEdge - leftEdge
                 height: bottomEdge - topEdge
                 radius: modelData.rounded ? Theme.radius : 0
-                color: pointer.containsMouse ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.15) : "transparent"
+                color: pointer.containsMouse ? (Backend.captureAction === "record" ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.15) : Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.15)) : "transparent"
                 border.width: pointer.containsMouse ? 3 : 1
-                border.color: pointer.containsMouse ? Theme.primary : Theme.mutedDark
+                border.color: pointer.containsMouse ? (Backend.captureAction === "record" ? Theme.red : Theme.primary) : Theme.mutedDark
 
                 Behavior on color {
                     ColorAnimation {
@@ -123,9 +123,9 @@ PanelWindow {
             height: Math.max(0, bottomEdge - topEdge)
             visible: Backend.captureSelectionMode === "region" && Backend.regionSelectionDragging && width > 0 && height > 0
             radius: 2
-            color: Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.15)
+            color: Backend.captureAction === "record" ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.15) : Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.15)
             border.width: 2
-            border.color: Theme.primary
+            border.color: Backend.captureAction === "record" ? Theme.red : Theme.primary
         }
 
         Rectangle {
@@ -141,14 +141,14 @@ PanelWindow {
             radius: Theme.radiusSmall
             color: Theme.bgDim
             border.width: 1
-            border.color: Theme.primary
+            border.color: Backend.captureAction === "record" ? Theme.red : Theme.primary
 
             ShellText {
                 id: dimensionsText
 
                 anchors.centerIn: parent
-                text: Math.round(root.regionWidth) + " × " + Math.round(root.regionHeight)
-                color: Theme.foreground
+                text: (Backend.captureAction === "record" ? "󰑊 " : "") + Math.round(root.regionWidth) + " × " + Math.round(root.regionHeight)
+                color: Backend.captureAction === "record" ? Theme.red : Theme.foreground
                 font.pixelSize: 10
                 font.weight: Font.DemiBold
             }

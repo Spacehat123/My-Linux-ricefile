@@ -36,6 +36,8 @@ Singleton {
     property string lastError: ""
     property var windowCandidates: []
     property string captureSelectionMode: ""
+    property string captureAction: "still"
+    property bool recordAudio: true
     readonly property bool captureSelectionActive: captureSelectionMode.length > 0
     property bool regionSelectionDragging: false
     property real regionStartX: 0
@@ -128,6 +130,7 @@ Singleton {
 
     function capture(mode) {
         lastError = "";
+        captureAction = "still";
         root.ownCaptureAt = Date.now();
         if (mode === "window") {
             windowCandidatesProcess.exec([helper, "window-list"]);
@@ -143,6 +146,7 @@ Singleton {
 
     function cancelCaptureSelection() {
         captureSelectionMode = "";
+        captureAction = "still";
         windowCandidates = [];
         regionSelectionDragging = false;
     }
@@ -197,9 +201,34 @@ Singleton {
         });
     }
 
-    function toggleRecording() {
+    function startRecording(mode, withAudio) {
         lastError = "";
-        recordingProcess.exec([helper, "record-toggle"]);
+        recordAudio = Boolean(withAudio);
+        captureAction = "record";
+        if (mode === "window") {
+            windowCandidatesProcess.exec([helper, "window-list"]);
+            return ;
+        }
+        if (mode === "region") {
+            windowCandidates = [];
+            captureSelectionMode = "region";
+            return ;
+        }
+        recordingProcess.exec([helper, "record-start", "full", withAudio ? "audio" : "no-audio"]);
+    }
+
+    function stopRecording() {
+        lastError = "";
+        captureAction = "still";
+        recordingProcess.exec([helper, "record-stop"]);
+    }
+
+    function toggleRecording(mode, withAudio) {
+        if (recording) {
+            stopRecording();
+            return ;
+        }
+        startRecording(mode || "region", withAudio);
     }
 
     function power(action) {
@@ -422,7 +451,26 @@ Singleton {
                 return ;
 
             root.pendingGeometryCapture = null;
-            captureProcess.exec([root.helper, "capture-geometry", String(geometry.x), String(geometry.y), String(geometry.width), String(geometry.height)]);
+            if (root.captureAction === "record") {
+                recordingProcess.exec([
+                    root.helper,
+                    "record-start-geometry",
+                    String(geometry.x),
+                    String(geometry.y),
+                    String(geometry.width),
+                    String(geometry.height),
+                    root.recordAudio ? "audio" : "no-audio"
+                ]);
+            } else {
+                captureProcess.exec([
+                    root.helper,
+                    "capture-geometry",
+                    String(geometry.x),
+                    String(geometry.y),
+                    String(geometry.width),
+                    String(geometry.height)
+                ]);
+            }
         }
     }
 
