@@ -1953,6 +1953,7 @@ ShellRoot {
                     onActivated: {
                         console.log("[pranc-shell] Middle-right media trigger ACTIVATED")
                         mediaCloseDebounce.stop()
+                        mediaWidget.open = true
                         monitorScope.mediaWidgetOpen = true
                         if (shellRoot.desktopState) shellRoot.desktopState.setMediaWidgetOpen(true)
                     }
@@ -1976,6 +1977,7 @@ ShellRoot {
                     onActivated: {
                         console.log("[pranc-shell] Upper-right stash trigger ACTIVATED")
                         stashCloseDebounce.stop()
+                        stashPocket.open = true
                         monitorScope.stashPocketOpen = true
                         if (shellRoot.desktopState) shellRoot.desktopState.setStashPocketOpen(true)
                     }
@@ -2063,10 +2065,11 @@ ShellRoot {
 
                 Timer {
                     id: mediaCloseDebounce
-                    interval: 800
+                    interval: 380
                     repeat: false
                     onTriggered: {
                         if (!mediaWidget.hovered && !mediaTrigger.active) {
+                            mediaWidget.open = false
                             monitorScope.mediaWidgetOpen = false
                             if (shellRoot.desktopState) shellRoot.desktopState.setMediaWidgetOpen(false)
                         }
@@ -2094,10 +2097,11 @@ ShellRoot {
 
                 Timer {
                     id: stashCloseDebounce
-                    interval: 800
+                    interval: 380
                     repeat: false
                     onTriggered: {
                         if (!stashPocket.hovered && !stashTrigger.active) {
+                            stashPocket.open = false
                             monitorScope.stashPocketOpen = false
                             if (shellRoot.desktopState) shellRoot.desktopState.setStashPocketOpen(false)
                         }

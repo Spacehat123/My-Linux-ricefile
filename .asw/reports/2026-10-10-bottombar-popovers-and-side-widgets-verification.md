@@ -5,8 +5,8 @@
 **Target Subsystems:**
 - `panels/BottomBar.qml`: 1px workspace pills, monochrome gray/black inner color, deep theme tint background, dedicated hover popovers for Wi-Fi, Sound, Battery, and zero click-blocking mask discipline.
 - `panels/MediaWidget.qml`: Root-level full-coverage `HoverHandler` and `MouseArea` hover guards, zero-clipping mask discipline when open, unmapped when closed.
-- `components/StashPocket.qml`: Multi-layer hover continuity (`rootHoverHandler`, `windowMouseArea`, `drawerMouseArea`, `drawerHover`), full-window mask when open, 28px pill mask when closed.
-- `shell.qml`: Debounce timer calibration (800ms), `stashPocketOpen` state synchronization, and `isAnimating` guards on edge trigger deactivation.
+- `components/StashPocket.qml`: Multi-layer hover continuity, guarded `closedPillHover` latch fix, Escape shortcut, direct header close button.
+- `shell.qml`: Calibrated debounce timers (380ms), bidirectional state synchronization, and `open = false` explicit resets.
 
 ---
 
@@ -27,15 +27,17 @@ All features and fixes requested by the user have been successfully implemented,
 4. **Click-Through Mask Discipline (`mask: Region`)**:
    - While popovers are closed, `mask: Region` strictly covers only `dockBody` (the 44px dock capsule). All space above the bar passes clicks through 100% to background application windows.
    - While a popover is active, `mask: Region` includes only `dockBody`, `activePopoverItem`, and `popoverHoverBridge`. Regions outside the card pass clicks through completely.
-5. **Side Widgets Hover Continuity & Edge-Leave Resolution (`MediaWidget` & `StashPocket`)**:
-   - **Root Cause of Initial Premature Closure**:
-     1. Inner slide-in translation (`Translate { x: 430 }` and `Translate { x: 295 }`) moved content items offscreen during the 240ms open animation.
-     2. Restrictive `mask: Region` tracking the translated inner items caused Wayland to clip the input region offscreen during transit.
-     3. The 3px `EdgeTrigger` deactivation fired immediately when the cursor crossed 3px inward, scheduling dismissal before hover could register on the animated body.
+5. **Side Widgets Hover Continuity & Dismiss Latch Resolution**:
+   - **Premature Closure Root Cause**: Mask clipping offscreen during slide-in translation and edge trigger deactivation race. Resolved by root-level hover areas and unclipped open masks.
+   - **Stuck Open Latch Root Cause**:
+     1. `closedPillHover` was evaluated in `windowHovered` even when `root.open == true`. Because `closedPill` becomes invisible when open, it never received pointer leave events, keeping `closedPillHover.hovered` latched to `true`.
+     2. `closedPillHover` directly assigned `root.open = true;`, breaking declarative property bindings.
+     3. Debounce handler lacked explicit `stashPocket.open = false` reset.
    - **Complete Resolution**:
-     1. Placed root-level `HoverHandler` + `MouseArea` (`acceptedButtons: Qt.NoButton`) outside content translation, spanning the entire window from the screen edge.
-     2. Input regions: `MediaWidget` is completely unmapped (`visible: false`) when closed, and maintains full unclipped input region when open. `StashPocket` masks to `pocketContent` (full window) when open, and to the 28px indicator pill when closed with stashed windows.
-     3. State synchronization: Bound `desktopState.stashPocketOpen` and `monitorScope.stashPocketOpen`, guarded `onDeactivated` against closing while animating (`!isAnimating`), and calibrated debounce timers to 800ms.
+     1. In `StashPocket.qml`, restricted `closedPillHover` in `windowHovered` to `(!root.open && closedPillHover && closedPillHover.hovered)` and disabled handler when open (`enabled: !root.open`).
+     2. Added `Shortcut { sequence: "Escape" }` for keyboard dismissal.
+     3. Added direct "✕" close button in drawer header.
+     4. In `shell.qml`, assigned `stashPocket.open = false` and `mediaWidget.open = false` in debounce handlers, and calibrated debounce interval to a crisp 380ms.
 
 ---
 
@@ -51,10 +53,9 @@ All features and fixes requested by the user have been successfully implemented,
 | **Battery Popover Widget** | Floating battery widget with charging telemetry, time remaining, progress gauge | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L767-L910) | **PASS** |
 | **Click-Through Safety** | `mask: Region` strictly limits input regions to visible elements; zero blocked clicks behind | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L65-L85) | **PASS** |
 | **MediaWidget Continuity** | Multi-layer hover guard (`rootHoverHandler`, `windowMouseArea`, `cardHoverHandler`), zero-clipping mask | [`panels/MediaWidget.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/MediaWidget.qml#L37-L75) | **PASS** |
-| **StashPocket Continuity** | Multi-layer hover guard (`rootHoverHandler`, `windowMouseArea`, `drawerMouseArea`, `drawerHover`), dynamic mask | [`components/StashPocket.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/StashPocket.qml#L102-L175) | **PASS** |
-| **Edge Trigger Guarding** | Guarded `onDeactivated` against closing while animating (`!isAnimating`), 800ms debounce | [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml#L1958-L2108) | **PASS** |
+| **StashPocket Continuity** | Multi-layer hover guard, latch fix (`!root.open` guard on pill hover), 380ms debounce | [`components/StashPocket.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/StashPocket.qml#L126-L230) | **PASS** |
+| **Stash Dismiss Channels** | Mouse leave (380ms debounce), Escape key shortcut, and direct header close button ("✕") | [`components/StashPocket.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/StashPocket.qml#L129-L400) | **PASS** |
 | **LayerShell Validation** | Verified via `hyprctl layers`: unmapped when closed (0 clicks blocked), mapped when active | Compositor runtime | **PASS** |
-| **User Live QA** | Live testing by user confirmed working with fluid hover entry and stable interaction | User feedback | **PASS** |
 
 ---
 
@@ -67,4 +68,4 @@ All features and fixes requested by the user have been successfully implemented,
    - When idle: Top layer contains 0 side widgets; full click-through to background applications.
    - When active: Surface maps at exact screen edge (`x=1500, w=420` for MediaWidget, `x=1620, w=300` for StashPocket).
 3. **IPC Interactivity**:
-   - Verified via `quickshell ipc -c cool-shell call state setMediaWidgetOpen ...` and `setStashPocketOpen ...`.
+   - Verified opening and closing via `quickshell ipc -c cool-shell call state setMediaWidgetOpen ...` and `setStashPocketOpen ...`.

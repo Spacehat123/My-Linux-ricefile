@@ -126,6 +126,15 @@ Scope {
             enabled: root.open
         }
 
+        Shortcut {
+            sequence: "Escape"
+            enabled: root.open
+            onActivated: {
+                if (root.desktopState) root.desktopState.setStashPocketOpen(false);
+                root.open = false;
+            }
+        }
+
         ParallelAnimation {
             id: openAnim
             NumberAnimation {
@@ -167,7 +176,7 @@ Scope {
             (windowMouseArea && windowMouseArea.containsMouse) ||
             (drawerMouseArea && drawerMouseArea.containsMouse) ||
             (drawerHover && drawerHover.hovered) ||
-            (closedPillHover && closedPillHover.hovered)
+            (!root.open && closedPillHover && closedPillHover.hovered)
         )
         readonly property bool isAnimating: openAnim.running || closeAnim.running
 
@@ -203,8 +212,9 @@ Scope {
 
             HoverHandler {
                 id: closedPillHover
+                enabled: !root.open
                 onHoveredChanged: {
-                    if (hovered) {
+                    if (hovered && !root.open) {
                         if (root.desktopState) root.desktopState.setStashPocketOpen(true);
                         root.open = true;
                     }
@@ -358,6 +368,37 @@ Scope {
                             color: Island.Theme.primary
                             font.pixelSize: 9
                             font.bold: true
+                        }
+                    }
+
+                    // Direct dismiss close button
+                    Rectangle {
+                        width: 22
+                        height: 22
+                        radius: 11
+                        color: closeBtnHover.hovered ? "#30ffffff" : "#12ffffff"
+                        border.color: closeBtnHover.hovered ? Island.Theme.primary : "transparent"
+                        border.width: 1
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                        HoverHandler { id: closeBtnHover }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "✕"
+                            color: closeBtnHover.hovered ? Island.Theme.primary : Island.Theme.muted
+                            font.pixelSize: 10
+                            font.bold: true
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (root.desktopState) root.desktopState.setStashPocketOpen(false);
+                                root.open = false;
+                            }
                         }
                     }
                 }
