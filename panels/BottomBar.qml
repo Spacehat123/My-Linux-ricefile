@@ -512,8 +512,8 @@ PanelWindow {
             visible: opacity > 0.001
             opacity: activePopover === "vol" ? 1.0 : 0.0
             radius: 16
-            width: 250
-            height: 145
+            width: 240
+            height: 96
             anchors.bottom: dockBody.top
             anchors.bottomMargin: 8
             x: {
@@ -541,7 +541,7 @@ PanelWindow {
             Column {
                 anchors.fill: parent
                 anchors.margins: 12
-                spacing: 10
+                spacing: 8
 
                 // Header
                 Row {
@@ -579,58 +579,35 @@ PanelWindow {
                     }
                 }
 
-                // Volume level & Mute toggle row
-                Item {
+                // Volume level
+                Row {
                     width: parent.width
-                    height: 28
+                    spacing: 8
 
                     Text {
-                        anchors.left: parent.left
                         anchors.verticalCenter: parent.verticalCenter
                         text: root.audioMuted ? "Muted" : root.volText
                         font.family: Island.Theme.fontFamily
-                        font.pixelSize: 18
+                        font.pixelSize: 16
                         font.bold: true
                         color: root.audioMuted ? Island.Theme.red : Island.Theme.primary
                     }
 
-                    Rectangle {
+                    Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        anchors.right: parent.right
-                        height: 24
-                        width: 72
-                        radius: 12
-                        color: root.audioMuted ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.22) : (muteBtnMouse.containsMouse ? Island.Theme.glassCardHover : Island.Theme.glassCard)
-                        border.color: root.audioMuted ? Island.Theme.red : Island.Theme.glassBorderSubtle
-                        border.width: 1
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: root.audioMuted ? "Unmute" : "Mute"
-                            font.family: Island.Theme.fontFamily
-                            font.pixelSize: 10
-                            font.bold: true
-                            color: root.audioMuted ? Island.Theme.red : Island.Theme.foreground
-                        }
-
-                        MouseArea {
-                            id: muteBtnMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (root.sinkAudio) root.sinkAudio.muted = !root.sinkAudio.muted;
-                            }
-                        }
+                        text: root.audioMuted ? "(Muted)" : ""
+                        font.family: Island.Theme.fontFamily
+                        font.pixelSize: 10
+                        color: Island.Theme.red
+                        visible: root.audioMuted
                     }
                 }
 
-                // Custom fluid volume slider
+                // Volume level gauge
                 Rectangle {
-                    id: volSliderTrack
                     width: parent.width
-                    height: 14
-                    radius: 7
+                    height: 8
+                    radius: 4
                     color: "#20ffffff"
 
                     Rectangle {
@@ -638,65 +615,8 @@ PanelWindow {
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
                         width: parent.width * (root.sinkAudio ? Math.max(0.0, Math.min(1.0, root.sinkAudio.volume)) : 0.0)
-                        radius: 7
+                        radius: 4
                         color: root.audioMuted ? Island.Theme.muted : Island.Theme.primary
-                    }
-
-                    Rectangle {
-                        x: Math.max(0, Math.min(parent.width - width, (parent.width * (root.sinkAudio ? root.sinkAudio.volume : 0.0)) - width / 2))
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 12
-                        height: 12
-                        radius: 6
-                        color: "#ffffff"
-                        visible: root.sinkAudio !== null
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onPressed: (mouse) => {
-                            if (root.sinkAudio) {
-                                root.sinkAudio.volume = Math.max(0.0, Math.min(1.0, mouse.x / width));
-                            }
-                        }
-                        onPositionChanged: (mouse) => {
-                            if (pressed && root.sinkAudio) {
-                                root.sinkAudio.volume = Math.max(0.0, Math.min(1.0, mouse.x / width));
-                            }
-                        }
-                    }
-                }
-
-                // Footer: Pavucontrol quick link
-                Row {
-                    width: parent.width
-                    spacing: 6
-
-                    Rectangle {
-                        height: 22
-                        width: parent.width
-                        radius: 11
-                        color: mixerBtnMouse.containsMouse ? Island.Theme.glassCardHover : "transparent"
-                        border.color: mixerBtnMouse.containsMouse ? Island.Theme.primary : Island.Theme.glassBorderSubtle
-                        border.width: 1
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰘵  Open Audio Mixer (Pavucontrol)"
-                            font.family: Island.Theme.fontFamily
-                            font.pixelSize: 10
-                            color: mixerBtnMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
-                        }
-
-                        MouseArea {
-                            id: mixerBtnMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: Quickshell.execDetached(["pavucontrol"])
-                        }
                     }
                 }
             }
@@ -710,8 +630,8 @@ PanelWindow {
             visible: opacity > 0.001
             opacity: activePopover === "net" ? 1.0 : 0.0
             radius: 16
-            width: 260
-            height: 145
+            width: 240
+            height: 96
             anchors.bottom: dockBody.top
             anchors.bottomMargin: 8
             x: {
@@ -739,7 +659,7 @@ PanelWindow {
             Column {
                 anchors.fill: parent
                 anchors.margins: 12
-                spacing: 10
+                spacing: 8
 
                 // Header
                 Row {
@@ -775,10 +695,10 @@ PanelWindow {
                     }
                 }
 
-                // SSID / Network Name
+                // SSID / Network Name & Signal Badge
                 Rectangle {
                     width: parent.width
-                    height: 44
+                    height: 38
                     radius: 10
                     color: Island.Theme.glassCard
                     border.color: Island.Theme.glassBorderSubtle
@@ -794,11 +714,11 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             text: root.connectedWifi ? (root.connectedWifi.ssid || "Connected Network") : (root.ethernetDevice ? "Ethernet Link" : "No Network")
                             font.family: Island.Theme.fontFamily
-                            font.pixelSize: 13
+                            font.pixelSize: 12
                             font.bold: true
                             color: Island.Theme.foreground
                             elide: Text.ElideRight
-                            width: parent.width - 60
+                            width: parent.width - 55
                         }
 
                         // Signal or status indicator badge
@@ -821,32 +741,6 @@ PanelWindow {
                         }
                     }
                 }
-
-                // Quick Action: Open Settings
-                Rectangle {
-                    height: 24
-                    width: parent.width
-                    radius: 12
-                    color: netSettingsMouse.containsMouse ? Island.Theme.glassCardHover : "transparent"
-                    border.color: netSettingsMouse.containsMouse ? Island.Theme.primary : Island.Theme.glassBorderSubtle
-                    border.width: 1
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰤨  Open Network Settings"
-                        font.family: Island.Theme.fontFamily
-                        font.pixelSize: 10
-                        color: netSettingsMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
-                    }
-
-                    MouseArea {
-                        id: netSettingsMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Island.ShellState.openSettings("network")
-                    }
-                }
             }
         }
 
@@ -859,7 +753,7 @@ PanelWindow {
             opacity: activePopover === "bat" ? 1.0 : 0.0
             radius: 16
             width: 240
-            height: 140
+            height: 96
             anchors.bottom: dockBody.top
             anchors.bottomMargin: 8
             x: {
@@ -897,7 +791,7 @@ PanelWindow {
             Column {
                 anchors.fill: parent
                 anchors.margins: 12
-                spacing: 10
+                spacing: 8
 
                 // Header
                 Row {
@@ -942,7 +836,7 @@ PanelWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         text: Math.round(root.batPct) + "%"
                         font.family: Island.Theme.fontFamily
-                        font.pixelSize: 18
+                        font.pixelSize: 16
                         font.bold: true
                         color: root.batPct <= 20 ? Island.Theme.red : Island.Theme.foreground
                     }
@@ -964,8 +858,8 @@ PanelWindow {
                 // Gauge Bar
                 Rectangle {
                     width: parent.width
-                    height: 10
-                    radius: 5
+                    height: 8
+                    radius: 4
                     color: "#20ffffff"
 
                     Rectangle {
@@ -973,34 +867,8 @@ PanelWindow {
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
                         width: parent.width * Math.max(0.0, Math.min(1.0, root.batPct / 100.0))
-                        radius: 5
+                        radius: 4
                         color: root.batPct <= 20 ? Island.Theme.red : (batPopover.isCharging ? Island.Theme.green : Island.Theme.primary)
-                    }
-                }
-
-                // Quick Action: Power Settings
-                Rectangle {
-                    height: 22
-                    width: parent.width
-                    radius: 11
-                    color: batSettingsMouse.containsMouse ? Island.Theme.glassCardHover : "transparent"
-                    border.color: batSettingsMouse.containsMouse ? Island.Theme.primary : Island.Theme.glassBorderSubtle
-                    border.width: 1
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰁹  Open Power Settings"
-                        font.family: Island.Theme.fontFamily
-                        font.pixelSize: 10
-                        color: batSettingsMouse.containsMouse ? Island.Theme.primary : Island.Theme.muted
-                    }
-
-                    MouseArea {
-                        id: batSettingsMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Island.ShellState.openSettings("power")
                     }
                 }
             }

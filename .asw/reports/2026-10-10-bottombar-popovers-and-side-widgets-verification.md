@@ -19,10 +19,10 @@ All features and fixes requested by the user have been successfully implemented,
 2. **BottomBar Dynamic Theme Tint**:
    - The entire dock capsule background dynamically calculates `Qt.tint("#07070a", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.08))`.
    - Transitions smoothly across theme switches with a 300ms `ColorAnimation`.
-3. **Dedicated Status Popover Widgets**:
-   - **Sound & Volume Popover (`volPopover`)**: Shows active sink name, large volume percentage, Mute/Unmute toggle, fluid interactive volume slider, and Pavucontrol mixer launcher.
-   - **Wi-Fi & Network Popover (`netPopover`)**: Shows active connection type (Wi-Fi / Ethernet), SSID, signal strength gauge, and quick link to network settings.
-   - **Power & Battery Popover (`batPopover`)**: Displays live battery percentage, charging state (AC power vs battery), remaining time estimation, battery gauge bar, and power settings shortcut.
+3. **Dedicated Status Popover Widgets (Pure Telemetry HUDs, Zero Action Buttons)**:
+   - **Sound & Volume Popover (`volPopover`)**: Clean 96px telemetry card displaying active audio sink description, volume percentage badge, and smooth volume level gauge bar. All interactive buttons (Mute toggle, Pavucontrol mixer launcher) and child draggers removed to guarantee zero clutter and pure status presentation.
+   - **Wi-Fi & Network Popover (`netPopover`)**: Compact 96px telemetry card displaying active connection type (Wi-Fi / Ethernet), SSID name, and signal strength badge. Network settings launcher button removed.
+   - **Power & Battery Popover (`batPopover`)**: Clean 96px telemetry card displaying live battery percentage, charging status (AC power vs battery), remaining time estimation, and smooth battery gauge bar. Power settings launcher button removed.
    - **Hover Bridge & Continuity**: Popovers appear when hovering their respective pills, bridge cursor movement via `popoverHoverBridge`, remain open while hovered, and smoothly close after a 280ms debounce when the pointer leaves.
 4. **Click-Through Mask Discipline (`mask: Region`)**:
    - While popovers are closed, `mask: Region` strictly covers only `dockBody` (the 44px dock capsule). All space above the bar passes clicks through 100% to background application windows.
@@ -45,12 +45,13 @@ All features and fixes requested by the user have been successfully implemented,
 
 | Requirement | Implementation Detail | Target File | Status |
 | :--- | :--- | :--- | :--- |
-| **Pill Border Width** | `border.width: 1` universally across all states | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L204) | **PASS** |
-| **Pill Inner Color** | Active pill uses `Island.Theme.glassCardHover` (monochrome gray/black) instead of primary tint | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L197-L203) | **PASS** |
-| **Dock Background Tint** | `Qt.tint("#07070a", Qt.rgba(Island.Theme.primary.r, ..., 0.08))` with 300ms animation | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L157-L162) | **PASS** |
-| **Sound Popover Widget** | Floating volume widget with sink info, interactive slider, mute button, pavucontrol launcher | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L465-L640) | **PASS** |
-| **Wi-Fi Popover Widget** | Floating network widget with SSID, signal strength badge, and settings shortcut | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L642-L765) | **PASS** |
-| **Battery Popover Widget** | Floating battery widget with charging telemetry, time remaining, progress gauge | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L767-L910) | **PASS** |
+| **Pill Border Width** | `border.width: 1` universally across all states | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L222) | **PASS** |
+| **Pill Inner Color** | Active pill uses `Island.Theme.glassCardHover` (monochrome gray/black) instead of primary tint | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L213-L218) | **PASS** |
+| **Dock Background Tint** | `Qt.tint("#07070a", Qt.rgba(Island.Theme.primary.r, ..., 0.08))` with 300ms animation | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L157-L164) | **PASS** |
+| **Sound Popover Widget** | Floating 96px telemetry card with sink info and volume gauge; zero buttons or child click-captures | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L510-L630) | **PASS** |
+| **Wi-Fi Popover Widget** | Floating 96px telemetry card with SSID and signal badge; zero buttons | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L632-L750) | **PASS** |
+| **Battery Popover Widget** | Floating 96px telemetry card with charging state, time estimation, gauge bar; zero buttons | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L752-L875) | **PASS** |
+| **Zero Buttons Discipline** | All action/launcher buttons removed from status popovers in response to user direction | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml) | **PASS** |
 | **Click-Through Safety** | `mask: Region` strictly limits input regions to visible elements; zero blocked clicks behind | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L65-L85) | **PASS** |
 | **MediaWidget Continuity** | Multi-layer hover guard (`rootHoverHandler`, `windowMouseArea`, `cardHoverHandler`), zero-clipping mask | [`panels/MediaWidget.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/MediaWidget.qml#L37-L75) | **PASS** |
 | **StashPocket Continuity** | Multi-layer hover guard, latch fix (`!root.open` guard on pill hover), 380ms debounce | [`components/StashPocket.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/StashPocket.qml#L126-L230) | **PASS** |
