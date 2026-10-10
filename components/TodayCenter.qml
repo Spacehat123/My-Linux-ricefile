@@ -175,14 +175,14 @@ Item {
                     }
                 }
 
-                // Today Pill badge
+                // Precision Chrono Datum Tag (No generic pill)
                 Rectangle {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    height: 28
+                    height: 24
                     implicitWidth: todayBadgeText.implicitWidth + 20
-                    radius: 14
-                    color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
+                    radius: 4
+                    color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.12)
                     border.color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.4)
                     border.width: 1
 
@@ -192,7 +192,7 @@ Item {
                         Text {
                             text: "󰸗"
                             font.family: Island.Theme.iconFontFamily
-                            font.pixelSize: 13
+                            font.pixelSize: 11
                             color: Island.Theme.primary
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -200,8 +200,9 @@ Item {
                             id: todayBadgeText
                             text: Qt.formatDateTime(root.currentDate, "hh:mm")
                             font.family: Island.Theme.fontFamily
-                            font.pixelSize: 12
+                            font.pixelSize: 11
                             font.bold: true
+                            font.letterSpacing: 0.8
                             color: Island.Theme.foreground
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -250,15 +251,15 @@ Item {
 
                             // Previous Month
                             Rectangle {
-                                width: 26
-                                height: 26
-                                radius: 13
+                                width: 24
+                                height: 24
+                                radius: 4
                                 color: prevHover.containsMouse ? Island.Theme.glassCardHover : "transparent"
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰅁"
                                     font.family: Island.Theme.iconFontFamily
-                                    font.pixelSize: 12
+                                    font.pixelSize: 11
                                     color: Island.Theme.foreground
                                 }
                                 MouseArea {
@@ -272,15 +273,15 @@ Item {
 
                             // Reset to Today
                             Rectangle {
-                                width: 26
-                                height: 26
-                                radius: 13
+                                width: 24
+                                height: 24
+                                radius: 4
                                 color: todayHover.containsMouse ? Island.Theme.glassCardHover : "transparent"
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰁝"
                                     font.family: Island.Theme.iconFontFamily
-                                    font.pixelSize: 12
+                                    font.pixelSize: 11
                                     color: Island.Theme.primary
                                 }
                                 MouseArea {
@@ -294,15 +295,15 @@ Item {
 
                             // Next Month
                             Rectangle {
-                                width: 26
-                                height: 26
-                                radius: 13
+                                width: 24
+                                height: 24
+                                radius: 4
                                 color: nextHover.containsMouse ? Island.Theme.glassCardHover : "transparent"
                                 Text {
                                     anchors.centerIn: parent
                                     text: "󰅂"
                                     font.family: Island.Theme.iconFontFamily
-                                    font.pixelSize: 12
+                                    font.pixelSize: 11
                                     color: Island.Theme.foreground
                                 }
                                 MouseArea {
@@ -460,11 +461,11 @@ Item {
                         }
                     }
 
-                    // Add Task Input Capsule
+                    // Add Task Input Field (Precision Micro-Chip)
                     Rectangle {
                         width: parent.width
                         height: 36
-                        radius: 18
+                        radius: 6
                         color: Island.Theme.glassCardHover
                         border.color: todoAddInput.activeFocus ? Island.Theme.glassBorderActive : Island.Theme.glassBorderSubtle
                         border.width: 1
@@ -850,11 +851,11 @@ Item {
                                     anchors.margins: 8
                                     spacing: 10
 
-                                    // Alert Icon Capsule
+                                    // Alert Icon Chip
                                     Rectangle {
-                                        width: 28
-                                        height: 28
-                                        radius: 14
+                                        width: 26
+                                        height: 26
+                                        radius: 4
                                         color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
                                         anchors.top: parent.top
 
