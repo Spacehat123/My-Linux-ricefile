@@ -77,12 +77,37 @@ case "${1:-status}" in
     pair)
         IP="${2:-}"
         PORT="${3:-5555}"
+        CONFIG_DIR="$HOME/.config/cool-shell"
+        mkdir -p "$CONFIG_DIR"
+
         if [[ -z "${IP}" ]]; then
-            echo "Usage: phone-ctl pair <IP_ADDRESS> [PORT]"
+            # Attempt automatic discovery via USB connection
+            echo "[phone-ctl] No IP provided. Checking for USB-connected phone..."
+            if adb devices | grep -E "\bdevice\b" >/dev/null 2>&1; then
+                echo "[phone-ctl] Found USB device. Enabling TCP/IP mode on port 5555..."
+                adb tcpip 5555 || true
+                sleep 1
+                echo "[phone-ctl] Querying phone Wi-Fi IP address..."
+                IP=$(adb shell "ip -f inet addr show wlan0 | grep inet | awk '{print \$2}' | cut -d/ -f1" 2>/dev/null | tr -d '\r\n' || true)
+                if [[ -z "${IP}" ]]; then
+                    IP=$(adb shell "ip route" 2>/dev/null | awk '{print $9}' | head -n 1 | tr -d '\r\n' || true)
+                fi
+            fi
+        fi
+
+        if [[ -z "${IP}" ]]; then
+            echo "[-] Error: Could not detect phone IP automatically."
+            echo "Usage: phone-ctl pair <PHONE_IP_ADDRESS> [PORT]"
+            echo "Example: phone-ctl pair 192.168.1.50"
             exit 1
         fi
+
         echo "[phone-ctl] Connecting to wireless ADB device at ${IP}:${PORT}..."
+        adb tcpip "${PORT}" >/dev/null 2>&1 || true
         adb connect "${IP}:${PORT}"
+        echo "WIRELESS_IP=\"${IP}\"" > "${CONFIG_DIR}/phone.conf"
+        echo "[+] Wireless pairing complete! Saved ${IP} to ~/.config/cool-shell/phone.conf"
+        echo "[+] You can now unplug the USB cable and use CoolPhone wirelessly."
         ;;
 
     disconnect)
