@@ -80,6 +80,11 @@ accelerate>=0.33.0
 # pacman: nodejs
 # pacman: npm
 
+# Security, Firewall & Credential Management
+# pacman: bitwarden
+# pacman: bitwarden-cli
+# pacman: ufw
+
 # Unix Utilities & IPC Tooling
 # pacman: jq
 # pacman: curl
