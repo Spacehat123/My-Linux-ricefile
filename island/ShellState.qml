@@ -273,7 +273,7 @@ Singleton {
     property bool studyOvertime: false
     property int studyOvertimeSeconds: 0
     property string studySubject: "CA / ICAI Study"
-    property int studyTargetDuration: 10 // 10s for initial testing, switchable to 1800 for 30m
+    property int studyTargetDuration: 1800 // 30 minutes (1800s) production duration
 
     signal studyModeToggled(bool active)
 

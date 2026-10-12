@@ -9,7 +9,7 @@ PYTHON_SCRIPT="$SCRIPT_DIR/study-mode.py"
 
 case "${1:-status}" in
     start)
-        duration="${2:-10}"
+        duration="${2:-1800}"
         subject="${3:-CA / ICAI Study}"
         python3 "$PYTHON_SCRIPT" start --duration "$duration" --subject "$subject"
         ;;
@@ -27,7 +27,7 @@ case "${1:-status}" in
         python3 "$PYTHON_SCRIPT" verify-password --password "$pass"
         ;;
     prompt|prompt-and-start)
-        duration="${2:-10}"
+        duration="${2:-1800}"
         subject="${3:-CA / ICAI Study}"
         python3 "$PYTHON_SCRIPT" prompt-and-start --duration "$duration" --subject "$subject"
         ;;

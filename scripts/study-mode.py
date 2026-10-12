@@ -104,7 +104,7 @@ def get_state() -> dict:
         return {
             "active": False,
             "start_time": 0,
-            "target_duration": 10,  # Default testing duration
+            "target_duration": 1800,  # 30 minutes
             "expiry_time": 0,
             "subject": "CA / ICAI Study",
             "overtime": False,
@@ -435,7 +435,7 @@ def main():
     parser = argparse.ArgumentParser(description="Cool-Shell Study Mode")
     parser.add_argument("action", choices=["status", "start", "stop", "verify-password", "history", "daemon", "prompt-and-start", "prompt"])
     parser.add_argument("extra_args", nargs="*", help="Optional extra positional arguments")
-    parser.add_argument("--duration", type=int, default=10, help="Duration in seconds (default: 10s for testing)")
+    parser.add_argument("--duration", type=int, default=1800, help="Duration in seconds (default: 1800s / 30m)")
     parser.add_argument("--subject", type=str, default="CA / ICAI Study", help="Study subject name")
     parser.add_argument("--password", type=str, default="", help="Password to verify")
 
