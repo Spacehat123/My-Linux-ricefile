@@ -104,7 +104,7 @@ def get_state() -> dict:
         return {
             "active": False,
             "start_time": 0,
-            "target_duration": 1800,  # 30 minutes
+            "target_duration": 10,  # 10s test harness
             "expiry_time": 0,
             "subject": "CA / ICAI Study",
             "overtime": False,
@@ -158,6 +158,21 @@ def get_hyprland_clients() -> list:
         pass
     return []
 
+def hypr_close_window(addr: str, pid: int = None):
+    raw_addr = addr.replace("address:", "")
+    lua_close = f'hl.dispatch(hl.dsp.window.close({{ address = "{raw_addr}" }}))'
+    subprocess.run(["hyprctl", "repl", lua_close], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=1)
+    if pid and pid > 0:
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except Exception:
+            pass
+
+def hypr_close_tab(addr: str):
+    raw_addr = addr.replace("address:", "")
+    lua_send = f'hl.dispatch(hl.dsp.send_shortcut({{ mods = "CTRL", key = "w", window = "address:{raw_addr}" }}))'
+    subprocess.run(["hyprctl", "repl", lua_send], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=1)
+
 def enforce_distractions():
     # 1. Ensure Spotify playback is paused
     try:
@@ -171,6 +186,7 @@ def enforce_distractions():
         c_class = (client.get("class") or "").lower()
         c_title = (client.get("title") or "").lower()
         c_addr = client.get("address")
+        c_pid = client.get("pid")
 
         if not c_addr:
             continue
@@ -178,7 +194,7 @@ def enforce_distractions():
         # Check application whitelist
         if c_class and c_class not in ALLOWED_CLASSES:
             # Check if it's Spotify, Steam, Discord, or any other distracting app
-            subprocess.run(["hyprctl", "dispatch", "closewindow", f"address:{c_addr}"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            hypr_close_window(c_addr, c_pid)
             continue
 
         # Check Brave browser tabs for forbidden websites
@@ -186,7 +202,7 @@ def enforce_distractions():
             blocked = False
             for dist in DISTRACTION_KEYWORDS:
                 if dist in c_title:
-                    subprocess.run(["hyprctl", "dispatch", "sendshortcut", f"CTRL,W,address:{c_addr}"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    hypr_close_tab(c_addr)
                     notify_island(f"🚫 Study Mode: Blocked {dist.capitalize()}", 3000)
                     blocked = True
                     break
@@ -196,7 +212,7 @@ def enforce_distractions():
                 if clean_title:
                     is_allowed = any(kw in clean_title for kw in ALLOWED_BRAVE_KEYWORDS)
                     if not is_allowed:
-                        subprocess.run(["hyprctl", "dispatch", "sendshortcut", f"CTRL,W,address:{c_addr}"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        hypr_close_tab(c_addr)
                         notify_island("🚫 Study Mode: Whitelist Only (ICAI / Notebook / WhatsApp)", 3000)
 
 def start_lofi_player():
@@ -241,8 +257,8 @@ def run_daemon():
         target = state.get("target_duration", 10)
         overtime = state.get("overtime", False)
 
-        # Hyprland distraction enforcement every 600ms
-        if now - last_hypr_check >= 0.6:
+        # Hyprland distraction enforcement every 300ms
+        if now - last_hypr_check >= 0.3:
             enforce_distractions()
             last_hypr_check = now
 
@@ -265,7 +281,7 @@ def run_daemon():
             save_state(state)
             last_second_tick = now
 
-        time.sleep(0.4)
+        time.sleep(0.2)
 
     # Clean up PID
     if PID_FILE.exists():
@@ -435,7 +451,7 @@ def main():
     parser = argparse.ArgumentParser(description="Cool-Shell Study Mode")
     parser.add_argument("action", choices=["status", "start", "stop", "verify-password", "history", "daemon", "prompt-and-start", "prompt"])
     parser.add_argument("extra_args", nargs="*", help="Optional extra positional arguments")
-    parser.add_argument("--duration", type=int, default=1800, help="Duration in seconds (default: 1800s / 30m)")
+    parser.add_argument("--duration", type=int, default=10, help="Duration in seconds (default: 10s for testing)")
     parser.add_argument("--subject", type=str, default="CA / ICAI Study", help="Study subject name")
     parser.add_argument("--password", type=str, default="", help="Password to verify")
 
