@@ -2,7 +2,7 @@
 
 **Date**: 2026-10-12  
 **Component**: Cool-Shell Study Mode Subsystem (`scripts/study-mode.py`, `desktop/StudyContributionHeatmap.qml`, `desktop/AmbientLayer.qml`, `island/ShellState.qml`, `island/Notch.qml`, `components/ControlCenter.qml`)  
-**Status**: VERIFIED & TEST READY (10s Initial Test Harness, Scalable to 30m / 1800s)
+**Status**: PRODUCTION ACTIVATED & VERIFIED (30 Minutes / 1800s Hard Lockout)
 
 ---
 
