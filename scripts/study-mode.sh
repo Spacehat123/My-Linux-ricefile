@@ -26,6 +26,11 @@ case "${1:-status}" in
         pass="${2:-}"
         python3 "$PYTHON_SCRIPT" verify-password --password "$pass"
         ;;
+    prompt|prompt-and-start)
+        duration="${2:-10}"
+        subject="${3:-CA / ICAI Study}"
+        python3 "$PYTHON_SCRIPT" prompt-and-start --duration "$duration" --subject "$subject"
+        ;;
     *)
         echo "Usage: $0 {start [duration] [subject]|stop|status|history|verify [password]}"
         exit 1

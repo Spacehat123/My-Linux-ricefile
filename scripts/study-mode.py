@@ -375,9 +375,65 @@ def cmd_status() -> dict:
         "total_sessions": total_sessions
     }
 
+def prompt_password_gui() -> str | None:
+    # Ensure floating and centered window in Hyprland
+    try:
+        subprocess.run(["hyprctl", "keyword", "windowrulev2", "float,class:^(zenity)$"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["hyprctl", "keyword", "windowrulev2", "center,class:^(zenity)$"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+    # 1. Try Zenity
+    try:
+        cmd = [
+            "zenity",
+            "--entry",
+            "--title=Cool-Shell Study Mode: Lock In",
+            "--text=Enter Study Password to activate Lock In (Hard Lock):",
+            "--hide-text"
+        ]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode == 0:
+            return res.stdout.strip()
+        return None
+    except Exception:
+        pass
+
+    # 2. Fallback to Rofi
+    try:
+        cmd = ["rofi", "-dmenu", "-password", "-p", "Study Password"]
+        res = subprocess.run(cmd, input="", capture_output=True, text=True)
+        if res.returncode == 0:
+            return res.stdout.strip()
+    except Exception:
+        pass
+
+    return None
+
+def cmd_prompt_and_start(duration: int, subject: str):
+    pwd = prompt_password_gui()
+    if pwd is None:
+        notify_island("Study Mode activation cancelled", 3000)
+        return {"success": False, "cancelled": True}
+
+    if not verify_password(pwd):
+        try:
+            subprocess.run([
+                "zenity", "--error",
+                "--title=Study Mode: Authentication Failed",
+                "--text=Incorrect password! Lock In aborted."
+            ], timeout=5)
+        except Exception:
+            pass
+        notify_island("❌ Incorrect Study Password", 3000)
+        return {"success": False, "valid": False, "message": "Incorrect password"}
+
+    # Password verified! Start study mode
+    return cmd_start(duration, subject)
+
 def main():
     parser = argparse.ArgumentParser(description="Cool-Shell Study Mode")
-    parser.add_argument("action", choices=["status", "start", "stop", "verify-password", "history", "daemon"])
+    parser.add_argument("action", choices=["status", "start", "stop", "verify-password", "history", "daemon", "prompt-and-start", "prompt"])
     parser.add_argument("extra_args", nargs="*", help="Optional extra positional arguments")
     parser.add_argument("--duration", type=int, default=10, help="Duration in seconds (default: 10s for testing)")
     parser.add_argument("--subject", type=str, default="CA / ICAI Study", help="Study subject name")
@@ -389,6 +445,9 @@ def main():
         pwd = args.password if args.password else (args.extra_args[0] if args.extra_args else "")
         is_valid = verify_password(pwd)
         print(json.dumps({"valid": is_valid}))
+    elif args.action in ("prompt-and-start", "prompt"):
+        res = cmd_prompt_and_start(args.duration, args.subject)
+        print(json.dumps(res))
     elif args.action == "start":
         res = cmd_start(args.duration, args.subject)
         print(json.dumps(res))

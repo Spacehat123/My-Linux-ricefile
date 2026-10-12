@@ -1570,32 +1570,12 @@ Item {
     }
 
     // =========================================================================
-    // STUDY MODE: 2-WARNING & PASSWORD CEREMONY MODAL OVERLAY
+    // STUDY MODE: 2-WARNING CEREMONY & POP-UP PASSWORD WINDOW
     // =========================================================================
     Process {
-        id: verifyPassProc
-        property string candidate: ""
-        command: ["python3", Quickshell.shellPath("scripts/study-mode.py"), "verify-password", "--password", candidate]
+        id: promptStudyProc
+        command: ["python3", Quickshell.shellPath("scripts/study-mode.py"), "prompt-and-start", "--duration", (Island.ShellState ? Island.ShellState.studyTargetDuration.toString() : "10")]
         running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const res = JSON.parse(text);
-                    if (res && res.valid === true) {
-                        root.studyModalStep = 0;
-                        root.studyPasswordInput = "";
-                        root.studyPasswordError = "";
-                        if (Island.ShellState) {
-                            Island.ShellState.startStudyMode(10, "CA / ICAI Study");
-                        }
-                    } else {
-                        root.studyPasswordError = "Incorrect Study Password! Try again.";
-                    }
-                } catch (e) {
-                    root.studyPasswordError = "Validation failed: " + e;
-                }
-            }
-        }
     }
 
     Rectangle {
@@ -1629,15 +1609,13 @@ Item {
                     radius: 10
                     color: root.studyModalStep === 1
                         ? Qt.rgba(Island.Theme.orange.r, Island.Theme.orange.g, Island.Theme.orange.b, 0.2)
-                        : (root.studyModalStep === 2
-                            ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.2)
-                            : Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.2))
-                    border.color: root.studyModalStep === 1 ? Island.Theme.orange : (root.studyModalStep === 2 ? Island.Theme.red : Island.Theme.green)
+                        : Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.2)
+                    border.color: root.studyModalStep === 1 ? Island.Theme.orange : Island.Theme.red
                     border.width: 1
 
                     Text {
                         anchors.centerIn: parent
-                        text: root.studyModalStep === 1 ? "󰀦" : (root.studyModalStep === 2 ? "󰈈" : "󰌾")
+                        text: root.studyModalStep === 1 ? "󰀦" : "󰈈"
                         font.family: Island.Theme.iconFontFamily
                         font.pixelSize: 18
                         color: parent.border.color
@@ -1650,16 +1628,14 @@ Item {
                     Text {
                         text: root.studyModalStep === 1
                             ? "Warning 1: Lockdown Block"
-                            : (root.studyModalStep === 2
-                                ? "Warning 2: Hard Commitment"
-                                : "Study Mode Password Gate")
+                            : "Warning 2: Hard Commitment"
                         font.pixelSize: 13
                         font.bold: true
                         font.family: Island.Theme.fontFamily
                         color: Island.Theme.foreground
                     }
                     Text {
-                        text: "Step " + root.studyModalStep + " of 3 • Study Lockdown"
+                        text: "Step " + root.studyModalStep + " of 2 • Study Lockdown"
                         font.pixelSize: 10
                         font.family: Island.Theme.fontFamily
                         color: Island.Theme.muted
@@ -1670,7 +1646,7 @@ Item {
             // Body Card with explanatory text
             Rectangle {
                 width: parent.width
-                height: root.studyModalStep === 3 ? 110 : 150
+                height: 155
                 radius: 12
                 color: Island.Theme.glassCard
                 border.color: Island.Theme.glassBorderSubtle
@@ -1737,65 +1713,12 @@ Item {
                             width: parent.width
                         }
                         Text {
-                            text: "• Duration: 10 seconds (Testing mode). After 10s, an overtime flow timer counts UP with no exit penalty."
+                            text: "• Duration: 10s (Testing mode). After countdown, overtime counts UP with no exit penalty."
                             font.pixelSize: 11
                             font.family: Island.Theme.fontFamily
                             color: Island.Theme.green
                             wrapMode: Text.WordWrap
                             width: parent.width
-                        }
-                    }
-
-                    // Step 3: Password Input
-                    Column {
-                        visible: root.studyModalStep === 3
-                        width: parent.width
-                        spacing: 8
-
-                        Text {
-                            text: "Enter your Study Password to lock in:"
-                            font.pixelSize: 11
-                            font.family: Island.Theme.fontFamily
-                            color: Island.Theme.muted
-                        }
-
-                        Rectangle {
-                            width: parent.width
-                            height: 36
-                            radius: 8
-                            color: Qt.rgba(0.0, 0.0, 0.0, 0.4)
-                            border.color: root.studyPasswordError !== "" ? Island.Theme.red : Island.Theme.glassBorderActive
-                            border.width: 1
-
-                            TextInput {
-                                id: studyPassInput
-                                anchors.fill: parent
-                                anchors.margins: 8
-                                echoMode: TextInput.Password
-                                font.pixelSize: 13
-                                font.family: Island.Theme.fontFamily
-                                color: Island.Theme.foreground
-                                clip: true
-                                text: root.studyPasswordInput
-                                onTextChanged: {
-                                    root.studyPasswordInput = text;
-                                    root.studyPasswordError = "";
-                                }
-                                onAccepted: {
-                                    if (text.length > 0) {
-                                        verifyPassProc.candidate = text;
-                                        verifyPassProc.running = true;
-                                    }
-                                }
-                            }
-                        }
-
-                        Text {
-                            visible: root.studyPasswordError !== ""
-                            text: root.studyPasswordError
-                            font.pixelSize: 10
-                            font.family: Island.Theme.fontFamily
-                            color: Island.Theme.red
                         }
                     }
                 }
@@ -1839,9 +1762,7 @@ Item {
                     width: (parent.width - 10) / 2
                     height: 38
                     radius: 12
-                    color: root.studyModalStep === 2
-                        ? Island.Theme.red
-                        : (root.studyModalStep === 3 ? Island.Theme.green : Island.Theme.primary)
+                    color: root.studyModalStep === 2 ? Island.Theme.red : Island.Theme.primary
                     scale: proceedTap.pressed ? 0.96 : 1.0
                     Behavior on scale { NumberAnimation { duration: 80 } }
 
@@ -1852,22 +1773,15 @@ Item {
                             if (root.studyModalStep === 1) {
                                 root.studyModalStep = 2;
                             } else if (root.studyModalStep === 2) {
-                                root.studyModalStep = 3;
-                                studyPassInput.focus = true;
-                            } else if (root.studyModalStep === 3) {
-                                if (root.studyPasswordInput.length > 0) {
-                                    verifyPassProc.candidate = root.studyPasswordInput;
-                                    verifyPassProc.running = true;
-                                }
+                                root.studyModalStep = 0;
+                                promptStudyProc.running = true;
                             }
                         }
                     }
 
                     Text {
                         anchors.centerIn: parent
-                        text: root.studyModalStep === 1
-                            ? "Continue"
-                            : (root.studyModalStep === 2 ? "I Commit" : "Lock In 󰌾")
+                        text: root.studyModalStep === 1 ? "Continue" : "Lock In 󰌾"
                         font.family: Island.Theme.fontFamily
                         font.pixelSize: 11
                         font.bold: true
