@@ -1675,7 +1675,7 @@ Item {
     // =========================================================================
     Process {
         id: promptStudyProc
-        command: ["python3", Quickshell.shellPath("scripts/study-mode.py"), "prompt-and-start", "--duration", (Island.ShellState ? Island.ShellState.studyTargetDuration.toString() : "10")]
+        command: ["python3", Quickshell.shellPath("scripts/study-mode.py"), "prompt-and-start", "--duration", (Island.ShellState ? Island.ShellState.studyTargetDuration.toString() : "1800")]
         running: false
     }
 
@@ -1814,7 +1814,7 @@ Item {
                             width: parent.width
                         }
                         Text {
-                            text: "• Duration: 10s (Testing mode). After countdown, overtime counts UP with no exit penalty."
+                            text: "• Duration: 30 minutes (Deep Focus). After countdown, overtime counts UP with no exit penalty."
                             font.pixelSize: 11
                             font.family: Island.Theme.fontFamily
                             color: Island.Theme.green

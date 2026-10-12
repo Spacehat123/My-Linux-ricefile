@@ -104,7 +104,7 @@ def get_state() -> dict:
         return {
             "active": False,
             "start_time": 0,
-            "target_duration": 10,  # 10s test harness
+            "target_duration": 1800,  # 30 minutes (1800s)
             "expiry_time": 0,
             "subject": "CA / ICAI Study",
             "overtime": False,
@@ -254,7 +254,7 @@ def run_daemon():
 
         now = time.time()
         expiry = state.get("expiry_time", 0)
-        target = state.get("target_duration", 10)
+        target = state.get("target_duration", 1800)
         overtime = state.get("overtime", False)
 
         # Hyprland distraction enforcement every 300ms
@@ -270,7 +270,8 @@ def run_daemon():
             state["credited"] = True
             state["overtime_seconds"] = 0
             save_state(state)
-            notify_island(f"🎉 Session Complete ({target}s)! Overtime Flow Active", 6000)
+            target_str = f"{target // 60}m" if target >= 60 else f"{target}s"
+            notify_island(f"🎉 Session Complete ({target_str})! Overtime Flow Active", 6000)
 
         elif overtime and now - last_second_tick >= 1.0:
             state["overtime_seconds"] = state.get("overtime_seconds", 0) + 1
@@ -324,7 +325,8 @@ def cmd_start(duration: int, subject: str):
     script_path = os.path.abspath(__file__)
     subprocess.Popen([sys.executable, script_path, "daemon"], start_new_session=True)
 
-    notify_island(f"󰑴 Study Mode Started ({duration}s lock)", 4000)
+    dur_str = f"{duration // 60}m" if duration >= 60 else f"{duration}s"
+    notify_island(f"󰑴 Study Mode Started ({dur_str} lock)", 4000)
     return {
         "success": True,
         "expiry": new_state["expiry_time"],
@@ -382,7 +384,7 @@ def cmd_status() -> dict:
     return {
         "active": active,
         "remaining_seconds": remaining,
-        "target_duration": state.get("target_duration", 10),
+        "target_duration": state.get("target_duration", 1800),
         "expiry_time": expiry,
         "subject": state.get("subject", "CA / ICAI Study"),
         "overtime": overtime,
@@ -451,7 +453,7 @@ def main():
     parser = argparse.ArgumentParser(description="Cool-Shell Study Mode")
     parser.add_argument("action", choices=["status", "start", "stop", "verify-password", "history", "daemon", "prompt-and-start", "prompt"])
     parser.add_argument("extra_args", nargs="*", help="Optional extra positional arguments")
-    parser.add_argument("--duration", type=int, default=10, help="Duration in seconds (default: 10s for testing)")
+    parser.add_argument("--duration", type=int, default=1800, help="Duration in seconds (default: 1800s / 30m)")
     parser.add_argument("--subject", type=str, default="CA / ICAI Study", help="Study subject name")
     parser.add_argument("--password", type=str, default="", help="Password to verify")
 
