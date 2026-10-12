@@ -182,9 +182,27 @@ mkdir -p ~/Pictures/generated
 
 ---
 
-## 7. Turnkey Automated Setup Scripts
+## 7. Modular Setup Scripts & Unmissable Master Installer
 
-The following helper scripts are included in this directory to automate the entire process:
-1. **`install-models.sh`** — One-command download of Kokoro voices, Tesseract OCR data, and directories.
-2. **`setup-godseye.sh`** — One-command clone, install, and validation of God's Eye View.
-3. **`setup-python-env.sh`** — One-command creation of the Python/CUDA AI runtime.
+All installer scripts are modular, unhidden, and explicitly numbered in `Other-stuff/` so you can install only what you need without downloading heavy assets:
+
+| Script | Purpose | Download Size | Required / Optional |
+|---|---|:---:|:---:|
+| **`install.sh`** (repo root) | Master interactive terminal menu to run all or selected steps | — | Master Launcher |
+| **`01-system-packages.sh`** | Installs all Arch Pacman and AUR system packages | ~300 MB | **Required** |
+| **`02-python-environment.sh`** | Sets up Python virtualenv with PyTorch & CUDA | ~1.5 GB | **Required** |
+| **`03-light-models-tts-ocr.sh`** | Downloads Kokoro TTS ONNX & Tesseract OCR | ~139 MB | **Recommended** |
+| **`04-heavy-ai-image-models.sh`** | Downloads Realistic Vision v5.1 + LCM-LoRA from Hugging Face | ~2.2 GB | *Optional* (AI Art) |
+| **`05-godseye-globe.sh`** | Clones & installs God's Eye 3D Cesium OSINT globe | ~350 MB | *Optional* (3D Globe) |
+
+### Quick Start:
+To launch the interactive menu, simply run from the repository root:
+```bash
+./install.sh
+```
+Or run any individual numbered script directly:
+```bash
+./Other-stuff/01-system-packages.sh
+./Other-stuff/02-python-environment.sh
+./Other-stuff/03-light-models-tts-ocr.sh
+```
