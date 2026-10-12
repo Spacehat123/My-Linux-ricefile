@@ -555,6 +555,39 @@ Item {
                 target: root
             }
         }
+
+        // Phone Connected & Battery Pill
+        Rectangle {
+            id: phonePill
+            anchors.verticalCenter: parent.verticalCenter
+            width: phoneRow.width + 8
+            height: 16
+            radius: 8
+            visible: ShellState.phoneConnected
+            color: ShellState.phoneMirrorActive ? Theme.primary : "#22ffffff"
+
+            Row {
+                id: phoneRow
+                anchors.centerIn: parent
+                spacing: 3
+
+                ShellText {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: ShellState.phoneCharging ? "󰂄" : "📱"
+                    font.pixelSize: 10
+                    color: ShellState.phoneMirrorActive ? "#000000" : Theme.primary
+                }
+
+                ShellText {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: ShellState.phoneBattery >= 0 ? (ShellState.phoneBattery + "%") : ""
+                    visible: ShellState.phoneBattery >= 0
+                    font.pixelSize: 9
+                    font.weight: Font.DemiBold
+                    color: ShellState.phoneMirrorActive ? "#000000" : Theme.shellForeground
+                }
+            }
+        }
     }
 
     // Volume takeover: exclusive state over the fill, nothing else visible.

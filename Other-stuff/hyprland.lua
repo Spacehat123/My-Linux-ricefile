@@ -410,6 +410,9 @@ hl.bind("SUPER + Print", hl.dsp.exec_cmd('grim -g "$(slurp)" - | swappy -f -'))
 
 -- SUPER + SHIFT + S → Universal Screen Lens (OCR, QR, Color to Clipboard & Dynamic Island)
 hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd("/home/pranc/.config/quickshell/cool-shell/scripts/screen-lens.sh"))
+
+-- SUPER + ALT + P → CoolPhone Android Screen Mirroring Toggle
+hl.bind("SUPER + ALT + P", hl.dsp.exec_cmd("/home/pranc/.config/quickshell/cool-shell/scripts/phone-ctl.sh toggle"))
 --------------------------------
 ---- WINDOWS AND WORKSPACES ----
 --------------------------------
@@ -459,4 +462,17 @@ hl.window_rule({
     move  = "20 monitor_h-120",
     float = true,
 })
+
+-- CoolPhone: Apple-style Android Screen Mirroring Window
+hl.window_rule({
+    name = "coolphone-mirror-frame",
+    match = { title = "^CoolPhone$" },
+    float = true,
+    size = "380 824",
+    keepaspectratio = true,
+    rounding = 26,
+    opaque = true,
+    nodim = true,
+})
+
 

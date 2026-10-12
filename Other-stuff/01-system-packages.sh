@@ -44,6 +44,8 @@ PACMAN_PKGS=(
     fd
     ufw
     bitwarden
+    scrcpy
+    android-tools
 )
 
 AUR_PKGS=(

@@ -1847,6 +1847,41 @@ ShellRoot {
     }
 
     IpcHandler {
+        target: "phone"
+
+        function setBattery(battery: string, charging: string, connected: string): string {
+            ShellState.phoneBattery = parseInt(battery);
+            ShellState.phoneCharging = (charging === "true");
+            ShellState.phoneConnected = (connected === "true");
+            return JSON.stringify({
+                success: true,
+                battery: ShellState.phoneBattery,
+                charging: ShellState.phoneCharging,
+                connected: ShellState.phoneConnected
+            });
+        }
+
+        function toggleMirror(): string {
+            ShellState.togglePhoneMirror();
+            return JSON.stringify({ success: true });
+        }
+
+        function openPanel(): string {
+            ShellState.show("phone");
+            return JSON.stringify({ success: true });
+        }
+
+        function status(): string {
+            return JSON.stringify({
+                connected: ShellState.phoneConnected,
+                battery: ShellState.phoneBattery,
+                charging: ShellState.phoneCharging,
+                mirrorActive: ShellState.phoneMirrorActive
+            });
+        }
+    }
+
+    IpcHandler {
         target: "capture"
 
         function screenshot(mode: string) {

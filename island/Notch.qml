@@ -1319,6 +1319,13 @@ PanelWindow {
                 visible: window.displayedPanel === "ai"
             }
 
+            PhonePanel {
+                id: phonePanel
+
+                width: parent.width
+                visible: window.displayedPanel === "phone"
+            }
+
             Behavior on opacity {
                 NumberAnimation {
                     duration: Theme.animationFast

@@ -191,6 +191,10 @@ Trigger or query any shell action from scripts or terminal using `qs -c cool-she
 | `notch` | `toggle` | `panel: string` | Toggle specific Island panel |
 | `notch` | `close` | *none* | Collapse Island back to default pill |
 | `theme` | `reload` | *none* | Reload dynamic theme colors from disk |
+| `phone` | `status` | *none* | Returns JSON with connection, battery, charging, and mirror state |
+| `phone` | `toggleMirror` | *none* | Toggle CoolPhone scrcpy screen mirroring |
+| `phone` | `openPanel` | *none* | Open PhonePanel in Dynamic Island |
+| `phone` | `setBattery` | `battery, charging, connected` | Authoritative battery telemetry synchronization |
 
 ---
 
@@ -199,8 +203,22 @@ Trigger or query any shell action from scripts or terminal using `qs -c cool-she
 | Shortcut | Action | Subsystem |
 |---|---|---|
 | `Super + Shift + S` | Universal Screen Lens (OCR, QR, Color Picker) | `scripts/screen-lens.sh` |
+| `Super + Alt + P` | CoolPhone Android Screen Mirror Toggle | `scripts/phone-ctl.sh toggle` |
 | `Super + G` | AI Image Prompt Bar | Dynamic Island (`AiPromptPanel.qml`) |
 | `Super + R` | BirdsEye Spatial Workspace Overview | `components/BirdsEyeOverview.qml` |
 | `Left Edge Bump` | Open Left Sidebar (Control Center & Modes) | `panels/LeftSidebar.qml` |
 | `Right Edge Bump` | Open Right Sidebar (VALENCE Command Deck) | `panels/RightSidebar.qml` |
 | `Bottom-Left Click` | Open Control Center Drawer | `components/EdgeTrigger.qml` |
+
+---
+
+## 10. CoolPhone: macOS Sequoia-Style Android Screen Mirroring & Filtered File Bridge
+
+Seamless Android integration modeled after Apple's macOS Sequoia iPhone Mirroring:
+- **Floating Hardware Frame**: Borderless, 26px rounded floating frame (`380x824`) with `keepaspectratio = true` in Hyprland.
+- **Physical USB HID Input Emulation**: Uses `--keyboard=uhid` and `--mouse=uhid` so PC mouse and keyboard control the phone seamlessly without triggering on-screen touch keyboards.
+- **Strict MIME Type Filtered Bridge**: Dragging files onto the mirror window executes an ADB interceptor (`scrcpy-adb-filter.sh`) that inspects MIME types (`file -b --mime-type`) against a strict whitelist (Images, Audio, Video, PDF/Office Docs, APKs), rejecting executable scripts/binaries and alerting through the Dynamic Island.
+- **Two-Way Reverse File Ingestion**: Drop files on your phone into `/sdcard/SendToPC/` and the background bridge daemon pulls them into `~/Downloads/Phone/`, adds them directly to the Cool-Shell Stash Shelf, and fires an Island toast.
+- **Dynamic Island & Control Center Integration**: Shows real-time phone connection pill (`📱 [85% ⚡]`), interactive `PhonePanel.qml`, and quick tile in Control Center.
+- **Connection Flexibility**: Connect via standard USB-C cable or pair wirelessly across local Wi-Fi with `./scripts/phone-ctl.sh pair <phone-ip>`.
+

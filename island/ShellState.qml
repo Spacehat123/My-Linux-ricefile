@@ -23,7 +23,8 @@ Singleton {
         "shelf": 420,
         "weather": 380,
         "gamemode": 300,
-        "ai": 540
+        "ai": 540,
+        "phone": 380
     })
     readonly property var panelHeights: ({
         "control": 386,
@@ -41,7 +42,8 @@ Singleton {
         "shelf": 120,
         "weather": 120,
         "gamemode": 84,
-        "ai": 110
+        "ai": 110,
+        "phone": 230
     })
     readonly property var panelRadii: ({
         "control": 20,
@@ -59,7 +61,8 @@ Singleton {
         "shelf": 24,
         "weather": 22,
         "gamemode": 20,
-        "ai": 22
+        "ai": 22,
+        "phone": 24
     })
     signal openSettingsRequested(string category)
 
@@ -337,6 +340,43 @@ Singleton {
         }
     }
 
+    // CoolPhone State & Process Mediation
+    property bool phoneConnected: false
+    property int phoneBattery: -1
+    property bool phoneCharging: false
+    property bool phoneMirrorActive: false
+
+    signal phoneStateChanged()
+
+    function togglePhoneMirror() {
+        Quickshell.execDetached([Quickshell.shellPath("scripts/phone-ctl.sh"), "toggle"]);
+    }
+
+    function checkPhoneStatus() {
+        if (!phoneStatusProc.running) {
+            phoneStatusProc.running = true;
+        }
+    }
+
+    Process {
+        id: phoneStatusProc
+        command: [Quickshell.shellPath("scripts/phone-ctl.sh"), "status"]
+        running: true
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: (text) => {
+                if (text.indexOf("Mirror Window: RUNNING") !== -1) root.phoneMirrorActive = true;
+                else if (text.indexOf("Mirror Window: STOPPED") !== -1) root.phoneMirrorActive = false;
+                
+                if (text.indexOf("\tdevice") !== -1 || text.indexOf(" device") !== -1) {
+                    root.phoneConnected = true;
+                } else if (text.indexOf("List of devices attached") !== -1) {
+                    // reset will happen if no device line follows
+                }
+            }
+        }
+    }
+
     Timer {
         interval: root.studyActive ? 1000 : 3000
         running: true
@@ -345,6 +385,7 @@ Singleton {
             root.checkAiDaemonStatus();
             root.checkGodsEyeStatus();
             root.checkStudyStatus();
+            root.checkPhoneStatus();
         }
     }
 
@@ -412,7 +453,7 @@ Singleton {
             setPanel(panel === "gamemode" ? "collapsed" : "gamemode");
             return;
         }
-        const panels = ["collapsed", "control", "launcher", "clipboard", "todo", "notes", "theme", "wallpaper", "capture", "power", "media", "notifications", "timer", "shelf", "weather"];
+        const panels = ["collapsed", "control", "launcher", "clipboard", "todo", "notes", "theme", "wallpaper", "capture", "power", "media", "notifications", "timer", "shelf", "weather", "phone"];
         const current = Math.max(0, panels.indexOf(panel));
         setPanel(panels[(current + offset + panels.length) % panels.length]);
     }

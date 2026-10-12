@@ -80,6 +80,16 @@ Item {
         }
     }
 
+    // CoolPhone State & Control
+    readonly property bool phoneConnected: Island.ShellState ? Island.ShellState.phoneConnected : false
+    readonly property bool phoneMirrorActive: Island.ShellState ? Island.ShellState.phoneMirrorActive : false
+    readonly property int phoneBattery: Island.ShellState ? Island.ShellState.phoneBattery : -1
+    readonly property bool phoneCharging: Island.ShellState ? Island.ShellState.phoneCharging : false
+
+    function togglePhoneMirror() {
+        if (Island.ShellState) Island.ShellState.togglePhoneMirror();
+    }
+
     // Action Signals (Unidirectional Event Flow to shellRoot)
     signal toggleWallpaper()
     signal toggleAmbient()
@@ -1290,6 +1300,161 @@ Item {
 
                     TapHandler {
                         onTapped: root.triggerStudyModeClick()
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // SECTION 2G: COOLPHONE MIRROR & FILTERED FILE BRIDGE
+        // =====================================================================
+        Rectangle {
+            width: parent.width
+            height: 64
+            radius: 16
+            readonly property bool mirrorOn: root.phoneMirrorActive
+            color: mirrorOn
+                ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.16)
+                : (phoneTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
+            border.color: mirrorOn
+                ? Island.Theme.primary
+                : (phoneTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+            border.width: mirrorOn ? 1.5 : 1
+
+            Behavior on color { ColorAnimation { duration: 120 } }
+            Behavior on border.color { ColorAnimation { duration: 120 } }
+
+            HoverHandler { id: phoneTileHover }
+
+            Row {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 10
+
+                // Main clickable toggle zone (Badge + Text)
+                Item {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - 50
+                    height: parent.height
+
+                    scale: phoneMainTap.pressed ? 0.98 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 80 } }
+
+                    HoverHandler { id: phoneMainHover }
+                    TapHandler {
+                        id: phoneMainTap
+                        onTapped: root.togglePhoneMirror()
+                    }
+
+                    Row {
+                        anchors.fill: parent
+                        spacing: 10
+
+                        // Phone badge
+                        Rectangle {
+                            width: 36
+                            height: 36
+                            radius: 10
+                            color: parent.parent.parent.parent.mirrorOn
+                                ? Island.Theme.primary
+                                : (root.phoneConnected
+                                    ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
+                                    : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.4))
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: parent.parent.parent.parent.parent.mirrorOn ? "󰍹" : "📱"
+                                font.family: parent.parent.parent.parent.parent.mirrorOn ? Island.Theme.iconFontFamily : Island.Theme.fontFamily
+                                font.pixelSize: 16
+                                color: parent.parent.parent.parent.parent.mirrorOn ? "#0a0a0f" : Island.Theme.foreground
+                            }
+                        }
+
+                        // Text block
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 3
+                            width: parent.width - 46
+
+                            Row {
+                                spacing: 6
+                                Text {
+                                    text: "Phone Mirror & Bridge"
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    font.family: Island.Theme.fontFamily
+                                    color: Island.Theme.foreground
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Rectangle {
+                                    visible: root.phoneConnected
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    height: 16
+                                    implicitWidth: phoneConnBadgeText.implicitWidth + 8
+                                    radius: 8
+                                    color: root.phoneCharging
+                                        ? Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.2)
+                                        : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.2)
+                                    border.color: root.phoneCharging ? Island.Theme.green : Island.Theme.primary
+                                    border.width: 1
+
+                                    Text {
+                                        id: phoneConnBadgeText
+                                        anchors.centerIn: parent
+                                        text: root.phoneCharging ? "⚡ CHARGING" : "CONNECTED"
+                                        font.pixelSize: 8
+                                        font.bold: true
+                                        font.family: Island.Theme.fontFamily
+                                        color: root.phoneCharging ? Island.Theme.green : Island.Theme.primary
+                                    }
+                                }
+                            }
+
+                            Text {
+                                text: root.phoneMirrorActive
+                                    ? "Mirroring screen • Super+Alt+P"
+                                    : (root.phoneConnected
+                                        ? (root.phoneBattery >= 0 ? ("Battery " + root.phoneBattery + "% • Tap to launch mirror") : "Ready • Tap to launch mirror")
+                                        : "No device • Connect USB or Wi-Fi")
+                                font.pixelSize: 10
+                                font.family: Island.Theme.fontFamily
+                                color: root.phoneMirrorActive ? Island.Theme.primary : Island.Theme.muted
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
+
+                // Toggle pill switch
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 40
+                    height: 22
+                    radius: 11
+                    color: root.phoneMirrorActive ? Island.Theme.primary : Island.Theme.glassCardHover
+                    border.color: root.phoneMirrorActive ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                    border.width: 1
+
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                    Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: root.phoneMirrorActive ? parent.width - width - 2 : 2
+                        width: 18
+                        height: 18
+                        radius: 9
+                        color: root.phoneMirrorActive ? "#0a0a0f" : Island.Theme.muted
+
+                        Behavior on x {
+                            NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                        }
+                    }
+
+                    TapHandler {
+                        onTapped: root.togglePhoneMirror()
                     }
                 }
             }
