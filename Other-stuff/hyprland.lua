@@ -469,10 +469,8 @@ hl.window_rule({
     match = { title = "^CoolPhone$" },
     float = true,
     size = "380 824",
-    keepaspectratio = true,
-    rounding = 26,
+    rounding = 20,
     opaque = true,
-    nodim = true,
 })
 
 
