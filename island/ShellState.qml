@@ -137,19 +137,34 @@ Singleton {
     // Feather Mode State & Process Mediation ("The Feather" Absolute Battery Mode)
     property bool featherMode: false
     property int featherKilledCount: 0
+    property int featherLimit: 20
 
     signal featherModeToggled(bool active)
 
-    function toggleFeatherMode() {
+    function toggleFeatherMode(limit) {
         if (!featherModeProc.running) {
-            featherModeProc.command = ["python3", Quickshell.shellPath("island/scripts/feather-mode.py"), "toggle"];
+            let cmd = ["python3", Quickshell.shellPath("island/scripts/feather-mode.py"), "toggle"];
+            const targetLimit = limit !== undefined ? limit : root.featherLimit;
+            if (targetLimit) cmd.push(String(targetLimit));
+            featherModeProc.command = cmd;
             featherModeProc.running = true;
         }
     }
 
-    function setFeatherMode(enabled) {
+    function setFeatherMode(enabled, limit) {
         if (featherMode !== enabled && !featherModeProc.running) {
-            featherModeProc.command = ["python3", Quickshell.shellPath("island/scripts/feather-mode.py"), enabled ? "enable" : "disable"];
+            let cmd = ["python3", Quickshell.shellPath("island/scripts/feather-mode.py"), enabled ? "enable" : "disable"];
+            const targetLimit = limit !== undefined ? limit : root.featherLimit;
+            if (enabled && targetLimit) cmd.push(String(targetLimit));
+            featherModeProc.command = cmd;
+            featherModeProc.running = true;
+        }
+    }
+
+    function setFeatherLimit(limit) {
+        root.featherLimit = limit;
+        if (!featherModeProc.running) {
+            featherModeProc.command = ["python3", Quickshell.shellPath("island/scripts/feather-mode.py"), "set-limit", String(limit)];
             featherModeProc.running = true;
         }
     }
@@ -162,6 +177,7 @@ Singleton {
                     const res = JSON.parse(text);
                     root.featherMode = res.featherMode === true;
                     if (res.killedCount !== undefined) root.featherKilledCount = res.killedCount;
+                    if (res.limit !== undefined) root.featherLimit = res.limit;
                     root.close();
                     gc();
                     root.featherModeToggled(root.featherMode);
@@ -182,6 +198,7 @@ Singleton {
                     const res = JSON.parse(text);
                     root.featherMode = res.featherMode === true;
                     if (res.killedCount !== undefined) root.featherKilledCount = res.killedCount;
+                    if (res.limit !== undefined) root.featherLimit = res.limit;
                 } catch (e) {}
             }
         }

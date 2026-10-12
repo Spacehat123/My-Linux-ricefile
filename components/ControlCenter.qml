@@ -29,9 +29,13 @@ Item {
     // The Feather Mode State (Absolute Battery Optimization)
     readonly property bool featherModeActive: Island.ShellState ? Island.ShellState.featherMode : false
     readonly property int featherModeKilledCount: Island.ShellState ? Island.ShellState.featherKilledCount : 0
+    readonly property int featherModeLimit: Island.ShellState ? Island.ShellState.featherLimit : 20
 
-    function toggleFeatherMode() {
-        if (Island.ShellState) Island.ShellState.toggleFeatherMode();
+    function toggleFeatherMode(limit) {
+        if (Island.ShellState) Island.ShellState.toggleFeatherMode(limit);
+    }
+    function setFeatherLimit(val) {
+        if (Island.ShellState) Island.ShellState.setFeatherLimit(val);
     }
 
     // God's Eye View Mode State
@@ -550,7 +554,7 @@ Item {
         // =====================================================================
         Rectangle {
             width: parent.width
-            height: 64
+            height: root.featherModeActive ? 102 : 64
             radius: 16
             color: root.featherModeActive
                 ? Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.16)
@@ -559,135 +563,232 @@ Item {
                 ? Island.Theme.green 
                 : (featherTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
             border.width: root.featherModeActive ? 1.5 : 1
+            clip: true
 
+            Behavior on height { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
             Behavior on color { ColorAnimation { duration: 120 } }
             Behavior on border.color { ColorAnimation { duration: 120 } }
 
             HoverHandler { id: featherTileHover }
 
-            Row {
+            Column {
                 anchors.fill: parent
                 anchors.margins: 12
-                spacing: 10
+                spacing: 8
 
-                // Main clickable toggle zone (Badge + Text)
-                Item {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width - 50
-                    height: parent.height
+                // Top row: Main Toggle zone and pill switch
+                Row {
+                    width: parent.width
+                    height: 40
+                    spacing: 10
 
-                    scale: featherMainTap.pressed ? 0.98 : 1.0
-                    Behavior on scale { NumberAnimation { duration: 80 } }
+                    // Main clickable toggle zone (Badge + Text)
+                    Item {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 50
+                        height: parent.height
 
-                    HoverHandler { id: featherMainHover }
-                    TapHandler {
-                        id: featherMainTap
-                        onTapped: root.toggleFeatherMode()
+                        scale: featherMainTap.pressed ? 0.98 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 80 } }
+
+                        HoverHandler { id: featherMainHover }
+                        TapHandler {
+                            id: featherMainTap
+                            onTapped: root.toggleFeatherMode()
+                        }
+
+                        Row {
+                            anchors.fill: parent
+                            spacing: 10
+
+                            // Glowing leaf / feather badge
+                            Rectangle {
+                                width: 36
+                                height: 36
+                                radius: 10
+                                color: root.featherModeActive 
+                                    ? Island.Theme.green 
+                                    : Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.15)
+                                anchors.verticalCenter: parent.verticalCenter
+
+                                Behavior on color { ColorAnimation { duration: 120 } }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "󰌪"
+                                    font.family: Island.Theme.iconFontFamily
+                                    font.pixelSize: 18
+                                    color: root.featherModeActive ? "#0a0a0f" : Island.Theme.green
+                                }
+                            }
+
+                            // Text labels
+                            Column {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: parent.width - 46
+                                spacing: 2
+
+                                Row {
+                                    spacing: 6
+                                    Text {
+                                        text: "The Feather"
+                                        font.pixelSize: 13
+                                        font.bold: true
+                                        font.family: Island.Theme.fontFamily
+                                        color: Island.Theme.foreground
+                                    }
+
+                                    Rectangle {
+                                        visible: root.featherModeActive
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        width: 54
+                                        height: 16
+                                        radius: 8
+                                        color: Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.25)
+                                        border.color: Island.Theme.green
+                                        border.width: 1
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: root.featherModeLimit + "% CAP"
+                                            font.pixelSize: 8
+                                            font.bold: true
+                                            font.family: Island.Theme.fontFamily
+                                            color: Island.Theme.green
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    text: root.featherModeActive
+                                        ? ("Active • " + root.featherModeLimit + "% CPU/GPU (" + (root.featherModeLimit <= 25 ? "30Hz" : "60Hz") + ") • " + root.featherModeKilledCount + " pruned")
+                                        : "Absolute battery • 20% or 35% CPU/GPU caps"
+                                    font.pixelSize: 10
+                                    font.family: Island.Theme.fontFamily
+                                    color: root.featherModeActive ? Island.Theme.green : Island.Theme.muted
+                                    elide: Text.ElideRight
+                                }
+                            }
+                        }
                     }
 
-                    Row {
-                        anchors.fill: parent
-                        spacing: 10
+                    // Toggle pill switch
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 40
+                        height: 22
+                        radius: 11
+                        color: root.featherModeActive ? Island.Theme.green : Island.Theme.glassCardHover
+                        border.color: root.featherModeActive ? Island.Theme.green : Island.Theme.glassBorderSubtle
+                        border.width: 1
 
-                        // Glowing leaf / feather badge
+                        Behavior on color { ColorAnimation { duration: 120 } }
+                        Behavior on border.color { ColorAnimation { duration: 120 } }
+
                         Rectangle {
-                            width: 36
-                            height: 36
-                            radius: 10
-                            color: root.featherModeActive 
-                                ? Island.Theme.green 
-                                : Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.15)
                             anchors.verticalCenter: parent.verticalCenter
+                            x: root.featherModeActive ? parent.width - width - 2 : 2
+                            width: 18
+                            height: 18
+                            radius: 9
+                            color: root.featherModeActive ? "#0a0a0f" : Island.Theme.muted
 
-                            Behavior on color { ColorAnimation { duration: 120 } }
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "󰌪"
-                                font.family: Island.Theme.iconFontFamily
-                                font.pixelSize: 18
-                                color: root.featherModeActive ? "#0a0a0f" : Island.Theme.green
+                            Behavior on x {
+                                NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
                             }
                         }
 
-                        // Text labels
-                        Column {
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: parent.width - 46
-                            spacing: 2
-
-                            Row {
-                                spacing: 6
-                                Text {
-                                    text: "The Feather"
-                                    font.pixelSize: 13
-                                    font.bold: true
-                                    font.family: Island.Theme.fontFamily
-                                    color: Island.Theme.foreground
-                                }
-
-                                Rectangle {
-                                    visible: root.featherModeActive
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    width: 44
-                                    height: 16
-                                    radius: 8
-                                    color: Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.25)
-                                    border.color: Island.Theme.green
-                                    border.width: 1
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "ECO"
-                                        font.pixelSize: 8
-                                        font.bold: true
-                                        font.family: Island.Theme.fontFamily
-                                        color: Island.Theme.green
-                                    }
-                                }
-                            }
-
-                            Text {
-                                text: root.featherModeActive
-                                    ? "Active • " + root.featherModeKilledCount + " pruned • Bare Hyprland"
-                                    : "Absolute battery • Bare-minimum Hyprland"
-                                font.pixelSize: 10
-                                font.family: Island.Theme.fontFamily
-                                color: root.featherModeActive ? Island.Theme.green : Island.Theme.muted
-                                elide: Text.ElideRight
-                            }
+                        TapHandler {
+                            onTapped: root.toggleFeatherMode()
                         }
                     }
                 }
 
-                // Toggle pill switch
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 40
-                    height: 22
-                    radius: 11
-                    color: root.featherModeActive ? Island.Theme.green : Island.Theme.glassCardHover
-                    border.color: root.featherModeActive ? Island.Theme.green : Island.Theme.glassBorderSubtle
-                    border.width: 1
+                // Bottom row: Resource Limit Selectors (20% Maximum Battery vs 35% Balanced Eco)
+                Row {
+                    width: parent.width
+                    height: 26
+                    spacing: 8
+                    visible: root.featherModeActive
 
-                    Behavior on color { ColorAnimation { duration: 120 } }
-                    Behavior on border.color { ColorAnimation { duration: 120 } }
-
+                    // 20% Limit Pill
                     Rectangle {
-                        anchors.verticalCenter: parent.verticalCenter
-                        x: root.featherModeActive ? parent.width - width - 2 : 2
-                        width: 18
-                        height: 18
-                        radius: 9
-                        color: root.featherModeActive ? "#0a0a0f" : Island.Theme.muted
+                        width: (parent.width - 8) / 2
+                        height: 26
+                        radius: 8
+                        color: root.featherModeLimit <= 25
+                            ? Island.Theme.green
+                            : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.5)
+                        border.color: root.featherModeLimit <= 25
+                            ? Island.Theme.green
+                            : Island.Theme.glassBorderSubtle
+                        border.width: 1
+                        scale: tap20.pressed ? 0.95 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 60 } }
+                        Behavior on color { ColorAnimation { duration: 120 } }
 
-                        Behavior on x {
-                            NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 4
+                            Text {
+                                text: "󰌪"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 11
+                                color: root.featherModeLimit <= 25 ? "#0a0a0f" : Island.Theme.muted
+                            }
+                            Text {
+                                text: "20% Cap (30Hz)"
+                                font.pixelSize: 10
+                                font.bold: root.featherModeLimit <= 25
+                                font.family: Island.Theme.fontFamily
+                                color: root.featherModeLimit <= 25 ? "#0a0a0f" : Island.Theme.muted
+                            }
+                        }
+
+                        TapHandler {
+                            id: tap20
+                            onTapped: root.setFeatherLimit(20)
                         }
                     }
 
-                    TapHandler {
-                        onTapped: root.toggleFeatherMode()
+                    // 35% Limit Pill
+                    Rectangle {
+                        width: (parent.width - 8) / 2
+                        height: 26
+                        radius: 8
+                        color: root.featherModeLimit > 25
+                            ? Island.Theme.green
+                            : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.5)
+                        border.color: root.featherModeLimit > 25
+                            ? Island.Theme.green
+                            : Island.Theme.glassBorderSubtle
+                        border.width: 1
+                        scale: tap35.pressed ? 0.95 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 60 } }
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 4
+                            Text {
+                                text: "󰌪"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 11
+                                color: root.featherModeLimit > 25 ? "#0a0a0f" : Island.Theme.muted
+                            }
+                            Text {
+                                text: "35% Cap (60Hz)"
+                                font.pixelSize: 10
+                                font.bold: root.featherModeLimit > 25
+                                font.family: Island.Theme.fontFamily
+                                color: root.featherModeLimit > 25 ? "#0a0a0f" : Island.Theme.muted
+                            }
+                        }
+
+                        TapHandler {
+                            id: tap35
+                            onTapped: root.setFeatherLimit(35)
+                        }
                     }
                 }
             }

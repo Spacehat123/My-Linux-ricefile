@@ -2139,8 +2139,9 @@ PanelWindow {
                                 // The Feather: Absolute Battery Mode Card
                                 Rectangle {
                                     width: parent.width
-                                    height: 74
+                                    height: (Island.ShellState && Island.ShellState.featherMode) ? 104 : 74
                                     radius: 12
+                                    clip: true
                                     color: Island.ShellState && Island.ShellState.featherMode
                                         ? Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.16)
                                         : Island.Theme.glassCard
@@ -2149,87 +2150,177 @@ PanelWindow {
                                         : Island.Theme.glassBorderSubtle
                                     border.width: Island.ShellState && Island.ShellState.featherMode ? 1.5 : 1
 
-                                    Row {
+                                    Behavior on height { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+
+                                    Column {
                                         anchors.fill: parent
-                                        anchors.margins: 14
-                                        spacing: 14
+                                        anchors.margins: 12
+                                        spacing: 8
 
-                                        Text {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: "󰌪"
-                                            font.family: Island.Theme.iconFontFamily
-                                            font.pixelSize: 22
-                                            color: Island.ShellState && Island.ShellState.featherMode ? Island.Theme.green : Island.Theme.muted
-                                        }
+                                        Row {
+                                            width: parent.width
+                                            height: 44
+                                            spacing: 14
 
-                                        Column {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            width: parent.width - 120
-                                            spacing: 2
-                                            Row {
-                                                spacing: 6
-                                                Text {
-                                                    text: "The Feather (Absolute Battery)"
-                                                    font.pixelSize: 12
-                                                    font.bold: true
-                                                    color: Island.Theme.foreground
-                                                }
-                                                Rectangle {
-                                                    visible: Island.ShellState && Island.ShellState.featherMode
-                                                    anchors.verticalCenter: parent.verticalCenter
-                                                    width: 44
-                                                    height: 16
-                                                    radius: 8
-                                                    color: Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.25)
-                                                    border.color: Island.Theme.green
-                                                    border.width: 1
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "󰌪"
+                                                font.family: Island.Theme.iconFontFamily
+                                                font.pixelSize: 22
+                                                color: Island.ShellState && Island.ShellState.featherMode ? Island.Theme.green : Island.Theme.muted
+                                            }
 
+                                            Column {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: parent.width - 120
+                                                spacing: 2
+                                                Row {
+                                                    spacing: 6
                                                     Text {
-                                                        anchors.centerIn: parent
-                                                        text: "ECO"
-                                                        font.pixelSize: 8
+                                                        text: "The Feather (Absolute Battery)"
+                                                        font.pixelSize: 12
                                                         font.bold: true
-                                                        font.family: Island.Theme.fontFamily
-                                                        color: Island.Theme.green
+                                                        color: Island.Theme.foreground
+                                                    }
+                                                    Rectangle {
+                                                        visible: Island.ShellState && Island.ShellState.featherMode
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        width: 50
+                                                        height: 16
+                                                        radius: 8
+                                                        color: Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.25)
+                                                        border.color: Island.Theme.green
+                                                        border.width: 1
+
+                                                        Text {
+                                                            anchors.centerIn: parent
+                                                            text: (Island.ShellState ? Island.ShellState.featherLimit : 20) + "% CAP"
+                                                            font.pixelSize: 8
+                                                            font.bold: true
+                                                            font.family: Island.Theme.fontFamily
+                                                            color: Island.Theme.green
+                                                        }
+                                                    }
+                                                }
+                                                Text {
+                                                    text: Island.ShellState && Island.ShellState.featherMode
+                                                        ? ("Active • " + (Island.ShellState ? Island.ShellState.featherLimit : 20) + "% CPU/GPU (" + ((Island.ShellState ? Island.ShellState.featherLimit : 20) <= 25 ? "30Hz" : "60Hz") + ") • " + Island.ShellState.featherKilledCount + " apps pruned")
+                                                        : "Prunes user bloat & caps CPU/GPU (20% extreme or 35% balanced) with bare-minimum Hyprland."
+                                                    font.pixelSize: 10
+                                                    color: Island.ShellState && Island.ShellState.featherMode ? Island.Theme.green : Island.Theme.muted
+                                                    elide: Text.ElideRight
+                                                }
+                                            }
+
+                                            // Toggle Pill Switch
+                                            Rectangle {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: 44
+                                                height: 24
+                                                radius: 12
+                                                color: (Island.ShellState && Island.ShellState.featherMode) ? Island.Theme.green : Island.Theme.glassCardHover
+                                                border.color: (Island.ShellState && Island.ShellState.featherMode) ? Island.Theme.green : Island.Theme.glassBorderSubtle
+                                                border.width: 1
+
+                                                Rectangle {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    x: (Island.ShellState && Island.ShellState.featherMode) ? parent.width - width - 3 : 3
+                                                    width: 18
+                                                    height: 18
+                                                    radius: 9
+                                                    color: (Island.ShellState && Island.ShellState.featherMode) ? "#0a0a0f" : Island.Theme.muted
+
+                                                    Behavior on x {
+                                                        NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                                                    }
+                                                }
+
+                                                TapHandler {
+                                                    onTapped: {
+                                                        if (Island.ShellState) Island.ShellState.toggleFeatherMode();
                                                     }
                                                 }
                                             }
-                                            Text {
-                                                text: Island.ShellState && Island.ShellState.featherMode
-                                                    ? ("Active • " + Island.ShellState.featherKilledCount + " apps pruned • Bare-minimum Hyprland (0 animations, VFR)")
-                                                    : "Prunes user bloat & drops Hyprland to bare minimum (0 animations, VFR, 15% brightness) so apps can start on demand."
-                                                font.pixelSize: 10
-                                                color: Island.ShellState && Island.ShellState.featherMode ? Island.Theme.green : Island.Theme.muted
-                                                elide: Text.ElideRight
-                                            }
                                         }
 
-                                        // Toggle Pill Switch
-                                        Rectangle {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            width: 44
-                                            height: 24
-                                            radius: 12
-                                            color: (Island.ShellState && Island.ShellState.featherMode) ? Island.Theme.green : Island.Theme.glassCardHover
-                                            border.color: (Island.ShellState && Island.ShellState.featherMode) ? Island.Theme.green : Island.Theme.glassBorderSubtle
-                                            border.width: 1
+                                        // Presets Row (20% vs 35%)
+                                        Row {
+                                            width: parent.width
+                                            height: 26
+                                            spacing: 8
+                                            visible: Island.ShellState && Island.ShellState.featherMode
 
                                             Rectangle {
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                x: (Island.ShellState && Island.ShellState.featherMode) ? parent.width - width - 3 : 3
-                                                width: 18
-                                                height: 18
-                                                radius: 9
-                                                color: (Island.ShellState && Island.ShellState.featherMode) ? "#0a0a0f" : Island.Theme.muted
+                                                width: (parent.width - 8) / 2
+                                                height: 26
+                                                radius: 8
+                                                color: (Island.ShellState && Island.ShellState.featherLimit <= 25)
+                                                    ? Island.Theme.green
+                                                    : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.5)
+                                                border.color: (Island.ShellState && Island.ShellState.featherLimit <= 25)
+                                                    ? Island.Theme.green
+                                                    : Island.Theme.glassBorderSubtle
+                                                border.width: 1
 
-                                                Behavior on x {
-                                                    NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                                                Row {
+                                                    anchors.centerIn: parent
+                                                    spacing: 4
+                                                    Text {
+                                                        text: "󰌪"
+                                                        font.family: Island.Theme.iconFontFamily
+                                                        font.pixelSize: 11
+                                                        color: (Island.ShellState && Island.ShellState.featherLimit <= 25) ? "#0a0a0f" : Island.Theme.muted
+                                                    }
+                                                    Text {
+                                                        text: "20% Extreme Cap (30Hz)"
+                                                        font.pixelSize: 10
+                                                        font.bold: Island.ShellState && Island.ShellState.featherLimit <= 25
+                                                        font.family: Island.Theme.fontFamily
+                                                        color: (Island.ShellState && Island.ShellState.featherLimit <= 25) ? "#0a0a0f" : Island.Theme.muted
+                                                    }
+                                                }
+
+                                                TapHandler {
+                                                    onTapped: {
+                                                        if (Island.ShellState) Island.ShellState.setFeatherLimit(20);
+                                                    }
                                                 }
                                             }
 
-                                            TapHandler {
-                                                onTapped: {
-                                                    if (Island.ShellState) Island.ShellState.toggleFeatherMode();
+                                            Rectangle {
+                                                width: (parent.width - 8) / 2
+                                                height: 26
+                                                radius: 8
+                                                color: (Island.ShellState && Island.ShellState.featherLimit > 25)
+                                                    ? Island.Theme.green
+                                                    : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.5)
+                                                border.color: (Island.ShellState && Island.ShellState.featherLimit > 25)
+                                                    ? Island.Theme.green
+                                                    : Island.Theme.glassBorderSubtle
+                                                border.width: 1
+
+                                                Row {
+                                                    anchors.centerIn: parent
+                                                    spacing: 4
+                                                    Text {
+                                                        text: "󰌪"
+                                                        font.family: Island.Theme.iconFontFamily
+                                                        font.pixelSize: 11
+                                                        color: (Island.ShellState && Island.ShellState.featherLimit > 25) ? "#0a0a0f" : Island.Theme.muted
+                                                    }
+                                                    Text {
+                                                        text: "35% Balanced Cap (60Hz)"
+                                                        font.pixelSize: 10
+                                                        font.bold: Island.ShellState && Island.ShellState.featherLimit > 25
+                                                        font.family: Island.Theme.fontFamily
+                                                        color: (Island.ShellState && Island.ShellState.featherLimit > 25) ? "#0a0a0f" : Island.Theme.muted
+                                                    }
+                                                }
+
+                                                TapHandler {
+                                                    onTapped: {
+                                                        if (Island.ShellState) Island.ShellState.setFeatherLimit(35);
+                                                    }
                                                 }
                                             }
                                         }

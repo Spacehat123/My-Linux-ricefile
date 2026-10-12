@@ -1524,22 +1524,29 @@ ShellRoot {
 
         property bool enabled: ShellState.featherMode
         property int killedCount: ShellState.featherKilledCount
+        property int limit: ShellState.featherLimit
 
         function toggle(): string {
             ShellState.toggleFeatherMode();
-            return JSON.stringify({ success: true, enabled: ShellState.featherMode });
+            return JSON.stringify({ success: true, enabled: ShellState.featherMode, limit: ShellState.featherLimit });
         }
 
         function setEnabled(val: bool): string {
             ShellState.setFeatherMode(val);
-            return JSON.stringify({ success: true, enabled: val });
+            return JSON.stringify({ success: true, enabled: val, limit: ShellState.featherLimit });
+        }
+
+        function setLimit(val: int): string {
+            ShellState.setFeatherLimit(val);
+            return JSON.stringify({ success: true, enabled: ShellState.featherMode, limit: val });
         }
 
         function status(): string {
             return JSON.stringify({
                 success: true,
                 enabled: ShellState.featherMode,
-                killedCount: ShellState.featherKilledCount
+                killedCount: ShellState.featherKilledCount,
+                limit: ShellState.featherLimit
             });
         }
     }
