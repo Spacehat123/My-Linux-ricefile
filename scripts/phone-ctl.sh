@@ -96,7 +96,31 @@ case "${1:-status}" in
         fi
 
         if [[ -z "${IP}" ]]; then
-            echo "[-] Error: Could not detect phone IP automatically."
+            if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${DISPLAY:-}" ]] && command -v zenity >/dev/null 2>&1; then
+                local form_res
+                form_res=$(zenity --forms \
+                    --title="CoolPhone Wireless Pairing" \
+                    --text="Open 'Wireless Debugging' on your phone and tap 'Pair device with pairing code':" \
+                    --add-entry="Phone IP (e.g. 192.168.1.17)" \
+                    --add-entry="Pairing Port" \
+                    --add-entry="6-digit Pairing Code" \
+                    --separator="|" 2>/dev/null || true)
+                if [[ -n "$form_res" ]]; then
+                    IP=$(echo "$form_res" | cut -d'|' -f1 | tr -d ' ')
+                    local p_port p_code
+                    p_port=$(echo "$form_res" | cut -d'|' -f2 | tr -d ' ')
+                    p_code=$(echo "$form_res" | cut -d'|' -f3 | tr -d ' ')
+                    if [[ -n "$p_port" && -n "$p_code" ]]; then
+                        echo "[phone-ctl] Pairing with ${IP}:${p_port} using code..."
+                        adb pair "${IP}:${p_port}" "${p_code}" || true
+                        PORT="${p_port}"
+                    fi
+                fi
+            fi
+        fi
+
+        if [[ -z "${IP}" ]]; then
+            echo "[-] Error: Could not detect phone IP or pairing was cancelled."
             echo "Usage: phone-ctl pair <PHONE_IP_ADDRESS> [PORT]"
             echo "Example: phone-ctl pair 192.168.1.50"
             exit 1
