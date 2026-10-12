@@ -563,7 +563,7 @@ Item {
             width: phoneRow.width + 8
             height: 16
             radius: 8
-            visible: ShellState.phoneConnected
+            visible: ShellState.phoneSystemEnabled && ShellState.phoneConnected
             color: ShellState.phoneMirrorActive ? Theme.primary : "#22ffffff"
 
             Row {

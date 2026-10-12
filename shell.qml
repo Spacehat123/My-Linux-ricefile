@@ -1849,10 +1849,25 @@ ShellRoot {
     IpcHandler {
         target: "phone"
 
+        function setSystemEnabled(enabled: string): string {
+            const val = (enabled === "true");
+            ShellState.phoneSystemEnabled = val;
+            if (!val) {
+                ShellState.phoneConnected = false;
+                ShellState.phoneMirrorActive = false;
+                ShellState.phoneBattery = -1;
+                ShellState.phoneCharging = false;
+            }
+            return JSON.stringify({ success: true, phoneSystemEnabled: ShellState.phoneSystemEnabled });
+        }
+
         function setBattery(battery: string, charging: string, connected: string): string {
             ShellState.phoneBattery = parseInt(battery);
             ShellState.phoneCharging = (charging === "true");
             ShellState.phoneConnected = (connected === "true");
+            if (ShellState.phoneConnected) {
+                ShellState.phoneSystemEnabled = true;
+            }
             return JSON.stringify({
                 success: true,
                 battery: ShellState.phoneBattery,

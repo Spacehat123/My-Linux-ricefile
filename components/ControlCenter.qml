@@ -81,6 +81,7 @@ Item {
     }
 
     // CoolPhone State & Control
+    readonly property bool phoneSystemEnabled: Island.ShellState ? Island.ShellState.phoneSystemEnabled : false
     readonly property bool phoneConnected: Island.ShellState ? Island.ShellState.phoneConnected : false
     readonly property bool phoneMirrorActive: Island.ShellState ? Island.ShellState.phoneMirrorActive : false
     readonly property int phoneBattery: Island.ShellState ? Island.ShellState.phoneBattery : -1
@@ -1312,14 +1313,14 @@ Item {
             width: parent.width
             height: 64
             radius: 16
-            readonly property bool mirrorOn: root.phoneMirrorActive
-            color: mirrorOn
+            readonly property bool phoneOn: root.phoneSystemEnabled || root.phoneMirrorActive || root.phoneConnected
+            color: phoneOn
                 ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.16)
                 : (phoneTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
-            border.color: mirrorOn
+            border.color: phoneOn
                 ? Island.Theme.primary
                 : (phoneTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
-            border.width: mirrorOn ? 1.5 : 1
+            border.width: phoneOn ? 1.5 : 1
 
             Behavior on color { ColorAnimation { duration: 120 } }
             Behavior on border.color { ColorAnimation { duration: 120 } }
@@ -1355,19 +1356,17 @@ Item {
                             width: 36
                             height: 36
                             radius: 10
-                            color: parent.parent.parent.parent.mirrorOn
+                            color: parent.parent.parent.parent.phoneOn
                                 ? Island.Theme.primary
-                                : (root.phoneConnected
-                                    ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
-                                    : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.4))
+                                : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.4)
                             anchors.verticalCenter: parent.verticalCenter
 
                             Text {
                                 anchors.centerIn: parent
-                                text: parent.parent.parent.parent.parent.mirrorOn ? "󰍹" : "📱"
-                                font.family: parent.parent.parent.parent.parent.mirrorOn ? Island.Theme.iconFontFamily : Island.Theme.fontFamily
+                                text: parent.parent.parent.parent.parent.phoneOn ? (root.phoneMirrorActive ? "󰍹" : "📱") : "󰂲"
+                                font.family: Island.Theme.iconFontFamily
                                 font.pixelSize: 16
-                                color: parent.parent.parent.parent.parent.mirrorOn ? "#0a0a0f" : Island.Theme.foreground
+                                color: parent.parent.parent.parent.parent.phoneOn ? "#0a0a0f" : Island.Theme.muted
                             }
                         }
 
@@ -1389,7 +1388,7 @@ Item {
                                 }
 
                                 Rectangle {
-                                    visible: root.phoneConnected
+                                    visible: parent.parent.parent.parent.parent.phoneOn && root.phoneConnected
                                     anchors.verticalCenter: parent.verticalCenter
                                     height: 16
                                     implicitWidth: phoneConnBadgeText.implicitWidth + 8
@@ -1413,14 +1412,16 @@ Item {
                             }
 
                             Text {
-                                text: root.phoneMirrorActive
-                                    ? "Mirroring screen • Super+Alt+P"
-                                    : (root.phoneConnected
-                                        ? (root.phoneBattery >= 0 ? ("Battery " + root.phoneBattery + "% • Tap to launch mirror") : "Ready • Tap to launch mirror")
-                                        : "No device • Connect USB or Wi-Fi")
+                                text: parent.parent.parent.parent.parent.phoneOn
+                                    ? (root.phoneMirrorActive
+                                        ? "Mirroring screen • Super+Alt+P"
+                                        : (root.phoneConnected
+                                            ? (root.phoneBattery >= 0 ? ("Connected • Battery " + root.phoneBattery + "%") : "Connected • Ready")
+                                            : "System Active • Ready to mirror"))
+                                    : "Completely Off • 0% CPU & RAM load"
                                 font.pixelSize: 10
                                 font.family: Island.Theme.fontFamily
-                                color: root.phoneMirrorActive ? Island.Theme.primary : Island.Theme.muted
+                                color: parent.parent.parent.parent.parent.phoneOn ? Island.Theme.primary : Island.Theme.muted
                                 elide: Text.ElideRight
                             }
                         }
@@ -1433,8 +1434,8 @@ Item {
                     width: 40
                     height: 22
                     radius: 11
-                    color: root.phoneMirrorActive ? Island.Theme.primary : Island.Theme.glassCardHover
-                    border.color: root.phoneMirrorActive ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                    color: parent.parent.phoneOn ? Island.Theme.primary : Island.Theme.glassCardHover
+                    border.color: parent.parent.phoneOn ? Island.Theme.primary : Island.Theme.glassBorderSubtle
                     border.width: 1
 
                     Behavior on color { ColorAnimation { duration: 120 } }
@@ -1442,11 +1443,11 @@ Item {
 
                     Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
-                        x: root.phoneMirrorActive ? parent.width - width - 2 : 2
+                        x: parent.parent.parent.phoneOn ? parent.width - width - 2 : 2
                         width: 18
                         height: 18
                         radius: 9
-                        color: root.phoneMirrorActive ? "#0a0a0f" : Island.Theme.muted
+                        color: parent.parent.parent.phoneOn ? "#0a0a0f" : Island.Theme.muted
 
                         Behavior on x {
                             NumberAnimation { duration: 140; easing.type: Easing.OutCubic }

@@ -340,7 +340,8 @@ Singleton {
         }
     }
 
-    // CoolPhone State & Process Mediation
+    // CoolPhone State & Process Mediation (Zero-load when off)
+    property bool phoneSystemEnabled: false
     property bool phoneConnected: false
     property int phoneBattery: -1
     property bool phoneCharging: false
@@ -349,11 +350,21 @@ Singleton {
     signal phoneStateChanged()
 
     function togglePhoneMirror() {
-        Quickshell.execDetached([Quickshell.shellPath("scripts/phone-ctl.sh"), "toggle"]);
+        if (root.phoneSystemEnabled || root.phoneMirrorActive) {
+            root.phoneSystemEnabled = false;
+            root.phoneMirrorActive = false;
+            root.phoneConnected = false;
+            root.phoneBattery = -1;
+            root.phoneCharging = false;
+            Quickshell.execDetached([Quickshell.shellPath("scripts/phone-ctl.sh"), "off"]);
+        } else {
+            root.phoneSystemEnabled = true;
+            Quickshell.execDetached([Quickshell.shellPath("scripts/phone-ctl.sh"), "on"]);
+        }
     }
 
     function checkPhoneStatus() {
-        if (!phoneStatusProc.running) {
+        if (root.phoneSystemEnabled && !phoneStatusProc.running) {
             phoneStatusProc.running = true;
         }
     }
@@ -361,17 +372,22 @@ Singleton {
     Process {
         id: phoneStatusProc
         command: [Quickshell.shellPath("scripts/phone-ctl.sh"), "status"]
-        running: true
+        running: false
         stdout: SplitParser {
             splitMarker: "\n"
             onRead: (text) => {
+                if (text.indexOf("System State: OFF") !== -1) {
+                    root.phoneSystemEnabled = false;
+                    root.phoneMirrorActive = false;
+                    root.phoneConnected = false;
+                    root.phoneBattery = -1;
+                    return;
+                }
                 if (text.indexOf("Mirror Window: RUNNING") !== -1) root.phoneMirrorActive = true;
                 else if (text.indexOf("Mirror Window: STOPPED") !== -1) root.phoneMirrorActive = false;
                 
                 if (text.indexOf("\tdevice") !== -1 || text.indexOf(" device") !== -1) {
                     root.phoneConnected = true;
-                } else if (text.indexOf("List of devices attached") !== -1) {
-                    // reset will happen if no device line follows
                 }
             }
         }

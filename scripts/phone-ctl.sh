@@ -29,15 +29,85 @@ stop_daemon() {
         fi
         rm -f "${PID_FILE}"
     fi
+    pkill -f "phone-bridge-daemon.py" 2>/dev/null || true
+    rm -f "/tmp/coolphone-bridge.pid"
+}
+
+shutdown_whole_system() {
+    echo "[phone-ctl] Completely powering down CoolPhone system to eliminate background load..."
+    # 1. Kill scrcpy mirror window
+    pkill -f "scrcpy.*CoolPhone" 2>/dev/null || true
+    rm -f "/tmp/coolphone-mirror.pid"
+
+    # 2. Kill background bridge daemon
+    stop_daemon
+
+    # 3. Disconnect ADB wireless devices & kill background server
+    if command -v adb >/dev/null 2>&1; then
+        adb disconnect >/dev/null 2>&1 || true
+        adb kill-server >/dev/null 2>&1 || true
+    fi
+
+    # 4. Notify Quickshell to clear state and hide status pills
+    qs -c cool-shell ipc call phone setBattery -1 false false >/dev/null 2>&1 || \
+    quickshell -c cool-shell ipc call phone setBattery -1 false false >/dev/null 2>&1 || true
+    qs -c cool-shell ipc call phone setSystemEnabled false >/dev/null 2>&1 || \
+    quickshell -c cool-shell ipc call phone setSystemEnabled false >/dev/null 2>&1 || true
+    qs -c cool-shell ipc call island showTransient "📱 Phone System Powered Off (0% Load)" 2500 >/dev/null 2>&1 || true
 }
 
 is_mirror_running() {
-    pgrep -f "scrcpy.*--window-title=CoolPhone" >/dev/null 2>&1
+    pgrep -f "scrcpy.*CoolPhone" >/dev/null 2>&1
+}
+
+is_daemon_running() {
+    pgrep -f "phone-bridge-daemon.py" >/dev/null 2>&1
+}
+
+is_system_active() {
+    is_mirror_running || is_daemon_running
+}
+
+show_status() {
+    echo "=== CoolPhone Status ==="
+    local mirror_run=false
+    local daemon_run=false
+
+    if is_mirror_running; then
+        mirror_run=true
+        echo "Mirror Window: RUNNING"
+    else
+        echo "Mirror Window: STOPPED"
+    fi
+
+    if [[ -f "${PID_FILE}" ]] && kill -0 "$(cat "${PID_FILE}")" 2>/dev/null; then
+        daemon_run=true
+        echo "Bridge Daemon: RUNNING (PID $(cat "${PID_FILE}"))"
+    elif is_daemon_running; then
+        daemon_run=true
+        echo "Bridge Daemon: RUNNING"
+    else
+        echo "Bridge Daemon: STOPPED"
+    fi
+
+    if [ "$mirror_run" = false ] && [ "$daemon_run" = false ]; then
+        echo "System State: OFF"
+        return 0
+    fi
+
+    echo ""
+    echo "Connected ADB Devices:"
+    if command -v adb >/dev/null 2>&1; then
+        adb devices -l 2>/dev/null || true
+    else
+        echo "adb not found in PATH"
+    fi
 }
 
 case "${1:-status}" in
-    start)
+    start|on)
         ensure_daemon
+        qs -c cool-shell ipc call phone setSystemEnabled true >/dev/null 2>&1 || true
         if is_mirror_running; then
             echo "[phone-ctl] CoolPhone mirror is already running."
             exit 0
@@ -46,21 +116,16 @@ case "${1:-status}" in
         "${MIRROR_SCRIPT}" &
         ;;
 
-    stop)
-        if is_mirror_running; then
-            echo "[phone-ctl] Stopping CoolPhone mirror..."
-            pkill -f "scrcpy.*--window-title=CoolPhone" || true
-        else
-            echo "[phone-ctl] CoolPhone mirror is not running."
-        fi
+    stop|off)
+        shutdown_whole_system
         ;;
 
     toggle)
-        if is_mirror_running; then
-            echo "[phone-ctl] Stopping CoolPhone mirror..."
-            pkill -f "scrcpy.*--window-title=CoolPhone" || true
+        if is_system_active; then
+            shutdown_whole_system
         else
             ensure_daemon
+            qs -c cool-shell ipc call phone setSystemEnabled true >/dev/null 2>&1 || true
             echo "[phone-ctl] Starting CoolPhone mirror..."
             "${MIRROR_SCRIPT}" &
         fi
@@ -154,26 +219,7 @@ case "${1:-status}" in
         ;;
 
     status)
-        echo "=== CoolPhone Status ==="
-        if is_mirror_running; then
-            echo "Mirror Window: RUNNING"
-        else
-            echo "Mirror Window: STOPPED"
-        fi
-
-        if [[ -f "${PID_FILE}" ]] && kill -0 "$(cat "${PID_FILE}")" 2>/dev/null; then
-            echo "Bridge Daemon: RUNNING (PID $(cat "${PID_FILE}"))"
-        else
-            echo "Bridge Daemon: STOPPED"
-        fi
-
-        echo ""
-        echo "Connected ADB Devices:"
-        if command -v adb >/dev/null 2>&1; then
-            adb devices -l
-        else
-            echo "adb not found in PATH"
-        fi
+        show_status
         ;;
 
     *)
