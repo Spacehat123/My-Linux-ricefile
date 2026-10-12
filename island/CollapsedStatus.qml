@@ -19,6 +19,7 @@ Item {
     property bool volumeMuted: false
     property string btConnected: ""
     property bool mediaPlaying: false
+    property bool hasLyrics: false
 
     implicitHeight: 24
 
@@ -188,12 +189,14 @@ Item {
             transformOrigin: Item.Center
             anchors.verticalCenter: parent.verticalCenter
             visible: text !== ""
-            width: Math.min(implicitWidth, root.weatherMini !== "" ? 68 : 104)
+            width: root.hasLyrics
+                ? Math.min(implicitWidth, Math.max(160, root.width - (root.unread > 0 ? 24 : 0) - (waveRow.visible ? 20 : 0) - (root.weatherMini !== "" ? 45 : 0) - (root.micActive ? 12 : 0) - (root.camActive ? 12 : 0) - 24))
+                : Math.min(implicitWidth, root.weatherMini !== "" ? 68 : 104)
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             color: root.recActive ? Theme.red : Theme.shellForeground
-            font.pixelSize: 11
+            font.pixelSize: root.hasLyrics ? 12 : 11
             font.weight: Font.DemiBold
 
             function syncLabel() {
@@ -275,7 +278,7 @@ Item {
         Row {
             id: waveRow
             anchors.verticalCenter: parent.verticalCenter
-            visible: root.mediaPlaying && !root.volumeActive
+            visible: root.mediaPlaying && !root.volumeActive && IslandHub.visualizerEnabled
             spacing: 1
             transformOrigin: Item.Center
 

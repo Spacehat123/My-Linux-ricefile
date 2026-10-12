@@ -1731,6 +1731,60 @@ ShellRoot {
             IslandHub.showTransient(text, ms || 3500);
             return JSON.stringify({ success: true, text: text });
         }
+
+        function showLensAction(snippet: string, wordCount: int): string {
+            IslandHub.showLensAction(snippet, wordCount);
+            return JSON.stringify({ success: true });
+        }
+
+        function setVoicePlaying(playing: bool): string {
+            IslandHub.voicePlaying = playing;
+            return JSON.stringify({ success: true, playing: playing });
+        }
+
+        function triggerReadAloud(): string {
+            IslandHub.triggerReadAloud();
+            return JSON.stringify({ success: true });
+        }
+
+        function stopVoice(): string {
+            IslandHub.stopVoice();
+            return JSON.stringify({ success: true });
+        }
+
+        function toggleLyrics(): string {
+            IslandHub.toggleLyrics();
+            return JSON.stringify({ success: true, enabled: IslandHub.lyricsEnabled });
+        }
+
+        function setLyricsEnabled(enabled: bool): string {
+            IslandHub.lyricsEnabled = enabled;
+            return JSON.stringify({ success: true, enabled: IslandHub.lyricsEnabled });
+        }
+
+        function toggleVisualizer(): string {
+            IslandHub.toggleVisualizer();
+            return JSON.stringify({ success: true, enabled: IslandHub.visualizerEnabled });
+        }
+
+        function setVisualizerEnabled(enabled: bool): string {
+            IslandHub.visualizerEnabled = enabled;
+            return JSON.stringify({ success: true, enabled: IslandHub.visualizerEnabled });
+        }
+
+        function getLyric(): string {
+            return JSON.stringify({ lyric: IslandHub.liveLyric, playing: IslandHub.mediaPlaying, enabled: IslandHub.lyricsEnabled });
+        }
+
+        function setAiGenerating(generating: bool, msg: string): string {
+            IslandHub.setAiGenerating(generating, msg);
+            return JSON.stringify({ success: true, aiGenerating: IslandHub.aiGenerating });
+        }
+
+        function triggerAiGeneration(prompt: string): string {
+            IslandHub.triggerAiGeneration(prompt);
+            return JSON.stringify({ success: true });
+        }
     }
 
     IpcHandler {

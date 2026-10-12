@@ -160,6 +160,34 @@ Singleton {
         transientTimer.restart();
     }
 
+    // -- screen lens read aloud & voice state --
+    property bool lensActionActive: false
+    property string lensActionSnippet: ""
+    property int lensWordCount: 0
+    property bool voicePlaying: false
+    readonly property string voiceHelper: Quickshell.shellPath("scripts/voice-engine.sh").toString().replace(/^file:\/\//, "")
+
+    function showLensAction(snippet, count) {
+        lensActionSnippet = snippet || "";
+        lensWordCount = count || 0;
+        lensActionActive = true;
+        lensActionTimer.restart();
+        flashBorder(Theme.primary, 800);
+    }
+
+    function triggerReadAloud() {
+        if (!lensActionActive && !voicePlaying) return;
+        lensActionActive = false;
+        voicePlaying = true;
+        Quickshell.execDetached([root.voiceHelper, "read", "/tmp/screen-lens-last.txt"]);
+    }
+
+    function stopVoice() {
+        voicePlaying = false;
+        lensActionActive = false;
+        Quickshell.execDetached([root.voiceHelper, "stop"]);
+    }
+
     // -- micro particle burst trigger (major events only) --
     property int burstTick: 0
     function burst() {
@@ -183,8 +211,46 @@ Singleton {
         flashBorder(Theme.primary, 400);
     }
 
+    // -- AI Generation state --
+    property bool aiGenerating: false
+    property string aiStatusMsg: ""
+
+    function setAiGenerating(val, msg) {
+        root.aiGenerating = (val === true || val === "true" || val === 1 || val === "1");
+        root.aiStatusMsg = root.aiGenerating ? (msg || "Generating Image...") : "";
+        if (root.aiGenerating) {
+            aiSafetyTimer.restart();
+            root.flashBorder("#8B5CF6", 1200);
+        } else {
+            aiSafetyTimer.stop();
+            root.flashBorder("#10B981", 1200);
+            root.showTransient("Image Ready!", 3000);
+        }
+    }
+
+    Timer {
+        id: aiSafetyTimer
+        interval: 180000
+        onTriggered: {
+            if (root.aiGenerating)
+                root.setAiGenerating(false, "");
+        }
+    }
+
+    function preloadAiDaemon() {
+        Quickshell.execDetached([Quickshell.shellPath("scripts/image-engine.sh"), "--preload"]);
+    }
+
+    function triggerAiGeneration(prompt) {
+        if (!prompt || !prompt.trim()) return;
+        root.setAiGenerating(true, "Generating Image...");
+        Quickshell.execDetached([Quickshell.shellPath("scripts/image-engine.sh"), prompt.trim()]);
+    }
+
     // -- click routing: most prominent live activity wins --
     function primaryPanel() {
+        if (aiGenerating)
+            return "ai";
         if (recordingActive)
             return "capture";
         if (TimerState.hasActive)
@@ -202,6 +268,12 @@ Singleton {
 
     // -- collapsed primary label (single slot; secondary items are dots) --
     function primaryLabel(playerTitle, playerArtist) {
+        if (root.aiGenerating)
+            return root.aiStatusMsg.length > 0 ? root.aiStatusMsg : "󱨊 Generating Image...";
+        if (root.voicePlaying)
+            return "🔊 Reading aloud... (click to stop)";
+        if (root.lensActionActive)
+            return "󰇚 " + root.lensActionSnippet + " [🔊 Read Aloud]";
         if (transientText)
             return transientText;
         if (recordingActive)
@@ -214,6 +286,8 @@ Singleton {
             return TimerState.compactText;
         if (ShelfState.hasActiveDownload)
             return ShelfState.compactText;
+        if (root.liveLyric && root.liveLyric.length > 0 && root.mediaPlaying)
+            return "♪ " + root.liveLyric;
         if (mediaPlaying && playerTitle)
             return playerTitle + (playerArtist ? " - " + playerArtist : "");
         if (PowerState.charging)
@@ -223,6 +297,12 @@ Singleton {
         if (mediaActive && playerTitle)
             return playerTitle;
         return "";
+    }
+
+    Timer {
+        id: lensActionTimer
+        interval: 8500
+        onTriggered: root.lensActionActive = false
     }
 
     Timer {
@@ -256,11 +336,13 @@ Singleton {
     }
 
     // -- real audio levels for the waveform (level-meter.py daemon) --
+    property bool visualizerEnabled: false
     readonly property string levelHelper: Quickshell.shellPath("island/scripts/level-meter.py").toString().replace(/^file:\/\//, "")
     readonly property string levelFile: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/cool-shell-levels"
     property var levels: [0, 0, 0, 0]
 
     function startLevels() {
+        if (!root.visualizerEnabled) return;
         if (!levelProc.running)
             levelProc.exec(["python3", "-u", root.levelHelper]);
     }
@@ -269,19 +351,60 @@ Singleton {
             levelProc.running = false;
         root.levels = [0, 0, 0, 0];
     }
+    function toggleVisualizer() {
+        root.visualizerEnabled = !root.visualizerEnabled;
+    }
+    onVisualizerEnabledChanged: {
+        if (!root.visualizerEnabled) {
+            root.stopLevels();
+        } else if (root.mediaPlaying) {
+            root.startLevels();
+        }
+    }
+
+    // -- synchronized live lyrics (sptlrx daemon) --
+    property bool lyricsEnabled: true
+    property string liveLyric: ""
+    readonly property string lyricsHelper: Quickshell.shellPath("island/scripts/lyrics-daemon.sh").toString().replace(/^file:\/\//, "")
+
+    function startLyrics() {
+        if (!root.lyricsEnabled) return;
+        if (!lyricsProc.running)
+            lyricsProc.exec([root.lyricsHelper]);
+    }
+    function stopLyrics() {
+        if (lyricsProc.running)
+            lyricsProc.running = false;
+        root.liveLyric = "";
+    }
+    function toggleLyrics() {
+        root.lyricsEnabled = !root.lyricsEnabled;
+    }
+    onLyricsEnabledChanged: {
+        if (!root.lyricsEnabled) {
+            root.stopLyrics();
+        } else if (root.mediaPlaying) {
+            root.startLyrics();
+        }
+    }
 
     onMediaPlayingChanged: {
-        if (root.mediaPlaying)
-            root.startLevels();
-        else
+        if (root.mediaPlaying) {
+            if (root.visualizerEnabled)
+                root.startLevels();
+            if (root.lyricsEnabled)
+                root.startLyrics();
+        } else {
             root.stopLevels();
+            root.stopLyrics();
+        }
     }
 
     Connections {
         target: Pipewire
         function onDefaultAudioSinkChanged() {
             // Monitor source follows the default sink; restart the tap.
-            if (root.mediaPlaying) {
+            if (root.mediaPlaying && root.visualizerEnabled) {
                 root.stopLevels();
                 root.startLevels();
             }
@@ -313,8 +436,8 @@ Singleton {
             }
         }
         onExited: {
-            // Watchdog: daemon died while music plays -> restart after 2s.
-            if (root.mediaPlaying)
+            // Watchdog: daemon died while music plays -> restart after 2s if enabled.
+            if (root.visualizerEnabled && root.mediaPlaying)
                 levelRestart.restart();
         }
     }
@@ -323,7 +446,7 @@ Singleton {
         id: levelRestart
         interval: 2000
         onTriggered: {
-            if (root.mediaPlaying && !levelProc.running)
+            if (root.visualizerEnabled && root.mediaPlaying && !levelProc.running)
                 root.startLevels();
         }
     }
@@ -353,7 +476,46 @@ Singleton {
         }
     }
 
+    Connections {
+        target: root.player
+        ignoreUnknownSignals: true
+        function onTrackTitleChanged() {
+            root.liveLyric = "";
+        }
+    }
+
+    Process {
+        id: lyricsProc
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: (line) => {
+                const trimmed = line.trim();
+                const lower = trimmed.toLowerCase();
+                if (trimmed.length > 0 &&
+                    !lower.includes("no lyrics") &&
+                    !lower.startsWith("error") &&
+                    !lower.startsWith("failed")) {
+                    root.liveLyric = trimmed;
+                }
+            }
+        }
+        onExited: {
+            if (root.lyricsEnabled && root.mediaPlaying)
+                lyricsRestartTimer.restart();
+        }
+    }
+
+    Timer {
+        id: lyricsRestartTimer
+        interval: 3000
+        onTriggered: {
+            if (root.lyricsEnabled && root.mediaPlaying && !lyricsProc.running)
+                root.startLyrics();
+        }
+    }
+
     Component.onDestruction: {
         root.stopLevels();
+        root.stopLyrics();
     }
 }

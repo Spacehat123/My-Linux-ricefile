@@ -119,32 +119,41 @@ PanelWindow {
     property real batPct: batReady ? (bat.percentage * 100.0) : -1
     readonly property bool batCharging: bat ? (!UPower.onBattery || bat.state === 1) : false
 
-    // Hardware Telemetry (CPU & RAM) - only polled when on System tab and open
+    // Hardware Telemetry (CPU, GPU & RAM) - only polled when on System tab and open
     property real memUsedGb: 0.0
     property real memTotalGb: 0.0
     property int memPct: 0
     property int cpuPct: 0
+    property int cpuTemp: 0
     property var prevCpuIdle: 0
     property var prevCpuTotal: 0
+    property int gpuPct: 0
+    property int gpuTemp: 0
+    property int gpuMemUsedMb: 0
+    property int gpuMemTotalMb: 0
 
     Process {
         id: sysStatsProc
         command: [
             "sh", "-c",
-            "awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{printf \"%.2f %.2f %d\\n\", (t-a)/1048576, t/1048576, int((t-a)*100/t)}' /proc/meminfo; awk '/^cpu /{print $2+$3+$4+$5+$6+$7+$8, $5}' /proc/stat"
+            "awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{printf \"MEM %.2f %.2f %d\\n\", (t-a)/1048576, t/1048576, int((t-a)*100/t)}' /proc/meminfo; " +
+            "cpu_temp=0; for h in /sys/class/hwmon/hwmon*; do if [ -f \"$h/name\" ] && grep -qE \"k10temp|coretemp|cpu\" \"$h/name\" 2>/dev/null; then cpu_temp=$(awk '{printf \"%d\", $1/1000}' \"$h/temp1_input\" 2>/dev/null); break; fi; done; " +
+            "awk -v temp=\"$cpu_temp\" '/^cpu /{print \"CPU\", $2+$3+$4+$5+$6+$7+$8, $5, temp}' /proc/stat; " +
+            "nv_out=$(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total --format=csv,noheader,nounits 2>/dev/null | awk -F', ' '{print $1, $2, $3, $4}'); " +
+            "if [ -n \"$nv_out\" ]; then echo \"GPU $nv_out\"; elif [ -f /sys/class/drm/card1/device/gpu_busy_percent ]; then echo \"GPU $(cat /sys/class/drm/card1/device/gpu_busy_percent 2>/dev/null || echo 0) 0 0 0\"; else echo \"GPU 0 0 0 0\"; fi"
         ]
         stdout: SplitParser {
             splitMarker: "\n"
             onRead: (line) => {
                 if (!line || line.trim() === "") return;
-                const parts = line.trim().split(" ");
-                if (parts.length === 3) {
-                    root.memUsedGb = parseFloat(parts[0]);
-                    root.memTotalGb = parseFloat(parts[1]);
-                    root.memPct = parseInt(parts[2]);
-                } else if (parts.length === 2) {
-                    const total = parseInt(parts[0]);
-                    const idle = parseInt(parts[1]);
+                const parts = line.trim().split(/\s+/);
+                if (parts[0] === "MEM" && parts.length >= 4) {
+                    root.memUsedGb = parseFloat(parts[1]);
+                    root.memTotalGb = parseFloat(parts[2]);
+                    root.memPct = parseInt(parts[3]);
+                } else if (parts[0] === "CPU" && parts.length >= 3) {
+                    const total = parseInt(parts[1]);
+                    const idle = parseInt(parts[2]);
                     if (root.prevCpuTotal > 0) {
                         const totalDiff = total - root.prevCpuTotal;
                         const idleDiff = idle - root.prevCpuIdle;
@@ -154,6 +163,14 @@ PanelWindow {
                     }
                     root.prevCpuTotal = total;
                     root.prevCpuIdle = idle;
+                    if (parts.length >= 4) {
+                        root.cpuTemp = parseInt(parts[3]) || 0;
+                    }
+                } else if (parts[0] === "GPU" && parts.length >= 5) {
+                    root.gpuPct = Math.max(0, Math.min(100, parseInt(parts[1]) || 0));
+                    root.gpuTemp = parseInt(parts[2]) || 0;
+                    root.gpuMemUsedMb = parseInt(parts[3]) || 0;
+                    root.gpuMemTotalMb = parseInt(parts[4]) || 0;
                 }
             }
         }
@@ -1220,7 +1237,7 @@ PanelWindow {
                                             Text {
                                                 anchors.right: parent.right
                                                 anchors.verticalCenter: parent.verticalCenter
-                                                text: root.cpuPct + "%"
+                                                text: root.cpuPct + "%" + (root.cpuTemp > 0 ? (" · " + root.cpuTemp + "°C") : "")
                                                 font.family: Island.Theme.fontFamily
                                                 font.pixelSize: 12
                                                 font.bold: true
@@ -1237,6 +1254,67 @@ PanelWindow {
                                                 model: 16
                                                 Rectangle {
                                                     readonly property bool lit: root.cpuPct >= ((index + 1) / 16.0 * 100.0)
+                                                    width: (parent.width - 15 * 3) / 16.0
+                                                    height: parent.height
+                                                    radius: 2
+                                                    color: lit ? (index >= 13 ? Island.Theme.red : (index >= 10 ? Island.Theme.yellow : Island.Theme.primary)) : Qt.rgba(1, 1, 1, 0.06)
+                                                    border.color: lit ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
+                                                    border.width: lit ? 1 : 0
+                                                    Behavior on color { ColorAnimation { duration: 160 } }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // GPU Gauge (16-Segment LED VU-Meter)
+                                    Column {
+                                        width: parent.width
+                                        spacing: 6
+
+                                        Item {
+                                            width: parent.width
+                                            height: 16
+                                            Row {
+                                                anchors.left: parent.left
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                spacing: 6
+                                                Text {
+                                                    text: "󰢮"
+                                                    font.family: Island.Theme.iconFontFamily
+                                                    font.pixelSize: 12
+                                                    color: Island.Theme.primary
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+                                                Text {
+                                                    text: "GPU COMPUTE"
+                                                    font.family: Island.Theme.fontFamily
+                                                    font.pixelSize: 10
+                                                    font.bold: true
+                                                    font.letterSpacing: 1.0
+                                                    color: Island.Theme.foreground
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+                                            }
+                                            Text {
+                                                anchors.right: parent.right
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: root.gpuPct + "%" + (root.gpuTemp > 0 ? (" · " + root.gpuTemp + "°C") : "")
+                                                font.family: Island.Theme.fontFamily
+                                                font.pixelSize: 12
+                                                font.bold: true
+                                                color: root.gpuPct > 80 ? Island.Theme.red : Island.Theme.primary
+                                            }
+                                        }
+
+                                        Row {
+                                            width: parent.width
+                                            height: 8
+                                            spacing: 3
+
+                                            Repeater {
+                                                model: 16
+                                                Rectangle {
+                                                    readonly property bool lit: root.gpuPct >= ((index + 1) / 16.0 * 100.0)
                                                     width: (parent.width - 15 * 3) / 16.0
                                                     height: parent.height
                                                     radius: 2

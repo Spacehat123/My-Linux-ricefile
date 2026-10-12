@@ -31,7 +31,9 @@ FocusScope {
         return minutes + ":" + String(Math.floor(seconds % 60)).padStart(2, "0");
     }
 
-    implicitWidth: 492
+    readonly property bool hasLyrics: IslandHub.liveLyric.length > 0 && IslandHub.mediaPlaying
+
+    implicitWidth: hasLyrics ? 540 : 460
     implicitHeight: content.implicitHeight
 
     Timer {
@@ -57,7 +59,7 @@ FocusScope {
             id: mediaCard
 
             width: parent.width
-            height: 190
+            height: root.hasLyrics ? 230 : 190
             radius: 24
             clip: true
 
@@ -132,6 +134,35 @@ FocusScope {
                     color: Theme.muted
                     font.pixelSize: 10
                     elide: Text.ElideRight
+                }
+
+                Item {
+                    visible: root.hasLyrics
+                    width: parent.width
+                    height: 24
+
+                    Row {
+                        anchors.fill: parent
+                        spacing: 6
+
+                        ShellText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "♪"
+                            color: Theme.primary
+                            font.pixelSize: 11
+                            font.weight: Font.Bold
+                        }
+
+                        ShellText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width - 20
+                            text: IslandHub.liveLyric
+                            color: Theme.foreground
+                            font.pixelSize: 11
+                            font.weight: Font.DemiBold
+                            elide: Text.ElideRight
+                        }
+                    }
                 }
 
             }

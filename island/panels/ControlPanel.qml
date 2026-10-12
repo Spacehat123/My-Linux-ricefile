@@ -1357,7 +1357,7 @@ FocusScope {
                     label: "Capture"
                 }, {
                     key: "shelf",
-                    label: "Shelf"
+                    label: "Pocket"
                 }, {
                     key: "notifications",
                     label: "Notifs"

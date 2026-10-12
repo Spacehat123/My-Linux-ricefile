@@ -11,10 +11,12 @@ PanelWindow {
     id: window
 
     readonly property int contentPadding: 14
-    readonly property int collapsedHeight: 24
+    readonly property bool hasLiveLyrics: IslandHub.mediaPlaying && IslandHub.liveLyric.length > 0 && !ShellState.gameMode
+    readonly property real collapsedLyricWidth: Math.min(380, Math.max(220, Math.round(IslandHub.liveLyric.length * 7.2 + 65)))
+    readonly property int collapsedHeight: (!isExpanded && window.hasLiveLyrics) ? 30 : 24
     readonly property int cornerWing: 12
     readonly property int topGap: 10
-    readonly property int canvasWidth: 552
+    readonly property int canvasWidth: 600
     readonly property int canvasHeight: 600
     readonly property int requestedTopPadding: ShellState.panel === "launcher" ? 10 : (ShellState.panel === "power" ? 8 : contentPadding)
     readonly property int requestedBottomPadding: ShellState.panel === "launcher" ? 4 : (ShellState.panel === "power" ? 8 : contentPadding)
@@ -38,9 +40,13 @@ PanelWindow {
     }
     readonly property bool isExpanded: ShellState.expanded && isCurrentScreen
     readonly property real targetRadius: isExpanded ? (ShellState.panelRadii[ShellState.panel] || Theme.radius) : (collapsedHeight / 2)
-    readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : 145) + cornerWing * 2
+    readonly property real collapsedLensWidth: Math.min(380, Math.max(220, Math.round((IslandHub.lensActionSnippet.length + 16) * 7.2 + 35)))
+    readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : (IslandHub.aiGenerating ? 240 : (window.hasLiveLyrics ? window.collapsedLyricWidth : (IslandHub.voicePlaying ? 260 : (IslandHub.lensActionActive ? collapsedLensWidth : 145))))) + cornerWing * 2
     readonly property real targetVisualHeight: isExpanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : collapsedHeight
-    readonly property real panelContentHeight: isExpanded ? Math.max(ShellState.panelHeights[ShellState.panel] || 0, requestedPanel ? requestedPanel.implicitHeight : 0) : 0
+    readonly property real panelContentHeight: isExpanded ? Math.max(
+        (ShellState.panel === "media" ? (window.hasLiveLyrics ? 265 : 220) : (ShellState.panelHeights[ShellState.panel] || 0)),
+        requestedPanel ? requestedPanel.implicitHeight : 0
+    ) : 0
     property bool clockRevealed: true
     property bool recBlinkOn: false
     // Staged reveal: panel content fades/slides in 150ms after the pill
@@ -75,7 +81,8 @@ PanelWindow {
             "timer": timerPanel,
             "shelf": shelfPanel,
             "weather": weatherPanel,
-            "gamemode": gameModePanel
+            "gamemode": gameModePanel,
+            "ai": aiPromptPanel
         };
         return panels[displayedPanel] || null;
     }
@@ -95,7 +102,8 @@ PanelWindow {
             "timer": timerPanel,
             "shelf": shelfPanel,
             "weather": weatherPanel,
-            "gamemode": gameModePanel
+            "gamemode": gameModePanel,
+            "ai": aiPromptPanel
         };
         return panels[ShellState.panel] || null;
     }
@@ -912,6 +920,7 @@ PanelWindow {
             unread: IslandHub.unreadCount
             label: IslandHub.primaryLabel(window.islandPlayer ? (window.islandPlayer.trackTitle || "") : "", window.islandPlayer ? (window.islandPlayer.trackArtist || "") : "")
             mediaPlaying: window.islandPlayer ? window.islandPlayer.isPlaying : false
+            hasLyrics: window.hasLiveLyrics
             micActive: PrivacyState.micActive
             camActive: PrivacyState.camActive
             recActive: IslandHub.recordingActive
@@ -1013,6 +1022,17 @@ PanelWindow {
 
                 if (mouse.button !== Qt.LeftButton)
                     return;
+
+                if (IslandHub.voicePlaying) {
+                    IslandHub.stopVoice();
+                    return;
+                }
+
+                if (IslandHub.lensActionActive) {
+                    IslandHub.triggerReadAloud();
+                    return;
+                }
+
                 // Intelligent click routing: target clicked screen and open active activity
                 ShellState.activeScreenName = window.screen ? window.screen.name : "";
                 if (ShellState.gameMode) {
@@ -1233,6 +1253,13 @@ PanelWindow {
                 width: parent.width
                 height: parent.height
                 visible: window.displayedPanel === "gamemode"
+            }
+
+            AiPromptPanel {
+                id: aiPromptPanel
+
+                width: parent.width
+                visible: window.displayedPanel === "ai"
             }
 
             Behavior on opacity {

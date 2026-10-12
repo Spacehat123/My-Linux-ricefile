@@ -523,6 +523,10 @@ set_wallpaper() {
   mkdir -p "$state_dir/wallpapers"
   printf '%s\n' "$resolved" > "$state_dir/wallpapers/$slug"
   [[ $sync != true ]] || schedule_sddm_sync
+
+  if [[ "$slug" == "material" ]] && [[ -x "$HOME/.config/quickshell/cool-shell/scripts/generate-palette.sh" ]]; then
+    "$HOME/.config/quickshell/cool-shell/scripts/generate-palette.sh" "$resolved" >/dev/null 2>&1 || true
+  fi
 }
 
 display_wallpaper() {

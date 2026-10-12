@@ -34,6 +34,17 @@ Item {
         if (Island.ShellState) Island.ShellState.toggleFeatherMode();
     }
 
+    // God's Eye View Mode State
+    readonly property bool godsEyeActive: Island.ShellState ? Island.ShellState.godsEyeActive : false
+
+    function toggleGodsEye() {
+        if (Island.ShellState) Island.ShellState.toggleGodsEye();
+    }
+
+    function openGodsEyeBrowser() {
+        if (Island.ShellState) Island.ShellState.openGodsEyeBrowser();
+    }
+
     // Action Signals (Unidirectional Event Flow to shellRoot)
     signal toggleWallpaper()
     signal toggleAmbient()
@@ -652,11 +663,353 @@ Item {
         }
 
         // =====================================================================
+        // SECTION 2D: AI IMAGE STUDIO DAEMON (WARM RAM • 0 VRAM • 3M AUTO-EXIT)
+        // =====================================================================
+        Rectangle {
+            width: parent.width
+            height: 64
+            radius: 16
+            readonly property bool aiActive: Island.ShellState ? Island.ShellState.aiDaemonLoaded : false
+            color: aiActive
+                ? Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.16)
+                : (aiTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
+            border.color: aiActive
+                ? Island.Theme.purple
+                : (aiTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+            border.width: aiActive ? 1.5 : 1
+
+            Behavior on color { ColorAnimation { duration: 120 } }
+            Behavior on border.color { ColorAnimation { duration: 120 } }
+
+            HoverHandler { id: aiTileHover }
+
+            Row {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 10
+
+                // Main clickable toggle zone (Badge + Text)
+                Item {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - 50
+                    height: parent.height
+
+                    scale: aiMainTap.pressed ? 0.98 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 80 } }
+
+                    HoverHandler { id: aiMainHover }
+                    TapHandler {
+                        id: aiMainTap
+                        onTapped: {
+                            if (Island.ShellState) Island.ShellState.toggleAiDaemon();
+                        }
+                    }
+
+                    Row {
+                        anchors.fill: parent
+                        spacing: 10
+
+                        // Glowing AI / Studio badge
+                        Rectangle {
+                            width: 36
+                            height: 36
+                            radius: 10
+                            color: parent.parent.parent.parent.aiActive
+                                ? Island.Theme.purple
+                                : Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.15)
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󱨊"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 18
+                                color: parent.parent.parent.parent.parent.aiActive ? "#0a0a0f" : Island.Theme.purple
+                            }
+                        }
+
+                        // Text labels
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width - 46
+                            spacing: 2
+
+                            Row {
+                                spacing: 6
+                                anchors.left: parent.left
+
+                                Text {
+                                    text: "AI Image Engine"
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                    font.family: Island.Theme.fontFamily
+                                    color: Island.Theme.foreground
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Rectangle {
+                                    visible: parent.parent.parent.parent.parent.parent.aiActive
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 48
+                                    height: 16
+                                    radius: 8
+                                    color: Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.25)
+                                    border.color: Island.Theme.purple
+                                    border.width: 1
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "WARM"
+                                        font.pixelSize: 8
+                                        font.bold: true
+                                        font.family: Island.Theme.fontFamily
+                                        color: Island.Theme.purple
+                                    }
+                                }
+                            }
+
+                            Text {
+                                text: parent.parent.parent.parent.parent.aiActive
+                                    ? "Loaded in RAM • 0 VRAM • 3m auto-exit"
+                                    : "Unloaded • 0 MB RAM • Preload on Super+G"
+                                font.pixelSize: 10
+                                font.family: Island.Theme.fontFamily
+                                color: parent.parent.parent.parent.parent.aiActive ? Island.Theme.purple : Island.Theme.muted
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
+
+                // Toggle pill switch
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 40
+                    height: 22
+                    radius: 11
+                    color: parent.parent.aiActive ? Island.Theme.purple : Island.Theme.glassCardHover
+                    border.color: parent.parent.aiActive ? Island.Theme.purple : Island.Theme.glassBorderSubtle
+                    border.width: 1
+
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                    Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: parent.parent.parent.aiActive ? parent.width - width - 2 : 2
+                        width: 18
+                        height: 18
+                        radius: 9
+                        color: parent.parent.parent.aiActive ? "#0a0a0f" : Island.Theme.muted
+
+                        Behavior on x {
+                            NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                        }
+                    }
+
+                    TapHandler {
+                        onTapped: {
+                            if (Island.ShellState) Island.ShellState.toggleAiDaemon();
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // SECTION 2E: GOD'S EYE (LIVE 3D OSINT & SATELLITE GLOBE)
+        // =====================================================================
+        Rectangle {
+            width: parent.width
+            height: 64
+            radius: 16
+            readonly property bool godsEyeOn: root.godsEyeActive
+            color: godsEyeOn
+                ? Qt.rgba(Island.Theme.blue.r, Island.Theme.blue.g, Island.Theme.blue.b, 0.16)
+                : (godsEyeTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
+            border.color: godsEyeOn
+                ? Island.Theme.blue
+                : (godsEyeTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+            border.width: godsEyeOn ? 1.5 : 1
+
+            Behavior on color { ColorAnimation { duration: 120 } }
+            Behavior on border.color { ColorAnimation { duration: 120 } }
+
+            HoverHandler { id: godsEyeTileHover }
+
+            Row {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 10
+
+                // Main clickable toggle zone (Badge + Text)
+                Item {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - (root.godsEyeActive ? 84 : 50)
+                    height: parent.height
+
+                    scale: godsEyeMainTap.pressed ? 0.98 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 80 } }
+
+                    HoverHandler { id: godsEyeMainHover }
+                    TapHandler {
+                        id: godsEyeMainTap
+                        onTapped: root.toggleGodsEye()
+                    }
+
+                    Row {
+                        anchors.fill: parent
+                        spacing: 10
+
+                        // Glowing Satellite / Globe badge
+                        Rectangle {
+                            width: 36
+                            height: 36
+                            radius: 10
+                            color: root.godsEyeActive
+                                ? Island.Theme.blue
+                                : Qt.rgba(Island.Theme.blue.r, Island.Theme.blue.g, Island.Theme.blue.b, 0.15)
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Behavior on color { ColorAnimation { duration: 120 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰝊"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 18
+                                color: root.godsEyeActive ? "#0a0a0f" : Island.Theme.blue
+                            }
+                        }
+
+                        // Text labels
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width - 46
+                            spacing: 2
+
+                            Row {
+                                spacing: 6
+                                anchors.left: parent.left
+
+                                Text {
+                                    text: "God's Eye"
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                    font.family: Island.Theme.fontFamily
+                                    color: Island.Theme.foreground
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Rectangle {
+                                    visible: root.godsEyeActive
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 42
+                                    height: 16
+                                    radius: 8
+                                    color: Qt.rgba(Island.Theme.blue.r, Island.Theme.blue.g, Island.Theme.blue.b, 0.25)
+                                    border.color: Island.Theme.blue
+                                    border.width: 1
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "LIVE"
+                                        font.pixelSize: 8
+                                        font.bold: true
+                                        font.family: Island.Theme.fontFamily
+                                        color: Island.Theme.blue
+                                    }
+                                }
+                            }
+
+                            Text {
+                                text: root.godsEyeActive
+                                    ? "Live 3D Globe • Port 4173 • Online"
+                                    : "Live 3D OSINT Globe & Satellite Tracker"
+                                font.pixelSize: 10
+                                font.family: Island.Theme.fontFamily
+                                color: root.godsEyeActive ? Island.Theme.blue : Island.Theme.muted
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
+
+                // Action controls (Open browser button + Toggle pill switch)
+                Row {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 6
+
+                    // Direct Open / Focus Tab button (visible when online)
+                    Rectangle {
+                        visible: root.godsEyeActive
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 28
+                        height: 28
+                        radius: 14
+                        color: openTabHover.hovered ? Island.Theme.glassCardHover : Qt.rgba(Island.Theme.blue.r, Island.Theme.blue.g, Island.Theme.blue.b, 0.15)
+                        border.color: openTabHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle
+                        border.width: 1
+                        scale: openTabTap.pressed ? 0.92 : 1.0
+
+                        Behavior on scale { NumberAnimation { duration: 80 } }
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰖟"
+                            font.family: Island.Theme.iconFontFamily
+                            font.pixelSize: 13
+                            color: openTabHover.hovered ? Island.Theme.foreground : Island.Theme.blue
+                        }
+
+                        HoverHandler { id: openTabHover }
+                        TapHandler {
+                            id: openTabTap
+                            onTapped: root.openGodsEyeBrowser()
+                        }
+                    }
+
+                    // Toggle pill switch
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 40
+                        height: 22
+                        radius: 11
+                        color: root.godsEyeActive ? Island.Theme.blue : Island.Theme.glassCardHover
+                        border.color: root.godsEyeActive ? Island.Theme.blue : Island.Theme.glassBorderSubtle
+                        border.width: 1
+
+                        Behavior on color { ColorAnimation { duration: 120 } }
+                        Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: root.godsEyeActive ? parent.width - width - 2 : 2
+                            width: 18
+                            height: 18
+                            radius: 9
+                            color: root.godsEyeActive ? "#0a0a0f" : Island.Theme.muted
+
+                            Behavior on x {
+                                NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                            }
+                        }
+
+                        TapHandler {
+                            onTapped: root.toggleGodsEye()
+                        }
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
         // SECTION 3: SOUND & VOLUME CONTROL CARD
         // =====================================================================
         Rectangle {
             width: parent.width
-            height: 74
+            height: 118
             radius: 16
             color: Island.Theme.glassCard
             border.color: Island.Theme.glassBorderSubtle
@@ -731,6 +1084,104 @@ Item {
                         onMoved: {
                             if (root.sinkAudio) {
                                 root.sinkAudio.volume = value;
+                            }
+                        }
+                    }
+                }
+
+                // Media Island Telemetry & Compute Toggles
+                Row {
+                    width: parent.width
+                    spacing: 8
+
+                    // 1. Live Lyrics Toggle
+                    Rectangle {
+                        width: (parent.width - 8) / 2
+                        height: 30
+                        radius: 10
+                        readonly property bool active: Island.IslandHub ? Island.IslandHub.lyricsEnabled : false
+                        color: active
+                            ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.14)
+                            : (lyricsHover.hovered ? Island.Theme.glassCardHover : "transparent")
+                        border.color: active
+                            ? Island.Theme.primary
+                            : (lyricsHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+                        border.width: 1
+                        scale: lyricsTap.pressed ? 0.97 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 80 } }
+                        Behavior on color { ColorAnimation { duration: 120 } }
+                        Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                        HoverHandler { id: lyricsHover }
+                        TapHandler {
+                            id: lyricsTap
+                            onTapped: {
+                                if (Island.IslandHub)
+                                    Island.IslandHub.toggleLyrics();
+                            }
+                        }
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 6
+                            Text {
+                                text: "♪"
+                                font.pixelSize: 12
+                                font.bold: true
+                                color: parent.parent.active ? Island.Theme.primary : Island.Theme.muted
+                            }
+                            Text {
+                                text: parent.parent.active ? "Lyrics On" : "Lyrics Off"
+                                font.pixelSize: 10
+                                font.bold: true
+                                font.family: Island.Theme.fontFamily
+                                color: parent.parent.active ? Island.Theme.foreground : Island.Theme.muted
+                            }
+                        }
+                    }
+
+                    // 2. Waveform Meter Toggle
+                    Rectangle {
+                        width: (parent.width - 8) / 2
+                        height: 30
+                        radius: 10
+                        readonly property bool active: Island.IslandHub ? Island.IslandHub.visualizerEnabled : false
+                        color: active
+                            ? Qt.rgba(Island.Theme.aqua.r, Island.Theme.aqua.g, Island.Theme.aqua.b, 0.14)
+                            : (vizHover.hovered ? Island.Theme.glassCardHover : "transparent")
+                        border.color: active
+                            ? Island.Theme.aqua
+                            : (vizHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+                        border.width: 1
+                        scale: vizTap.pressed ? 0.97 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 80 } }
+                        Behavior on color { ColorAnimation { duration: 120 } }
+                        Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                        HoverHandler { id: vizHover }
+                        TapHandler {
+                            id: vizTap
+                            onTapped: {
+                                if (Island.IslandHub)
+                                    Island.IslandHub.toggleVisualizer();
+                            }
+                        }
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 6
+                            Text {
+                                text: "󰎆"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 12
+                                color: parent.parent.active ? Island.Theme.aqua : Island.Theme.muted
+                            }
+                            Text {
+                                text: parent.parent.active ? "Waveform On" : "Waveform Off"
+                                font.pixelSize: 10
+                                font.bold: true
+                                font.family: Island.Theme.fontFamily
+                                color: parent.parent.active ? Island.Theme.foreground : Island.Theme.muted
                             }
                         }
                     }

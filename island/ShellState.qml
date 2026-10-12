@@ -22,7 +22,8 @@ Singleton {
         "timer": 380,
         "shelf": 420,
         "weather": 380,
-        "gamemode": 300
+        "gamemode": 300,
+        "ai": 540
     })
     readonly property var panelHeights: ({
         "control": 386,
@@ -39,7 +40,8 @@ Singleton {
         "timer": 220,
         "shelf": 120,
         "weather": 120,
-        "gamemode": 84
+        "gamemode": 84,
+        "ai": 110
     })
     readonly property var panelRadii: ({
         "control": 20,
@@ -56,7 +58,8 @@ Singleton {
         "timer": 42,
         "shelf": 24,
         "weather": 22,
-        "gamemode": 20
+        "gamemode": 20,
+        "ai": 22
     })
     signal openSettingsRequested(string category)
 
@@ -68,7 +71,14 @@ Singleton {
     property string panel: "collapsed"
     property int noticeTick: 0
     readonly property bool expanded: panel !== "collapsed" && panel !== "clock"
-    readonly property int targetWidth: expanded ? (panelWidths[panel] || 145) : 145
+    readonly property bool hasLiveLyrics: IslandHub.mediaPlaying && IslandHub.liveLyric.length > 0
+    readonly property int targetWidth: {
+        if (!expanded)
+            return 145;
+        if (panel === "media")
+            return hasLiveLyrics ? 540 : 460;
+        return panelWidths[panel] || 145;
+    }
     property alias nightLightTemperature: persistence.nightLightTemperature
 
     // Game Mode State & Process Mediation
@@ -174,6 +184,96 @@ Singleton {
                     if (res.killedCount !== undefined) root.featherKilledCount = res.killedCount;
                 } catch (e) {}
             }
+        }
+    }
+
+    // AI Image Studio Daemon state & lifecycle
+    property bool aiDaemonLoaded: false
+
+    function toggleAiDaemon() {
+        if (panel === "ai") return;
+        if (aiDaemonLoaded) {
+            Quickshell.execDetached([Quickshell.shellPath("scripts/image-engine.sh"), "--stop"]);
+            aiDaemonLoaded = false;
+        } else {
+            Quickshell.execDetached([Quickshell.shellPath("scripts/image-engine.sh"), "--preload"]);
+            aiDaemonLoaded = true;
+        }
+    }
+
+    function checkAiDaemonStatus() {
+        if (!aiStatusProc.running) {
+            aiStatusProc.running = true;
+        }
+    }
+
+    Process {
+        id: aiStatusProc
+        command: [Quickshell.shellPath("scripts/image-engine.sh"), "--status"]
+        running: false
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: (text) => {
+                try {
+                    const res = JSON.parse(text.trim());
+                    if (res && res.loaded !== undefined) {
+                        root.aiDaemonLoaded = (res.loaded === true);
+                    }
+                } catch (e) {}
+            }
+        }
+    }
+
+    // God's Eye View Mode state & lifecycle
+    property bool godsEyeActive: false
+
+    signal godsEyeToggled(bool active)
+
+    function toggleGodsEye() {
+        if (godsEyeActive) {
+            Quickshell.execDetached([Quickshell.shellPath("scripts/gods-eye.sh"), "stop"]);
+            godsEyeActive = false;
+        } else {
+            Quickshell.execDetached([Quickshell.shellPath("scripts/gods-eye.sh"), "start"]);
+            godsEyeActive = true;
+        }
+        root.godsEyeToggled(godsEyeActive);
+    }
+
+    function openGodsEyeBrowser() {
+        Quickshell.execDetached([Quickshell.shellPath("scripts/gods-eye.sh"), "open"]);
+    }
+
+    function checkGodsEyeStatus() {
+        if (!godsEyeStatusProc.running) {
+            godsEyeStatusProc.running = true;
+        }
+    }
+
+    Process {
+        id: godsEyeStatusProc
+        command: [Quickshell.shellPath("scripts/gods-eye.sh"), "status"]
+        running: true
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: (text) => {
+                try {
+                    const res = JSON.parse(text.trim());
+                    if (res && res.running !== undefined) {
+                        root.godsEyeActive = (res.running === true);
+                    }
+                } catch (e) {}
+            }
+        }
+    }
+
+    Timer {
+        interval: 3000
+        running: true
+        repeat: true
+        onTriggered: {
+            root.checkAiDaemonStatus();
+            root.checkGodsEyeStatus();
         }
     }
 

@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Services.Pipewire
 import ".."
 import "../components"
@@ -65,6 +66,13 @@ FocusScope {
 
         interval: Theme.animationNormal + 100
         onTriggered: Backend.startRecording(root.mode, Backend.recordAudio)
+    }
+
+    Timer {
+        id: lensDelay
+
+        interval: Theme.animationNormal + 150
+        onTriggered: Quickshell.execDetached([Quickshell.shellPath("scripts/screen-lens.sh").toString().replace(/^file:\/\//, "")])
     }
 
     Shortcut {
@@ -604,6 +612,93 @@ FocusScope {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: captureButton.activate()
+            }
+        }
+
+        FocusScope {
+            id: lensButton
+            width: parent.width
+            height: 36
+            activeFocusOnTab: true
+            Keys.onReturnPressed: activateLens()
+            Keys.onEnterPressed: activateLens()
+            Keys.onSpacePressed: activateLens()
+
+            function activateLens() {
+                ShellState.close();
+                lensDelay.restart();
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: Theme.radiusSmall
+                color: lensPointer.containsMouse ? Theme.bg1 : Theme.bg0
+                border.width: 1
+                border.color: lensPointer.containsMouse ? Theme.primary : Qt.rgba(0.83, 0.78, 0.67, 0.08)
+
+                Behavior on color {
+                    ColorAnimation { duration: Theme.animationFast }
+                }
+            }
+
+            Row {
+                anchors.fill: parent
+                anchors.leftMargin: 14
+                anchors.rightMargin: 10
+                spacing: 10
+
+                ShellText {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 20
+                    text: "󰄀"
+                    color: Theme.primary
+                    font.pixelSize: 14
+                }
+
+                Column {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - 90
+                    spacing: 0
+
+                    ShellText {
+                        text: "Screen Lens"
+                        color: Theme.foreground
+                        font.pixelSize: 10
+                        font.weight: Font.Bold
+                    }
+
+                    ShellText {
+                        text: "OCR, QR, & Color to Clipboard"
+                        color: Theme.mutedDark
+                        font.pixelSize: 7
+                    }
+                }
+
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 50
+                    height: 20
+                    radius: Theme.radiusSmall
+                    color: Theme.bg1
+                    border.width: 1
+                    border.color: Theme.bg2
+
+                    ShellText {
+                        anchors.centerIn: parent
+                        text: "󰘳 󰘶 S"
+                        color: Theme.muted
+                        font.pixelSize: 8
+                        font.weight: Font.DemiBold
+                    }
+                }
+            }
+
+            MouseArea {
+                id: lensPointer
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: lensButton.activateLens()
             }
         }
 
