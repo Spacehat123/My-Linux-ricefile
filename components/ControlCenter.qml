@@ -45,6 +45,37 @@ Item {
         if (Island.ShellState) Island.ShellState.openGodsEyeBrowser();
     }
 
+    // Study Mode State & Ceremony Bindings
+    readonly property bool studyActive: Island.ShellState ? Island.ShellState.studyActive : false
+    readonly property int studyRemaining: Island.ShellState ? Island.ShellState.studyRemaining : 0
+    readonly property bool studyOvertime: Island.ShellState ? Island.ShellState.studyOvertime : false
+    readonly property int studyOvertimeSeconds: Island.ShellState ? Island.ShellState.studyOvertimeSeconds : 0
+    readonly property string studySubject: Island.ShellState ? Island.ShellState.studySubject : "CA / ICAI Study"
+
+    property int studyModalStep: 0 // 0: Hidden, 1: Warning 1, 2: Warning 2, 3: Password
+    property string studyPasswordInput: ""
+    property string studyPasswordError: ""
+
+    function formatStudyDuration(sec) {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+    }
+
+    function triggerStudyModeClick() {
+        if (studyActive) {
+            if (studyOvertime) {
+                if (Island.ShellState) Island.ShellState.stopStudyMode();
+            } else {
+                Island.IslandHub.showTransient("🔒 Hard Lock Active: Cannot exit early (" + formatStudyDuration(studyRemaining) + " left)", 3500);
+            }
+        } else {
+            studyPasswordInput = "";
+            studyPasswordError = "";
+            studyModalStep = 1;
+        }
+    }
+
     // Action Signals (Unidirectional Event Flow to shellRoot)
     signal toggleWallpaper()
     signal toggleAmbient()
@@ -1005,6 +1036,165 @@ Item {
         }
 
         // =====================================================================
+        // SECTION 2F: STUDY MODE (HARD-LOCKOUT DEEP WORK & WHITELIST)
+        // =====================================================================
+        Rectangle {
+            width: parent.width
+            height: 64
+            radius: 16
+            readonly property bool isStudyOn: root.studyActive
+            readonly property color accentColor: root.studyOvertime ? Island.Theme.purple : Island.Theme.green
+            color: isStudyOn
+                ? Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.16)
+                : (studyTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
+            border.color: isStudyOn
+                ? accentColor
+                : (studyTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+            border.width: isStudyOn ? 1.5 : 1
+
+            Behavior on color { ColorAnimation { duration: 120 } }
+            Behavior on border.color { ColorAnimation { duration: 120 } }
+
+            HoverHandler { id: studyTileHover }
+
+            Row {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 10
+
+                // Main clickable toggle zone (Badge + Text)
+                Item {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - 50
+                    height: parent.height
+
+                    scale: studyMainTap.pressed ? 0.98 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 80 } }
+
+                    HoverHandler { id: studyMainHover }
+                    TapHandler {
+                        id: studyMainTap
+                        onTapped: root.triggerStudyModeClick()
+                    }
+
+                    Row {
+                        anchors.fill: parent
+                        spacing: 10
+
+                        // Glowing Book / Study badge
+                        Rectangle {
+                            width: 36
+                            height: 36
+                            radius: 10
+                            color: root.studyActive
+                                ? parent.parent.parent.parent.accentColor
+                                : Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.15)
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Behavior on color { ColorAnimation { duration: 120 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: root.studyOvertime ? "󰐊" : "󰑴"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 18
+                                color: root.studyActive ? "#0a0a0f" : Island.Theme.green
+                            }
+                        }
+
+                        // Text labels
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width - 46
+                            spacing: 2
+
+                            Row {
+                                spacing: 6
+                                anchors.left: parent.left
+
+                                Text {
+                                    text: "Study Mode"
+                                    font.pixelSize: 13
+                                    font.bold: true
+                                    font.family: Island.Theme.fontFamily
+                                    color: Island.Theme.foreground
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Rectangle {
+                                    visible: root.studyActive
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: root.studyOvertime ? 42 : 54
+                                    height: 16
+                                    radius: 8
+                                    color: Qt.rgba(parent.parent.parent.parent.parent.accentColor.r, parent.parent.parent.parent.parent.accentColor.g, parent.parent.parent.parent.parent.accentColor.b, 0.25)
+                                    border.color: parent.parent.parent.parent.parent.accentColor
+                                    border.width: 1
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: root.studyOvertime ? "FLOW" : "LOCKED"
+                                        font.pixelSize: 8
+                                        font.bold: true
+                                        font.family: Island.Theme.fontFamily
+                                        color: parent.parent.parent.parent.parent.parent.accentColor
+                                    }
+                                }
+                            }
+
+                            Text {
+                                text: {
+                                    if (!root.studyActive) {
+                                        return "Hard lockout • ICAI & Notes whitelist";
+                                    }
+                                    if (root.studyOvertime) {
+                                        return "Flow State (+" + root.formatStudyDuration(root.studyOvertimeSeconds) + ") • Tap to finish";
+                                    }
+                                    return "Locked in Focus • " + root.formatStudyDuration(root.studyRemaining) + " left";
+                                }
+                                font.pixelSize: 10
+                                font.family: Island.Theme.fontFamily
+                                color: root.studyActive ? parent.parent.parent.parent.accentColor : Island.Theme.muted
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
+
+                // Toggle pill switch
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 40
+                    height: 22
+                    radius: 11
+                    color: root.studyActive ? parent.parent.accentColor : Island.Theme.glassCardHover
+                    border.color: root.studyActive ? parent.parent.accentColor : Island.Theme.glassBorderSubtle
+                    border.width: 1
+
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                    Behavior on border.color { ColorAnimation { duration: 120 } }
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: root.studyActive ? parent.width - width - 2 : 2
+                        width: 18
+                        height: 18
+                        radius: 9
+                        color: root.studyActive ? "#0a0a0f" : Island.Theme.muted
+
+                        Behavior on x {
+                            NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+                        }
+                    }
+
+                    TapHandler {
+                        onTapped: root.triggerStudyModeClick()
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
         // SECTION 3: SOUND & VOLUME CONTROL CARD
         // =====================================================================
         Rectangle {
@@ -1373,6 +1563,315 @@ Item {
                         font.bold: true
                         font.family: Island.Theme.fontFamily
                         color: Island.Theme.foreground
+                    }
+                }
+            }
+        }
+    }
+
+    // =========================================================================
+    // STUDY MODE: 2-WARNING & PASSWORD CEREMONY MODAL OVERLAY
+    // =========================================================================
+    Process {
+        id: verifyPassProc
+        property string candidate: ""
+        command: ["python3", Quickshell.shellPath("scripts/study-mode.py"), "verify-password", "--password", candidate]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const res = JSON.parse(text);
+                    if (res && res.valid === true) {
+                        root.studyModalStep = 0;
+                        root.studyPasswordInput = "";
+                        root.studyPasswordError = "";
+                        if (Island.ShellState) {
+                            Island.ShellState.startStudyMode(10, "CA / ICAI Study");
+                        }
+                    } else {
+                        root.studyPasswordError = "Incorrect Study Password! Try again.";
+                    }
+                } catch (e) {
+                    root.studyPasswordError = "Validation failed: " + e;
+                }
+            }
+        }
+    }
+
+    Rectangle {
+        id: studyModalOverlay
+        anchors.fill: parent
+        z: 999
+        visible: root.studyModalStep > 0
+        color: Qt.rgba(0.04, 0.05, 0.08, 0.96)
+        radius: 18
+        border.color: Island.Theme.glassBorderActive
+        border.width: 1
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+        }
+
+        Column {
+            anchors.centerIn: parent
+            width: parent.width - 36
+            spacing: 16
+
+            // Header Icon & Step pill
+            Row {
+                width: parent.width
+                spacing: 10
+
+                Rectangle {
+                    width: 36
+                    height: 36
+                    radius: 10
+                    color: root.studyModalStep === 1
+                        ? Qt.rgba(Island.Theme.orange.r, Island.Theme.orange.g, Island.Theme.orange.b, 0.2)
+                        : (root.studyModalStep === 2
+                            ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.2)
+                            : Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.2))
+                    border.color: root.studyModalStep === 1 ? Island.Theme.orange : (root.studyModalStep === 2 ? Island.Theme.red : Island.Theme.green)
+                    border.width: 1
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: root.studyModalStep === 1 ? "󰀦" : (root.studyModalStep === 2 ? "󰈈" : "󰌾")
+                        font.family: Island.Theme.iconFontFamily
+                        font.pixelSize: 18
+                        color: parent.border.color
+                    }
+                }
+
+                Column {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 2
+                    Text {
+                        text: root.studyModalStep === 1
+                            ? "Warning 1: Lockdown Block"
+                            : (root.studyModalStep === 2
+                                ? "Warning 2: Hard Commitment"
+                                : "Study Mode Password Gate")
+                        font.pixelSize: 13
+                        font.bold: true
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.foreground
+                    }
+                    Text {
+                        text: "Step " + root.studyModalStep + " of 3 • Study Lockdown"
+                        font.pixelSize: 10
+                        font.family: Island.Theme.fontFamily
+                        color: Island.Theme.muted
+                    }
+                }
+            }
+
+            // Body Card with explanatory text
+            Rectangle {
+                width: parent.width
+                height: root.studyModalStep === 3 ? 110 : 150
+                radius: 12
+                color: Island.Theme.glassCard
+                border.color: Island.Theme.glassBorderSubtle
+                border.width: 1
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 8
+
+                    // Step 1: Warning 1 Text
+                    Column {
+                        visible: root.studyModalStep === 1
+                        width: parent.width
+                        spacing: 6
+
+                        Text {
+                            text: "• Everything except Dolphin, Brave, and PDF readers will be terminated."
+                            font.pixelSize: 11
+                            font.family: Island.Theme.fontFamily
+                            color: Island.Theme.foreground
+                            wrapMode: Text.WordWrap
+                            width: parent.width
+                        }
+                        Text {
+                            text: "• In Brave: ONLY ICAI BOS, Google Notebook, and WhatsApp Web can load. All other sites are blocked."
+                            font.pixelSize: 11
+                            font.family: Island.Theme.fontFamily
+                            color: Island.Theme.foreground
+                            wrapMode: Text.WordWrap
+                            width: parent.width
+                        }
+                        Text {
+                            text: "• Spotify is stopped. You can play your local lo-fi MP3s from ~/Music/study/."
+                            font.pixelSize: 11
+                            font.family: Island.Theme.fontFamily
+                            color: Island.Theme.muted
+                            wrapMode: Text.WordWrap
+                            width: parent.width
+                        }
+                    }
+
+                    // Step 2: Warning 2 Text
+                    Column {
+                        visible: root.studyModalStep === 2
+                        width: parent.width
+                        spacing: 6
+
+                        Text {
+                            text: "• NO EARLY EXIT. There is no cancel button once engaged."
+                            font.pixelSize: 11
+                            font.bold: true
+                            font.family: Island.Theme.fontFamily
+                            color: Island.Theme.red
+                            wrapMode: Text.WordWrap
+                            width: parent.width
+                        }
+                        Text {
+                            text: "• Even a hard reboot will NOT release the lockdown until the timer runs out."
+                            font.pixelSize: 11
+                            font.family: Island.Theme.fontFamily
+                            color: Island.Theme.foreground
+                            wrapMode: Text.WordWrap
+                            width: parent.width
+                        }
+                        Text {
+                            text: "• Duration: 10 seconds (Testing mode). After 10s, an overtime flow timer counts UP with no exit penalty."
+                            font.pixelSize: 11
+                            font.family: Island.Theme.fontFamily
+                            color: Island.Theme.green
+                            wrapMode: Text.WordWrap
+                            width: parent.width
+                        }
+                    }
+
+                    // Step 3: Password Input
+                    Column {
+                        visible: root.studyModalStep === 3
+                        width: parent.width
+                        spacing: 8
+
+                        Text {
+                            text: "Enter your Study Password to lock in:"
+                            font.pixelSize: 11
+                            font.family: Island.Theme.fontFamily
+                            color: Island.Theme.muted
+                        }
+
+                        Rectangle {
+                            width: parent.width
+                            height: 36
+                            radius: 8
+                            color: Qt.rgba(0.0, 0.0, 0.0, 0.4)
+                            border.color: root.studyPasswordError !== "" ? Island.Theme.red : Island.Theme.glassBorderActive
+                            border.width: 1
+
+                            TextInput {
+                                id: studyPassInput
+                                anchors.fill: parent
+                                anchors.margins: 8
+                                echoMode: TextInput.Password
+                                font.pixelSize: 13
+                                font.family: Island.Theme.fontFamily
+                                color: Island.Theme.foreground
+                                clip: true
+                                text: root.studyPasswordInput
+                                onTextChanged: {
+                                    root.studyPasswordInput = text;
+                                    root.studyPasswordError = "";
+                                }
+                                onAccepted: {
+                                    if (text.length > 0) {
+                                        verifyPassProc.candidate = text;
+                                        verifyPassProc.running = true;
+                                    }
+                                }
+                            }
+                        }
+
+                        Text {
+                            visible: root.studyPasswordError !== ""
+                            text: root.studyPasswordError
+                            font.pixelSize: 10
+                            font.family: Island.Theme.fontFamily
+                            color: Island.Theme.red
+                        }
+                    }
+                }
+            }
+
+            // Action Buttons Row
+            Row {
+                width: parent.width
+                spacing: 10
+
+                // Cancel / Back Button
+                Rectangle {
+                    width: (parent.width - 10) / 2
+                    height: 38
+                    radius: 12
+                    color: cancelHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard
+                    border.color: Island.Theme.glassBorderSubtle
+                    border.width: 1
+
+                    HoverHandler { id: cancelHover }
+                    TapHandler {
+                        onTapped: {
+                            root.studyModalStep = 0;
+                            root.studyPasswordInput = "";
+                            root.studyPasswordError = "";
+                        }
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: root.studyModalStep === 1 ? "Cancel" : "Back"
+                        font.family: Island.Theme.fontFamily
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: Island.Theme.muted
+                    }
+                }
+
+                // Proceed Button
+                Rectangle {
+                    width: (parent.width - 10) / 2
+                    height: 38
+                    radius: 12
+                    color: root.studyModalStep === 2
+                        ? Island.Theme.red
+                        : (root.studyModalStep === 3 ? Island.Theme.green : Island.Theme.primary)
+                    scale: proceedTap.pressed ? 0.96 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 80 } }
+
+                    HoverHandler { id: proceedHover }
+                    TapHandler {
+                        id: proceedTap
+                        onTapped: {
+                            if (root.studyModalStep === 1) {
+                                root.studyModalStep = 2;
+                            } else if (root.studyModalStep === 2) {
+                                root.studyModalStep = 3;
+                                studyPassInput.focus = true;
+                            } else if (root.studyModalStep === 3) {
+                                if (root.studyPasswordInput.length > 0) {
+                                    verifyPassProc.candidate = root.studyPasswordInput;
+                                    verifyPassProc.running = true;
+                                }
+                            }
+                        }
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: root.studyModalStep === 1
+                            ? "Continue"
+                            : (root.studyModalStep === 2 ? "I Commit" : "Lock In 󰌾")
+                        font.family: Island.Theme.fontFamily
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: root.studyModalStep === 2 ? "#ffffff" : "#0a0a0f"
                     }
                 }
             }

@@ -103,5 +103,13 @@ PanelWindow {
             screenName: root.screen ? (root.screen.name ?? "") : ""
             active: root.active && (hudContainer.opacity > 0.0)
         }
+
+        // 4. Study Contribution Heatmap (GitHub-style calendar, bottom center)
+        StudyContributionHeatmap {
+            anchors.bottom: parent.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottomMargin: theme.ambientCornerOffset + 16
+            active: root.active && (hudContainer.opacity > 0.0)
+        }
     }
 }

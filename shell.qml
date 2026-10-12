@@ -1915,8 +1915,8 @@ ShellRoot {
                 id: ambientLayer
                 screen: monitorScope.modelData
                 idle: shellRoot.idle
-                alwaysOn: shellRoot.ambientAlwaysOn
-                enabled: shellRoot.ambientEnabled && !ShellState.gameMode && !ShellState.featherMode
+                alwaysOn: shellRoot.ambientAlwaysOn || ShellState.studyActive
+                enabled: (shellRoot.ambientEnabled || ShellState.studyActive) && !ShellState.gameMode && !ShellState.featherMode
             }
 
             // Spatial Workspace Transition HUD (WlrLayer.Top, ephemeral)

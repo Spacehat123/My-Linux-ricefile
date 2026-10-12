@@ -267,13 +267,67 @@ Singleton {
         }
     }
 
+    // Study Mode State & Enforcement Binding
+    property bool studyActive: false
+    property int studyRemaining: 0
+    property bool studyOvertime: false
+    property int studyOvertimeSeconds: 0
+    property string studySubject: "CA / ICAI Study"
+    property int studyTargetDuration: 10 // 10s for initial testing, switchable to 1800 for 30m
+
+    signal studyModeToggled(bool active)
+
+    function startStudyMode(durationSeconds, subject) {
+        const dur = durationSeconds || root.studyTargetDuration;
+        const subj = subject || root.studySubject;
+        Quickshell.execDetached(["python3", Quickshell.shellPath("scripts/study-mode.py"), "start", "--duration", dur.toString(), "--subject", subj]);
+        root.studyActive = true;
+        root.studyOvertime = false;
+        root.studyRemaining = dur;
+        root.studyModeToggled(true);
+    }
+
+    function stopStudyMode() {
+        Quickshell.execDetached(["python3", Quickshell.shellPath("scripts/study-mode.py"), "stop"]);
+        root.checkStudyStatus();
+    }
+
+    function checkStudyStatus() {
+        if (!studyStatusProc.running) {
+            studyStatusProc.running = true;
+        }
+    }
+
+    Process {
+        id: studyStatusProc
+        command: ["python3", Quickshell.shellPath("scripts/study-mode.py"), "status"]
+        running: true
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: (text) => {
+                try {
+                    const res = JSON.parse(text.trim());
+                    if (res && res.active !== undefined) {
+                        root.studyActive = (res.active === true);
+                        root.studyRemaining = res.remaining_seconds || 0;
+                        root.studyOvertime = (res.overtime === true);
+                        root.studyOvertimeSeconds = res.overtime_seconds || 0;
+                        if (res.subject) root.studySubject = res.subject;
+                        if (res.target_duration) root.studyTargetDuration = res.target_duration;
+                    }
+                } catch (e) {}
+            }
+        }
+    }
+
     Timer {
-        interval: 3000
+        interval: root.studyActive ? 1000 : 3000
         running: true
         repeat: true
         onTriggered: {
             root.checkAiDaemonStatus();
             root.checkGodsEyeStatus();
+            root.checkStudyStatus();
         }
     }
 

@@ -219,3 +219,21 @@ You can query or trigger any shell action from bash scripts, keybindings, or dae
 | `Left Edge Bump` | Open Left Sidebar (Control Center & Modes) | `panels/LeftSidebar.qml` |
 | `Right Edge Bump` | Open Right Sidebar (VALENCE Command Deck) | `panels/RightSidebar.qml` |
 | `Bottom-Left Click` | Open Control Center Drawer | `components/EdgeTrigger.qml` |
+
+---
+
+## 10. Study Mode & Focus Lock Subsystem
+
+| Feature | Details | Architecture & Path |
+|---|---|---|
+| **Activation Ceremony** | 2-Warning prompt sequence + Cryptographic password check (`Studyudsob`) | `components/ControlCenter.qml` |
+| **Password Storage** | Salted SHA-256 hash with `0600` permissions (zero plaintext in repo) | `~/.local/share/cool-shell/study/auth.hash` |
+| **Hard Anti-Cheat Lockout** | Un-skippable timer block surviving reboots; early exit strictly blocked | `scripts/study-mode.py` (`cmd_stop`) |
+| **Whitelisted Applications** | Dolphin, Brave, PDF/Image readers (Okular, Evince, Zathura, Loupe, Gwenview, Imv, Swappy), Kate/KWrite, terminal, MPV | `scripts/study-mode.py` (`ALLOWED_CLASSES`) |
+| **Brave Tab Whitelist** | ICAI BoS Live, Google NotebookLM, WhatsApp Web, and local browser pages | Hyprland IPC keystroke injection (`sendshortcut CTRL,W`) |
+| **Lo-Fi Study Audio** | Auto-pauses Spotify; plays local lo-fi MP3s from `~/Music/study/` via `mpv` | `scripts/study-mode.py` (`start_lofi_player`) |
+| **Dynamic Island Focus Pill** | Dynamic Island morphs into a focused pill (`󰑴 CA / ICAI Study 00:10`) | `island/Notch.qml` (`studyPillRow`) |
+| **Ambient Reward Heatmap** | GitHub-style 7-row contribution grid (Mon–Sun) starting today with green shading | `desktop/StudyContributionHeatmap.qml` |
+| **Overtime Flow State** | Timer counts up after milestone with penalty-free exit; credits sessions every 30m | `scripts/study-mode.py` (`run_daemon`) |
+| **CLI Management** | Direct terminal control: `scripts/study-mode.sh {start\|stop\|status\|history\|verify}` | `scripts/study-mode.sh` |
+

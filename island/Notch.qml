@@ -915,7 +915,7 @@ PanelWindow {
             anchors.right: notchBody.right
             anchors.top: parent.top
             height: window.collapsedHeight
-            visible: opacity > 0 && !ShellState.gameMode
+            visible: opacity > 0 && !ShellState.gameMode && !ShellState.studyActive
             opacity: window.clockRevealed ? 1 : 0
             unread: IslandHub.unreadCount
             label: IslandHub.primaryLabel(window.islandPlayer ? (window.islandPlayer.trackTitle || "") : "", window.islandPlayer ? (window.islandPlayer.trackArtist || "") : "")
@@ -959,6 +959,63 @@ PanelWindow {
                 font.pixelSize: 10
                 font.bold: true
                 color: Theme.red
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+
+        // Dedicated Study Mode collapsed status pill (Focus Pill)
+        Row {
+            id: studyPillRow
+            anchors.centerIn: notchBody
+            spacing: 6
+            visible: window.clockRevealed && ShellState.studyActive && !ShellState.gameMode
+
+            function formatStudyTime(sec) {
+                const m = Math.floor(sec / 60);
+                const s = sec % 60;
+                return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+            }
+
+            Rectangle {
+                width: 6
+                height: 6
+                radius: 3
+                color: ShellState.studyOvertime ? Theme.primary : Theme.green
+                anchors.verticalCenter: parent.verticalCenter
+
+                SequentialAnimation on opacity {
+                    loops: Animation.Infinite
+                    running: ShellState.studyActive
+                    NumberAnimation { from: 0.4; to: 1.0; duration: 800; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 1.0; to: 0.4; duration: 800; easing.type: Easing.InOutSine }
+                }
+            }
+
+            Text {
+                text: ShellState.studyOvertime ? "󰐊" : "󰑴"
+                font.family: Theme.iconFontFamily
+                font.pixelSize: 13
+                color: ShellState.studyOvertime ? Theme.primary : Theme.green
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Text {
+                text: ShellState.studySubject
+                font.family: Theme.fontFamily
+                font.pixelSize: 10
+                font.bold: true
+                color: Theme.foreground
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Text {
+                text: ShellState.studyOvertime
+                    ? "+" + studyPillRow.formatStudyTime(ShellState.studyOvertimeSeconds)
+                    : studyPillRow.formatStudyTime(ShellState.studyRemaining)
+                font.family: Theme.fontFamily
+                font.pixelSize: 10
+                font.bold: true
+                color: ShellState.studyOvertime ? Theme.primary : Theme.green
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
