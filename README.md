@@ -142,5 +142,40 @@ Seamless mobile continuity bringing native Android control to the Wayland deskto
   - 📸 **Instant Phone Screenshot**: Grabs direct frame buffer capture (`adb exec-out screencap -p`), saves to `~/Pictures/Screenshots/`, and automatically absorbs it into the Dynamic Island Drop Pocket.
 - **Zero-Load Architecture**: When the Phone switch is toggled off in the Sidebar or Control Center, all daemons and ADB pollers terminate immediately, guaranteeing 0.0% background CPU consumption.
 
+---
+
+## 🎓 Study Mode Lockdown & Daily Contribution Heatmap
+
+An uncompromising deep-work and discipline enforcement system designed for exam prep (CA / ICAI) and intensive study blocks ([`scripts/study-mode.py`](file:///home/pranc/.config/quickshell/cool-shell/scripts/study-mode.py)).
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        Study Mode Hard Lockdown                        │
+│                                                                        │
+│   🔒 Cryptographic Salted Password Verification (Prevents Quit)        │
+│   🚫 Hyprland Window & Tab Guardian (Kills YouTube, Reddit, Discord)  │
+│   📄 Full Educational Whitelist (ICAI, BOS, NotebookLM, All PDFs)     │
+│   📂 All File Explorers & Choosers Permitted (Dolphin, Portals, etc.)  │
+│   🎧 Autonomous Background Lo-Fi Music (~/Music/study/)                │
+│   📈 Overtime Flow State (Counts UP After Milestone with Zero Penalty) │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│             Desktop GitHub-Style Contribution Heatmap                  │
+│                                                                        │
+│   🟩 52-Week Deep Work Matrix  │  🔥 Streak Counters  │  🎯 Milestones │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Capabilities
+- **Hard Lockdown Architecture**: Once initiated (e.g. 30-minute block), early termination is impossible without cryptographic password verification (`Studyudsob` hashed with unique 16-byte random salt). Survives compositor reloads and system reboots.
+- **Autonomous Window Guardian**: Daemon queries Hyprland clients every 300ms. Instantly terminates distracting windows (Steam, Discord, Spotify) and dispatches Lua-based tab closure (`Ctrl+W`) for distracting web domains (YouTube, Reddit, Twitter/X, Instagram, Twitch, Netflix).
+- **Educational Whitelist**: Fully permits ICAI Board of Studies resources (`resource.cdn.icai.org`, `bos`), Google NotebookLM, WhatsApp Web, and **all standalone or browser-viewed PDF study materials**.
+- **Complete File Manager & Portal Protection**: All Linux file explorers (`dolphin`, `nautilus`, `nemo`, `thunar`, `pcmanfm`, `caja`, `ranger`, `yazi`) and desktop portals (`xdg-desktop-portal-gtk`, `kdialog`, `zenity`) are whitelisted, allowing seamless document downloading and organization.
+- **Autonomous Lo-Fi Accompaniment**: Silently mounts and shuffles study tracks from `~/Music/study/` in background `mpv` loop without UI clutter.
+- **Desktop Contribution Heatmap**: Renders an interactive 52-week activity grid on the desktop wallpaper layer ([`desktop/StudyContributionHeatmap.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/StudyContributionHeatmap.qml)), tracking sessions, consistency streaks, and deep-work volume.
+
+
 
 
