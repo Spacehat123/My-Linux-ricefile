@@ -2995,7 +2995,7 @@ PanelWindow {
                                                 Text {
                                                     width: parent.width - 24
                                                     wrapMode: Text.WordWrap
-                                                    font.pixelSize: 9.5
+                                                    font.pixelSize: 10
                                                     color: Island.Theme.muted
                                                     text: "Acer Aspire / Nitro hardware Embedded Controller (EC) enforces a fixed 80% physical cutoff. When above 80%, the laptop switches to AC power and the battery gradually settles to 80%."
                                                 }

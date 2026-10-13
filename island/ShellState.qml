@@ -24,7 +24,8 @@ Singleton {
         "weather": 380,
         "gamemode": 300,
         "ai": 540,
-        "phone": 380
+        "phone": 380,
+        "caption": 420
     })
     readonly property var panelHeights: ({
         "control": 386,
@@ -43,7 +44,8 @@ Singleton {
         "weather": 120,
         "gamemode": 84,
         "ai": 110,
-        "phone": 230
+        "phone": 230,
+        "caption": 200
     })
     readonly property var panelRadii: ({
         "control": 20,
@@ -62,7 +64,8 @@ Singleton {
         "weather": 22,
         "gamemode": 20,
         "ai": 22,
-        "phone": 24
+        "phone": 24,
+        "caption": 22
     })
     signal openSettingsRequested(string category)
 

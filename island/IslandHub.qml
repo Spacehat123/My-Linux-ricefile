@@ -249,6 +249,8 @@ Singleton {
 
     // -- click routing: most prominent live activity wins --
     function primaryPanel() {
+        if (CaptionState.pendingFile.length > 0)
+            return "caption";
         if (aiGenerating)
             return "ai";
         if (recordingActive)
@@ -268,6 +270,8 @@ Singleton {
 
     // -- collapsed primary label (single slot; secondary items are dots) --
     function primaryLabel(playerTitle, playerArtist) {
+        if (CaptionState.isProcessing)
+            return "⚡ " + (CaptionState.currentStatus || "Transcribing...");
         if (root.aiGenerating)
             return root.aiStatusMsg.length > 0 ? root.aiStatusMsg : "󱨊 Generating Image...";
         if (root.voicePlaying)

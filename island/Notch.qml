@@ -41,7 +41,7 @@ PanelWindow {
     readonly property bool isExpanded: ShellState.expanded && isCurrentScreen
     readonly property real targetRadius: isExpanded ? (ShellState.panelRadii[ShellState.panel] || Theme.radius) : (collapsedHeight / 2)
     readonly property real collapsedLensWidth: Math.min(380, Math.max(220, Math.round((IslandHub.lensActionSnippet.length + 16) * 7.2 + 35)))
-    readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : (IslandHub.aiGenerating ? 240 : (window.hasLiveLyrics ? window.collapsedLyricWidth : (IslandHub.voicePlaying ? 260 : (IslandHub.lensActionActive ? collapsedLensWidth : 145))))) + cornerWing * 2
+    readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : (CaptionState.isProcessing ? 250 : (IslandHub.aiGenerating ? 240 : (window.hasLiveLyrics ? window.collapsedLyricWidth : (IslandHub.voicePlaying ? 260 : (IslandHub.lensActionActive ? collapsedLensWidth : 145)))))) + cornerWing * 2
     readonly property real targetVisualHeight: isExpanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : collapsedHeight
     readonly property real panelContentHeight: isExpanded ? Math.max(
         (ShellState.panel === "media" ? (window.hasLiveLyrics ? 265 : 220) : (ShellState.panelHeights[ShellState.panel] || 0)),
@@ -82,7 +82,9 @@ PanelWindow {
             "shelf": shelfPanel,
             "weather": weatherPanel,
             "gamemode": gameModePanel,
-            "ai": aiPromptPanel
+            "ai": aiPromptPanel,
+            "phone": phonePanel,
+            "caption": captionPanel
         };
         return panels[displayedPanel] || null;
     }
@@ -103,7 +105,9 @@ PanelWindow {
             "shelf": shelfPanel,
             "weather": weatherPanel,
             "gamemode": gameModePanel,
-            "ai": aiPromptPanel
+            "ai": aiPromptPanel,
+            "phone": phonePanel,
+            "caption": captionPanel
         };
         return panels[ShellState.panel] || null;
     }
@@ -1125,6 +1129,31 @@ PanelWindow {
                 shelfRelease.stop();
                 shelfStretch.stop();
                 if (drop.hasUrls) {
+                    let mediaPath = "";
+                    for (let i = 0; i < drop.urls.length; ++i) {
+                        const raw = String(drop.urls[i]);
+                        if (CaptionState.checkMedia(raw)) {
+                            mediaPath = ShelfState.cleanPath(raw);
+                            break;
+                        }
+                    }
+
+                    if (mediaPath !== "") {
+                        absorbFly.stop();
+                        absorbProxy.fileName = ShelfState.baseName(mediaPath);
+                        absorbProxy.x = Math.max(4, Math.min(notchBody.width - absorbProxy.width - 4, drop.x - absorbProxy.width / 2));
+                        absorbProxy.y = Math.max(2, Math.min(notchBody.height - absorbProxy.height - 2, drop.y - absorbProxy.height / 2));
+                        absorbProxy.scale = 1;
+                        absorbProxy.opacity = 1;
+                        absorbProxy.visible = true;
+                        absorbFly.restart();
+
+                        CaptionState.setPending(mediaPath);
+                        ShellState.show("caption", window.screen ? window.screen.name : "");
+                        IslandHub.flashBorder(Theme.primary, 400);
+                        return ;
+                    }
+
                     const added = ShelfState.addUrls(drop.urls);
                     if (added > 0) {
                         IslandHub.showTransient(ShelfState.lastEvent, 3000);
@@ -1324,6 +1353,13 @@ PanelWindow {
 
                 width: parent.width
                 visible: window.displayedPanel === "phone"
+            }
+
+            CaptionActionPanel {
+                id: captionPanel
+
+                width: parent.width
+                visible: window.displayedPanel === "caption"
             }
 
             Behavior on opacity {

@@ -336,7 +336,8 @@ def process_video(video_file: Path, args):
         print(f"[✔] Generated {len(blocks)} subtitle lines.")
 
         # Step 5: Embed Soft Subtitles into Video
-        if not args.no_embed:
+        has_video = any(s.get("codec_type") == "video" for s in streams)
+        if not args.no_embed and has_video:
             print(f"[*] Embedding soft subtitle track into video container...")
             t_mux_0 = time.time()
             if embed_soft_subtitles(video_path, local_srt_path, subtitled_video_path):
@@ -344,6 +345,8 @@ def process_video(video_file: Path, args):
                 print(f"[✔] Embedded in {t_mux:.2f}s (lossless copy mode)!")
             else:
                 print("[!] Subtitle muxing warning: failed to embed soft-sub track.")
+        elif not has_video:
+            print("[*] Audio-only media detected; skipping video embed.")
 
         t_total = time.time() - t_start_total
 
@@ -351,7 +354,7 @@ def process_video(video_file: Path, args):
         print(f"🎉 Complete in {t_total:.1f} seconds total!")
         print(f"  1. Caption File:     {local_srt_path}")
         print(f"  2. Archive Library:  {archive_srt_path}")
-        if not args.no_embed and subtitled_video_path.exists():
+        if not args.no_embed and has_video and subtitled_video_path.exists():
             print(f"  3. Subtitled Video:  {subtitled_video_path}")
         print("=" * 64)
         return True

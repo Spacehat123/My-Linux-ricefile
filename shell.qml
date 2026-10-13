@@ -1727,6 +1727,30 @@ ShellRoot {
             return JSON.stringify({ success: added, files: ShelfState.files.length });
         }
 
+        function captionMedia(path: string): string {
+            if (!path) return JSON.stringify({ success: false, error: "No path provided" });
+            CaptionState.setPending(path);
+            ShellState.show("caption");
+            return JSON.stringify({ success: true, file: CaptionState.pendingFile });
+        }
+
+        function captionAction(action: string): string {
+            if (action === "embed") {
+                CaptionState.startCaption("embed");
+                return JSON.stringify({ success: true, action: "embed" });
+            } else if (action === "file_only") {
+                CaptionState.startCaption("file_only");
+                return JSON.stringify({ success: true, action: "file_only" });
+            } else if (action === "stash") {
+                CaptionState.stash();
+                return JSON.stringify({ success: true, action: "stash" });
+            } else if (action === "cancel") {
+                CaptionState.cancel();
+                return JSON.stringify({ success: true, action: "cancel" });
+            }
+            return JSON.stringify({ success: false, error: "Invalid action" });
+        }
+
         function weatherRefresh(): string {
             WeatherState.refresh();
             return JSON.stringify({ success: true });
