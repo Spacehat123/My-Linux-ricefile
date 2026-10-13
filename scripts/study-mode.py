@@ -215,35 +215,55 @@ def get_state() -> dict:
             "overtime": False,
             "overtime_seconds": 0,
             "credited": False,
+            "bonus_sessions_credited": 0,
             "lofi_enabled": True
         }
-    try:
-        with open(STATE_FILE, "r") as f:
-            return json.load(f)
-    except Exception:
-        return {"active": False}
+    for _ in range(3):
+        try:
+            with open(STATE_FILE, "r") as f:
+                content = f.read().strip()
+                if content:
+                    return json.loads(content)
+        except Exception:
+            time.sleep(0.05)
+    return {"active": False}
 
 def save_state(state: dict):
-    with open(STATE_FILE, "w") as f:
-        json.dump(state, f, indent=2)
-    os.chmod(STATE_FILE, 0o600)
+    tmp_file = STATE_FILE.with_suffix(".tmp")
+    try:
+        with open(tmp_file, "w") as f:
+            json.dump(state, f, indent=2)
+        os.chmod(tmp_file, 0o600)
+        os.replace(tmp_file, STATE_FILE)
+    except Exception as e:
+        print(f"Error saving state: {e}", file=sys.stderr)
 
 def get_history() -> dict:
     if not HISTORY_FILE.exists():
         return {}
-    try:
-        with open(HISTORY_FILE, "r") as f:
-            return json.load(f)
-    except Exception:
-        return {}
+    for _ in range(3):
+        try:
+            with open(HISTORY_FILE, "r") as f:
+                content = f.read().strip()
+                if content:
+                    return json.loads(content)
+        except Exception:
+            time.sleep(0.05)
+    return {}
 
 def record_completed_session():
     history = get_history()
     today = time.strftime("%Y-%m-%d")
     history[today] = history.get(today, 0) + 1
-    with open(HISTORY_FILE, "w") as f:
-        json.dump(history, f, indent=2)
-    os.chmod(HISTORY_FILE, 0o600)
+    tmp_file = HISTORY_FILE.with_suffix(".tmp")
+    try:
+        with open(tmp_file, "w") as f:
+            json.dump(history, f, indent=2)
+        os.chmod(tmp_file, 0o600)
+        os.replace(tmp_file, HISTORY_FILE)
+    except Exception as e:
+        print(f"Error recording history: {e}", file=sys.stderr)
+
 
 def notify_island(text: str, duration_ms: int = 4000):
     try:
@@ -329,6 +349,53 @@ def enforce_distractions():
                         hypr_close_tab(c_addr)
                         notify_island("🚫 Study Mode: Whitelist Only (ICAI / Notebook / WhatsApp / PDFs)", 3000)
 
+def is_pid_alive(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return False
+    try:
+        cmdline_path = Path(f"/proc/{pid}/cmdline")
+        if cmdline_path.exists():
+            cmdline = cmdline_path.read_bytes().decode("utf-8", errors="ignore")
+            if "study-mode.py" in cmdline:
+                return True
+    except Exception:
+        return True
+    return False
+
+def is_daemon_running() -> bool:
+    if not PID_FILE.exists():
+        return False
+    try:
+        pid = int(PID_FILE.read_text().strip())
+        return is_pid_alive(pid)
+    except Exception:
+        return False
+
+def ensure_daemon():
+    """Self-healing: If study mode is active but daemon is dead, resurrect immediately."""
+    state = get_state()
+    if not state.get("active"):
+        return
+    if is_daemon_running():
+        return
+
+    script_path = os.path.abspath(__file__)
+    try:
+        subprocess.Popen(
+            [sys.executable, script_path, "daemon"],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+            close_fds=True
+        )
+    except Exception as e:
+        print(f"Failed to resurrect daemon: {e}", file=sys.stderr)
+
 def start_lofi_player():
     # If audio files exist in ~/Music/study/, play them with mpv in background loop
     files = list(LOFI_DIR.glob("*.mp3")) + list(LOFI_DIR.glob("*.wav")) + list(LOFI_DIR.glob("*.flac")) + list(LOFI_DIR.glob("*.ogg"))
@@ -341,7 +408,11 @@ def start_lofi_player():
             return None
         proc = subprocess.Popen(
             ["mpv", "--no-video", "--loop-playlist=inf", "--shuffle", str(LOFI_DIR)],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+            close_fds=True
         )
         return proc.pid
     except Exception:
@@ -354,53 +425,65 @@ def stop_lofi_player():
         pass
 
 def run_daemon():
-    # Record PID
-    with open(PID_FILE, "w") as f:
-        f.write(str(os.getpid()))
+    # Record PID atomically
+    pid = os.getpid()
+    tmp_pid = PID_FILE.with_suffix(".tmp")
+    tmp_pid.write_text(str(pid))
+    os.replace(tmp_pid, PID_FILE)
 
-    last_second_tick = time.time()
-    last_hypr_check = time.time()
+    last_hypr_check = 0.0
 
     while True:
-        state = get_state()
-        if not state.get("active"):
-            break
+        try:
+            state = get_state()
+            if not state.get("active"):
+                break
 
-        now = time.time()
-        expiry = state.get("expiry_time", 0)
-        target = state.get("target_duration", 1800)
-        overtime = state.get("overtime", False)
+            now = time.time()
+            expiry = state.get("expiry_time", 0)
+            target = state.get("target_duration", 1800)
 
-        # Hyprland distraction enforcement every 300ms
-        if now - last_hypr_check >= 0.3:
-            enforce_distractions()
-            last_hypr_check = now
+            # Hyprland distraction enforcement every 300ms
+            if now - last_hypr_check >= 0.3:
+                try:
+                    enforce_distractions()
+                except Exception:
+                    pass
+                last_hypr_check = now
 
-        # Timer evaluation
-        if now >= expiry and not overtime:
-            # First milestone reached: Credit session!
-            record_completed_session()
-            state["overtime"] = True
-            state["credited"] = True
-            state["overtime_seconds"] = 0
-            save_state(state)
-            target_str = f"{target // 60}m" if target >= 60 else f"{target}s"
-            notify_island(f"🎉 Session Complete ({target_str})! Overtime Flow Active", 6000)
+            # Overtime check & milestone crediting
+            if now >= expiry:
+                # First base session milestone
+                if not state.get("credited", False):
+                    record_completed_session()
+                    state["credited"] = True
+                    state["overtime"] = True
+                    save_state(state)
+                    target_str = f"{target // 60}m" if target >= 60 else f"{target}s"
+                    notify_island(f"🎉 Session Complete ({target_str})! Overtime Flow Active", 6000)
 
-        elif overtime and now - last_second_tick >= 1.0:
-            state["overtime_seconds"] = state.get("overtime_seconds", 0) + 1
-            # Every 1800s (30m) of overtime, credit another session!
-            if state["overtime_seconds"] % 1800 == 0 and state["overtime_seconds"] > 0:
-                record_completed_session()
-                notify_island("🔥 +30m Deep Work Milestone Reached!", 5000)
-            save_state(state)
-            last_second_tick = now
+                # Overtime milestone crediting: every 1800s (30m) of overtime
+                overtime_sec = int(now - expiry)
+                bonus_count = overtime_sec // 1800
+                recorded_bonus = state.get("bonus_sessions_credited", 0)
+                if bonus_count > recorded_bonus:
+                    record_completed_session()
+                    state["bonus_sessions_credited"] = bonus_count
+                    save_state(state)
+                    notify_island("🔥 +30m Deep Work Milestone Reached!", 5000)
 
-        time.sleep(0.2)
+            time.sleep(0.15)
+        except Exception:
+            time.sleep(0.5)
 
-    # Clean up PID
+    # Clean up PID only if it matches our PID
     if PID_FILE.exists():
-        PID_FILE.unlink(missing_ok=True)
+        try:
+            current_pid = int(PID_FILE.read_text().strip())
+            if current_pid == os.getpid():
+                PID_FILE.unlink(missing_ok=True)
+        except Exception:
+            pass
 
 def cmd_start(duration: int, subject: str):
     state = get_state()
@@ -425,19 +508,30 @@ def cmd_start(duration: int, subject: str):
         "overtime": False,
         "overtime_seconds": 0,
         "credited": False,
+        "bonus_sessions_credited": 0,
         "lofi_enabled": True
     }
     save_state(new_state)
 
     # Kill open distractions immediately
-    enforce_distractions()
+    try:
+        enforce_distractions()
+    except Exception:
+        pass
 
     # Start background lo-fi player if tracks exist
     start_lofi_player()
 
     # Launch daemon detached
     script_path = os.path.abspath(__file__)
-    subprocess.Popen([sys.executable, script_path, "daemon"], start_new_session=True)
+    subprocess.Popen(
+        [sys.executable, script_path, "daemon"],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+        close_fds=True
+    )
 
     dur_str = f"{duration // 60}m" if duration >= 60 else f"{duration}s"
     notify_island(f"󰑴 Study Mode Started ({dur_str} lock)", 4000)
@@ -455,9 +549,12 @@ def cmd_stop():
     if not state.get("active"):
         return {"success": True, "message": "Study Mode is not active"}
 
+    expiry = state.get("expiry_time", 0)
+    is_overtime = (now >= expiry) or state.get("overtime", False)
+
     # Hard lock check: if not in overtime and timer hasn't expired, REFUSE to stop!
-    if not state.get("overtime") and now < state.get("expiry_time", 0):
-        remaining = int(state.get("expiry_time", 0) - now)
+    if not is_overtime:
+        remaining = int(expiry - now)
         return {
             "success": False,
             "locked": True,
@@ -483,6 +580,7 @@ def cmd_stop():
     return {"success": True, "message": "Study Mode finished cleanly"}
 
 def cmd_status() -> dict:
+    ensure_daemon()
     state = get_state()
     history = get_history()
     today = time.strftime("%Y-%m-%d")
@@ -492,17 +590,36 @@ def cmd_status() -> dict:
     now = time.time()
     active = state.get("active", False)
     expiry = state.get("expiry_time", 0)
-    overtime = state.get("overtime", False)
-    remaining = max(0, int(expiry - now)) if active and not overtime else 0
+    target = state.get("target_duration", 1800)
+
+    if active:
+        if now < expiry:
+            remaining = int(expiry - now)
+            overtime = False
+            overtime_seconds = 0
+        else:
+            remaining = 0
+            overtime = True
+            overtime_seconds = int(now - expiry)
+            # Automatic crediting fallback if not yet credited
+            if not state.get("credited", False):
+                record_completed_session()
+                state["credited"] = True
+                state["overtime"] = True
+                save_state(state)
+    else:
+        remaining = 0
+        overtime = False
+        overtime_seconds = 0
 
     return {
         "active": active,
         "remaining_seconds": remaining,
-        "target_duration": state.get("target_duration", 1800),
+        "target_duration": target,
         "expiry_time": expiry,
         "subject": state.get("subject", "CA / ICAI Study"),
         "overtime": overtime,
-        "overtime_seconds": state.get("overtime_seconds", 0),
+        "overtime_seconds": overtime_seconds,
         "today_sessions": today_sessions,
         "total_sessions": total_sessions
     }

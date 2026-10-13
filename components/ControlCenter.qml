@@ -68,7 +68,7 @@ Item {
 
     function triggerStudyModeClick() {
         if (studyActive) {
-            if (studyOvertime) {
+            if (studyOvertime || studyRemaining <= 0) {
                 if (Island.ShellState) Island.ShellState.stopStudyMode();
             } else {
                 Island.IslandHub.showTransient("🔒 Hard Lock Active: Cannot exit early (" + formatStudyDuration(studyRemaining) + " left)", 3500);
@@ -1155,7 +1155,8 @@ Item {
             height: 64
             radius: 16
             readonly property bool isStudyOn: root.studyActive
-            readonly property color accentColor: root.studyOvertime ? Island.Theme.purple : Island.Theme.green
+            readonly property bool isFlow: root.studyOvertime || (root.studyActive && root.studyRemaining <= 0)
+            readonly property color accentColor: isFlow ? Island.Theme.purple : Island.Theme.green
             color: isStudyOn
                 ? Qt.rgba(accentColor.r, accentColor.g, accentColor.b, 0.16)
                 : (studyTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
@@ -1207,7 +1208,7 @@ Item {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: root.studyOvertime ? "󰐊" : "󰑴"
+                                text: parent.parent.parent.parent.parent.isFlow ? "󰐊" : "󰑴"
                                 font.family: Island.Theme.iconFontFamily
                                 font.pixelSize: 18
                                 color: root.studyActive ? "#0a0a0f" : Island.Theme.green
@@ -1236,7 +1237,7 @@ Item {
                                 Rectangle {
                                     visible: root.studyActive
                                     anchors.verticalCenter: parent.verticalCenter
-                                    width: root.studyOvertime ? 42 : 54
+                                    width: parent.parent.parent.parent.parent.parent.isFlow ? 42 : 54
                                     height: 16
                                     radius: 8
                                     color: Qt.rgba(parent.parent.parent.parent.parent.accentColor.r, parent.parent.parent.parent.parent.accentColor.g, parent.parent.parent.parent.parent.accentColor.b, 0.25)
@@ -1245,7 +1246,7 @@ Item {
 
                                     Text {
                                         anchors.centerIn: parent
-                                        text: root.studyOvertime ? "FLOW" : "LOCKED"
+                                        text: parent.parent.parent.parent.parent.parent.parent.isFlow ? "FLOW" : "LOCKED"
                                         font.pixelSize: 8
                                         font.bold: true
                                         font.family: Island.Theme.fontFamily
@@ -1259,7 +1260,7 @@ Item {
                                     if (!root.studyActive) {
                                         return "Hard lockout • ICAI & Notes whitelist";
                                     }
-                                    if (root.studyOvertime) {
+                                    if (parent.parent.parent.parent.parent.isFlow) {
                                         return "Flow State (+" + root.formatStudyDuration(root.studyOvertimeSeconds) + ") • Tap to finish";
                                     }
                                     return "Locked in Focus • " + root.formatStudyDuration(root.studyRemaining) + " left";

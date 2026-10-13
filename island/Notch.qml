@@ -974,6 +974,8 @@ PanelWindow {
             spacing: 6
             visible: window.clockRevealed && ShellState.studyActive && !ShellState.gameMode
 
+            readonly property bool isOvertime: ShellState.studyOvertime || (ShellState.studyActive && ShellState.studyRemaining <= 0)
+
             function formatStudyTime(sec) {
                 const m = Math.floor(sec / 60);
                 const s = sec % 60;
@@ -984,7 +986,7 @@ PanelWindow {
                 width: 6
                 height: 6
                 radius: 3
-                color: ShellState.studyOvertime ? Theme.primary : Theme.green
+                color: studyPillRow.isOvertime ? Theme.primary : Theme.green
                 anchors.verticalCenter: parent.verticalCenter
 
                 SequentialAnimation on opacity {
@@ -996,10 +998,10 @@ PanelWindow {
             }
 
             Text {
-                text: ShellState.studyOvertime ? "󰐊" : "󰑴"
+                text: studyPillRow.isOvertime ? "󰐊" : "󰑴"
                 font.family: Theme.iconFontFamily
                 font.pixelSize: 13
-                color: ShellState.studyOvertime ? Theme.primary : Theme.green
+                color: studyPillRow.isOvertime ? Theme.primary : Theme.green
                 anchors.verticalCenter: parent.verticalCenter
             }
 
@@ -1013,13 +1015,13 @@ PanelWindow {
             }
 
             Text {
-                text: ShellState.studyOvertime
+                text: studyPillRow.isOvertime
                     ? "+" + studyPillRow.formatStudyTime(ShellState.studyOvertimeSeconds)
                     : studyPillRow.formatStudyTime(ShellState.studyRemaining)
                 font.family: Theme.fontFamily
                 font.pixelSize: 10
                 font.bold: true
-                color: ShellState.studyOvertime ? Theme.primary : Theme.green
+                color: studyPillRow.isOvertime ? Theme.primary : Theme.green
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
