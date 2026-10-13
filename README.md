@@ -125,4 +125,22 @@ Drag Video/Audio onto Island ──► Intercepted by Notch ──► Tactile Is
   3. `<media_dir>/<name>_subtitled.mp4` (Lossless copy-stream container with toggleable soft subtitle track).
 - **Tactile Island Telemetry**: Collapsed pill displays `⚡ Embedding captions...` or `⚡ Transcribing...`, popping a green border flash (`#22c55e`) and confetti burst upon completion.
 
+---
+
+## 📱 macOS Sequoia-Style Android Mirroring & Bridge (`cool-phone`)
+
+Seamless mobile continuity bringing native Android control to the Wayland desktop, inspired by macOS Sequoia's iPhone Mirroring.
+
+### Key Capabilities
+- **Wireless ADB Auto-Discovery**: Discovers wireless debugging endpoints over local Wi-Fi using mDNS service browsing (`_adb-tls-pairing._tcp`).
+- **1-Click Auto-Pairing Modal**: Interactive GUI dialog automatically triggers when pairing is required, allowing 6-digit pairing code entry without opening a terminal.
+- **High-Framerate Low-Latency Stream**: Powered by hardware-accelerated `scrcpy` wrapped in a custom floating Wayland frame (`title: CoolPhone`) conforming to Hyprland layout rules.
+- **Dedicated Dynamic Island Phone Hub**:
+  - 📱 **Screen Toggle**: Power on/off remote phone screen without waking physical display.
+  - 🔊 **Volume Control**: Hardware volume steps sent via ADB keyevents.
+  - 🧭 **Navigation Bar**: Quick Home (`KEYCODE_HOME`), Back (`KEYCODE_BACK`), and App Switcher actions.
+  - 📸 **Instant Phone Screenshot**: Grabs direct frame buffer capture (`adb exec-out screencap -p`), saves to `~/Pictures/Screenshots/`, and automatically absorbs it into the Dynamic Island Drop Pocket.
+- **Zero-Load Architecture**: When the Phone switch is toggled off in the Sidebar or Control Center, all daemons and ADB pollers terminate immediately, guaranteeing 0.0% background CPU consumption.
+
+
 
