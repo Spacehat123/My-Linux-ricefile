@@ -205,6 +205,24 @@ A direct hardware-level battery preservation system tailored for Acer laptops an
   - Implements Polkit privilege delegation with zero desktop hang.
   - Interactive toggle located in the Settings Window under **System Modes**.
 
+---
+
+## 👁️ Screen Lens OCR & AI Multimodal Studio
+
+Integrated local perception and machine intelligence surfaces accessible right from the desktop and Dynamic Island.
+
+### 🔍 Screen Lens (OCR & Read-Aloud)
+- **Regional Capture**: Shortcut activates a tactile crosshair selector (`slurp` + `grim`) to drag a frame over any text, code, or document on screen.
+- **Local OCR Extraction**: Uses `tesseract` to parse textual content directly into the clipboard within milliseconds.
+- **Dynamic Island Read-Aloud**: Immediately morphs the Notch into an audio reader HUD (`🔊 Reading aloud...`), streaming localized speech synthesis (`speech-dispatcher` / `piper-tts`) with 1-click stop.
+
+### 🎨 AI Image Studio (Local LCM Generation)
+- **Dedicated Prompt Modal**: Press shortcut or click the AI icon on the notch to expand the **AI Prompt Panel** ([`island/panels/AiPromptPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/AiPromptPanel.qml)).
+- **Sub-Second Daemon Preload**: Daemon keeps model weights hot in VRAM (`image-daemon.py`) for rapid generation without load penalty.
+- **Realistic Vision v5.1 + LCM**: Generates native 512×512 photo-realistic outputs locally on NVIDIA GPU in ~3 seconds.
+- **Instant Shelf Stash**: Completed renders fly into the Dynamic Island with transient preview and auto-stash into Drop Pocket.
+
+
 
 
 
