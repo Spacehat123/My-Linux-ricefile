@@ -222,6 +222,79 @@ Integrated local perception and machine intelligence surfaces accessible right f
 - **Realistic Vision v5.1 + LCM**: Generates native 512×512 photo-realistic outputs locally on NVIDIA GPU in ~3 seconds.
 - **Instant Shelf Stash**: Completed renders fly into the Dynamic Island with transient preview and auto-stash into Drop Pocket.
 
+---
+
+## 🎛️ Tactical Desktop Surfaces & Spatial Navigation
+
+Beyond the Dynamic Island, `cool-shell` provides a complete multi-layered cyber-tactical desktop cockpit:
+
+### 1. Slide-Out Sidebars
+- **Left Sidebar ([`panels/LeftSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/LeftSidebar.qml))**: Hosts the full Control Center, system mode switches (Feather Mode, Study Mode, Battery Care, Game Mode), audio sink selectors, and performance graphs.
+- **Right Sidebar ([`panels/RightSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/RightSidebar.qml))**: Application Overview with searchable running surfaces, window thumbnail previews, and window management controls.
+
+### 2. Workspace Navigator & Directional HUD
+- **Bottom Bar ([`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml))**: Floating workspace pills with occupancy pips, urgency alerts, and active window counters.
+- **Spatial Transition Overlay ([`desktop/DesktopTransition.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/DesktopTransition.qml))**: Ephemeral HUD overlay indicating workspace switch direction (`← / →`) with spring physics.
+
+### 3. Idle-Triggered Ambient Layer
+- Activates automatically upon user inactivity via `ext_idle_notification_v1` ([`desktop/AmbientLayer.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/AmbientLayer.qml)).
+- Features linear orbital telemetry rings, tactical corner brackets, and floating battery/workspace coordinates.
+
+### 4. GPU Procedural Shader Wallpaper
+- Live harmonic interference fragment shader ([`wallpaper/shaders/wallpaper.frag`](file:///home/pranc/.config/quickshell/cool-shell/wallpaper/shaders/wallpaper.frag)) compiled via Qt 6 Shader Baker (`qsb`).
+- Renders directly on `WlrLayer.Background` with zero CPU overhead.
+
+---
+
+## 🚀 Installation & Setup
+
+### Automated Modular Installers
+Run the interactive master installer menu:
+
+```bash
+./install.sh
+```
+
+Or run modular numbered installers directly:
+- `installers/01-quickshell.sh` — Builds/installs Quickshell with Hyprland & PipeWire support.
+- `installers/02-hyprland.sh` — Hyprland dependencies, Wayland tools, and portal backends.
+- `installers/03-audio.sh` — Pipewire, Wireplumber, playerctl, and SPTLRX lyrics daemon.
+- `installers/04-phone.sh` — Scrcpy, Android tools, ADB, and bridge requirements.
+- `installers/05-caption.sh` — NVIDIA FastConformer-CTC ONNX model, sherpa-onnx, and ffmpeg.
+- `installers/06-ai.sh` — Latent Consistency Models and diffusers runtime.
+
+### Launching
+Run `cool-shell` via Quickshell:
+
+```bash
+quickshell -c cool-shell
+```
+
+---
+
+## 📡 Quickshell IPC Protocol
+
+`cool-shell` exposes native IPC endpoints for automation, scripts, and keybindings:
+
+```bash
+# Query Dynamic Island state summary
+qs -c cool-shell ipc call island getSummary
+
+# Trigger media captioning modal on a video
+qs -c cool-shell ipc call island captionMedia "/path/to/video.mp4"
+
+# Add a file directly to Drop Pocket
+qs -c cool-shell ipc call island shelfAdd "/path/to/document.pdf"
+
+# Show custom transient notification with glow
+qs -c cool-shell ipc call island showTransient "🚀 Mission Accomplished" 3500
+
+# Toggle active system modes
+python3 scripts/study-mode.py start --duration 1800
+python3 island/scripts/feather-mode.py toggle 35
+```
+
+
 
 
 
