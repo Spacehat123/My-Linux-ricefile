@@ -66,6 +66,8 @@ PanelWindow {
     property int idleTimeoutMinutes: 2
     property var gameModeExceptions: ["steam", "discord", "spotify", "obs", "heroic"]
     property string activeCategory: "modes"
+    property bool batteryLimitEnabled: false
+    property int batteryLimitPercent: 80
 
     // =========================================================================
     // PUBLIC API METHODS
@@ -96,6 +98,23 @@ PanelWindow {
         if (!getBrightnessProc.running) getBrightnessProc.running = true;
         if (wifiDevice && Networking.wifiEnabled) wifiDevice.scannerEnabled = true;
         if (!getExceptionsProc.running) getExceptionsProc.running = true;
+        if (!getBatteryLimitProc.running) getBatteryLimitProc.running = true;
+    }
+
+    function setBatteryLimit(pct) {
+        let val = Math.max(50, Math.min(100, pct));
+        root.batteryLimitPercent = val;
+        if (!setBatteryLimitProc.running) {
+            setBatteryLimitProc.command = [Quickshell.shellPath("scripts/battery-limit.sh"), "set-limit", val.toString()];
+            setBatteryLimitProc.running = true;
+        }
+    }
+
+    function toggleBatteryLimit() {
+        if (!setBatteryLimitProc.running) {
+            setBatteryLimitProc.command = [Quickshell.shellPath("scripts/battery-limit.sh"), "toggle"];
+            setBatteryLimitProc.running = true;
+        }
     }
 
     // Subsystem Actuators
@@ -233,6 +252,34 @@ PanelWindow {
             onStreamFinished: {
                 try {
                     root.gameModeExceptions = JSON.parse(text);
+                } catch (e) {}
+            }
+        }
+    }
+
+    Process {
+        id: getBatteryLimitProc
+        command: [Quickshell.shellPath("scripts/battery-limit.sh"), "status"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    let data = JSON.parse(text.trim());
+                    if (data.enabled !== undefined) root.batteryLimitEnabled = (data.enabled === true);
+                    if (data.limit !== undefined) root.batteryLimitPercent = data.limit;
+                } catch (e) {}
+            }
+        }
+    }
+
+    Process {
+        id: setBatteryLimitProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    let data = JSON.parse(text.trim());
+                    if (data.enabled !== undefined) root.batteryLimitEnabled = (data.enabled === true);
+                    if (data.limit !== undefined) root.batteryLimitPercent = data.limit;
                 } catch (e) {}
             }
         }
@@ -2706,6 +2753,182 @@ PanelWindow {
                                                 text: Island.PowerState && Island.PowerState.charging ? "Connected to AC Power (Charging)" : "Running on Battery Power"
                                                 font.pixelSize: 10
                                                 color: Island.Theme.muted
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // =============================================
+                                // Battery Charge Limit Card (80% Health Mode)
+                                // =============================================
+                                Rectangle {
+                                    width: parent.width
+                                    radius: 12
+                                    color: root.batteryLimitEnabled ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.12) : Island.Theme.glassCard
+                                    border.color: root.batteryLimitEnabled ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                    border.width: root.batteryLimitEnabled ? 1.5 : 1
+                                    clip: true
+                                    implicitHeight: battLimitCol.implicitHeight + 24
+
+                                    Behavior on color { ColorAnimation { duration: 140 } }
+                                    Behavior on border.color { ColorAnimation { duration: 140 } }
+
+                                    Column {
+                                        id: battLimitCol
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.top: parent.top
+                                        anchors.margins: 12
+                                        spacing: 12
+
+                                        // Header Row: Icon, Title, Subtitle, Toggle Switch
+                                        Row {
+                                            width: parent.width
+                                            spacing: 12
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "󱈑"
+                                                font.family: Island.Theme.iconFontFamily
+                                                font.pixelSize: 24
+                                                color: root.batteryLimitEnabled ? Island.Theme.primary : Island.Theme.muted
+                                            }
+
+                                            Column {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: parent.width - 90
+                                                spacing: 2
+
+                                                Row {
+                                                    spacing: 8
+                                                    Text {
+                                                        text: "Battery Charge Limit (Health Mode)"
+                                                        font.pixelSize: 13
+                                                        font.bold: true
+                                                        color: Island.Theme.foreground
+                                                    }
+                                                    Rectangle {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        height: 16
+                                                        implicitWidth: battLimitBadgeText.implicitWidth + 10
+                                                        radius: 8
+                                                        color: root.batteryLimitEnabled ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25) : Qt.rgba(1, 1, 1, 0.08)
+                                                        border.color: root.batteryLimitEnabled ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                                        border.width: 1
+
+                                                        Text {
+                                                            id: battLimitBadgeText
+                                                            anchors.centerIn: parent
+                                                            text: root.batteryLimitEnabled ? (root.batteryLimitPercent + "% CAP ACTIVE") : "OFF (100% FULL)"
+                                                            font.pixelSize: 9
+                                                            font.bold: true
+                                                            color: root.batteryLimitEnabled ? Island.Theme.primary : Island.Theme.muted
+                                                        }
+                                                    }
+                                                }
+
+                                                Text {
+                                                    text: "Halts charging at target limit to preserve lithium chemistry when operating on AC power."
+                                                    font.pixelSize: 10
+                                                    color: Island.Theme.muted
+                                                    elide: Text.ElideRight
+                                                    width: parent.width
+                                                }
+                                            }
+
+                                            // Toggle Pill Switch
+                                            Rectangle {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: 44
+                                                height: 24
+                                                radius: 12
+                                                color: root.batteryLimitEnabled ? Island.Theme.primary : Island.Theme.glassCardHover
+                                                border.color: root.batteryLimitEnabled ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                                border.width: 1
+
+                                                Rectangle {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    x: root.batteryLimitEnabled ? parent.width - width - 3 : 3
+                                                    width: 18
+                                                    height: 18
+                                                    radius: 9
+                                                    color: root.batteryLimitEnabled ? "#0a0a0f" : Island.Theme.muted
+                                                    Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                                                }
+
+                                                TapHandler {
+                                                    onTapped: root.toggleBatteryLimit()
+                                                }
+                                            }
+                                        }
+
+                                        // Quick Presets Row (60%, 70%, 80% Recommended, 85%, 90%, 100%)
+                                        Row {
+                                            width: parent.width
+                                            height: 26
+                                            spacing: 6
+
+                                            Repeater {
+                                                model: [
+                                                    { label: "60%", value: 60, title: "Storage" },
+                                                    { label: "70%", value: 70, title: "Desk" },
+                                                    { label: "80% (Health)", value: 80, title: "Recommended" },
+                                                    { label: "85%", value: 85, title: "Extended" },
+                                                    { label: "90%", value: 90, title: "Travel" },
+                                                    { label: "100%", value: 100, title: "Full" }
+                                                ]
+
+                                                delegate: Rectangle {
+                                                    required property var modelData
+                                                    width: (battLimitCol.width - 30) / 6
+                                                    height: 26
+                                                    radius: 8
+                                                    readonly property bool isSelected: root.batteryLimitPercent === modelData.value
+                                                    color: isSelected
+                                                        ? Island.Theme.primary
+                                                        : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.5)
+                                                    border.color: isSelected ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                                    border.width: 1
+
+                                                    Text {
+                                                        anchors.centerIn: parent
+                                                        text: modelData.label
+                                                        font.pixelSize: 10
+                                                        font.bold: isSelected
+                                                        color: isSelected ? "#0a0a0f" : Island.Theme.muted
+                                                    }
+
+                                                    TapHandler {
+                                                        onTapped: root.setBatteryLimit(modelData.value)
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Custom Limit Slider Row
+                                        Row {
+                                            width: parent.width
+                                            spacing: 12
+                                            height: 28
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "Custom: " + root.batteryLimitPercent + "%"
+                                                font.pixelSize: 11
+                                                font.bold: true
+                                                color: Island.Theme.foreground
+                                                width: 85
+                                            }
+
+                                            StyledSlider {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: parent.width - 100
+                                                height: 18
+                                                value: (root.batteryLimitPercent - 50) / 50.0
+                                                onMoved: (val) => {
+                                                    let pct = Math.round(50 + val * 50);
+                                                    root.setBatteryLimit(pct);
+                                                }
                                             }
                                         }
                                     }
