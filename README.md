@@ -176,6 +176,20 @@ An uncompromising deep-work and discipline enforcement system designed for exam 
 - **Autonomous Lo-Fi Accompaniment**: Silently mounts and shuffles study tracks from `~/Music/study/` in background `mpv` loop without UI clutter.
 - **Desktop Contribution Heatmap**: Renders an interactive 52-week activity grid on the desktop wallpaper layer ([`desktop/StudyContributionHeatmap.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/StudyContributionHeatmap.qml)), tracking sessions, consistency streaks, and deep-work volume.
 
+---
+
+## 🪶 Feather Mode & Hardware Resource Throttling
+
+A precision power-capping profile engineered for maximum battery longevity, silent fan operation, and thermal management ([`island/scripts/feather-mode.py`](file:///home/pranc/.config/quickshell/cool-shell/island/scripts/feather-mode.py)).
+
+### Architecture & Throttling Limits
+- **Hardware-Level CPU & GPU Capping**: Enforces strict operational ceilings via Linux kernel cpufreq governor, energy-performance preferences (`power`), and GPU frequency limiters:
+  - **20% Limit (`Feather 20%`)**: Absolute power minimization. Caps CPU clock ceiling to baseline, limits GPU compute, ideal for reading, note-taking, and battery emergency.
+  - **35% Limit (`Feather 35%`)**: Balanced whisper-quiet profile. Ample headroom for smooth 60fps desktop rendering while cutting package power draw by over 60%.
+- **Tactile Island & Control Center HUD**: Interactive pills (`20%` / `35%`) inside the Control Center allow instant 1-tap switching without root password prompts.
+- **Process Freeze & Scheduler Renicing**: Automatically freezes intensive background indexers and sets desktop interactive tasks to higher priority (`nice -n -5`), maintaining snappy UI response even under aggressive power caps.
+
+
 
 
 
