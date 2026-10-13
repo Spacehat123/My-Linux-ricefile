@@ -102,8 +102,9 @@ PanelWindow {
     }
 
     function setBatteryLimit(pct) {
-        let val = Math.max(50, Math.min(100, pct));
+        let val = (pct <= 85) ? 80 : 100;
         root.batteryLimitPercent = val;
+        root.batteryLimitEnabled = (val === 80);
         if (!setBatteryLimitProc.running) {
             setBatteryLimitProc.command = [Quickshell.shellPath("scripts/battery-limit.sh"), "set-limit", val.toString()];
             setBatteryLimitProc.running = true;
@@ -2862,72 +2863,141 @@ PanelWindow {
                                             }
                                         }
 
-                                        // Quick Presets Row (60%, 70%, 80% Recommended, 85%, 90%, 100%)
+                                        // Mode Options (80% Health Mode vs 100% Full Capacity)
                                         Row {
                                             width: parent.width
-                                            height: 26
-                                            spacing: 6
+                                            height: 48
+                                            spacing: 8
 
-                                            Repeater {
-                                                model: [
-                                                    { label: "60%", value: 60, title: "Storage" },
-                                                    { label: "70%", value: 70, title: "Desk" },
-                                                    { label: "80% (Health)", value: 80, title: "Recommended" },
-                                                    { label: "85%", value: 85, title: "Extended" },
-                                                    { label: "90%", value: 90, title: "Travel" },
-                                                    { label: "100%", value: 100, title: "Full" }
-                                                ]
+                                            // 80% Health Mode Tile
+                                            Rectangle {
+                                                width: (parent.width - 8) / 2
+                                                height: parent.height
+                                                radius: 10
+                                                readonly property bool isSelected: root.batteryLimitEnabled
+                                                color: isSelected
+                                                    ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.2)
+                                                    : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.4)
+                                                border.color: isSelected ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                                border.width: isSelected ? 1.5 : 1
 
-                                                delegate: Rectangle {
-                                                    required property var modelData
-                                                    width: (battLimitCol.width - 30) / 6
-                                                    height: 26
-                                                    radius: 8
-                                                    readonly property bool isSelected: root.batteryLimitPercent === modelData.value
-                                                    color: isSelected
-                                                        ? Island.Theme.primary
-                                                        : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.5)
-                                                    border.color: isSelected ? Island.Theme.primary : Island.Theme.glassBorderSubtle
-                                                    border.width: 1
+                                                Row {
+                                                    anchors.fill: parent
+                                                    anchors.margins: 8
+                                                    spacing: 8
 
                                                     Text {
-                                                        anchors.centerIn: parent
-                                                        text: modelData.label
-                                                        font.pixelSize: 10
-                                                        font.bold: isSelected
-                                                        color: isSelected ? "#0a0a0f" : Island.Theme.muted
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        text: "󱈑"
+                                                        font.family: Island.Theme.iconFontFamily
+                                                        font.pixelSize: 20
+                                                        color: isSelected ? Island.Theme.primary : Island.Theme.muted
                                                     }
 
-                                                    TapHandler {
-                                                        onTapped: root.setBatteryLimit(modelData.value)
+                                                    Column {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        spacing: 2
+
+                                                        Text {
+                                                            text: "80% Health Mode"
+                                                            font.pixelSize: 11
+                                                            font.bold: true
+                                                            color: isSelected ? Island.Theme.foreground : Island.Theme.muted
+                                                        }
+
+                                                        Text {
+                                                            text: "AC / Desk protection"
+                                                            font.pixelSize: 9
+                                                            color: Island.Theme.muted
+                                                        }
                                                     }
+                                                }
+
+                                                TapHandler {
+                                                    onTapped: root.setBatteryLimit(80)
+                                                }
+                                            }
+
+                                            // 100% Full Capacity Tile
+                                            Rectangle {
+                                                width: (parent.width - 8) / 2
+                                                height: parent.height
+                                                radius: 10
+                                                readonly property bool isSelected: !root.batteryLimitEnabled
+                                                color: isSelected
+                                                    ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.2)
+                                                    : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.4)
+                                                border.color: isSelected ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                                border.width: isSelected ? 1.5 : 1
+
+                                                Row {
+                                                    anchors.fill: parent
+                                                    anchors.margins: 8
+                                                    spacing: 8
+
+                                                    Text {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        text: "󱈏"
+                                                        font.family: Island.Theme.iconFontFamily
+                                                        font.pixelSize: 20
+                                                        color: isSelected ? Island.Theme.primary : Island.Theme.muted
+                                                    }
+
+                                                    Column {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        spacing: 2
+
+                                                        Text {
+                                                            text: "100% Full Charge"
+                                                            font.pixelSize: 11
+                                                            font.bold: true
+                                                            color: isSelected ? Island.Theme.foreground : Island.Theme.muted
+                                                        }
+
+                                                        Text {
+                                                            text: "Maximum battery life"
+                                                            font.pixelSize: 9
+                                                            color: Island.Theme.muted
+                                                        }
+                                                    }
+                                                }
+
+                                                TapHandler {
+                                                    onTapped: root.setBatteryLimit(100)
                                                 }
                                             }
                                         }
 
-                                        // Custom Limit Slider Row
-                                        Row {
+                                        // Acer Hardware Architecture Note
+                                        Rectangle {
                                             width: parent.width
-                                            spacing: 12
-                                            height: 28
+                                            implicitHeight: battHwNote.implicitHeight + 12
+                                            radius: 8
+                                            color: Qt.rgba(1, 1, 1, 0.04)
+                                            border.color: Island.Theme.glassBorderSubtle
+                                            border.width: 1
 
-                                            Text {
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                text: "Custom: " + root.batteryLimitPercent + "%"
-                                                font.pixelSize: 11
-                                                font.bold: true
-                                                color: Island.Theme.foreground
-                                                width: 85
-                                            }
+                                            Row {
+                                                id: battHwNote
+                                                anchors.left: parent.left
+                                                anchors.right: parent.right
+                                                anchors.top: parent.top
+                                                anchors.margins: 6
+                                                spacing: 8
 
-                                            StyledSlider {
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                width: parent.width - 100
-                                                height: 18
-                                                value: (root.batteryLimitPercent - 50) / 50.0
-                                                onMoved: (val) => {
-                                                    let pct = Math.round(50 + val * 50);
-                                                    root.setBatteryLimit(pct);
+                                                Text {
+                                                    text: "󰌢"
+                                                    font.family: Island.Theme.iconFontFamily
+                                                    font.pixelSize: 13
+                                                    color: Island.Theme.primary
+                                                }
+
+                                                Text {
+                                                    width: parent.width - 24
+                                                    wrapMode: Text.WordWrap
+                                                    font.pixelSize: 9.5
+                                                    color: Island.Theme.muted
+                                                    text: "Acer Aspire / Nitro hardware Embedded Controller (EC) enforces a fixed 80% physical cutoff. When above 80%, the laptop switches to AC power and the battery gradually settles to 80%."
                                                 }
                                             }
                                         }
