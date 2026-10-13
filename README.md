@@ -189,6 +189,23 @@ A precision power-capping profile engineered for maximum battery longevity, sile
 - **Tactile Island & Control Center HUD**: Interactive pills (`20%` / `35%`) inside the Control Center allow instant 1-tap switching without root password prompts.
 - **Process Freeze & Scheduler Renicing**: Automatically freezes intensive background indexers and sets desktop interactive tasks to higher priority (`nice -n -5`), maintaining snappy UI response even under aggressive power caps.
 
+---
+
+## 🔋 Hardware Battery Health Care Mode (Acer EC 80%)
+
+A direct hardware-level battery preservation system tailored for Acer laptops and Embedded Controller (EC) architectures ([`scripts/battery-limit.sh`](file:///home/pranc/.config/quickshell/cool-shell/scripts/battery-limit.sh)).
+
+### Electrical & Hardware Operation
+- **Acer EC Register Control**: Directly interacts with the Embedded Controller firmware (`ec_sys` / `/dev/port`) to activate native Acer Battery Care Mode (`0x01`).
+- **Physical 80% Cutoff**: The hardware EC microcontroller physically disconnects battery charging circuitry at 80% capacity, switching the laptop directly to wall AC bypass power.
+- **Settling Behavior**: If enabled while battery charge is above 80% (e.g. 85%), charging halts instantly. The system draws exclusively from the battery until 80% is reached, then locks indefinitely at 80% on AC power.
+- **Chemistry Protection**: Prevents high-voltage anode degradation and thermal saturation caused by prolonged 100% float charging (4.2V/cell).
+- **Hardened Safety Guardrails**:
+  - Validates EC register address boundaries before every read/write.
+  - Implements Polkit privilege delegation with zero desktop hang.
+  - Interactive toggle located in the Settings Window under **System Modes**.
+
+
 
 
 
