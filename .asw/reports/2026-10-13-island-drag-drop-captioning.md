@@ -99,6 +99,7 @@ All execution occurs strictly in the background via Quickshell native `Process` 
 | **Caption File Only** | `/tmp/test_drop_video.mp4` | IPC `captionAction "file_only"` | Produced `.srt` in `/tmp` & `~/Music/caption_extracts/`. Video left completely untouched. | **PASS** |
 | **Instant Subtitle Extraction** | `/tmp/test_already_subbed.mp4` | Existing track probe | Extracted existing track in **0.06s** directly to `.srt` without GPU re-transcription. | **PASS** |
 | **Stash in Pocket** | `/tmp/test_stash.mp4` | IPC `captionAction "stash"` | Saved file path directly to `ShelfState` Drop Pocket. No transcription triggered. | **PASS** |
+| **Panel Retention on Drop** | Any media file | Drop on Notch | Fixed: `absorbFly.onFinished` was hardcoded to call `ShellState.show("shelf")` after 300ms. Added condition in `Notch.qml` to stay on `"caption"` when media is pending. | **PASS** |
 | **Non-Media Drop** | Generic files | Normal drop flow | Stashed directly on shelf with absorption animation. | **PASS** |
 | **QML Diagnostics** | `quickshell -c cool-shell` | `quickshell log` | Clean reload, zero syntax/runtime errors. | **PASS** |
 
