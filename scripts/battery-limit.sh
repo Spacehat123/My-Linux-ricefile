@@ -103,16 +103,26 @@ write_hardware_ec() {
     python3 -c '
 import os, sys
 val = int(sys.argv[1])
+
+# SAFETY GUARDRAIL: Refuse to write anything other than official Acer Care Mode flags
+if val not in (0x51, 0x11):
+    sys.exit(1)
+
 success = False
 for path in ["/sys/kernel/debug/ec/ec0/io", "/dev/ec"]:
     if os.path.exists(path):
         try:
-            with open(path, "wb+") as f:
+            with open(path, "r+b") as f:
+                # Seek strictly to register 0x03 (Acer Battery Charge Limit)
                 f.seek(0x03)
-                f.write(bytearray([val]))
+                f.write(bytes([val]))
                 f.flush()
-            success = True
-            break
+                # Read-back verification
+                f.seek(0x03)
+                readback = f.read(1)[0]
+                if readback == val:
+                    success = True
+                    break
         except Exception:
             pass
 sys.exit(0 if success else 1)
