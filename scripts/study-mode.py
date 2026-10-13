@@ -33,14 +33,61 @@ LOFI_DIR.mkdir(parents=True, exist_ok=True)
 
 # Whitelisted application window classes in Hyprland
 ALLOWED_CLASSES = {
+    # Browsers
     "brave",
     "brave-browser",
+
+    # File Explorers & Managers (All)
     "dolphin",
     "org.kde.dolphin",
-    "kate",
-    "org.kde.kate",
-    "kwrite",
-    "org.kde.kwrite",
+    "nautilus",
+    "org.gnome.nautilus",
+    "nemo",
+    "org.nemo",
+    "thunar",
+    "org.xfce.thunar",
+    "pcmanfm",
+    "pcmanfm-qt",
+    "org.lxde.pcmanfm",
+    "caja",
+    "org.mate.caja",
+    "spacefm",
+    "krusader",
+    "org.kde.krusader",
+    "doublecmd",
+    "mc",
+    "ranger",
+    "yazi",
+    "vifm",
+    "ark",
+    "org.kde.ark",
+    "file-roller",
+    "org.gnome.fileroller",
+    "engrampa",
+    "peazip",
+
+    # Desktop Portals & File Choosers
+    "xdg-desktop-portal",
+    "xdg-desktop-portal-gtk",
+    "org.freedesktop.impl.portal.desktop.gtk",
+    "xdg-desktop-portal-kde",
+    "org.freedesktop.impl.portal.desktop.kde",
+    "xdg-desktop-portal-hyprland",
+    "org.freedesktop.impl.portal.desktop.hyprland",
+    "xdg-desktop-portal-gnome",
+    "org.freedesktop.impl.portal.desktop.gnome",
+    "xdg-desktop-portal-wlr",
+    "kdialog",
+    "org.kde.kdialog",
+    "zenity",
+    "org.gnome.zenity",
+    "yad",
+    "qarma",
+    "gcr-prompter",
+    "polkit-kde-authentication-agent-1",
+    "org.kde.polkit-kde-authentication-agent-1",
+
+    # Document & Media Viewers
     "okular",
     "org.kde.okular",
     "evince",
@@ -53,19 +100,38 @@ ALLOWED_CLASSES = {
     "org.kde.gwenview",
     "imv",
     "swappy",
+    "mpv",
+
+    # Text & Code Editors
+    "kate",
+    "org.kde.kate",
+    "kwrite",
+    "org.kde.kwrite",
+
+    # Terminals & System
     "foot",
     "kitty",
     "alacritty",
-    "mpv",
     "quickshell",
-    "zenity",
     "rofi"
 }
 
 # Whitelist allowed domains / keywords in Brave browser window titles
 ALLOWED_BRAVE_KEYWORDS = [
-    "boslive", "icai", "notebook", "gemini notebook", "notebooklm", "whatsapp",
-    "new tab", "untitled", "settings", "extensions", "downloads", "sign in", "login", "accounts.google"
+    # ICAI / Board of Studies (BOS) / CA Study Materials
+    "bos", "boslive", "icai", "cdn.icai.org", "resource.cdn.icai.org", "icai.org", "icaiexam",
+    "ca ", "foundation", "intermediate", "final", "chapter", "module",
+
+    # Document formats & PDF reading
+    ".pdf", "pdf",
+
+    # File actions & download dialogs
+    "save", "save file", "save as", "open file", "open", "upload", "download", "downloads", "print",
+
+    # Allowed study tools
+    "notebook", "gemini notebook", "notebooklm", "whatsapp",
+    "new tab", "untitled", "settings", "extensions", "sign in", "login",
+    "accounts.google", "drive.google", "docs.google"
 ]
 
 # Explicit distraction titles that trigger immediate tab closure
@@ -74,6 +140,45 @@ DISTRACTION_KEYWORDS = [
     "tiktok", "netflix", "prime video", "anime", "manga", "facebook",
     "discord", "chess", "kick.com", "hulu", "steam"
 ]
+
+def is_file_manager_or_dialog(c_class: str, c_initial: str, c_title: str) -> bool:
+    cls = (c_class or "").lower()
+    init_cls = (c_initial or "").lower()
+    t = (c_title or "").lower()
+
+    # Substring match on file managers / portals / choosers
+    fm_patterns = [
+        "dolphin", "nautilus", "nemo", "thunar", "pcmanfm", "caja",
+        "spacefm", "krusader", "doublecmd", "portal", "kdialog",
+        "zenity", "yad", "qarma", "file-roller", "ark", "engrampa",
+        "peazip", "file manager", "file chooser", "file picker",
+        "open files", "save file"
+    ]
+    if any(p in cls or p in init_cls for p in fm_patterns):
+        return True
+
+    # Standard dialog titles
+    dialog_titles = [
+        "save file", "save as", "open file", "open files", "select a file",
+        "select file", "select folder", "select directory", "file upload",
+        "choose file", "choose files", "all files", "save", "open"
+    ]
+    if any(d == t or t.startswith(d) for d in dialog_titles):
+        return True
+
+    return False
+
+def is_allowed_class(c_class: str, c_initial: str, c_title: str) -> bool:
+    cls = (c_class or "").lower()
+    init_cls = (c_initial or "").lower()
+
+    if cls in ALLOWED_CLASSES or init_cls in ALLOWED_CLASSES:
+        return True
+
+    if is_file_manager_or_dialog(c_class, c_initial, c_title):
+        return True
+
+    return False
 
 def ensure_auth_file():
     if not AUTH_FILE.exists():
@@ -184,6 +289,7 @@ def enforce_distractions():
     clients = get_hyprland_clients()
     for client in clients:
         c_class = (client.get("class") or "").lower()
+        c_initial_class = (client.get("initialClass") or "").lower()
         c_title = (client.get("title") or "").lower()
         c_addr = client.get("address")
         c_pid = client.get("pid")
@@ -191,14 +297,17 @@ def enforce_distractions():
         if not c_addr:
             continue
 
-        # Check application whitelist
-        if c_class and c_class not in ALLOWED_CLASSES:
-            # Check if it's Spotify, Steam, Discord, or any other distracting app
+        # Check application whitelist (all whitelisted apps, all file managers, portals, and file dialogs)
+        if not is_allowed_class(c_class, c_initial_class, c_title):
             hypr_close_window(c_addr, c_pid)
             continue
 
         # Check Brave browser tabs for forbidden websites
-        if "brave" in c_class:
+        if "brave" in c_class or "brave" in c_initial_class:
+            # File save/download/upload dialogs or portals opened by Brave must never be closed
+            if is_file_manager_or_dialog(c_class, c_initial_class, c_title):
+                continue
+
             blocked = False
             for dist in DISTRACTION_KEYWORDS:
                 if dist in c_title:
@@ -210,10 +319,15 @@ def enforce_distractions():
             if not blocked and c_title:
                 clean_title = re.sub(r'[\s\-—]+brave.*$', '', c_title, flags=re.IGNORECASE).strip().lower()
                 if clean_title:
-                    is_allowed = any(kw in clean_title for kw in ALLOWED_BRAVE_KEYWORDS)
+                    # Allow all PDF documents, Board of Studies (BOS) files, and whitelisted domains
+                    is_allowed = (
+                        ".pdf" in clean_title
+                        or clean_title.endswith(".pdf")
+                        or any(kw in clean_title for kw in ALLOWED_BRAVE_KEYWORDS)
+                    )
                     if not is_allowed:
                         hypr_close_tab(c_addr)
-                        notify_island("🚫 Study Mode: Whitelist Only (ICAI / Notebook / WhatsApp)", 3000)
+                        notify_island("🚫 Study Mode: Whitelist Only (ICAI / Notebook / WhatsApp / PDFs)", 3000)
 
 def start_lofi_player():
     # If audio files exist in ~/Music/study/, play them with mpv in background loop
