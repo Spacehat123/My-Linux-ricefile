@@ -38,7 +38,7 @@ PanelWindow {
     // =========================================================================
 
     // Networking
-    readonly property var wifiDevice: Networking.devices ? Networking.devices.values.find((d) => d.type === NetworkDeviceType.Wifi || d.networks !== undefined) : null
+    readonly property var wifiDevice: Networking.devices ? Networking.devices.values.find((d) => (d.type && String(d.type).toLowerCase().indexOf("wifi") !== -1) || d.networks !== undefined) : null
     readonly property var wifiNetworks: wifiDevice ? wifiDevice.networks.values.slice().sort((a, b) => (b.strength || 0) - (a.strength || 0)) : []
     readonly property var connectedWifi: wifiNetworks.find((n) => n.connected)
     property var pendingWifiNetwork: null
@@ -65,7 +65,7 @@ PanelWindow {
     property bool keyNumlockDefault: false
     property int idleTimeoutMinutes: 2
     property var gameModeExceptions: ["steam", "discord", "spotify", "obs", "heroic"]
-    property string activeCategory: "network"
+    property string activeCategory: "modes"
 
     // =========================================================================
     // PUBLIC API METHODS
@@ -87,7 +87,7 @@ PanelWindow {
 
     function openCategory(cat) {
         if (cat) {
-            root.activeCategory = cat;
+            root.activeCategory = (cat === "gamemode" ? "modes" : cat);
         }
         show();
     }
@@ -453,6 +453,7 @@ PanelWindow {
                                 spacing: 4
 
                                 readonly property var categories: [
+                                    { id: "modes", name: "System Modes", icon: "󰓅" },
                                     { id: "network", name: "Network & Wi-Fi", icon: "󰤨" },
                                     { id: "bluetooth", name: "Bluetooth & Devices", icon: "󰂯" },
                                     { id: "display", name: "Display & Brightness", icon: "󰍹" },
@@ -460,7 +461,6 @@ PanelWindow {
                                     { id: "mouse", name: "Mouse & Touchpad", icon: "󰍽" },
                                     { id: "keyboard", name: "Keyboard & Shortcuts", icon: "󰌌" },
                                     { id: "appearance", name: "Appearance & Themes", icon: "󰏘" },
-                                    { id: "gamemode", name: "Performance", icon: "󰓅" },
                                     { id: "power", name: "Power & Battery", icon: "󰁹" },
                                     { id: "privacy", name: "Privacy & Security", icon: "󰌾" },
                                     { id: "a11y", name: "Accessibility & Voice", icon: "󰐝" },
@@ -473,7 +473,7 @@ PanelWindow {
                                     delegate: Rectangle {
                                         id: catPill
                                         required property var modelData
-                                        readonly property bool isSelected: windowCard.activeCategory === modelData.id
+                                        readonly property bool isSelected: windowCard.activeCategory === modelData.id || (modelData.id === "modes" && windowCard.activeCategory === "gamemode")
 
                                         width: navCol.width
                                         height: 36
@@ -1909,114 +1909,741 @@ PanelWindow {
                             }
 
                             // =================================================
-                            // 8. GAME MODE & RULES PAGE
+                            // 8. SYSTEM MODES & TACTICAL PRESETS PAGE
                             // =================================================
                             Column {
                                 width: parent.width
                                 spacing: 14
-                                visible: windowCard.activeCategory === "gamemode"
+                                visible: windowCard.activeCategory === "modes" || windowCard.activeCategory === "gamemode"
 
                                 Text {
-                                    text: "Performance Mode"
+                                    text: "System Modes"
                                     font.pixelSize: 16
                                     font.bold: true
                                     color: Island.Theme.foreground
                                 }
                                 Text {
-                                    text: "Aggressively minimizes system RAM footprint by suspending background apps and unmapping heavy shell layers during intensive workloads."
+                                    text: "Unified control center for Game Mode, The Feather battery saver, Study focus lockdown, and God's Eye panoramic overview."
                                     font.pixelSize: 11
                                     color: Island.Theme.muted
                                     wrapMode: Text.WordWrap
                                     width: parent.width
                                 }
 
-                                // Status Banner
+                                // -------------------------------------------------
+                                // 1. EXTREME GAME MODE CARD
+                                // -------------------------------------------------
                                 Rectangle {
                                     width: parent.width
-                                    height: 58
                                     radius: 12
-                                    color: Island.ShellState.gameMode ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.16) : Island.Theme.glassCard
+                                    color: Island.ShellState.gameMode ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.12) : Island.Theme.glassCard
                                     border.color: Island.ShellState.gameMode ? Island.Theme.red : Island.Theme.glassBorderSubtle
-                                    border.width: 1
+                                    border.width: Island.ShellState.gameMode ? 1.5 : 1
+                                    clip: true
+                                    implicitHeight: gameCol.implicitHeight + 24
 
-                                    Row {
-                                        anchors.fill: parent
-                                        anchors.margins: 14
-                                        spacing: 12
+                                    Behavior on color { ColorAnimation { duration: 140 } }
+                                    Behavior on border.color { ColorAnimation { duration: 140 } }
 
-                                        Text {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: "󰓅"
-                                            font.family: Island.Theme.iconFontFamily
-                                            font.pixelSize: 22
-                                            color: Island.ShellState.gameMode ? Island.Theme.red : Island.Theme.muted
+                                    Column {
+                                        id: gameCol
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.top: parent.top
+                                        anchors.margins: 12
+                                        spacing: 10
+
+                                        Row {
+                                            width: parent.width
+                                            spacing: 12
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "󰓅"
+                                                font.family: Island.Theme.iconFontFamily
+                                                font.pixelSize: 22
+                                                color: Island.ShellState.gameMode ? Island.Theme.red : Island.Theme.muted
+                                            }
+
+                                            Column {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: parent.width - 90
+                                                spacing: 2
+
+                                                Row {
+                                                    spacing: 8
+                                                    Text {
+                                                        text: "Game Mode (Extreme Performance)"
+                                                        font.pixelSize: 13
+                                                        font.bold: true
+                                                        color: Island.Theme.foreground
+                                                    }
+                                                    Rectangle {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        height: 16
+                                                        implicitWidth: gameBadgeText.implicitWidth + 10
+                                                        radius: 8
+                                                        color: Island.ShellState.gameMode ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.25) : Qt.rgba(1, 1, 1, 0.08)
+                                                        border.color: Island.ShellState.gameMode ? Island.Theme.red : Island.Theme.glassBorderSubtle
+                                                        border.width: 1
+
+                                                        Text {
+                                                            id: gameBadgeText
+                                                            anchors.centerIn: parent
+                                                            text: Island.ShellState.gameMode ? ("ACTIVE • " + Island.ShellState.gameModeKilledCount + " PRUNED") : "STANDBY"
+                                                            font.pixelSize: 9
+                                                            font.bold: true
+                                                            color: Island.ShellState.gameMode ? Island.Theme.red : Island.Theme.muted
+                                                        }
+                                                    }
+                                                }
+
+                                                Text {
+                                                    text: "Suspends background bloat and unmaps heavy shell layers to free maximum GPU/CPU & RAM."
+                                                    font.pixelSize: 10
+                                                    color: Island.Theme.muted
+                                                    elide: Text.ElideRight
+                                                    width: parent.width
+                                                }
+                                            }
+
+                                            // Toggle Pill Switch
+                                            Rectangle {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: 44
+                                                height: 24
+                                                radius: 12
+                                                color: Island.ShellState.gameMode ? Island.Theme.red : Island.Theme.glassCardHover
+                                                border.color: Island.ShellState.gameMode ? Island.Theme.red : Island.Theme.glassBorderSubtle
+                                                border.width: 1
+
+                                                Rectangle {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    x: Island.ShellState.gameMode ? parent.width - width - 3 : 3
+                                                    width: 18
+                                                    height: 18
+                                                    radius: 9
+                                                    color: Island.ShellState.gameMode ? "#0a0a0f" : Island.Theme.muted
+                                                    Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                                                }
+
+                                                TapHandler {
+                                                    onTapped: Island.ShellState.toggleGameMode()
+                                                }
+                                            }
                                         }
 
-                                        Column {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            width: parent.width - 130
-                                            spacing: 2
+                                        // Protected Whitelist Header
+                                        Row {
+                                            spacing: 6
                                             Text {
-                                                text: Island.ShellState.gameMode ? "Performance Mode Currently Active" : "Performance Mode Standby"
-                                                font.pixelSize: 12
+                                                text: "PROTECTED WHITELIST"
+                                                font.pixelSize: 9
                                                 font.bold: true
-                                                color: Island.Theme.foreground
+                                                font.letterSpacing: 1
+                                                color: Island.Theme.primary
                                             }
                                             Text {
-                                                text: Island.ShellState.gameMode ? (Island.ShellState.gameModeKilledCount + " background processes pruned.") : "Shielding Hyprland, Audio, and Protected Whitelist."
-                                                font.pixelSize: 10
+                                                text: "• These apps are shielded and never terminated"
+                                                font.pixelSize: 9
                                                 color: Island.Theme.muted
+                                            }
+                                        }
+
+                                        // Exceptions Flow
+                                        Flow {
+                                            width: parent.width
+                                            spacing: 6
+
+                                            Repeater {
+                                                model: root.gameModeExceptions
+
+                                                delegate: Rectangle {
+                                                    required property var modelData
+                                                    width: excText.implicitWidth + 34
+                                                    height: 24
+                                                    radius: 12
+                                                    color: Island.Theme.glassCardHover
+                                                    border.color: Island.Theme.glassBorderSubtle
+                                                    border.width: 1
+
+                                                    Row {
+                                                        anchors.centerIn: parent
+                                                        spacing: 6
+
+                                                        Text {
+                                                            id: excText
+                                                            text: modelData
+                                                            font.pixelSize: 10
+                                                            color: Island.Theme.foreground
+                                                        }
+
+                                                        Text {
+                                                            text: "×"
+                                                            font.pixelSize: 13
+                                                            font.bold: true
+                                                            color: Island.Theme.red
+                                                            MouseArea {
+                                                                anchors.fill: parent
+                                                                cursorShape: Qt.PointingHandCursor
+                                                                onClicked: root.removeException(modelData)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Add Whitelist App Input Row
+                                        Row {
+                                            width: parent.width
+                                            spacing: 8
+
+                                            Rectangle {
+                                                height: 30
+                                                width: Math.min(260, parent.width - 100)
+                                                radius: 8
+                                                color: Island.Theme.glassCard
+                                                border.color: addInput.activeFocus ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                                border.width: 1
+
+                                                TextInput {
+                                                    id: addInput
+                                                    anchors.fill: parent
+                                                    anchors.leftMargin: 8
+                                                    anchors.rightMargin: 8
+                                                    verticalAlignment: TextInput.AlignVCenter
+                                                    font.pixelSize: 11
+                                                    font.family: Island.Theme.fontFamily
+                                                    color: Island.Theme.foreground
+                                                    selectByMouse: true
+                                                    clip: true
+
+                                                    Text {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        text: "Add app process (e.g. steam, heroic)..."
+                                                        font.pixelSize: 10
+                                                        font.family: Island.Theme.fontFamily
+                                                        color: Island.Theme.muted
+                                                        visible: !addInput.text && !addInput.activeFocus
+                                                    }
+
+                                                    onAccepted: {
+                                                        if (text.trim() !== "") {
+                                                            root.addException(text.trim());
+                                                            text = "";
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                height: 30
+                                                width: 84
+                                                radius: 8
+                                                color: addBtnHover.hovered ? Island.Theme.primary : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.2)
+                                                border.color: Island.Theme.primary
+                                                border.width: 1
+
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: "+ Add App"
+                                                    font.pixelSize: 10
+                                                    font.bold: true
+                                                    font.family: Island.Theme.fontFamily
+                                                    color: addBtnHover.hovered ? "#0a0a0f" : Island.Theme.foreground
+                                                }
+
+                                                HoverHandler { id: addBtnHover }
+                                                TapHandler {
+                                                    onTapped: {
+                                                        if (addInput.text.trim() !== "") {
+                                                            root.addException(addInput.text.trim());
+                                                            addInput.text = "";
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
 
-                                // Exceptions Whitelist Header
-                                Text {
-                                    text: "WHITELISTED APPLICATIONS"
-                                    font.pixelSize: 10
-                                    font.bold: true
-                                    font.letterSpacing: 1
-                                    color: Island.Theme.primary
-                                }
-
-                                Flow {
+                                // -------------------------------------------------
+                                // 2. THE FEATHER: BATTERY SAVER MODE CARD
+                                // -------------------------------------------------
+                                Rectangle {
                                     width: parent.width
-                                    spacing: 8
+                                    radius: 12
+                                    color: (Island.ShellState && Island.ShellState.featherMode) ? Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.12) : Island.Theme.glassCard
+                                    border.color: (Island.ShellState && Island.ShellState.featherMode) ? Island.Theme.green : Island.Theme.glassBorderSubtle
+                                    border.width: (Island.ShellState && Island.ShellState.featherMode) ? 1.5 : 1
+                                    clip: true
+                                    implicitHeight: featherCol.implicitHeight + 24
 
-                                    Repeater {
-                                        model: root.gameModeExceptions
+                                    Behavior on color { ColorAnimation { duration: 140 } }
+                                    Behavior on border.color { ColorAnimation { duration: 140 } }
 
-                                        delegate: Rectangle {
-                                            required property var modelData
-                                            width: excText.implicitWidth + 36
-                                            height: 28
-                                            radius: 14
-                                            color: Island.Theme.glassCardHover
-                                            border.color: Island.Theme.glassBorderSubtle
-                                            border.width: 1
+                                    Column {
+                                        id: featherCol
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.top: parent.top
+                                        anchors.margins: 12
+                                        spacing: 10
 
-                                            Row {
-                                                anchors.centerIn: parent
-                                                spacing: 6
+                                        Row {
+                                            width: parent.width
+                                            spacing: 12
 
-                                                Text {
-                                                    id: excText
-                                                    text: modelData
-                                                    font.pixelSize: 11
-                                                    color: Island.Theme.foreground
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "󰌪"
+                                                font.family: Island.Theme.iconFontFamily
+                                                font.pixelSize: 22
+                                                color: (Island.ShellState && Island.ShellState.featherMode) ? Island.Theme.green : Island.Theme.muted
+                                            }
+
+                                            Column {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: parent.width - 90
+                                                spacing: 2
+
+                                                Row {
+                                                    spacing: 8
+                                                    Text {
+                                                        text: "The Feather (Absolute Battery)"
+                                                        font.pixelSize: 13
+                                                        font.bold: true
+                                                        color: Island.Theme.foreground
+                                                    }
+                                                    Rectangle {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        height: 16
+                                                        implicitWidth: featherBadgeText.implicitWidth + 10
+                                                        radius: 8
+                                                        color: (Island.ShellState && Island.ShellState.featherMode) ? Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.25) : Qt.rgba(1, 1, 1, 0.08)
+                                                        border.color: (Island.ShellState && Island.ShellState.featherMode) ? Island.Theme.green : Island.Theme.glassBorderSubtle
+                                                        border.width: 1
+
+                                                        Text {
+                                                            id: featherBadgeText
+                                                            anchors.centerIn: parent
+                                                            text: (Island.ShellState && Island.ShellState.featherMode) ? ("ACTIVE • " + (Island.ShellState.featherLimit || 20) + "% CPU CAP") : "STANDBY"
+                                                            font.pixelSize: 9
+                                                            font.bold: true
+                                                            color: (Island.ShellState && Island.ShellState.featherMode) ? Island.Theme.green : Island.Theme.muted
+                                                        }
+                                                    }
                                                 }
 
                                                 Text {
-                                                    text: "×"
-                                                    font.pixelSize: 14
-                                                    font.bold: true
-                                                    color: Island.Theme.red
-                                                    MouseArea {
-                                                        anchors.fill: parent
-                                                        cursorShape: Qt.PointingHandCursor
-                                                        onClicked: root.removeException(modelData)
+                                                    text: (Island.ShellState && Island.ShellState.featherMode)
+                                                        ? ("Active • " + (Island.ShellState.featherLimit || 20) + "% CPU/GPU (" + ((Island.ShellState.featherLimit || 20) <= 25 ? "30Hz" : "60Hz") + ") • " + Island.ShellState.featherKilledCount + " apps pruned")
+                                                        : "Prunes user bloat & caps CPU/GPU governor with bare-minimum Hyprland overhead."
+                                                    font.pixelSize: 10
+                                                    color: Island.Theme.muted
+                                                    elide: Text.ElideRight
+                                                    width: parent.width
+                                                }
+                                            }
+
+                                            // Toggle Pill Switch
+                                            Rectangle {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: 44
+                                                height: 24
+                                                radius: 12
+                                                color: (Island.ShellState && Island.ShellState.featherMode) ? Island.Theme.green : Island.Theme.glassCardHover
+                                                border.color: (Island.ShellState && Island.ShellState.featherMode) ? Island.Theme.green : Island.Theme.glassBorderSubtle
+                                                border.width: 1
+
+                                                Rectangle {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    x: (Island.ShellState && Island.ShellState.featherMode) ? parent.width - width - 3 : 3
+                                                    width: 18
+                                                    height: 18
+                                                    radius: 9
+                                                    color: (Island.ShellState && Island.ShellState.featherMode) ? "#0a0a0f" : Island.Theme.muted
+                                                    Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                                                }
+
+                                                TapHandler {
+                                                    onTapped: {
+                                                        if (Island.ShellState) Island.ShellState.toggleFeatherMode();
                                                     }
+                                                }
+                                            }
+                                        }
+
+                                        // Presets Row
+                                        Row {
+                                            width: parent.width
+                                            height: 26
+                                            spacing: 8
+
+                                            Rectangle {
+                                                width: (parent.width - 16) / 3
+                                                height: 26
+                                                radius: 8
+                                                color: (Island.ShellState && Island.ShellState.featherLimit <= 25)
+                                                    ? Island.Theme.green
+                                                    : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.5)
+                                                border.color: (Island.ShellState && Island.ShellState.featherLimit <= 25) ? Island.Theme.green : Island.Theme.glassBorderSubtle
+                                                border.width: 1
+
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: "20% Extreme (30Hz)"
+                                                    font.pixelSize: 10
+                                                    font.bold: Island.ShellState && Island.ShellState.featherLimit <= 25
+                                                    color: (Island.ShellState && Island.ShellState.featherLimit <= 25) ? "#0a0a0f" : Island.Theme.muted
+                                                }
+
+                                                TapHandler {
+                                                    onTapped: {
+                                                        if (Island.ShellState) Island.ShellState.setFeatherLimit(20);
+                                                    }
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                width: (parent.width - 16) / 3
+                                                height: 26
+                                                radius: 8
+                                                color: (Island.ShellState && Island.ShellState.featherLimit > 25 && Island.ShellState.featherLimit <= 40)
+                                                    ? Island.Theme.green
+                                                    : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.5)
+                                                border.color: (Island.ShellState && Island.ShellState.featherLimit > 25 && Island.ShellState.featherLimit <= 40) ? Island.Theme.green : Island.Theme.glassBorderSubtle
+                                                border.width: 1
+
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: "35% Balanced (60Hz)"
+                                                    font.pixelSize: 10
+                                                    font.bold: Island.ShellState && Island.ShellState.featherLimit > 25 && Island.ShellState.featherLimit <= 40
+                                                    color: (Island.ShellState && Island.ShellState.featherLimit > 25 && Island.ShellState.featherLimit <= 40) ? "#0a0a0f" : Island.Theme.muted
+                                                }
+
+                                                TapHandler {
+                                                    onTapped: {
+                                                        if (Island.ShellState) Island.ShellState.setFeatherLimit(35);
+                                                    }
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                width: (parent.width - 16) / 3
+                                                height: 26
+                                                radius: 8
+                                                color: (Island.ShellState && Island.ShellState.featherLimit > 40)
+                                                    ? Island.Theme.green
+                                                    : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.5)
+                                                border.color: (Island.ShellState && Island.ShellState.featherLimit > 40) ? Island.Theme.green : Island.Theme.glassBorderSubtle
+                                                border.width: 1
+
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: "50% Minimal"
+                                                    font.pixelSize: 10
+                                                    font.bold: Island.ShellState && Island.ShellState.featherLimit > 40
+                                                    color: (Island.ShellState && Island.ShellState.featherLimit > 40) ? "#0a0a0f" : Island.Theme.muted
+                                                }
+
+                                                TapHandler {
+                                                    onTapped: {
+                                                        if (Island.ShellState) Island.ShellState.setFeatherLimit(50);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // -------------------------------------------------
+                                // 3. STUDY MODE: FOCUS & DISTRACTION LOCKDOWN CARD
+                                // -------------------------------------------------
+                                Rectangle {
+                                    width: parent.width
+                                    radius: 12
+                                    color: (Island.ShellState && Island.ShellState.studyActive) ? Qt.rgba(Island.Theme.orange.r, Island.Theme.orange.g, Island.Theme.orange.b, 0.12) : Island.Theme.glassCard
+                                    border.color: (Island.ShellState && Island.ShellState.studyActive) ? Island.Theme.orange : Island.Theme.glassBorderSubtle
+                                    border.width: (Island.ShellState && Island.ShellState.studyActive) ? 1.5 : 1
+                                    clip: true
+                                    implicitHeight: studyCol.implicitHeight + 24
+
+                                    Behavior on color { ColorAnimation { duration: 140 } }
+                                    Behavior on border.color { ColorAnimation { duration: 140 } }
+
+                                    Column {
+                                        id: studyCol
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.top: parent.top
+                                        anchors.margins: 12
+                                        spacing: 10
+
+                                        Row {
+                                            width: parent.width
+                                            spacing: 12
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "󰈈"
+                                                font.family: Island.Theme.iconFontFamily
+                                                font.pixelSize: 22
+                                                color: (Island.ShellState && Island.ShellState.studyActive) ? Island.Theme.orange : Island.Theme.muted
+                                            }
+
+                                            Column {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: parent.width - 130
+                                                spacing: 2
+
+                                                Row {
+                                                    spacing: 8
+                                                    Text {
+                                                        text: "Study Mode (Deep Focus Lockdown)"
+                                                        font.pixelSize: 13
+                                                        font.bold: true
+                                                        color: Island.Theme.foreground
+                                                    }
+                                                    Rectangle {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        height: 16
+                                                        implicitWidth: studyBadgeText.implicitWidth + 10
+                                                        radius: 8
+                                                        color: (Island.ShellState && Island.ShellState.studyActive)
+                                                            ? Qt.rgba(Island.Theme.orange.r, Island.Theme.orange.g, Island.Theme.orange.b, 0.25)
+                                                            : Qt.rgba(1, 1, 1, 0.08)
+                                                        border.color: (Island.ShellState && Island.ShellState.studyActive) ? Island.Theme.orange : Island.Theme.glassBorderSubtle
+                                                        border.width: 1
+
+                                                        Text {
+                                                            id: studyBadgeText
+                                                            anchors.centerIn: parent
+                                                            text: (Island.ShellState && Island.ShellState.studyActive)
+                                                                ? ("LOCKED IN • " + Math.floor(Island.ShellState.studyRemaining / 60) + "m REMAINING")
+                                                                : "STANDBY"
+                                                            font.pixelSize: 9
+                                                            font.bold: true
+                                                            color: (Island.ShellState && Island.ShellState.studyActive) ? Island.Theme.orange : Island.Theme.muted
+                                                        }
+                                                    }
+                                                }
+
+                                                Text {
+                                                    text: "Terminates distracting apps & browser tabs, blocks games/social media, shields offline PDF/study tools."
+                                                    font.pixelSize: 10
+                                                    color: Island.Theme.muted
+                                                    elide: Text.ElideRight
+                                                    width: parent.width
+                                                }
+                                            }
+
+                                            // Start Focus Session Button
+                                            Rectangle {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: 110
+                                                height: 28
+                                                radius: 8
+                                                visible: !(Island.ShellState && Island.ShellState.studyActive)
+                                                color: studyStartHover.hovered ? Island.Theme.orange : Qt.rgba(Island.Theme.orange.r, Island.Theme.orange.g, Island.Theme.orange.b, 0.2)
+                                                border.color: Island.Theme.orange
+                                                border.width: 1
+
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: "Lock In 󰌾"
+                                                    font.pixelSize: 10
+                                                    font.bold: true
+                                                    font.family: Island.Theme.fontFamily
+                                                    color: studyStartHover.hovered ? "#0a0a0f" : Island.Theme.foreground
+                                                }
+
+                                                HoverHandler { id: studyStartHover }
+                                                TapHandler {
+                                                    onTapped: {
+                                                        Quickshell.execDetached(["python3", Quickshell.shellPath("scripts/study-mode.py"), "prompt-and-start", "--duration", (Island.ShellState ? Island.ShellState.studyTargetDuration.toString() : "1800")]);
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Duration Selection Pills (when standby)
+                                        Row {
+                                            width: parent.width
+                                            height: 26
+                                            spacing: 6
+                                            visible: !(Island.ShellState && Island.ShellState.studyActive)
+
+                                            Repeater {
+                                                model: [
+                                                    { name: "15 min", seconds: 900 },
+                                                    { name: "30 min", seconds: 1800 },
+                                                    { name: "45 min", seconds: 2700 },
+                                                    { name: "60 min", seconds: 3600 },
+                                                    { name: "90 min", seconds: 5400 }
+                                                ]
+
+                                                delegate: Rectangle {
+                                                    required property var modelData
+                                                    width: (studyCol.width - 24) / 5
+                                                    height: 26
+                                                    radius: 8
+                                                    readonly property bool isSelected: (Island.ShellState ? Island.ShellState.studyTargetDuration : 1800) === modelData.seconds
+                                                    color: isSelected
+                                                        ? Island.Theme.orange
+                                                        : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.5)
+                                                    border.color: isSelected ? Island.Theme.orange : Island.Theme.glassBorderSubtle
+                                                    border.width: 1
+
+                                                    Text {
+                                                        anchors.centerIn: parent
+                                                        text: modelData.name
+                                                        font.pixelSize: 10
+                                                        font.bold: isSelected
+                                                        color: isSelected ? "#0a0a0f" : Island.Theme.muted
+                                                    }
+
+                                                    TapHandler {
+                                                        onTapped: {
+                                                            if (Island.ShellState) Island.ShellState.studyTargetDuration = modelData.seconds;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // -------------------------------------------------
+                                // 4. GOD'S EYE VIEW MODE CARD
+                                // -------------------------------------------------
+                                Rectangle {
+                                    width: parent.width
+                                    radius: 12
+                                    color: (Island.ShellState && Island.ShellState.godsEyeActive) ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.12) : Island.Theme.glassCard
+                                    border.color: (Island.ShellState && Island.ShellState.godsEyeActive) ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                    border.width: (Island.ShellState && Island.ShellState.godsEyeActive) ? 1.5 : 1
+                                    clip: true
+                                    implicitHeight: godsEyeCol.implicitHeight + 24
+
+                                    Behavior on color { ColorAnimation { duration: 140 } }
+                                    Behavior on border.color { ColorAnimation { duration: 140 } }
+
+                                    Column {
+                                        id: godsEyeCol
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.top: parent.top
+                                        anchors.margins: 12
+                                        spacing: 10
+
+                                        Row {
+                                            width: parent.width
+                                            spacing: 12
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "󰍹"
+                                                font.family: Island.Theme.iconFontFamily
+                                                font.pixelSize: 22
+                                                color: (Island.ShellState && Island.ShellState.godsEyeActive) ? Island.Theme.primary : Island.Theme.muted
+                                            }
+
+                                            Column {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: parent.width - 90
+                                                spacing: 2
+
+                                                Row {
+                                                    spacing: 8
+                                                    Text {
+                                                        text: "God's Eye View Mode"
+                                                        font.pixelSize: 13
+                                                        font.bold: true
+                                                        color: Island.Theme.foreground
+                                                    }
+                                                    Rectangle {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        height: 16
+                                                        implicitWidth: godsEyeBadgeText.implicitWidth + 10
+                                                        radius: 8
+                                                        color: (Island.ShellState && Island.ShellState.godsEyeActive) ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25) : Qt.rgba(1, 1, 1, 0.08)
+                                                        border.color: (Island.ShellState && Island.ShellState.godsEyeActive) ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                                        border.width: 1
+
+                                                        Text {
+                                                            id: godsEyeBadgeText
+                                                            anchors.centerIn: parent
+                                                            text: (Island.ShellState && Island.ShellState.godsEyeActive) ? "ACTIVE" : "STANDBY"
+                                                            font.pixelSize: 9
+                                                            font.bold: true
+                                                            color: (Island.ShellState && Island.ShellState.godsEyeActive) ? Island.Theme.primary : Island.Theme.muted
+                                                        }
+                                                    }
+                                                }
+
+                                                Text {
+                                                    text: "Panoramic system matrix, visual window topology, and real-time spatial desktop monitoring."
+                                                    font.pixelSize: 10
+                                                    color: Island.Theme.muted
+                                                    elide: Text.ElideRight
+                                                    width: parent.width
+                                                }
+                                            }
+
+                                            // Toggle Pill Switch
+                                            Rectangle {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                width: 44
+                                                height: 24
+                                                radius: 12
+                                                color: (Island.ShellState && Island.ShellState.godsEyeActive) ? Island.Theme.primary : Island.Theme.glassCardHover
+                                                border.color: (Island.ShellState && Island.ShellState.godsEyeActive) ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                                border.width: 1
+
+                                                Rectangle {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    x: (Island.ShellState && Island.ShellState.godsEyeActive) ? parent.width - width - 3 : 3
+                                                    width: 18
+                                                    height: 18
+                                                    radius: 9
+                                                    color: (Island.ShellState && Island.ShellState.godsEyeActive) ? "#0a0a0f" : Island.Theme.muted
+                                                    Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                                                }
+
+                                                TapHandler {
+                                                    onTapped: {
+                                                        if (Island.ShellState) Island.ShellState.toggleGodsEye();
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Action Button: Open in Browser
+                                        Rectangle {
+                                            width: 140
+                                            height: 26
+                                            radius: 8
+                                            visible: Island.ShellState && Island.ShellState.godsEyeActive
+                                            color: godsEyeOpenHover.hovered ? Island.Theme.primary : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.2)
+                                            border.color: Island.Theme.primary
+                                            border.width: 1
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "Open in Browser 󰖟"
+                                                font.pixelSize: 10
+                                                font.bold: true
+                                                font.family: Island.Theme.fontFamily
+                                                color: godsEyeOpenHover.hovered ? "#0a0a0f" : Island.Theme.foreground
+                                            }
+
+                                            HoverHandler { id: godsEyeOpenHover }
+                                            TapHandler {
+                                                onTapped: {
+                                                    if (Island.ShellState) Island.ShellState.openGodsEyeBrowser();
                                                 }
                                             }
                                         }

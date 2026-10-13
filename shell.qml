@@ -1490,17 +1490,15 @@ ShellRoot {
     Connections {
         target: ShellState
         function onOpenSettingsRequested(category) {
-            if (!ShellState.gameMode) {
-                if (desktopState) {
-                    desktopState.setLeftSidebarOpen(false);
-                    desktopState.setRightSidebarOpen(false);
-                    desktopState.setBottomBarOpen(false);
-                }
-                if (category && category !== "") {
-                    settingsWindow.openCategory(category);
-                } else {
-                    settingsWindow.show();
-                }
+            if (desktopState) {
+                desktopState.setLeftSidebarOpen(false);
+                desktopState.setRightSidebarOpen(false);
+                desktopState.setBottomBarOpen(false);
+            }
+            if (category && category !== "") {
+                settingsWindow.openCategory(category);
+            } else {
+                settingsWindow.show();
             }
         }
         function onGameModeToggled(active) {
