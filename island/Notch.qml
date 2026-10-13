@@ -1139,6 +1139,7 @@ PanelWindow {
                     }
 
                     if (mediaPath !== "") {
+                        shelfAutoClose.stop();
                         absorbFly.stop();
                         absorbProxy.fileName = ShelfState.baseName(mediaPath);
                         absorbProxy.x = Math.max(4, Math.min(notchBody.width - absorbProxy.width - 4, drop.x - absorbProxy.width / 2));
@@ -1451,6 +1452,13 @@ PanelWindow {
                 absorbProxy.opacity = 1;
                 IslandHub.burst();
                 absorbPop.restart();
+
+                // If media was dropped or caption panel is active, stay on caption panel!
+                // Only open shelf for standard non-media file drops.
+                if (CaptionState.pendingFile !== "" || ShellState.panel === "caption") {
+                    return ;
+                }
+
                 // Absorbed: open the shelf on the result, then auto-close
                 // once the user has seen it land.
                 ShellState.show("shelf", window.screen ? window.screen.name : "");

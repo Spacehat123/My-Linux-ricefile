@@ -45,6 +45,15 @@ Singleton {
         pendingFile = ShelfState.cleanPath(path);
     }
 
+    Connections {
+        target: ShellState
+        function onPanelChanged() {
+            if (ShellState.panel !== "caption" && !root.isProcessing) {
+                root.pendingFile = "";
+            }
+        }
+    }
+
     function cancel() {
         pendingFile = "";
         ShellState.close();
