@@ -131,6 +131,7 @@ PanelWindow {
 
     onOpenChanged: {
         if (open) {
+            if (Island.ShellState) Island.ShellState.refreshAllSubsystems();
             closeAnim.stop();
             openAnim.start();
         } else {

@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
 import "../island" as Island
@@ -15,6 +16,7 @@ PanelWindow {
     visible: open || closeAnim.running
 
     // Injected authoritative models
+    property var desktopState: null
     property var desktopModel: null
     property var surfaceModel: null
     property var interactionModel: null
@@ -25,6 +27,12 @@ PanelWindow {
 
     // Action signals
     signal toggleOverview()
+    signal closeRequested()
+
+    SystemClock {
+        id: headerClock
+        precision: SystemClock.Minutes
+    }
 
     // Dual-layer hover continuity system
     property bool hoverLatching: false
@@ -392,7 +400,7 @@ PanelWindow {
                             }
 
                             Text {
-                                text: Qt.formatDateTime(new Date(), "ddd, d MMM").toUpperCase() + (Island.WeatherState.tempC !== "" ? (" // " + Island.WeatherState.tempC) : "")
+                                text: Qt.formatDateTime(headerClock.date, "ddd, d MMM").toUpperCase() + (Island.WeatherState.tempC !== "" ? (" // " + Island.WeatherState.tempC) : "")
                                 font.family: Island.Theme.fontFamily
                                 font.pixelSize: 9
                                 font.bold: true
@@ -427,7 +435,7 @@ PanelWindow {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     if (root.desktopState) root.desktopState.setRightSidebarOpen(false);
-                                    else root.open = false;
+                                    root.closeRequested();
                                 }
                             }
                         }

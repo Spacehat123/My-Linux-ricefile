@@ -18,6 +18,7 @@ ShellRoot {
     // Idle & Power Intelligence Layer (compositor-wide lifetime)
     IdleManager {
         id: idleManager
+        idleSeconds: ShellState.idleTimeoutSeconds
     }
 
     // Compositor intelligence layer singletons (compositor-wide lifetime)
@@ -243,7 +244,7 @@ ShellRoot {
         setWallpaperProc.exec([shellRoot.islandThemeHelper, "wallpaper", cleanPath]);
         let isVid = !!cleanPath.match(/\.(mp4|webm|mkv|mov)$/i);
         shellRoot.wallpaperMediaType = isVid ? "video" : "image";
-        shellRoot.wallpaperMediaSource = isVid ? ("file://" + cleanPath) : "";
+        shellRoot.wallpaperMediaSource = (isVid && cleanPath) ? ("file://" + cleanPath) : "";
         console.log("[pranc-shell] Wallpaper set via island system: " + cleanPath + " (" + shellRoot.wallpaperMediaType + ")");
         return JSON.stringify({ success: true, mediaType: shellRoot.wallpaperMediaType, mediaSource: shellRoot.wallpaperMediaSource });
     }
@@ -267,7 +268,18 @@ ShellRoot {
 
     Process {
         id: restoreWallpaperProc
-        command: [shellRoot.islandThemeHelper, "restore-wallpaper"]
+        command: ["sh", "-c", "'" + shellRoot.islandThemeHelper + "' restore-wallpaper >/dev/null 2>&1 || true; cat \"${XDG_STATE_HOME:-$HOME/.local/state}/vyeos/current-wallpaper\" 2>/dev/null || true"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let saved = (text || "").trim().split("\n").pop().trim();
+                if (saved) {
+                    let clean = saved.replace(/^file:\/\//, "");
+                    let isVid = !!clean.match(/\.(mp4|webm|mkv|mov)$/i);
+                    shellRoot.wallpaperMediaType = isVid ? "video" : "image";
+                    shellRoot.wallpaperMediaSource = isVid ? ("file://" + clean) : "";
+                }
+            }
+        }
     }
 
     // dotarch wallpaper bootstrap: ensure the renderer daemon, then restore
@@ -1144,7 +1156,9 @@ ShellRoot {
         }
 
         function setIdleTimeout(seconds: int): string {
-            idleManager.setIdleSeconds(seconds);
+            const val = Math.max(1, seconds);
+            ShellState.idleTimeoutSeconds = val;
+            idleManager.setIdleSeconds(val);
             return JSON.stringify({ success: true, idleSeconds: idleManager.idleSeconds });
         }
 
@@ -1501,6 +1515,15 @@ ShellRoot {
                 settingsWindow.show();
             }
         }
+        function onOpenOnboardingRequested() {
+            settingsWindow.hide();
+            onboardingManager.replay();
+        }
+        function onToggleTodayRequested() {
+            if (desktopState) {
+                desktopState.setRightSidebarOpen(!desktopState.rightSidebarOpen);
+            }
+        }
         function onGameModeToggled(active) {
             if (active) {
                 settingsWindow.hide();
@@ -1514,6 +1537,16 @@ ShellRoot {
                 shellRoot.overviewOpen = false;
                 shellRoot.birdsEyeOpen = false;
             }
+        }
+    }
+
+    Connections {
+        target: AppearanceState
+        function onWallpaperApplied(path, mediaType) {
+            let clean = (path || "").trim().replace(/^file:\/\//, "");
+            let resolvedType = mediaType || (clean.match(/\.(mp4|webm|mkv|mov)$/i) ? "video" : "image");
+            shellRoot.wallpaperMediaType = resolvedType;
+            shellRoot.wallpaperMediaSource = (resolvedType === "video" && clean) ? ("file://" + clean) : "";
         }
     }
 
@@ -2172,12 +2205,17 @@ ShellRoot {
                 id: rightSidebar
                 screen: monitorScope.modelData
                 desktopModel: shellRoot.desktopModel
+                desktopState: shellRoot.desktopState
                 surfaceModel: shellRoot.surfaceModel
                 interactionModel: shellRoot.interactionModel
                 compositorActionLayer: shellRoot.compositorActionLayer
                 open: (monitorScope.rightSidebarOpen || (shellRoot.desktopState && shellRoot.desktopState.rightSidebarOpen)) && !ShellState.gameMode
 
                 onToggleOverview: shellRoot.overviewOpen = !shellRoot.overviewOpen
+                onCloseRequested: {
+                    monitorScope.rightSidebarOpen = false
+                    if (shellRoot.desktopState) shellRoot.desktopState.setRightSidebarOpen(false)
+                }
 
                 onHoveredChanged: {
                     if (!hovered && !rightTrigger.active) {

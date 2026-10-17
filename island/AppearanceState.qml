@@ -7,11 +7,15 @@ Singleton {
     id: root
 
     readonly property string helper: Quickshell.shellPath("island/scripts/theme-system.sh")
+    readonly property string currentSlug: Theme.slug
+    readonly property string currentTheme: Theme.slug
     property var themes: []
     property var wallpapers: []
     property string error: ""
     property bool busy: applyProcess.running || wallpaperProcess.running
     property bool wallpaperRefreshPending: false
+
+    signal wallpaperApplied(string path, string mediaType)
 
     function refreshThemes() {
         if (!themeListProcess.running)
@@ -27,13 +31,25 @@ Singleton {
     }
 
     function applyTheme(slug) {
-        if (!busy)
+        if (!applyProcess.running && slug)
             applyProcess.exec([helper, "apply", slug]);
     }
 
+    function setTheme(slug) {
+        applyTheme(slug);
+    }
+
     function setWallpaper(path) {
-        if (!busy)
-            wallpaperProcess.exec([helper, "wallpaper", path]);
+        if (!path)
+            return;
+        const cleanPath = String(path).trim().replace(/^file:\/\//, "");
+        if (!cleanPath)
+            return;
+        const isVid = /\.(mp4|webm|mkv|mov)$/i.test(cleanPath);
+        root.wallpaperApplied(isVid ? cleanPath : "", isVid ? "video" : "image");
+        if (wallpaperProcess.running)
+            wallpaperProcess.running = false;
+        wallpaperProcess.exec([helper, "wallpaper", cleanPath]);
     }
 
     function openWallpaperFolder() {

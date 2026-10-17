@@ -63,7 +63,7 @@ PanelWindow {
     property int keyRepeatDelay: 300
     property int keyRepeatRate: 40
     property bool keyNumlockDefault: false
-    property int idleTimeoutMinutes: 2
+    property int idleTimeoutMinutes: Island.ShellState ? Math.max(1, Math.round(Island.ShellState.idleTimeoutSeconds / 60)) : 2
     property var gameModeExceptions: ["steam", "discord", "spotify", "obs", "heroic"]
     property string activeCategory: "modes"
     property bool batteryLimitEnabled: false
@@ -183,6 +183,9 @@ PanelWindow {
     function setIdleMinutes(mins) {
         idleTimeoutMinutes = mins;
         let secs = mins * 60;
+        if (Island.ShellState) {
+            Island.ShellState.idleTimeoutSeconds = secs;
+        }
         actuatorProc.exec(["quickshell", "ipc", "-c", "cool-shell", "call", "idle", "setIdleTimeout", secs.toString()]);
     }
 
@@ -237,7 +240,7 @@ PanelWindow {
     Process {
         id: getExceptionsProc
         command: ["python3", Quickshell.shellPath("island/scripts/game-mode.py"), "list-exceptions"]
-        running: true
+        running: false
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
@@ -261,7 +264,7 @@ PanelWindow {
     Process {
         id: getBatteryLimitProc
         command: [Quickshell.shellPath("scripts/battery-limit.sh"), "status"]
-        running: true
+        running: false
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
@@ -1812,14 +1815,17 @@ PanelWindow {
                                 // Shortcuts Cheat Sheet Card
                                 Rectangle {
                                     width: parent.width
-                                    height: 190
+                                    implicitHeight: cheatCol.implicitHeight + 28
                                     radius: 12
                                     color: Island.Theme.glassCard
                                     border.color: Island.Theme.glassBorderSubtle
                                     border.width: 1
 
                                     Column {
-                                        anchors.fill: parent
+                                        id: cheatCol
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.top: parent.top
                                         anchors.margins: 14
                                         spacing: 8
 
@@ -1833,28 +1839,38 @@ PanelWindow {
 
                                         Row {
                                             width: parent.width
-                                            Text { width: 140; text: "Super (Tap)"; font.pixelSize: 11; font.bold: true; color: Island.Theme.foreground }
+                                            Text { width: 150; text: "Super (Tap)"; font.pixelSize: 11; font.bold: true; color: Island.Theme.foreground }
                                             Text { text: "Open Dynamic Island Application Launcher"; font.pixelSize: 11; color: Island.Theme.muted }
                                         }
                                         Row {
                                             width: parent.width
-                                            Text { width: 140; text: "Super + Tab"; font.pixelSize: 11; font.bold: true; color: Island.Theme.foreground }
-                                            Text { text: "Toggle Spatial Mission Control 3D Overview"; font.pixelSize: 11; color: Island.Theme.muted }
+                                            Text { width: 150; text: "Super + Tab / Super + R"; font.pixelSize: 11; font.bold: true; color: Island.Theme.foreground }
+                                            Text { text: "Toggle Spatial 3D Map (Tab) or Bird's-Eye Canvas (R)"; font.pixelSize: 11; color: Island.Theme.muted }
                                         }
                                         Row {
                                             width: parent.width
-                                            Text { width: 140; text: "Super + A"; font.pixelSize: 11; font.bold: true; color: Island.Theme.foreground }
-                                            Text { text: "Open Desktop Live Wallpaper Selector"; font.pixelSize: 11; color: Island.Theme.muted }
+                                            Text { width: 150; text: "Super + Shift + S"; font.pixelSize: 11; font.bold: true; color: Island.Theme.foreground }
+                                            Text { text: "Universal Screen Lens (OCR, QR, Color Picker & TTS)"; font.pixelSize: 11; color: Island.Theme.muted }
                                         }
                                         Row {
                                             width: parent.width
-                                            Text { width: 140; text: "Escape"; font.pixelSize: 11; font.bold: true; color: Island.Theme.foreground }
-                                            Text { text: "Dismiss Active Modal, Settings Window, or Island"; font.pixelSize: 11; color: Island.Theme.muted }
+                                            Text { width: 150; text: "Super + G / Super + A / C"; font.pixelSize: 11; font.bold: true; color: Island.Theme.foreground }
+                                            Text { text: "Open AI Studio (G), Wallpapers (A), or Theme Picker (C)"; font.pixelSize: 11; color: Island.Theme.muted }
                                         }
                                         Row {
                                             width: parent.width
-                                            Text { width: 140; text: "Bottom Edge Hover"; font.pixelSize: 11; font.bold: true; color: Island.Theme.foreground }
-                                            Text { text: "Slide out Control Center (Left) & Workspace Dock (Center)"; font.pixelSize: 11; color: Island.Theme.muted }
+                                            Text { width: 150; text: "Super + S / Super + Alt + S"; font.pixelSize: 11; font.bold: true; color: Island.Theme.foreground }
+                                            Text { text: "Toggle Stash Pocket (S) or Stash Active Window (Alt+S)"; font.pixelSize: 11; color: Island.Theme.muted }
+                                        }
+                                        Row {
+                                            width: parent.width
+                                            Text { width: 150; text: "Super + P / Super + Alt + P"; font.pixelSize: 11; font.bold: true; color: Island.Theme.foreground }
+                                            Text { text: "Cycle Display Mode (P) or Toggle CoolPhone Mirror (Alt+P)"; font.pixelSize: 11; color: Island.Theme.muted }
+                                        }
+                                        Row {
+                                            width: parent.width
+                                            Text { width: 150; text: "Bottom & Right Edges"; font.pixelSize: 11; font.bold: true; color: Island.Theme.foreground }
+                                            Text { text: "Control Center (BL), Dock (BC), Today (BR), Media & Stash (Right)"; font.pixelSize: 11; color: Island.Theme.muted }
                                         }
                                     }
                                 }
@@ -3163,7 +3179,7 @@ PanelWindow {
                                             }
                                         }
 
-                                        // Presets Row (20% vs 35%)
+                                        // Presets Row (20% vs 35% vs 50%)
                                         Row {
                                             width: parent.width
                                             height: 26
@@ -3171,7 +3187,7 @@ PanelWindow {
                                             visible: Island.ShellState && Island.ShellState.featherMode
 
                                             Rectangle {
-                                                width: (parent.width - 8) / 2
+                                                width: (parent.width - 16) / 3
                                                 height: 26
                                                 radius: 8
                                                 color: (Island.ShellState && Island.ShellState.featherLimit <= 25)
@@ -3182,22 +3198,13 @@ PanelWindow {
                                                     : Island.Theme.glassBorderSubtle
                                                 border.width: 1
 
-                                                Row {
+                                                Text {
                                                     anchors.centerIn: parent
-                                                    spacing: 4
-                                                    Text {
-                                                        text: "󰌪"
-                                                        font.family: Island.Theme.iconFontFamily
-                                                        font.pixelSize: 11
-                                                        color: (Island.ShellState && Island.ShellState.featherLimit <= 25) ? "#0a0a0f" : Island.Theme.muted
-                                                    }
-                                                    Text {
-                                                        text: "20% Extreme Cap (30Hz)"
-                                                        font.pixelSize: 10
-                                                        font.bold: Island.ShellState && Island.ShellState.featherLimit <= 25
-                                                        font.family: Island.Theme.fontFamily
-                                                        color: (Island.ShellState && Island.ShellState.featherLimit <= 25) ? "#0a0a0f" : Island.Theme.muted
-                                                    }
+                                                    text: "20% Extreme (30Hz)"
+                                                    font.pixelSize: 10
+                                                    font.bold: Island.ShellState && Island.ShellState.featherLimit <= 25
+                                                    font.family: Island.Theme.fontFamily
+                                                    color: (Island.ShellState && Island.ShellState.featherLimit <= 25) ? "#0a0a0f" : Island.Theme.muted
                                                 }
 
                                                 TapHandler {
@@ -3208,38 +3215,57 @@ PanelWindow {
                                             }
 
                                             Rectangle {
-                                                width: (parent.width - 8) / 2
+                                                width: (parent.width - 16) / 3
                                                 height: 26
                                                 radius: 8
-                                                color: (Island.ShellState && Island.ShellState.featherLimit > 25)
+                                                color: (Island.ShellState && Island.ShellState.featherLimit > 25 && Island.ShellState.featherLimit <= 40)
                                                     ? Island.Theme.green
                                                     : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.5)
-                                                border.color: (Island.ShellState && Island.ShellState.featherLimit > 25)
+                                                border.color: (Island.ShellState && Island.ShellState.featherLimit > 25 && Island.ShellState.featherLimit <= 40)
                                                     ? Island.Theme.green
                                                     : Island.Theme.glassBorderSubtle
                                                 border.width: 1
 
-                                                Row {
+                                                Text {
                                                     anchors.centerIn: parent
-                                                    spacing: 4
-                                                    Text {
-                                                        text: "󰌪"
-                                                        font.family: Island.Theme.iconFontFamily
-                                                        font.pixelSize: 11
-                                                        color: (Island.ShellState && Island.ShellState.featherLimit > 25) ? "#0a0a0f" : Island.Theme.muted
-                                                    }
-                                                    Text {
-                                                        text: "35% Balanced Cap (60Hz)"
-                                                        font.pixelSize: 10
-                                                        font.bold: Island.ShellState && Island.ShellState.featherLimit > 25
-                                                        font.family: Island.Theme.fontFamily
-                                                        color: (Island.ShellState && Island.ShellState.featherLimit > 25) ? "#0a0a0f" : Island.Theme.muted
-                                                    }
+                                                    text: "35% Balanced (60Hz)"
+                                                    font.pixelSize: 10
+                                                    font.bold: Island.ShellState && Island.ShellState.featherLimit > 25 && Island.ShellState.featherLimit <= 40
+                                                    font.family: Island.Theme.fontFamily
+                                                    color: (Island.ShellState && Island.ShellState.featherLimit > 25 && Island.ShellState.featherLimit <= 40) ? "#0a0a0f" : Island.Theme.muted
                                                 }
 
                                                 TapHandler {
                                                     onTapped: {
                                                         if (Island.ShellState) Island.ShellState.setFeatherLimit(35);
+                                                    }
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                width: (parent.width - 16) / 3
+                                                height: 26
+                                                radius: 8
+                                                color: (Island.ShellState && Island.ShellState.featherLimit > 40)
+                                                    ? Island.Theme.green
+                                                    : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.5)
+                                                border.color: (Island.ShellState && Island.ShellState.featherLimit > 40)
+                                                    ? Island.Theme.green
+                                                    : Island.Theme.glassBorderSubtle
+                                                border.width: 1
+
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: "50% Minimal"
+                                                    font.pixelSize: 10
+                                                    font.bold: Island.ShellState && Island.ShellState.featherLimit > 40
+                                                    font.family: Island.Theme.fontFamily
+                                                    color: (Island.ShellState && Island.ShellState.featherLimit > 40) ? "#0a0a0f" : Island.Theme.muted
+                                                }
+
+                                                TapHandler {
+                                                    onTapped: {
+                                                        if (Island.ShellState) Island.ShellState.setFeatherLimit(50);
                                                     }
                                                 }
                                             }
@@ -3503,6 +3529,9 @@ PanelWindow {
                                                 onClicked: {
                                                     root.hide();
                                                     Quickshell.execDetached(["rm", "-f", Quickshell.env("HOME") + "/.local/state/cool-shell/onboarding.json"]);
+                                                    if (Island.ShellState) {
+                                                        Island.ShellState.openOnboarding();
+                                                    }
                                                     Island.IslandHub.showTransient("Restarting Onboarding Guide...", 2000);
                                                 }
                                             }

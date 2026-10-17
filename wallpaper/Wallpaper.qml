@@ -15,25 +15,32 @@ PanelWindow {
     property string mediaSource: ""
     property bool live: true
 
-    // Lifecycle visibility: window is mapped to layer-shell only when active and in-view
+    // Lifecycle visibility: window is mapped to layer-shell ONLY when video is active and in-view (live).
+    // When an opaque window/tab is open (live === false) or when a static image is used (mediaType === "image"),
+    // this window unmaps completely (visible = false) so awww-daemon handles the background at 0% GPU/CPU cost.
     visible: enabled && activeRendering && mediaType === "video" && mediaSource !== "" && live
 
     onLiveChanged: _syncPlayback()
     onVisibleChanged: _syncPlayback()
+    onMediaSourceChanged: {
+        if (root.visible && root.live && root.mediaType === "video" && root.mediaSource !== "") {
+            mediaPlayer.stop();
+            mediaPlayer.play();
+        } else {
+            _syncPlayback();
+        }
+    }
 
     function _syncPlayback() {
-        if (root.mediaType !== "video" || root.mediaSource === "") {
-            return;
-        }
-
-        if (root.visible && root.live) {
-            if (mediaPlayer.playbackState === MediaPlayer.PausedState || mediaPlayer.playbackState === MediaPlayer.StoppedState) {
-                mediaPlayer.play();
-            }
-        } else {
+        if (root.mediaType !== "video" || root.mediaSource === "" || !root.visible || !root.live) {
             if (mediaPlayer.playbackState === MediaPlayer.PlayingState) {
                 mediaPlayer.pause();
             }
+            return;
+        }
+
+        if (mediaPlayer.playbackState === MediaPlayer.PausedState || mediaPlayer.playbackState === MediaPlayer.StoppedState) {
+            mediaPlayer.play();
         }
     }
 
@@ -63,21 +70,21 @@ PanelWindow {
     // =========================================================================
     MediaPlayer {
         id: mediaPlayer
-        source: (root.visible && root.mediaType === "video") ? root.mediaSource : ""
+        source: (root.visible && root.live && root.mediaType === "video") ? root.mediaSource : ""
         loops: MediaPlayer.Infinite
         videoOutput: videoOutputLayer
         audioOutput: null
 
         onMediaStatusChanged: {
-            if (mediaStatus === MediaPlayer.LoadedMedia && root.visible) {
+            if (mediaStatus === MediaPlayer.LoadedMedia && root.visible && root.live) {
                 root._syncPlayback();
             }
         }
 
         onPlaybackStateChanged: {
-            if (playbackState === MediaPlayer.StoppedState && root.visible && source !== "") {
+            if (playbackState === MediaPlayer.StoppedState && root.visible && root.live && source !== "") {
                 root._syncPlayback();
-            } else if (playbackState === MediaPlayer.PlayingState && !root.live) {
+            } else if (playbackState === MediaPlayer.PlayingState && (!root.live || !root.visible)) {
                 pause();
             }
         }

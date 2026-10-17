@@ -8,9 +8,21 @@ command -v jq >/dev/null 2>&1 || [[ -x $HOME/.local/bin/jq ]] && export PATH="$H
 [[ -d $HOME/.spicetify ]] && export PATH="$HOME/.spicetify:$PATH"
 command -v jq >/dev/null 2>&1 || { printf 'theme-system: jq is required but not installed\n' >&2; exit 1; }
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+bundled_theme_dir="$(cd "$script_dir/../.." && pwd)/theme/presets"
 theme_dir=${XDG_CONFIG_HOME:-"$HOME/.config"}/vyeos/themes
 cache_dir=${XDG_CACHE_HOME:-"$HOME/.cache"}/vyeos/theme
 state_dir=${XDG_STATE_HOME:-"$HOME/.local/state"}/vyeos
+
+# Ensure theme_dir exists and is seeded with bundled theme presets
+mkdir -p "$theme_dir"
+if [[ -d "$bundled_theme_dir" ]]; then
+  for preset in "$bundled_theme_dir"/*.json; do
+    [[ -f "$preset" ]] || continue
+    target="$theme_dir/$(basename "$preset")"
+    [[ -f "$target" ]] || cp -f "$preset" "$target" 2>/dev/null || true
+  done
+fi
 
 # This setup deliberately uses ~/Pictures/Wallpapers. xdg-user-dir may resolve
 # PICTURES to $HOME when XDG user directories have not been configured.
@@ -23,6 +35,18 @@ sddm_cache_dir=${VYEOS_SDDM_CACHE_DIR:-/var/cache/vyeos-sddm}
 die() {
   printf 'theme-system: %s\n' "$*" >&2
   exit 1
+}
+
+qs_ipc() {
+  qs -c cool-shell ipc call "$@" >/dev/null 2>&1 \
+    || qs ipc call "$@" >/dev/null 2>&1 \
+    || quickshell ipc -c cool-shell call "$@" >/dev/null 2>&1 \
+    || qs -c My-Linux-ricefile-main ipc call "$@" >/dev/null 2>&1 \
+    || {
+      local pid
+      pid=$(pgrep -n -f 'quickshell|qs' 2>/dev/null || true)
+      [[ -n "$pid" ]] && qs --pid "$pid" ipc call "$@" >/dev/null 2>&1
+    } || true
 }
 
 theme_file() {
@@ -487,10 +511,12 @@ HIGHLIGHTS
   trap - RETURN
   rmdir -- "$tmp"
 
-  mkdir -p "$state_dir" "$HOME/.config/gtk-3.0" "$HOME/.config/gtk-4.0"
+  local gtk3_dir="${XDG_CONFIG_HOME:-$HOME/.config}/gtk-3.0"
+  local gtk4_dir="${XDG_CONFIG_HOME:-$HOME/.config}/gtk-4.0"
+  mkdir -p "$state_dir" "$gtk3_dir" "$gtk4_dir" 2>/dev/null || true
   printf '%s\n' "$slug" > "$state_dir/current-theme"
-  ln -sfn -- "$cache_dir/gtk.css" "$HOME/.config/gtk-3.0/vyeos-theme.css"
-  ln -sfn -- "$cache_dir/gtk.css" "$HOME/.config/gtk-4.0/vyeos-theme.css"
+  ln -sfn -- "$cache_dir/gtk.css" "$gtk3_dir/vyeos-theme.css" 2>/dev/null || true
+  ln -sfn -- "$cache_dir/gtk.css" "$gtk4_dir/vyeos-theme.css" 2>/dev/null || true
   gsettings set org.gnome.desktop.interface color-scheme "prefer-$appearance" >/dev/null 2>&1 || true
 }
 
@@ -511,11 +537,17 @@ set_wallpaper() {
   fi
 
   if is_video_file "$resolved"; then
-    qs -c cool-shell ipc call wallpaper setMedia "$resolved" "video" >/dev/null 2>&1 || qs ipc call wallpaper setMedia "$resolved" "video" >/dev/null 2>&1 || true
-    awww clear "000000" >/dev/null 2>&1 || true
+    qs_ipc wallpaper setMedia "$resolved" "video"
+    local thumb
+    thumb=$(get_video_thumbnail "$resolved")
+    if [[ -n "$thumb" && -f "$thumb" && "$thumb" != "$resolved" ]]; then
+      display_wallpaper "$thumb" || true
+    else
+      awww clear "000000" >/dev/null 2>&1 || true
+    fi
   else
-    qs -c cool-shell ipc call wallpaper setMedia "" "image" >/dev/null 2>&1 || qs ipc call wallpaper setMedia "" "image" >/dev/null 2>&1 || true
-    display_wallpaper "$resolved"
+    qs_ipc wallpaper setMedia "" "image"
+    display_wallpaper "$resolved" || true
   fi
 
   mkdir -p "$state_dir"
@@ -538,7 +570,7 @@ display_wallpaper() {
   awww img "$1" "${arguments[@]}" \
     --transition-type center \
     --transition-duration 0.45 \
-    --transition-fps 60
+    --transition-fps 60 >/dev/null 2>&1 || true
 }
 
 restore_wallpaper() {
@@ -557,11 +589,17 @@ restore_wallpaper() {
     real_saved=$(realpath -- "$saved")
     if [[ $real_saved == "$(realpath -m -- "$directory")/"* || $real_saved == "$(realpath -m -- "$live_wallpaper_dir")/"* ]]; then
       if is_video_file "$real_saved"; then
-        qs -c cool-shell ipc call wallpaper setMedia "$real_saved" "video" >/dev/null 2>&1 || qs ipc call wallpaper setMedia "$real_saved" "video" >/dev/null 2>&1 || true
-        awww clear "000000" >/dev/null 2>&1 || true
+        qs_ipc wallpaper setMedia "$real_saved" "video"
+        local thumb
+        thumb=$(get_video_thumbnail "$real_saved")
+        if [[ -n "$thumb" && -f "$thumb" && "$thumb" != "$real_saved" ]]; then
+          display_wallpaper "$thumb" || true
+        else
+          awww clear "000000" >/dev/null 2>&1 || true
+        fi
       else
-        qs -c cool-shell ipc call wallpaper setMedia "" "image" >/dev/null 2>&1 || qs ipc call wallpaper setMedia "" "image" >/dev/null 2>&1 || true
-        display_wallpaper "$real_saved"
+        qs_ipc wallpaper setMedia "" "image"
+        display_wallpaper "$real_saved" || true
       fi
       return
     fi
@@ -587,7 +625,7 @@ apply_theme() {
   apply_folder_icons "$file"
   apply_spicetify_theme "$file" &
   hyprctl reload >/dev/null 2>&1 || true
-  qs ipc call theme reload >/dev/null 2>&1 || true
+  qs_ipc theme reload
   restore_wallpaper || true
   schedule_sddm_sync
   if $nautilus_was_running; then

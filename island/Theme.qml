@@ -31,19 +31,24 @@ Singleton {
     readonly property color muted: palette.muted
     readonly property color mutedDark: palette.muted_dark
     readonly property color red: palette.red
+    readonly property color error: palette.red
     readonly property color yellow: palette.yellow
     readonly property color green: palette.green
     readonly property color primary: palette.primary
     readonly property color primaryContainer: palette.primary_container
+    readonly property color secondaryContainer: palette.secondary_container
     readonly property color blue: palette.blue
     readonly property color aqua: palette.aqua
+    readonly property color cyan: palette.aqua
     readonly property color orange: palette.orange
     readonly property color purple: palette.purple
     readonly property color shellBackground: "#000000"
     readonly property color shellForeground: "#ffffff"
 
-    // Master Surface Materials (Solid Opaque Sidebars & Bars)
+    // Master Surface Materials (Solid Opaque Sidebars & Bars + Obsidian Elevations)
     readonly property color surfaceOpaque: Qt.rgba(bg0.r, bg0.g, bg0.b, 1.0)
+    readonly property color surfaceDeep: Qt.rgba(bgDim.r * 0.45, bgDim.g * 0.45, bgDim.b * 0.45, 1.0)
+    readonly property color surfaceElevated: Qt.rgba(bg1.r, bg1.g, bg1.b, 0.72)
     readonly property color glassBackground: surfaceOpaque
     readonly property color glassBackgroundSubtle: Qt.rgba(bgDim.r, bgDim.g, bgDim.b, 0.80)
     readonly property color glassCard: Qt.rgba(1.0, 1.0, 1.0, 0.04)
@@ -51,6 +56,8 @@ Singleton {
     readonly property color glassBorder: Qt.rgba(1.0, 1.0, 1.0, 0.12)
     readonly property color glassBorderSubtle: Qt.rgba(1.0, 1.0, 1.0, 0.07)
     readonly property color glassBorderActive: Qt.rgba(primary.r, primary.g, primary.b, 0.75)
+    readonly property color glassSpecularTop: Qt.rgba(1.0, 1.0, 1.0, 0.24)
+    readonly property color glassSpecularSide: Qt.rgba(1.0, 1.0, 1.0, 0.10)
     readonly property int glassBorderWidth: 1
 
     readonly property string fontFamily: "Geist"
