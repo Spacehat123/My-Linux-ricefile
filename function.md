@@ -161,7 +161,7 @@ Cyber-minimalist system monitoring deck accessible from the right screen edge.
 - **Viewer Integration**: Automatically launches the image in `swappy` for instant viewing and annotation.
 
 ### D. God's Eye View 3D Globe (`scripts/gods-eye.sh`)
-- **Location**: `/home/pranc/Desktop/gods-eye-view`
+- **Location**: `$HOME/Desktop/gods-eye-view`
 - **Port**: `http://localhost:4173`
 - **Features**:
   - Keyless Esri World Imagery 3D globe with global elevation.

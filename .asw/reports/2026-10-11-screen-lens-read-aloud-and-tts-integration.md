@@ -28,7 +28,7 @@ We integrated on-demand text-to-speech reading with the Screen Lens feature (<kb
    - If not clicked within 8.5 seconds, the action prompt automatically clears without any background overhead.
 
 4. **Dependency Ledger (`requirements.txt`)**:
-   - Root-level [`requirements.txt`](file:///home/pranc/.config/quickshell/cool-shell/requirements.txt) created listing every system and Python dependency (1 per line).
+   - Root-level [`requirements.txt`](file://$HOME/.config/quickshell/cool-shell/requirements.txt) created listing every system and Python dependency (1 per line).
 
 ---
 
@@ -36,13 +36,13 @@ We integrated on-demand text-to-speech reading with the Screen Lens feature (<kb
 
 | File | Role |
 | :--- | :--- |
-| [`scripts/screen-lens.sh`](file:///home/pranc/.config/quickshell/cool-shell/scripts/screen-lens.sh) | OCR pipeline emitting `showLensAction` to Dynamic Island. |
-| [`scripts/voice-engine.py`](file:///home/pranc/.config/quickshell/cool-shell/scripts/voice-engine.py) | Dual voice synthesizer (`read`, `alert`, `stop`). |
-| [`scripts/voice-engine.sh`](file:///home/pranc/.config/quickshell/cool-shell/scripts/voice-engine.sh) | Environment & PATH wrapper for zero-dependency execution. |
-| [`island/IslandHub.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/IslandHub.qml) | State arbitration, timeout handling, and process dispatch. |
-| [`island/Notch.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml) | Dynamic pill width spring animation and click event routing. |
-| [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml) | IPC endpoints (`showLensAction`, `setVoicePlaying`, `triggerReadAloud`, `stopVoice`). |
-| [`requirements.txt`](file:///home/pranc/.config/quickshell/cool-shell/requirements.txt) | Complete 1-per-line list of all dependencies. |
+| [`scripts/screen-lens.sh`](file://$HOME/.config/quickshell/cool-shell/scripts/screen-lens.sh) | OCR pipeline emitting `showLensAction` to Dynamic Island. |
+| [`scripts/voice-engine.py`](file://$HOME/.config/quickshell/cool-shell/scripts/voice-engine.py) | Dual voice synthesizer (`read`, `alert`, `stop`). |
+| [`scripts/voice-engine.sh`](file://$HOME/.config/quickshell/cool-shell/scripts/voice-engine.sh) | Environment & PATH wrapper for zero-dependency execution. |
+| [`island/IslandHub.qml`](file://$HOME/.config/quickshell/cool-shell/island/IslandHub.qml) | State arbitration, timeout handling, and process dispatch. |
+| [`island/Notch.qml`](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml) | Dynamic pill width spring animation and click event routing. |
+| [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml) | IPC endpoints (`showLensAction`, `setVoicePlaying`, `triggerReadAloud`, `stopVoice`). |
+| [`requirements.txt`](file://$HOME/.config/quickshell/cool-shell/requirements.txt) | Complete 1-per-line list of all dependencies. |
 
 ---
 

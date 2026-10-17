@@ -10,7 +10,7 @@ These operational laws govern the Chief of Staff and every agent operating withi
 ---
 
 ## 1. Always Use the Most Relevant Agent for the Job
-- **Specialized Allocation**: Every subtask must be routed to the agent specifically built for that domain from `/home/pranc/.gemini/config/agents/`. Never use a generic agent when a specialist exists.
+- **Specialized Allocation**: Every subtask must be routed to the agent specifically built for that domain from `$HOME/.gemini/config/agents/`. Never use a generic agent when a specialist exists.
   - **Exploration & Repo Mapping**: `asw-explorer`, `specialized-codebase-archaeologist`
   - **Planning & Architecture**: `asw-planner`, `specialized-workflow-architect`
   - **Execution & Implementation**: Domain engineers (backend, frontend, database, API)

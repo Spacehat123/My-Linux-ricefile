@@ -3,8 +3,8 @@
 **Document Date**: 2026-10-10  
 **Target Platform**: Hyprland 0.56.2 (Arch Linux) & Quickshell 0.3.1 (Qt Quick 6)  
 **Configuration Targets**:  
-- Compositor: `/home/pranc/.config/hypr/hyprland.lua`  
-- Desktop Shell: `/home/pranc/.config/quickshell/cool-shell/`  
+- Compositor: `$HOME/.config/hypr/hyprland.lua`  
+- Desktop Shell: `$HOME/.config/quickshell/cool-shell/`  
 **Execution Phase**: Planning Only (Zero Code Modifications)
 
 ---
@@ -12,7 +12,7 @@
 ## 1. Current Architecture
 
 ### 1.1 Compositor Foundation: Hyprland 0.56.2
-* **Configuration Format**: Lua (`/home/pranc/.config/hypr/hyprland.lua`) using native `hl.*` binding tables.
+* **Configuration Format**: Lua (`$HOME/.config/hypr/hyprland.lua`) using native `hl.*` binding tables.
 * **Layout Engine**: `layout = "scrolling"` (`hyprland.lua#L100`).
   * Custom multitasking layout emulating a continuous horizontal canvas ("infinite tape").
   * Core parameters: `column_width = 0.5` (exactly two columns fit simultaneously within the 100% viewport width), `direction = "right"`, `follow_focus = true`, `fullscreen_on_one_column = true` (`#L192-L206`).
@@ -159,7 +159,7 @@ flowchart TD
 
 The motion system is designed as surgical adjustments to existing timing parameters and curve definitions, requiring **no new daemons, no architectural rewrites, and no parallel state models**.
 
-### 5.1 Compositor Configuration: `/home/pranc/.config/hypr/hyprland.lua`
+### 5.1 Compositor Configuration: `$HOME/.config/hypr/hyprland.lua`
 1. **Define Cinematic Curves** (`#L131-L140`):
    ```lua
    -- Cinematic Motion Curves
@@ -174,7 +174,7 @@ The motion system is designed as surgical adjustments to existing timing paramet
    - `workspaces`: Refine crossfade speed: `bezier = "cinematicGlide", speed = 2.4, style = "fade"`.
    - `layersIn` / `layersOut`: Match `cinematicGlide` with symmetrical speeds.
 
-### 5.2 Quickshell Design System: `/home/pranc/.config/quickshell/cool-shell/theme/Theme.qml`
+### 5.2 Quickshell Design System: `$HOME/.config/quickshell/cool-shell/theme/Theme.qml`
 1. **Unify Motion Tokens** (`#L220-L245`):
    - Introduce standardized duration tokens:
      - `readonly property int durationFast: 180`
@@ -186,7 +186,7 @@ The motion system is designed as surgical adjustments to existing timing paramet
      - `readonly property real springEpsilon: 0.005`
    - Standardize `spatialTransitionOffset: 48` (enhanced depth perspective).
 
-### 5.3 Workspace Transition HUD: `/home/pranc/.config/quickshell/cool-shell/desktop/DesktopTransition.qml`
+### 5.3 Workspace Transition HUD: `$HOME/.config/quickshell/cool-shell/desktop/DesktopTransition.qml`
 1. **Calibrate Animation Envelope** (`#L50-L107`):
    - Update master duration to 240ms (exact match with Hyprland's `workspaces` fade).
    - Use `theme.durationNormal` and `theme.spatialTransitionOffset`.
@@ -273,8 +273,8 @@ Phase 5: Rapid Interaction & Failure Recovery Testing
 All proposed changes are strictly confined to curve definitions and timing tokens. No state models, layout logic, or Wayland bindings are altered.
 
 * **Compositor Rollback**:
-  - Revert `hl.curve` and `hl.animation` blocks in `/home/pranc/.config/hypr/hyprland.lua` to original values:
-    `git checkout HEAD -- /home/pranc/.config/hypr/hyprland.lua && hyprctl reload`.
+  - Revert `hl.curve` and `hl.animation` blocks in `$HOME/.config/hypr/hyprland.lua` to original values:
+    `git checkout HEAD -- $HOME/.config/hypr/hyprland.lua && hyprctl reload`.
 * **Quickshell Rollback**:
   - Revert `Theme.qml`, `DesktopTransition.qml`, and overview files:
     `git checkout HEAD -- theme/Theme.qml desktop/DesktopTransition.qml components/BirdsEyeOverview.qml components/SpatialWorkspaceMap.qml`.

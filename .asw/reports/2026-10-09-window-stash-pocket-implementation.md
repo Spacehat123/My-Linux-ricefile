@@ -2,7 +2,7 @@
 
 **Date**: 2026-10-09  
 **Target Environment**: Hyprland 0.56.2 on Arch Linux (`pranav-arch`)  
-**Workspace**: `/home/pranc/.config/quickshell/cool-shell` & `/home/pranc/.config/hypr/hyprland.lua`  
+**Workspace**: `$HOME/.config/quickshell/cool-shell` & `$HOME/.config/hypr/hyprland.lua`  
 **Subject**: Edge-triggered Stash Pocket overhaul, lag elimination, and 60 FPS Media Widget visualizer.
 
 ---

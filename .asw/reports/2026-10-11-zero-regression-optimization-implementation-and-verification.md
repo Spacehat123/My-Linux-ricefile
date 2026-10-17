@@ -1,7 +1,7 @@
 # Zero-Regression Optimization: Implementation & Verification Report
 
 - **Date**: 2026-10-11
-- **Workspace**: `/home/pranc/.config/quickshell/cool-shell`
+- **Workspace**: `$HOME/.config/quickshell/cool-shell`
 - **Target Platform**: Hyprland / Wayland / Linux
 - **Framework**: Quickshell 0.3.1 / Qt 6
 - **Status**: Implemented & Empirically Verified (100% Feature & Visual Fidelity Preserved)
@@ -13,7 +13,7 @@
 In response to the user's directive:
 > *"Looks good. also dont render anythign thats not in view. like the settings thing. Do the optimization and report. please"*
 
-A comprehensive, multi-subsystem optimization sweep was executed across 10 files in [`cool-shell`](file:///home/pranc/.config/quickshell/cool-shell). 
+A comprehensive, multi-subsystem optimization sweep was executed across 10 files in [`cool-shell`](file://$HOME/.config/quickshell/cool-shell). 
 
 ### Key Empirical Results:
 1. **Resident Memory (RSS) dropped by 211 MB**:
@@ -38,7 +38,7 @@ A comprehensive, multi-subsystem optimization sweep was executed across 10 files
 ## 2. Detailed Implementation Breakdown
 
 ### A. Unified Single-Instance Audio Daemon (`island/scripts/level-meter.py`)
-- **File**: [`island/scripts/level-meter.py`](file:///home/pranc/.config/quickshell/cool-shell/island/scripts/level-meter.py#L197-L235)
+- **File**: [`island/scripts/level-meter.py`](file://$HOME/.config/quickshell/cool-shell/island/scripts/level-meter.py#L197-L235)
 - **Changes**:
   1. Imported `fcntl`.
   2. Implemented non-blocking kernel advisory file lock on `/run/user/1000/cool-shell-level-meter.lock`.
@@ -47,21 +47,21 @@ A comprehensive, multi-subsystem optimization sweep was executed across 10 files
 - **Result**: Single PipeWire capture process; 0 duplicate links.
 
 ### B. Reactive Audio Gating & Cleanup (`island/IslandHub.qml`)
-- **File**: [`island/IslandHub.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/IslandHub.qml#L291-L355)
+- **File**: [`island/IslandHub.qml`](file://$HOME/.config/quickshell/cool-shell/island/IslandHub.qml#L291-L355)
 - **Changes**:
   1. In `levelProc`'s `onRead`, added delta threshold comparison (`diff > 0.012`): ignores floating-point noise and only re-evaluates `root.levels` when RMS levels meaningfully change or decay to zero.
   2. Added `Component.onDestruction: root.stopLevels()` to guarantee child processes terminate cleanly when Quickshell exits.
 - **Result**: Drastically reduced reactive binding churn across Notch and MediaWidget.
 
 ### C. Canvas Gradient Caching (`panels/MediaWidget.qml`)
-- **File**: [`panels/MediaWidget.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/MediaWidget.qml#L280-L325)
+- **File**: [`panels/MediaWidget.qml`](file://$HOME/.config/quickshell/cool-shell/panels/MediaWidget.qml#L280-L325)
 - **Changes**:
   1. Hoisted `ctx.createLinearGradient(0, 0, 0, height)` outside the 40-iteration bar loop in `onPaint`.
   2. Reused `ctx.fillStyle = grad` across all bars.
 - **Result**: Reduced gradient object allocations from 2,400/sec to 60/sec (a 97.5% reduction), eliminating GC pressure during music playback.
 
 ### D. Zero-Render Settings Window (`panels/SettingsWindow.qml`)
-- **File**: [`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml#L68,L244-L260,L2495-L2500)
+- **File**: [`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml#L68,L244-L260,L2495-L2500)
 - **Changes**:
   1. Added `property string activeCategory: "network"` to `root`.
   2. In `windowCard`, aliased `property alias activeCategory: root.activeCategory`.
@@ -77,23 +77,23 @@ A comprehensive, multi-subsystem optimization sweep was executed across 10 files
 - **Result**: When Settings is closed (99.9% of the time), exactly **zero** settings elements exist in memory or scene graph. When opened, it instantiates immediately.
 
 ### E. Obscured Wallpaper Layer Unmapping (`wallpaper/Wallpaper.qml`)
-- **File**: [`wallpaper/Wallpaper.qml`](file:///home/pranc/.config/quickshell/cool-shell/wallpaper/Wallpaper.qml#L19)
+- **File**: [`wallpaper/Wallpaper.qml`](file://$HOME/.config/quickshell/cool-shell/wallpaper/Wallpaper.qml#L19)
 - **Changes**:
   1. Updated `visible: enabled && activeRendering && mediaType === "video" && mediaSource !== "" && live`.
 - **Result**: When opaque windows cover the screen, the wallpaper layer unmaps from Wayland, dropping compositor composition and releasing video frame blits.
 
 ### F. Texture Layer Caching (`desktop/AmbientReticle.qml`)
-- **File**: [`desktop/AmbientReticle.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/AmbientReticle.qml#L24-L25)
+- **File**: [`desktop/AmbientReticle.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/AmbientReticle.qml#L24-L25)
 - **Changes**:
   1. Enabled `layer.enabled: true` and `layer.smooth: true` on `outerRing`.
 - **Result**: Rotates an offscreen GPU texture quad rather than traversing the vector scene graph on every vsync frame.
 
 ### G. Elimination of Internal IPC Subprocess Forks
 - **Files**:
-  - [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml)
-  - [`panels/RightSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/RightSidebar.qml)
-  - [`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml)
-  - [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml)
+  - [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml)
+  - [`panels/RightSidebar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/RightSidebar.qml)
+  - [`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml)
+  - [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml)
 - **Changes**:
   1. Replaced `Quickshell.execDetached(["qs", "ipc", ...])` in `BottomBar.qml` with native signals (`toggleOverview`, `toggleSettings`, `cycleDisplays`).
   2. Replaced `Quickshell.execDetached(["qs", "ipc", ...])` in `RightSidebar.qml` with `toggleOverview` signal.

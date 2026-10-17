@@ -79,7 +79,7 @@ Because `cool-shell` runs on Quickshell (Wayland Layer Shell):
    - `extra/hyprpm 0.56.2-4` is available in Arch Linux official repositories.
    - Hyprscroller's active fork (`hyprscrolling` / `hyprscroller-ng`) is compatible with Hyprland 0.56.x.
 3. **Configuration Interface**:
-   - The user's system utilizes Lua configuration (`/home/pranc/.config/hypr/hyprland.lua`).
+   - The user's system utilizes Lua configuration (`$HOME/.config/hypr/hyprland.lua`).
    - Plugin loading syntax in Lua: `hypr.plugin = { ... }` or via `hyprpm load hyprscroller`.
 
 ---

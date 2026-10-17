@@ -1,0 +1,30 @@
+{
+  "name": "Sea",
+  "slug": "sea",
+  "appearance": "dark",
+  "applications": {
+    "alacritty": "nord",
+    "folder_color": "blue"
+  },
+  "colors": {
+    "bg_dim": "#09101a",
+    "bg0": "#0e1929",
+    "bg1": "#142338",
+    "bg2": "#1d3350",
+    "bg3": "#27446b",
+    "bg4": "#35598a",
+    "primary_container": "#1a3b5c",
+    "secondary_container": "#162e4a",
+    "foreground": "#f0f8ff",
+    "muted": "#9ec1dd",
+    "muted_dark": "#6184a3",
+    "red": "#ff5c77",
+    "yellow": "#ffd166",
+    "green": "#4ad69d",
+    "primary": "#38b6ff",
+    "blue": "#2196f3",
+    "aqua": "#70d6ff",
+    "orange": "#ff9f59",
+    "purple": "#9b87f5"
+  }
+}

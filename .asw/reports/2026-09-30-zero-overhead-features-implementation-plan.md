@@ -1,15 +1,15 @@
 # Implementation Plan: Zero-Overhead Feature Architecture for Cool-Shell (V2 - Hardened)
 
 **Date:** 2026-09-30  
-**Target:** [`cool-shell`](file:///home/pranc/.config/quickshell/cool-shell/)  
+**Target:** [`cool-shell`](file://$HOME/.config/quickshell/cool-shell/)  
 **Baseline Principle:** **Strict Zero Increased Resource Usage (0% CPU at idle, Scene Graph rest-state, zero process forks, bounded memory, zero battery penalty).**  
-**Policy Compliance:** [`.agents/rules/reports.md`](file:///home/pranc/.config/quickshell/cool-shell/.agents/rules/reports.md)
+**Policy Compliance:** [`.agents/rules/reports.md`](file://$HOME/.config/quickshell/cool-shell/.agents/rules/reports.md)
 
 ---
 
 ## 1. Executive Summary & Design Constraints
 
-This document represents the **hardened, production-ready implementation plan** for zero-overhead features in `cool-shell`. It integrates the architectural audit from [`.asw/plans/Review.txt`](file:///home/pranc/.config/quickshell/cool-shell/.asw/plans/Review.txt) with critical engineering fixes addressing:
+This document represents the **hardened, production-ready implementation plan** for zero-overhead features in `cool-shell`. It integrates the architectural audit from [`.asw/plans/Review.txt`](file://$HOME/.config/quickshell/cool-shell/.asw/plans/Review.txt) with critical engineering fixes addressing:
 1. **Daemon Auto-Activation:** Safe user-space initialization for `speech-dispatcher` without silent D-Bus failures.
 2. **Atomic Recovery Persistence:** Explicit JSON schema, atomic file replacement, and corruption protection for window state.
 3. **GPU VRAM & Texture Deallocation:** Explicit pixmap reference detachment and engine garbage collection on notification eviction.

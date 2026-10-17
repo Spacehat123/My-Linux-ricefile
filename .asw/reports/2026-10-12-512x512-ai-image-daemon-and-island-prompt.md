@@ -101,8 +101,8 @@ We diagnosed and resolved the root causes of the **1.5 to 2-minute latency** and
 ---
 
 ## 5. Artifacts & References
-- **Script Daemon:** [`scripts/image-daemon.py`](file:///home/pranc/.config/quickshell/cool-shell/scripts/image-daemon.py)
-- **Script Client:** [`scripts/image-engine.py`](file:///home/pranc/.config/quickshell/cool-shell/scripts/image-engine.py)
-- **LeftSidebar Integration:** [`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml#L652-L806)
-- **Shell State Singleton:** [`island/ShellState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/ShellState.qml#L190-L232)
-- **Prompt UI Panel:** [`island/panels/AiPromptPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/AiPromptPanel.qml)
+- **Script Daemon:** [`scripts/image-daemon.py`](file://$HOME/.config/quickshell/cool-shell/scripts/image-daemon.py)
+- **Script Client:** [`scripts/image-engine.py`](file://$HOME/.config/quickshell/cool-shell/scripts/image-engine.py)
+- **LeftSidebar Integration:** [`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml#L652-L806)
+- **Shell State Singleton:** [`island/ShellState.qml`](file://$HOME/.config/quickshell/cool-shell/island/ShellState.qml#L190-L232)
+- **Prompt UI Panel:** [`island/panels/AiPromptPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/AiPromptPanel.qml)

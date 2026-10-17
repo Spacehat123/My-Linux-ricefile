@@ -86,7 +86,7 @@ graph TD
 | **JSON API Verification** | `theme-system.sh wallpapers` | Emits JSON with `isVideo: true` and thumbnail path. |
 | **IPC Query: Enabled** | `qs -c cool-shell ipc prop get wallpaper enabled` | Returns `true`. |
 | **IPC Query: Media Type** | `qs -c cool-shell ipc prop get wallpaper mediaType` | Returns `video`. |
-| **IPC Query: Media Source** | `qs -c cool-shell ipc prop get wallpaper mediaSource` | Returns `file:///home/pranc/Pictures/Wallpapers/live/black-hole-event-horizon.mp4`. |
+| **IPC Query: Media Source** | `qs -c cool-shell ipc prop get wallpaper mediaSource` | Returns `file://$HOME/Pictures/Wallpapers/live/black-hole-event-horizon.mp4`. |
 | **IPC Toggle Test** | `qs -c cool-shell ipc call wallpaper toggle` | Returned `{"success":true,"enabled":false}` and resumed to `true`. |
 | **Super + A Panel Test** | `qs -c cool-shell ipc call notch toggle wallpaper` | Opened `WallpaperPanel.qml` without QML errors. |
 | **Game Mode Check** | ShellState inspect | **NEVER ACTIVATED**; remained strictly false. |

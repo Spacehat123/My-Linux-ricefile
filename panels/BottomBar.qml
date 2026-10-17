@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
 import Quickshell.Networking
@@ -582,7 +583,7 @@ PanelWindow {
 
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: (Island.WeatherState.tempC !== "" ? Island.WeatherState.tempC.replace("+", "").replace("C", "").trim() : "29°")
+                                    text: (Island.WeatherState.tempC !== "" ? Island.WeatherState.tempC.replace("+", "").replace("C", "").trim() : "--°")
                                     font.family: Island.Theme.fontFamily
                                     font.pixelSize: 11
                                     font.weight: Font.Medium
@@ -738,7 +739,7 @@ PanelWindow {
                                 font.weight: Font.DemiBold
                                 color: root.batPct <= 20
                                     ? Island.Theme.red
-                                    : ((batMouse.containsMouse || root.activePopover === "bat") ? Island.Theme.primary : "#f5a97f")
+                                    : ((batMouse.containsMouse || root.activePopover === "bat") ? Island.Theme.primary : Island.Theme.orange)
                             }
 
                             MouseArea {

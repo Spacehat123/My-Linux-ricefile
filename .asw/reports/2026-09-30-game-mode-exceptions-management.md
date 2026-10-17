@@ -11,8 +11,8 @@
 Extreme Game Mode terminates non-essential applications and background bloat to achieve near-zero idle latency and free up maximum RAM. To give users total control over what remains running during gameplay, a complete **Exceptions Management System** has been integrated into `cool-shell`.
 
 Exceptions can be managed through:
-1. **Interactive Settings Window UI** ([`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml))
-2. **Left Sidebar Direct Deep-Link Button** ([`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml))
+1. **Interactive Settings Window UI** ([`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml))
+2. **Left Sidebar Direct Deep-Link Button** ([`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml))
 3. **IPC CLI Commands** (`qs -c cool-shell ipc call settings open gamemode`)
 4. **Standalone Python CLI** (`python3 island/scripts/game-mode.py add-exception <app>`)
 5. **JSON State File** (`~/.local/state/cool-shell/game-mode-exceptions.json`)
@@ -53,12 +53,12 @@ When Game Mode is engaged, `island/scripts/game-mode.py`:
 ## 3. UI Improvements & Fixes
 
 1. **Dedicated Exceptions Button on Game Mode Card:**
-   - In [`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml), added an independent `󰒓` settings button right next to the toggle switch.
+   - In [`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml), added an independent `󰒓` settings button right next to the toggle switch.
    - Clicking the button directly opens the Settings Window to the "Game Mode & Rules" tab.
    - Decoupled `TapHandler`s so clicking the gear icon never accidentally triggers Game Mode.
 
 2. **JavaScript String Compatibility Fix:**
-   - In [`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml), replaced Python-style `.lower()` calls with JavaScript `.toLowerCase()`.
+   - In [`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml), replaced Python-style `.lower()` calls with JavaScript `.toLowerCase()`.
 
 3. **Row Layout Fix:**
    - Fixed QML warning where checkbox pills inside `Row` had `anchors.right: parent.right`. Now anchored directly to the parent card.

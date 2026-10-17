@@ -1,7 +1,7 @@
 # Memory Profiling & RAM Optimization Plan
 
 - **Date**: 2026-10-11
-- **Workspace**: `/home/pranc/.config/quickshell/cool-shell`
+- **Workspace**: `$HOME/.config/quickshell/cool-shell`
 - **Target Platform**: Hyprland / Wayland / Linux (Hybrid Intel + NVIDIA GTX 1650)
 - **Framework**: Quickshell 0.3.1 / Qt 6.11
 - **Status**: Investigative Report & Proposed RAM Optimization Action Plan
@@ -54,7 +54,7 @@ The primary target for optimization is the **`~326 MB` of Anonymous Heap & Dirty
    - All 3 tabs and their hundreds of delegates are created simultaneously on startup, even though only Tab 0 is ever viewed first, and the sidebar is closed 95% of the time.
 
 ### Finding 2: Unconstrained Image Decoding Sizes (`sourceSize`)
-- In [`components/SpotifyWidget.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/SpotifyWidget.qml#L130) and [`panels/MediaWidget.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/MediaWidget.qml#L522):
+- In [`components/SpotifyWidget.qml`](file://$HOME/.config/quickshell/cool-shell/components/SpotifyWidget.qml#L130) and [`panels/MediaWidget.qml`](file://$HOME/.config/quickshell/cool-shell/panels/MediaWidget.qml#L522):
   ```qml
   Image {
       id: albumCover

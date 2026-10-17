@@ -63,7 +63,7 @@ The user requested an on-demand, local AI image generation pipeline with studio 
 ### 2.2 Turing GTX 1650 FP16 GroupNorm NaN Bug & Resolution
 - **Discovery**: During initial test generation, the pipeline generated all-zero arrays (`Min: 0, Max: 0, Mean: 0.0`) with `RuntimeWarning: invalid value encountered in cast` and `has_nan: True` at Step 0.
 - **Root Cause**: On Turing GPUs lacking Tensor Cores (such as the GTX 1650 TU117), cuDNN's FP16 kernel for GroupNorm overflows intermediate variances (`sum(x^2) > 65504`), yielding `inf` and subsequent `NaN`.
-- **Solution**: Setting `torch.backends.cudnn.enabled = False` in [`scripts/image-engine.py`](file:///home/pranc/.config/quickshell/cool-shell/scripts/image-engine.py). This directs GroupNorm to PyTorch's native CUDA kernel, preventing the overflow. Latents now compute cleanly with zero NaNs (`has_nan: False`, full 0-255 dynamic range).
+- **Solution**: Setting `torch.backends.cudnn.enabled = False` in [`scripts/image-engine.py`](file://$HOME/.config/quickshell/cool-shell/scripts/image-engine.py). This directs GroupNorm to PyTorch's native CUDA kernel, preventing the overflow. Latents now compute cleanly with zero NaNs (`has_nan: False`, full 0-255 dynamic range).
 
 ### 2.3 4GB VRAM Management with Model CPU Offload
 - When all submodels (UNet, text encoder, VAE) remained on the GPU simultaneously, VAE decoding of the 832×480 latents attempted to allocate 878 MiB, triggering CUDA OOM on the 3.64 GiB free pool.
@@ -75,14 +75,14 @@ The user requested an on-demand, local AI image generation pipeline with studio 
 
 | File | Type | Description |
 | :--- | :--- | :--- |
-| [`island/panels/AiPromptPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/AiPromptPanel.qml) | **Created** | Dynamic Island modal prompt input box (540×110). Includes `takeInitialFocus()`, Enter to submit, Esc to cancel, mode badges (`Realistic Vision v5.1 + LCM`, `1920×1080`), and "Generate" button. |
-| [`scripts/image-engine.py`](file:///home/pranc/.config/quickshell/cool-shell/scripts/image-engine.py) | **Created** | 2-stage generation backend. Handles `notify_island_ai()` IPC calls, 832×480 4-step generation, Lanczos 1080p upscale, PNG export to `~/Pictures/generated/`, and detached `swappy` launch. |
-| [`scripts/image-engine.sh`](file:///home/pranc/.config/quickshell/cool-shell/scripts/image-engine.sh) | **Created** | Shell launcher setting `LD_LIBRARY_PATH` for CUDA 13 and cuDNN 9, invoking Unsloth Python environment without compilation. |
-| [`island/ShellState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/ShellState.qml) | **Modified** | Added `"ai": 540` to `panelWidths`, `"ai": 110` to `panelHeights`, and `"ai": 22` to `panelRadii`. |
-| [`island/IslandHub.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/IslandHub.qml) | **Modified** | Added `aiGenerating`, `aiStatusMsg`, `setAiGenerating(val, msg)`, `triggerAiGeneration(prompt)`, and integrated `aiGenerating` into `primaryLabel()`. |
-| [`island/Notch.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml) | **Modified** | Registered `aiPromptPanel` in `activePanel` and `requestedPanel`, adjusted `targetVisualWidth` to expand to 240px while generating, and instantiated `AiPromptPanel`. |
-| [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml) | **Modified** | Exposed `setAiGenerating(bool, msg)` and `triggerAiGeneration(prompt)` endpoints in `IpcHandler { target: "island" }`. |
-| [`~/.config/hypr/hyprland.lua`](file:///home/pranc/.config/hypr/hyprland.lua) | **Modified** | Bound <kbd>SUPER + G</kbd> to `qs -c cool-shell ipc call notch toggle ai`. |
+| [`island/panels/AiPromptPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/AiPromptPanel.qml) | **Created** | Dynamic Island modal prompt input box (540×110). Includes `takeInitialFocus()`, Enter to submit, Esc to cancel, mode badges (`Realistic Vision v5.1 + LCM`, `1920×1080`), and "Generate" button. |
+| [`scripts/image-engine.py`](file://$HOME/.config/quickshell/cool-shell/scripts/image-engine.py) | **Created** | 2-stage generation backend. Handles `notify_island_ai()` IPC calls, 832×480 4-step generation, Lanczos 1080p upscale, PNG export to `~/Pictures/generated/`, and detached `swappy` launch. |
+| [`scripts/image-engine.sh`](file://$HOME/.config/quickshell/cool-shell/scripts/image-engine.sh) | **Created** | Shell launcher setting `LD_LIBRARY_PATH` for CUDA 13 and cuDNN 9, invoking Unsloth Python environment without compilation. |
+| [`island/ShellState.qml`](file://$HOME/.config/quickshell/cool-shell/island/ShellState.qml) | **Modified** | Added `"ai": 540` to `panelWidths`, `"ai": 110` to `panelHeights`, and `"ai": 22` to `panelRadii`. |
+| [`island/IslandHub.qml`](file://$HOME/.config/quickshell/cool-shell/island/IslandHub.qml) | **Modified** | Added `aiGenerating`, `aiStatusMsg`, `setAiGenerating(val, msg)`, `triggerAiGeneration(prompt)`, and integrated `aiGenerating` into `primaryLabel()`. |
+| [`island/Notch.qml`](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml) | **Modified** | Registered `aiPromptPanel` in `activePanel` and `requestedPanel`, adjusted `targetVisualWidth` to expand to 240px while generating, and instantiated `AiPromptPanel`. |
+| [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml) | **Modified** | Exposed `setAiGenerating(bool, msg)` and `triggerAiGeneration(prompt)` endpoints in `IpcHandler { target: "island" }`. |
+| [`~/.config/hypr/hyprland.lua`](file://$HOME/.config/hypr/hyprland.lua) | **Modified** | Bound <kbd>SUPER + G</kbd> to `qs -c cool-shell ipc call notch toggle ai`. |
 
 ---
 

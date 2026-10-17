@@ -85,8 +85,8 @@ Feather Mode stops `swaync.service` and queries `nvidia-smi` to ensure no proces
 
 ## 4. Modified Files
 
-- [`island/scripts/feather-mode.py`](file:///home/pranc/.config/quickshell/cool-shell/island/scripts/feather-mode.py): Core backend script implementing CPU quota calculations, Hyprland Lua configuration calls, monitor refresh throttling, and dGPU optimization.
-- [`island/ShellState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/ShellState.qml): Added `featherLimit` property, `setFeatherLimit()` method, and process output parsing.
-- [`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml): Updated Section 2C with limit badges, 20% / 35% toggle pills, and animated card height.
-- [`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml): Added preset selector pills to The Feather settings card.
-- [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml): Extended `feather` IpcHandler with `limit` property and `setLimit()` dispatcher.
+- [`island/scripts/feather-mode.py`](file://$HOME/.config/quickshell/cool-shell/island/scripts/feather-mode.py): Core backend script implementing CPU quota calculations, Hyprland Lua configuration calls, monitor refresh throttling, and dGPU optimization.
+- [`island/ShellState.qml`](file://$HOME/.config/quickshell/cool-shell/island/ShellState.qml): Added `featherLimit` property, `setFeatherLimit()` method, and process output parsing.
+- [`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml): Updated Section 2C with limit badges, 20% / 35% toggle pills, and animated card height.
+- [`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml): Added preset selector pills to The Feather settings card.
+- [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml): Extended `feather` IpcHandler with `limit` property and `setLimit()` dispatcher.

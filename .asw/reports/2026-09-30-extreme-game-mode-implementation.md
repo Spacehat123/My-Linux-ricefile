@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-30  
 **Status:** ✅ **OPERATIONAL & VERIFIED**  
-**Workspace:** `/home/pranc/.config/quickshell/cool-shell`  
+**Workspace:** `$HOME/.config/quickshell/cool-shell`  
 **Author:** Antigravity Autonomous Pair Programming Agent  
 
 ---
@@ -22,7 +22,7 @@ The user requested an aggressive, zero-compromise **Extreme Game Mode**:
 ## 2. Architecture & Implementation
 
 ### A. Process Termination Engine (`island/scripts/game-mode.py`)
-- **Location:** [`island/scripts/game-mode.py`](file:///home/pranc/.config/quickshell/cool-shell/island/scripts/game-mode.py)
+- **Location:** [`island/scripts/game-mode.py`](file://$HOME/.config/quickshell/cool-shell/island/scripts/game-mode.py)
 - **Whitelisted Essential Infrastructure:**
   - `Hyprland`, `hyprlock`, `hypridle`, `Xwayland`
   - `quickshell` (PID of host shell)
@@ -39,7 +39,7 @@ The user requested an aggressive, zero-compromise **Extreme Game Mode**:
   - When disabled, restores `animations:enabled 1`, `decoration:blur:enabled 1`, and restarts `awww-daemon`.
 
 ### B. Dynamic Island Game Mode Panel (`island/panels/GameModePanel.qml`)
-- **Location:** [`island/panels/GameModePanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/GameModePanel.qml)
+- **Location:** [`island/panels/GameModePanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/GameModePanel.qml)
 - **Silhouette:** 300×84 floating glass card with `Theme.radiusCard`.
 - **Single Option Layout:**
   - Header: `󰊴 Game Mode Active` with a `Max FPS` badge.
@@ -47,7 +47,7 @@ The user requested an aggressive, zero-compromise **Extreme Game Mode**:
   - Clicking this button immediately triggers `ShellState.toggleGameMode()`.
 
 ### C. Dynamic Island Integration (`island/Notch.qml`)
-- **Location:** [`island/Notch.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml)
+- **Location:** [`island/Notch.qml`](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml)
 - When `ShellState.gameMode` is `true`:
   - `notchBody` border glows with `Theme.red`.
   - `CollapsedStatus` (time, battery, volume, unread badges) is completely hidden.
@@ -56,7 +56,7 @@ The user requested an aggressive, zero-compromise **Extreme Game Mode**:
   - All other panel requests (control, launcher, notes, todo, media, weather, etc.) are locked out.
 
 ### D. Global Surface Suspension (`shell.qml`)
-- **Location:** [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml)
+- **Location:** [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml)
 - When `ShellState.gameMode` is `true`:
   - `leftSidebar.open` is forced to `false` and unmapped.
   - `rightSidebar.open` is forced to `false` and unmapped.

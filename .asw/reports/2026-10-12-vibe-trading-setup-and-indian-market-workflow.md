@@ -2,21 +2,21 @@
 
 **Date**: 2026-10-12  
 **Status**: Completed & Verified  
-**Installation Directory**: `/home/pranc/Desktop/vibe-trading`  
+**Installation Directory**: `$HOME/Desktop/vibe-trading`  
 
 ---
 
 ## 1. Setup Overview
 
-The **HKUDS/Vibe-Trading** quantitative AI research and backtesting platform has been successfully deployed and verified in `/home/pranc/Desktop/vibe-trading`.
+The **HKUDS/Vibe-Trading** quantitative AI research and backtesting platform has been successfully deployed and verified in `$HOME/Desktop/vibe-trading`.
 
 ### Key Environment Components
 * **Repository**: Cloned from `https://github.com/HKUDS/Vibe-Trading.git`
 * **Python Runtime**: Python 3.13 isolated virtual environment (`.venv`) powered by `uv`
 * **Dependencies**: 188 quant finance & agent packages installed (including `langchain`, `langgraph`, `quantlib`, `yfinance`, `ccxt`, `duckdb`, `scikit-learn`, `fastapi`, `uvicorn`)
 * **Web UI Dashboard**: Built production React 19 bundle in `frontend/dist/` (KaTeX, Lightweight Charts, Tailwind CSS)
-* **Configuration**: Initialized `.env` template in both `/home/pranc/Desktop/vibe-trading/.env` and `~/.vibe-trading/.env`
-* **Convenience Launcher**: Created executable [`/home/pranc/Desktop/vibe-trading/start.sh`](file:///home/pranc/Desktop/vibe-trading/start.sh)
+* **Configuration**: Initialized `.env` template in both `$HOME/Desktop/vibe-trading/.env` and `~/.vibe-trading/.env`
+* **Convenience Launcher**: Created executable [`$HOME/Desktop/vibe-trading/start.sh`](file://$HOME/Desktop/vibe-trading/start.sh)
 
 ---
 
@@ -51,7 +51,7 @@ The **HKUDS/Vibe-Trading** quantitative AI research and backtesting platform has
 
 ## 3. Configuring Your AI Provider
 
-Edit [`/home/pranc/Desktop/vibe-trading/.env`](file:///home/pranc/Desktop/vibe-trading/.env) to configure your preferred LLM:
+Edit [`$HOME/Desktop/vibe-trading/.env`](file://$HOME/Desktop/vibe-trading/.env) to configure your preferred LLM:
 
 * **DeepSeek (Recommended for Cost & Math Accuracy)**:
   ```env

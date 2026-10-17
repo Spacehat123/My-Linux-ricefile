@@ -1,7 +1,7 @@
 # Cool-Shell Comprehensive System Review & Architectural Evaluation
 
 - **Date**: 2026-10-10
-- **Workspace**: `/home/pranc/.config/quickshell/cool-shell`
+- **Workspace**: `$HOME/.config/quickshell/cool-shell`
 - **Target Platform**: Hyprland / Wayland / Linux
 - **Framework**: Quickshell 0.3.1 / Qt 6
 - **Review Scope**: Custom Shell Architecture, Dynamic Island, Sidebars, Bottom Bar, Video Wallpaper, Telemetry, Resource Footprint, UX & Ergonomics
@@ -25,7 +25,7 @@ Below is the definitive review categorized by **The Good**, **The Bad**, and **T
 ## 2. System Architecture & Topology
 
 ```text
-/home/pranc/.config/quickshell/cool-shell/
+$HOME/.config/quickshell/cool-shell/
 ├── shell.qml                     # Central shell root (2,134 lines), 23 IPC targets, variant scopes
 ├── theme/
 │   └── Theme.qml                 # Desktop tactical theme adapter (delegates to island/Theme.qml)

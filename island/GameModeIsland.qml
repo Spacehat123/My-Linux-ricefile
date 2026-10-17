@@ -270,7 +270,7 @@ Variants {
         // Process to disable game mode and restore full shell
         Process {
             id: disableProc
-            command: ["python3", Quickshell.shellPath("scripts/game-mode.py"), "disable"]
+            command: ["python3", Quickshell.shellPath("island/scripts/game-mode.py"), "disable"]
             onExited: function(exitCode, exitStatus) {
                 Qt.quit();
             }

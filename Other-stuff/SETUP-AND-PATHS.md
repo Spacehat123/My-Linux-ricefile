@@ -117,7 +117,7 @@ uv pip --python ~/.local/share/cool-shell/venv/bin/python install \
 ## 4. God's Eye View Setup (`godseye`)
 
 - **Repository**: `https://github.com/bilawalsidhu/gods-eye-view.git`
-- **Target Location**: `/home/pranc/Desktop/gods-eye-view`
+- **Target Location**: `~/Desktop/gods-eye-view`
 - **Prerequisites**: Node.js `v24` LTS (`fnm` or `pacman -S nodejs npm`)
 
 **Installation Steps**:
@@ -139,7 +139,7 @@ chmod +x start.sh
 
 # Verify runs on http://localhost:4173
 ```
-*Note*: The Left Sidebar "God's Eye" toggle automatically controls `~/Desktop/gods-eye-view` via [`scripts/gods-eye.sh`](file:///home/pranc/.config/quickshell/cool-shell/scripts/gods-eye.sh).
+*Note*: The Left Sidebar "God's Eye" toggle automatically controls `~/Desktop/gods-eye-view` via [`scripts/gods-eye.sh`](../scripts/gods-eye.sh).
 
 ---
 
@@ -161,7 +161,7 @@ hl.exec_cmd("quickshell -c cool-shell")
 hl.bind("SUPER + R", hl.dsp.exec_cmd("quickshell ipc -c cool-shell call birdseye toggle"))
 
 -- Universal Screen Lens (OCR, QR, Color Picker)
-hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd("/home/pranc/.config/quickshell/cool-shell/scripts/screen-lens.sh"))
+hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd("$HOME/.config/quickshell/cool-shell/scripts/screen-lens.sh"))
 
 -- AI Image Prompt Bar
 hl.bind("SUPER + G", hl.dsp.exec_cmd("quickshell ipc -c cool-shell call notch toggle ai"))

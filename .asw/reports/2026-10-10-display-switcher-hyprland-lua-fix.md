@@ -6,7 +6,7 @@
 - `island/scripts/display-switcher.sh`: Mode cycle logic, Lua evaluations, workspace migration, and multi-display output management.
 - `island/scripts/display-safety-watchdog.sh`: Non-interfering fail-safe display recovery daemon (emergency recovery only on zero active displays).
 - `shell.qml`: `displays` IPC target with `setMode` and `cycle` dispatchers.
-- `/home/pranc/.config/hypr/hyprland.lua`: `package.loaded["monitors"] = nil` dynamic reload cache invalidation.
+- `$HOME/.config/hypr/hyprland.lua`: `package.loaded["monitors"] = nil` dynamic reload cache invalidation.
 
 ---
 
@@ -30,7 +30,7 @@ Detailed investigation into Hyprland's runtime state and scripts identified four
 - **Impact**: Attempts to re-enable `eDP-1` or `HDMI-A-1` were silently ignored, leaving monitors disabled and black.
 
 ### 1.4 Lua Module Caching on `hyprctl reload`
-- **Problem**: In `/home/pranc/.config/hypr/hyprland.lua`, line 14 executed `require("monitors")`. In Lua, modules loaded via `require` are permanently cached in `package.loaded["monitors"]`.
+- **Problem**: In `$HOME/.config/hypr/hyprland.lua`, line 14 executed `require("monitors")`. In Lua, modules loaded via `require` are permanently cached in `package.loaded["monitors"]`.
 - **Impact**: Modifying `~/.config/hypr/monitors.lua` on disk had zero effect when `hyprctl reload` was called, because Lua simply returned the cached in-memory module.
 
 ### 1.5 Missing Workspace Migration Across Displays
@@ -60,10 +60,10 @@ Detailed investigation into Hyprland's runtime state and scripts identified four
 - When emergency recovery triggers, it enables both displays with `mirror = 'HDMI-A-1'` so the user can immediately see their screen without broken workspace boundaries.
 
 ### 2.3 Cache Invalidation in `hyprland.lua`
-- Inserted `package.loaded["monitors"] = nil` before `require("monitors")` in `/home/pranc/.config/hypr/hyprland.lua`. Every reload now guarantees that `monitors.lua` is re-read from disk.
+- Inserted `package.loaded["monitors"] = nil` before `require("monitors")` in `$HOME/.config/hypr/hyprland.lua`. Every reload now guarantees that `monitors.lua` is re-read from disk.
 
 ### 2.4 Quickshell IPC Extension
-- Extended the `displays` IPC target in [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml#L1762-L1775) with `setMode(mode: string)` supporting direct transitions (`laptop`, `pc`, `mirror`, `duplicate`, `extend`, `dual`, `external`, `second`).
+- Extended the `displays` IPC target in [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml#L1762-L1775) with `setMode(mode: string)` supporting direct transitions (`laptop`, `pc`, `mirror`, `duplicate`, `extend`, `dual`, `external`, `second`).
 
 ---
 

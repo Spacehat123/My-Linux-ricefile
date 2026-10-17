@@ -107,10 +107,10 @@ All execution occurs strictly in the background via Quickshell native `Process` 
 
 ## 5. Artifacts & Deliverables
 
-- [`island/CaptionState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/CaptionState.qml): Background process controller and singleton state.
-- [`island/panels/CaptionActionPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/CaptionActionPanel.qml): Dynamic Island media prompt UI.
-- [`island/Notch.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml): Drag-and-drop interception and panel mapping.
-- [`island/ShellState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/ShellState.qml): Registered panel dimensions and geometry.
-- [`island/IslandHub.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/IslandHub.qml): Dynamic Island priority arbitration and live progress display.
-- [`scripts/caption.py`](file:///home/pranc/.config/quickshell/cool-shell/scripts/caption.py): Transcription and extraction core backend.
-- [`~/.local/bin/fast-caption`](file:///home/pranc/.local/bin/fast-caption): Global CLI runner script.
+- [`island/CaptionState.qml`](file://$HOME/.config/quickshell/cool-shell/island/CaptionState.qml): Background process controller and singleton state.
+- [`island/panels/CaptionActionPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/CaptionActionPanel.qml): Dynamic Island media prompt UI.
+- [`island/Notch.qml`](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml): Drag-and-drop interception and panel mapping.
+- [`island/ShellState.qml`](file://$HOME/.config/quickshell/cool-shell/island/ShellState.qml): Registered panel dimensions and geometry.
+- [`island/IslandHub.qml`](file://$HOME/.config/quickshell/cool-shell/island/IslandHub.qml): Dynamic Island priority arbitration and live progress display.
+- [`scripts/caption.py`](file://$HOME/.config/quickshell/cool-shell/scripts/caption.py): Transcription and extraction core backend.
+- [`~/.local/bin/fast-caption`](file://$HOME/.local/bin/fast-caption): Global CLI runner script.

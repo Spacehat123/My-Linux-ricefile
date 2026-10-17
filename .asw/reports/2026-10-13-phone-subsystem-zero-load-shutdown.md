@@ -85,8 +85,8 @@ Added `shutdown_whole_system()` and enhanced the CLI dispatcher:
 
 ## 5. Summary of Files Changed
 
-- [`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml): Control Center tile and switch state binding for full on/off behavior.
-- [`island/CollapsedStatus.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/CollapsedStatus.qml): Hide battery pill when phone subsystem is disabled.
-- [`island/ShellState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/ShellState.qml): Added `phoneSystemEnabled`, gated timer checks, whole-system toggle function.
-- [`scripts/phone-ctl.sh`](file:///home/pranc/.config/quickshell/cool-shell/scripts/phone-ctl.sh): Implemented `shutdown_whole_system()`, guarded `show_status()`.
-- [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml): Added `setSystemEnabled` IPC method.
+- [`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml): Control Center tile and switch state binding for full on/off behavior.
+- [`island/CollapsedStatus.qml`](file://$HOME/.config/quickshell/cool-shell/island/CollapsedStatus.qml): Hide battery pill when phone subsystem is disabled.
+- [`island/ShellState.qml`](file://$HOME/.config/quickshell/cool-shell/island/ShellState.qml): Added `phoneSystemEnabled`, gated timer checks, whole-system toggle function.
+- [`scripts/phone-ctl.sh`](file://$HOME/.config/quickshell/cool-shell/scripts/phone-ctl.sh): Implemented `shutdown_whole_system()`, guarded `show_status()`.
+- [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml): Added `setSystemEnabled` IPC method.

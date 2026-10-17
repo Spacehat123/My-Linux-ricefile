@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-30  
 **Status:** ✅ **COMPLETED & OPERATIONAL**  
-**Workspace:** `/home/pranc/.config/quickshell/cool-shell`  
+**Workspace:** `$HOME/.config/quickshell/cool-shell`  
 **Author:** Antigravity Autonomous Pair Programming Agent  
 **Auditor / Reviewer:** `asw-reviewer` Subagent  
 
@@ -22,7 +22,7 @@ Crucially, this entire visual overhaul was achieved under the strict **Zero-Over
 ## 2. Inventory of Completed Work
 
 ### A. Master Glass Tokens & Theme Unification
-- **File:** [`island/Theme.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Theme.qml) & [`theme/Theme.qml`](file:///home/pranc/.config/quickshell/cool-shell/theme/Theme.qml)
+- **File:** [`island/Theme.qml`](file://$HOME/.config/quickshell/cool-shell/island/Theme.qml) & [`theme/Theme.qml`](file://$HOME/.config/quickshell/cool-shell/theme/Theme.qml)
 - Defined master translucent glass materials with high-legibility sheen borders:
   - `glassBackground`: `Qt.rgba(bg0.r, bg0.g, bg0.b, 0.90)`
   - `glassBackgroundSubtle`: `Qt.rgba(bgDim.r, bgDim.g, bgDim.b, 0.80)`
@@ -32,16 +32,16 @@ Crucially, this entire visual overhaul was achieved under the strict **Zero-Over
   - `glassBorderSubtle`: `Qt.rgba(1.0, 1.0, 1.0, 0.07)`
   - `glassBorderActive`: `Qt.rgba(primary.r, primary.g, primary.b, 0.75)`
   - Radii hierarchy: `radiusSquircle: 14`, `radiusCard: 16`, `radiusWindow: 24`, `radiusPill: 999`.
-- [`theme/Theme.qml`](file:///home/pranc/.config/quickshell/cool-shell/theme/Theme.qml) binds directly to `Island.Theme`, creating a unified single source of truth.
+- [`theme/Theme.qml`](file://$HOME/.config/quickshell/cool-shell/theme/Theme.qml) binds directly to `Island.Theme`, creating a unified single source of truth.
 
 ### B. Decoupled Standalone Settings Window
-- **Files:** [`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml), [`island/Notch.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml), [`island/ShellState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/ShellState.qml), [`island/panels/ControlPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/ControlPanel.qml), [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml)
+- **Files:** [`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml), [`island/Notch.qml`](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml), [`island/ShellState.qml`](file://$HOME/.config/quickshell/cool-shell/island/ShellState.qml), [`island/panels/ControlPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/ControlPanel.qml), [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml)
 - Settings was removed from the Dynamic Island's panel stack.
 - Created `panels/SettingsWindow.qml`: a centered 780×540 floating smoked glass modal on `WlrLayer.Overlay` with Escape-to-close, category navigation sidebar (Appearance, Display & Wallpaper, Sound & PipeWire, Accessibility & Screen Reader, Window Recovery, About), and keyboard-focus handling strictly on demand.
 - Clicking the Gear icon (`󰒓`) in the Island or Control Panel smoothly collapses the Island and opens the Settings window. Exposed IPC target `settings` (`toggle`, `open`, `close`).
 
 ### C. Floating Liquid Bottom Dock
-- **File:** [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml)
+- **File:** [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml)
 - Transformed from a rigid 30px flat bar into a 44px floating glass dock capsule (`radius: 22`, 10px bottom margin).
 - Interactive liquid workspace capsules with `SpringAnimation` physics on width (`spring: 4.2, damping: 0.35`). Active workspaces expand into spacious pills, occupied workspaces rest as medium dots, and empty workspaces stay compact.
 - Press compression: `scale: wsMouse.pressed ? 0.94 : 1.0`.
@@ -49,7 +49,7 @@ Crucially, this entire visual overhaul was achieved under the strict **Zero-Over
 - Interactive Network pill, scrollable PipeWire Audio pill (`+/-0.02` per wheel step), and UPower Battery pill.
 
 ### D. Left Sidebar Drawer Makeover & Game Mode
-- **Files:** [`panels/LeftSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/LeftSidebar.qml), [`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml), [`island/scripts/game-mode.py`](file:///home/pranc/.config/quickshell/cool-shell/island/scripts/game-mode.py)
+- **Files:** [`panels/LeftSidebar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/LeftSidebar.qml), [`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml), [`island/scripts/game-mode.py`](file://$HOME/.config/quickshell/cool-shell/island/scripts/game-mode.py)
 - Replaced monospace tactical HUD with a 360px floating smoked glass drawer (`radius: 24`, 12px margin, smooth `Easing.OutBack` slide animation).
 - Modern greeting header with dynamic date and gear icon opening Settings.
 - 2×2 squircle quick control tiles: Wallpaper toggle, Ambient HUD toggle, Do Not Disturb, Night Light (warm 4200K toggle).
@@ -64,18 +64,18 @@ Crucially, this entire visual overhaul was achieved under the strict **Zero-Over
   - Displays live telemetry of killed background processes in the UI and Dynamic Island transient pill.
 
 ### E. Right Sidebar: Personal Daily Dashboard ("Today Center")
-- **Files:** [`panels/RightSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/RightSidebar.qml), [`components/TodayCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/TodayCenter.qml)
+- **Files:** [`panels/RightSidebar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/RightSidebar.qml), [`components/TodayCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/TodayCenter.qml)
 - Completely excised active windows and surface lists per user directive: *"I dont want active windows, remove that and put something that matters. think"*.
 - Built `components/TodayCenter.qml`:
   1. **Header & Glance:** Live Day name, full date, pending tasks count, and ambient time pill.
   2. **Interactive Mini Month Calendar:** Month/year header, `<` `>` navigation and reset-to-today button, Monday-first weekday headers, and day grid with today highlighted in primary squircle.
-  3. **Tasks & To-Do Checklist:** Direct two-way sync with [`island/TodoState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/TodoState.qml). Inline task input field ("Add a task... [Press Enter]"), round checkboxes with checkmark animation, strikeout styling, and delete action.
+  3. **Tasks & To-Do Checklist:** Direct two-way sync with [`island/TodoState.qml`](file://$HOME/.config/quickshell/cool-shell/island/TodoState.qml). Inline task input field ("Add a task... [Press Enter]"), round checkboxes with checkmark animation, strikeout styling, and delete action.
   4. **Quick Scratchpad:** Auto-saving persistent notepad backed by `island/scratchpad.txt` with debounced atomic writes.
   5. **Recent Alerts / Notification Center:** Displays latest alerts from `IslandHub.notifModel.values` with app glyphs, summaries, timestamps, and "Clear" button.
-- Cleanly deleted obsolete [`components/ApplicationOverview.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ApplicationOverview.qml).
+- Cleanly deleted obsolete [`components/ApplicationOverview.qml`](file://$HOME/.config/quickshell/cool-shell/components/ApplicationOverview.qml).
 
 ### F. Micro-Haptics, Ambient Layer & Polish
-- **Files:** [`island/components/IconButton.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/components/IconButton.qml), [`island/components/ActionTile.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/components/ActionTile.qml), [`components/EdgeTrigger.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/EdgeTrigger.qml), [`desktop/DesktopTransition.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/DesktopTransition.qml)
+- **Files:** [`island/components/IconButton.qml`](file://$HOME/.config/quickshell/cool-shell/island/components/IconButton.qml), [`island/components/ActionTile.qml`](file://$HOME/.config/quickshell/cool-shell/island/components/ActionTile.qml), [`components/EdgeTrigger.qml`](file://$HOME/.config/quickshell/cool-shell/components/EdgeTrigger.qml), [`desktop/DesktopTransition.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/DesktopTransition.qml)
 - Tactile press compression: `IconButton` compresses to `0.94` scale on click; `ActionTile` compresses to `0.97` scale.
 - `EdgeTrigger`: Replaced raw debug rectangles with subtle ambient glow pills matching `Island.Theme.primary`.
 - `DesktopTransition`: Replaced boxy tactical reticle with a sleek 280×50 floating glass pill HUD with refined typography, softened telemetry badges, and smooth vector transition arrows.

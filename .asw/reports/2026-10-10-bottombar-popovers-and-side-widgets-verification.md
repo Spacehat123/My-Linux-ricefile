@@ -45,17 +45,17 @@ All features and fixes requested by the user have been successfully implemented,
 
 | Requirement | Implementation Detail | Target File | Status |
 | :--- | :--- | :--- | :--- |
-| **Pill Border Width** | `border.width: 1` universally across all states | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L222) | **PASS** |
-| **Pill Inner Color** | Active pill uses `Island.Theme.glassCardHover` (monochrome gray/black) instead of primary tint | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L213-L218) | **PASS** |
-| **Dock Background Tint** | `Qt.tint("#07070a", Qt.rgba(Island.Theme.primary.r, ..., 0.08))` with 300ms animation | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L157-L164) | **PASS** |
-| **Sound Popover Widget** | Floating 96px telemetry card with sink info and volume gauge; zero buttons or child click-captures | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L510-L630) | **PASS** |
-| **Wi-Fi Popover Widget** | Floating 96px telemetry card with SSID and signal badge; zero buttons | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L632-L750) | **PASS** |
-| **Battery Popover Widget** | Floating 96px telemetry card with charging state, time estimation, gauge bar; zero buttons | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L752-L875) | **PASS** |
-| **Zero Buttons Discipline** | All action/launcher buttons removed from status popovers in response to user direction | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml) | **PASS** |
-| **Click-Through Safety** | `mask: Region` strictly limits input regions to visible elements; zero blocked clicks behind | [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L65-L85) | **PASS** |
-| **MediaWidget Continuity** | Multi-layer hover guard (`rootHoverHandler`, `windowMouseArea`, `cardHoverHandler`), zero-clipping mask | [`panels/MediaWidget.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/MediaWidget.qml#L37-L75) | **PASS** |
-| **StashPocket Continuity** | Multi-layer hover guard, latch fix (`!root.open` guard on pill hover), 380ms debounce | [`components/StashPocket.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/StashPocket.qml#L126-L230) | **PASS** |
-| **Stash Dismiss Channels** | Mouse leave (380ms debounce), Escape key shortcut, and direct header close button ("✕") | [`components/StashPocket.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/StashPocket.qml#L129-L400) | **PASS** |
+| **Pill Border Width** | `border.width: 1` universally across all states | [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml#L222) | **PASS** |
+| **Pill Inner Color** | Active pill uses `Island.Theme.glassCardHover` (monochrome gray/black) instead of primary tint | [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml#L213-L218) | **PASS** |
+| **Dock Background Tint** | `Qt.tint("#07070a", Qt.rgba(Island.Theme.primary.r, ..., 0.08))` with 300ms animation | [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml#L157-L164) | **PASS** |
+| **Sound Popover Widget** | Floating 96px telemetry card with sink info and volume gauge; zero buttons or child click-captures | [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml#L510-L630) | **PASS** |
+| **Wi-Fi Popover Widget** | Floating 96px telemetry card with SSID and signal badge; zero buttons | [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml#L632-L750) | **PASS** |
+| **Battery Popover Widget** | Floating 96px telemetry card with charging state, time estimation, gauge bar; zero buttons | [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml#L752-L875) | **PASS** |
+| **Zero Buttons Discipline** | All action/launcher buttons removed from status popovers in response to user direction | [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml) | **PASS** |
+| **Click-Through Safety** | `mask: Region` strictly limits input regions to visible elements; zero blocked clicks behind | [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml#L65-L85) | **PASS** |
+| **MediaWidget Continuity** | Multi-layer hover guard (`rootHoverHandler`, `windowMouseArea`, `cardHoverHandler`), zero-clipping mask | [`panels/MediaWidget.qml`](file://$HOME/.config/quickshell/cool-shell/panels/MediaWidget.qml#L37-L75) | **PASS** |
+| **StashPocket Continuity** | Multi-layer hover guard, latch fix (`!root.open` guard on pill hover), 380ms debounce | [`components/StashPocket.qml`](file://$HOME/.config/quickshell/cool-shell/components/StashPocket.qml#L126-L230) | **PASS** |
+| **Stash Dismiss Channels** | Mouse leave (380ms debounce), Escape key shortcut, and direct header close button ("✕") | [`components/StashPocket.qml`](file://$HOME/.config/quickshell/cool-shell/components/StashPocket.qml#L129-L400) | **PASS** |
 | **LayerShell Validation** | Verified via `hyprctl layers`: unmapped when closed (0 clicks blocked), mapped when active | Compositor runtime | **PASS** |
 
 ---

@@ -23,7 +23,7 @@ While in Study Mode (`CA / ICAI Study`), the user attempted to view and download
 
 ## 2. Root Cause Analysis
 
-- **Location**: [`scripts/study-mode.py`](file:///home/pranc/.config/quickshell/cool-shell/scripts/study-mode.py)
+- **Location**: [`scripts/study-mode.py`](file://$HOME/.config/quickshell/cool-shell/scripts/study-mode.py)
 - **Functions**: `enforce_distractions()`
 - **Flaws**:
   1. `ALLOWED_CLASSES` omitted desktop integration portals (`xdg-desktop-portal-*`), alternative file managers, and file choosers.

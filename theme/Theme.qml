@@ -17,11 +17,36 @@ QtObject {
     readonly property int radiusSquircle: Island.Theme.radiusSquircle
     readonly property int radiusPill: Island.Theme.radiusPill
 
+    // Semantic Palette Pass-Through Tokens
+    readonly property color primary: Island.Theme.primary
+    readonly property color primaryContainer: Island.Theme.primaryContainer
+    readonly property color secondaryContainer: Island.Theme.secondaryContainer
+    readonly property color foreground: Island.Theme.foreground
+    readonly property color muted: Island.Theme.muted
+    readonly property color mutedDark: Island.Theme.mutedDark
+    readonly property color bgDim: Island.Theme.bgDim
+    readonly property color bg0: Island.Theme.bg0
+    readonly property color bg1: Island.Theme.bg1
+    readonly property color bg2: Island.Theme.bg2
+    readonly property color bg3: Island.Theme.bg3
+    readonly property color bg4: Island.Theme.bg4
+    readonly property color green: Island.Theme.green
+    readonly property color yellow: Island.Theme.yellow
+    readonly property color orange: Island.Theme.orange
+    readonly property color red: Island.Theme.red
+    readonly property color error: Island.Theme.error
+    readonly property color blue: Island.Theme.blue
+    readonly property color aqua: Island.Theme.aqua
+    readonly property color cyan: Island.Theme.cyan
+    readonly property color purple: Island.Theme.purple
+
     // Layout and spacing constants
     readonly property int panelPadding: 16
     readonly property int itemSpacing: 12
 
     // Typography constants
+    readonly property string fontFamily: Island.Theme.fontFamily
+    readonly property string iconFontFamily: Island.Theme.iconFontFamily
     readonly property color primaryTextColor: Island.Theme.foreground
     readonly property color secondaryTextColor: Island.Theme.muted
     readonly property color mutedTextColor: secondaryTextColor

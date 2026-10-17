@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-A dedicated mode tile for **"God's Eye"** (`bilawalsidhu/gods-eye-view`) has been integrated into the **Left Sidebar** ([`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml)). 
+A dedicated mode tile for **"God's Eye"** (`bilawalsidhu/gods-eye-view`) has been integrated into the **Left Sidebar** ([`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml)). 
 
 Toggling this mode:
 1. **Ensures the God's Eye 3D OSINT server** (`Vite` dev server running from `~/Desktop/gods-eye-view`) is started in the background on `http://localhost:4173`.
@@ -21,7 +21,7 @@ Toggling this mode:
 
 ## 2. Architecture & Implementation
 
-### A. Lifecycle & Process Controller: [`scripts/gods-eye.sh`](file:///home/pranc/.config/quickshell/cool-shell/scripts/gods-eye.sh)
+### A. Lifecycle & Process Controller: [`scripts/gods-eye.sh`](file://$HOME/.config/quickshell/cool-shell/scripts/gods-eye.sh)
 The backend controller manages the background server daemon and browser interaction:
 - **`start`**:
   - Checks if `http://localhost:4173/` is already responsive (`curl -s -f -m 0.6`). If running, it simply opens/focuses the browser.
@@ -36,7 +36,7 @@ The backend controller manages the background server daemon and browser interact
 - **`open`**:
   - Direct re-open / focus trigger without restarting server.
 
-### B. Shell State Binding: [`island/ShellState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/ShellState.qml)
+### B. Shell State Binding: [`island/ShellState.qml`](file://$HOME/.config/quickshell/cool-shell/island/ShellState.qml)
 Maintains authoritative state across Quickshell:
 - `property bool godsEyeActive`: Synchronized with server status.
 - `function toggleGodsEye()`: Toggles background server via `Quickshell.execDetached`.
@@ -44,7 +44,7 @@ Maintains authoritative state across Quickshell:
 - `Process id: godsEyeStatusProc`: Runs `scripts/gods-eye.sh status` with `SplitParser` to deserialize status.
 - `Timer`: 3-second recurring polling heartbeat keeps state synchronized even if the server is stopped externally.
 
-### C. Left Sidebar UI Tile: [`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml)
+### C. Left Sidebar UI Tile: [`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml)
 Located under **Section 2E** (adjacent to Performance Mode, The Feather, and AI Image Engine):
 - **Glass Card Height**: 64px, radius 16px.
 - **Visuals**:

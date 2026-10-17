@@ -1,4 +1,4 @@
-#!/home/pranc/.unsloth/studio/unsloth_studio/bin/python3
+#!/usr/bin/env python3
 """
 Cool-Shell Image Engine Client
 Connects to the background image daemon (/tmp/cool-shell-image.sock) for warm <10-25s inference.

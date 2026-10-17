@@ -4,7 +4,7 @@
 # ==============================================================================
 set -euo pipefail
 
-PROJECT_DIR="/home/pranc/Desktop/gods-eye-view"
+PROJECT_DIR="${GODS_EYE_DIR:-$HOME/Desktop/gods-eye-view}"
 PID_FILE="/tmp/gods-eye-view.pid"
 LOG_FILE="/tmp/gods-eye-view.log"
 PORT=4173

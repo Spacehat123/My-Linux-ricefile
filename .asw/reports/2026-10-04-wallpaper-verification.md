@@ -68,7 +68,7 @@ The component defines a top-level `PanelWindow` (Quickshell Wayland window item)
 #### 3.1.3 Runtime Loading Logs
 Inspection of `/run/user/1000/quickshell/by-id/q2m2lfqdmt/log.qslog` via `qs log -c cool-shell`:
 ```text
-INFO: Launching config: "/home/pranc/.config/quickshell/cool-shell/shell.qml"
+INFO: Launching config: "$HOME/.config/quickshell/cool-shell/shell.qml"
 ...
 WARN scene: QML IpcHandler at @shell.qml[225:5]: Signal detected: "enabledChanged"
 INFO: Configuration Loaded
@@ -85,7 +85,7 @@ No QML parse errors, unresolvable imports, type mismatches, or binding loops wer
 - Invocation test:
   ```bash
   $ ./wallpaper/shaders/compile.sh
-  [qsb] Compiling /home/pranc/.config/quickshell/cool-shell/wallpaper/shaders/wallpaper.frag...
+  [qsb] Compiling $HOME/.config/quickshell/cool-shell/wallpaper/shaders/wallpaper.frag...
   [qsb] Successfully generated wallpaper.frag.qsb (2954 bytes)
   ```
 - Git hash of the freshly compiled file matches repository HEAD index `7770387c434da98c241dcb072591546202f818f2`.

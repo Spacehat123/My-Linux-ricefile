@@ -69,7 +69,7 @@
 
 ## 🏝️ Apple-Style Dynamic Island (The Notch)
 
-At the apex of the screen sits the **Dynamic Island** ([`island/Notch.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml)), a tactile, hardware-accelerated floating pill powered by spring physics (`SpringAnimation`, damping=0.3) and elastic morphing.
+At the apex of the screen sits the **Dynamic Island** ([`island/Notch.qml`](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml)), a tactile, hardware-accelerated floating pill powered by spring physics (`SpringAnimation`, damping=0.3) and elastic morphing.
 
 ### Collapsed Ambient Pill
 When idle, the notch remains a compact, unobtrusive capsule displaying real-time situational awareness:
@@ -146,7 +146,7 @@ Seamless mobile continuity bringing native Android control to the Wayland deskto
 
 ## 🎓 Study Mode Lockdown & Daily Contribution Heatmap
 
-An uncompromising deep-work and discipline enforcement system designed for exam prep (CA / ICAI) and intensive study blocks ([`scripts/study-mode.py`](file:///home/pranc/.config/quickshell/cool-shell/scripts/study-mode.py)).
+An uncompromising deep-work and discipline enforcement system designed for exam prep (CA / ICAI) and intensive study blocks ([`scripts/study-mode.py`](file://$HOME/.config/quickshell/cool-shell/scripts/study-mode.py)).
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -174,13 +174,13 @@ An uncompromising deep-work and discipline enforcement system designed for exam 
 - **Educational Whitelist**: Fully permits ICAI Board of Studies resources (`resource.cdn.icai.org`, `bos`), Google NotebookLM, WhatsApp Web, and **all standalone or browser-viewed PDF study materials**.
 - **Complete File Manager & Portal Protection**: All Linux file explorers (`dolphin`, `nautilus`, `nemo`, `thunar`, `pcmanfm`, `caja`, `ranger`, `yazi`) and desktop portals (`xdg-desktop-portal-gtk`, `kdialog`, `zenity`) are whitelisted, allowing seamless document downloading and organization.
 - **Autonomous Lo-Fi Accompaniment**: Silently mounts and shuffles study tracks from `~/Music/study/` in background `mpv` loop without UI clutter.
-- **Desktop Contribution Heatmap**: Renders an interactive 52-week activity grid on the desktop wallpaper layer ([`desktop/StudyContributionHeatmap.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/StudyContributionHeatmap.qml)), tracking sessions, consistency streaks, and deep-work volume.
+- **Desktop Contribution Heatmap**: Renders an interactive 52-week activity grid on the desktop wallpaper layer ([`desktop/StudyContributionHeatmap.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/StudyContributionHeatmap.qml)), tracking sessions, consistency streaks, and deep-work volume.
 
 ---
 
 ## 🪶 Feather Mode & Hardware Resource Throttling
 
-A precision power-capping profile engineered for maximum battery longevity, silent fan operation, and thermal management ([`island/scripts/feather-mode.py`](file:///home/pranc/.config/quickshell/cool-shell/island/scripts/feather-mode.py)).
+A precision power-capping profile engineered for maximum battery longevity, silent fan operation, and thermal management ([`island/scripts/feather-mode.py`](file://$HOME/.config/quickshell/cool-shell/island/scripts/feather-mode.py)).
 
 ### Architecture & Throttling Limits
 - **Hardware-Level CPU & GPU Capping**: Enforces strict operational ceilings via Linux kernel cpufreq governor, energy-performance preferences (`power`), and GPU frequency limiters:
@@ -193,7 +193,7 @@ A precision power-capping profile engineered for maximum battery longevity, sile
 
 ## 🔋 Hardware Battery Health Care Mode (Acer EC 80%)
 
-A direct hardware-level battery preservation system tailored for Acer laptops and Embedded Controller (EC) architectures ([`scripts/battery-limit.sh`](file:///home/pranc/.config/quickshell/cool-shell/scripts/battery-limit.sh)).
+A direct hardware-level battery preservation system tailored for Acer laptops and Embedded Controller (EC) architectures ([`scripts/battery-limit.sh`](file://$HOME/.config/quickshell/cool-shell/scripts/battery-limit.sh)).
 
 ### Electrical & Hardware Operation
 - **Acer EC Register Control**: Directly interacts with the Embedded Controller firmware (`ec_sys` / `/dev/port`) to activate native Acer Battery Care Mode (`0x01`).
@@ -217,7 +217,7 @@ Integrated local perception and machine intelligence surfaces accessible right f
 - **Dynamic Island Read-Aloud**: Immediately morphs the Notch into an audio reader HUD (`🔊 Reading aloud...`), streaming localized speech synthesis (`speech-dispatcher` / `piper-tts`) with 1-click stop.
 
 ### 🎨 AI Image Studio (Local LCM Generation)
-- **Dedicated Prompt Modal**: Press shortcut or click the AI icon on the notch to expand the **AI Prompt Panel** ([`island/panels/AiPromptPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/AiPromptPanel.qml)).
+- **Dedicated Prompt Modal**: Press shortcut or click the AI icon on the notch to expand the **AI Prompt Panel** ([`island/panels/AiPromptPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/AiPromptPanel.qml)).
 - **Sub-Second Daemon Preload**: Daemon keeps model weights hot in VRAM (`image-daemon.py`) for rapid generation without load penalty.
 - **Realistic Vision v5.1 + LCM**: Generates native 512×512 photo-realistic outputs locally on NVIDIA GPU in ~3 seconds.
 - **Instant Shelf Stash**: Completed renders fly into the Dynamic Island with transient preview and auto-stash into Drop Pocket.
@@ -229,19 +229,19 @@ Integrated local perception and machine intelligence surfaces accessible right f
 Beyond the Dynamic Island, `cool-shell` provides a complete multi-layered cyber-tactical desktop cockpit:
 
 ### 1. Slide-Out Sidebars
-- **Left Sidebar ([`panels/LeftSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/LeftSidebar.qml))**: Hosts the full Control Center, system mode switches (Feather Mode, Study Mode, Battery Care, Game Mode), audio sink selectors, and performance graphs.
-- **Right Sidebar ([`panels/RightSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/RightSidebar.qml))**: Application Overview with searchable running surfaces, window thumbnail previews, and window management controls.
+- **Left Sidebar ([`panels/LeftSidebar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/LeftSidebar.qml))**: Hosts the full Control Center, system mode switches (Feather Mode, Study Mode, Battery Care, Game Mode), audio sink selectors, and performance graphs.
+- **Right Sidebar ([`panels/RightSidebar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/RightSidebar.qml))**: Application Overview with searchable running surfaces, window thumbnail previews, and window management controls.
 
 ### 2. Workspace Navigator & Directional HUD
-- **Bottom Bar ([`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml))**: Floating workspace pills with occupancy pips, urgency alerts, and active window counters.
-- **Spatial Transition Overlay ([`desktop/DesktopTransition.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/DesktopTransition.qml))**: Ephemeral HUD overlay indicating workspace switch direction (`← / →`) with spring physics.
+- **Bottom Bar ([`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml))**: Floating workspace pills with occupancy pips, urgency alerts, and active window counters.
+- **Spatial Transition Overlay ([`desktop/DesktopTransition.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/DesktopTransition.qml))**: Ephemeral HUD overlay indicating workspace switch direction (`← / →`) with spring physics.
 
 ### 3. Idle-Triggered Ambient Layer
-- Activates automatically upon user inactivity via `ext_idle_notification_v1` ([`desktop/AmbientLayer.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/AmbientLayer.qml)).
+- Activates automatically upon user inactivity via `ext_idle_notification_v1` ([`desktop/AmbientLayer.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/AmbientLayer.qml)).
 - Features linear orbital telemetry rings, tactical corner brackets, and floating battery/workspace coordinates.
 
 ### 4. GPU Procedural Shader Wallpaper
-- Live harmonic interference fragment shader ([`wallpaper/shaders/wallpaper.frag`](file:///home/pranc/.config/quickshell/cool-shell/wallpaper/shaders/wallpaper.frag)) compiled via Qt 6 Shader Baker (`qsb`).
+- Live harmonic interference fragment shader ([`wallpaper/shaders/wallpaper.frag`](file://$HOME/.config/quickshell/cool-shell/wallpaper/shaders/wallpaper.frag)) compiled via Qt 6 Shader Baker (`qsb`).
 - Renders directly on `WlrLayer.Background` with zero CPU overhead.
 
 ---

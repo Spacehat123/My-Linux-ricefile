@@ -85,9 +85,10 @@ def find_rec_inputs(objects, tag):
     return [ins.get("input_FL"), ins.get("input_FR")]
 
 
-def stream_levels(proc, out_path):
+def stream_levels(proc, out_path, current_sink):
     smooth = [0.0, 0.0, 0.0, 0.0]
     last_write = 0.0
+    last_sink_check = time.monotonic()
     buf = b""
     while True:
         data = proc.stdout.read(CHUNK)
@@ -113,6 +114,11 @@ def stream_levels(proc, out_path):
             if now - last_write >= 0.08:
                 last_write = now
                 write_levels(out_path, smooth)
+            if now - last_sink_check >= 8.0:
+                last_sink_check = now
+                new_sink = default_sink_name()
+                if new_sink and new_sink != current_sink:
+                    return
 
 
 def write_levels(out_path, vals):
@@ -188,7 +194,7 @@ def capture_session(out_path, tag):
         if not linked:
             write_levels(out_path, [0.0, 0.0, 0.0, 0.0])
             return False
-        stream_levels(proc, out_path)
+        stream_levels(proc, out_path, sink)
     finally:
         _kill_child()
     return True
@@ -228,18 +234,7 @@ def main():
 
     out_path = os.path.join(runtime, "cool-shell-levels")
     tag = "cool-shell-levels-%d" % os.getpid()
-    last_sink = None
-    sink_since = time.monotonic()
     while True:
-        sink = default_sink_name()
-        if sink != last_sink:
-            last_sink = sink
-            sink_since = time.monotonic()
-        # Re-resolve the sink every 30s (e.g. BT connect moves default).
-        if time.monotonic() - sink_since > 30:
-            sink_since = time.monotonic()
-            last_sink = None
-            continue
         ok = capture_session(out_path, tag)
         if not ok:
             time.sleep(2)

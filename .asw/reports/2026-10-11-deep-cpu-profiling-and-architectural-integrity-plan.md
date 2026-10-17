@@ -1,7 +1,7 @@
 # Deep CPU Profiling, Video Wallpaper Tuning & Architectural Integrity Plan
 
 - **Date**: 2026-10-11
-- **Workspace**: `/home/pranc/.config/quickshell/cool-shell`
+- **Workspace**: `$HOME/.config/quickshell/cool-shell`
 - **Target Platform**: Hyprland / Wayland / Linux
 - **Framework**: Quickshell 0.3.1 / Qt 6
 - **Status**: Investigative Report & Proposed Architectural Blueprint
@@ -64,7 +64,7 @@ However, the moment audio plays (`playerctl play`), CPU jumps to **`13.0% – 19
 ### Part I: Deep Performance & Rendering Optimization
 
 #### Action 1: Transform `mediaRing` from Continuous Canvas to Quantized Throttle
-- **File**: [`island/Notch.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml)
+- **File**: [`island/Notch.qml`](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml)
 - **Problem**: Repainting a 2D trigonometric canvas at 60/144 FPS to show track progress that changes over minutes.
 - **Solution**:
   - Remove the continuous 250ms `NumberAnimation` on `animatedFraction`.
@@ -72,7 +72,7 @@ However, the moment audio plays (`playerctl play`), CPU jumps to **`13.0% – 19
   - Result: Drops canvas repaints from **60/sec to ~1/sec**, saving **5%–8% CPU** during music playback with zero visible loss of precision.
 
 #### Action 2: Eliminate Double-Smoothing on Equalizer Bars
-- **File**: [`island/CollapsedStatus.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/CollapsedStatus.qml)
+- **File**: [`island/CollapsedStatus.qml`](file://$HOME/.config/quickshell/cool-shell/island/CollapsedStatus.qml)
 - **Problem**: Python `level-meter.py` already performs exponential moving average smoothing at 12.5Hz (`smooth[i] += (bars[i] - smooth[i]) * 0.35`). Adding a 120ms `NumberAnimation` in QML forces continuous 60 FPS repaints.
 - **Solution**:
   - Direct bind `height: 2 + (IslandHub.levels[index] || 0) * 10` without the overlapping 120ms animation loop.
@@ -80,7 +80,7 @@ However, the moment audio plays (`playerctl play`), CPU jumps to **`13.0% – 19
   - Result: Saves **3%–5% CPU**.
 
 #### Action 3: Eliminate Audio Decoding from Video Wallpaper
-- **File**: [`wallpaper/Wallpaper.qml`](file:///home/pranc/.config/quickshell/cool-shell/wallpaper/Wallpaper.qml)
+- **File**: [`wallpaper/Wallpaper.qml`](file://$HOME/.config/quickshell/cool-shell/wallpaper/Wallpaper.qml)
 - **Solution**:
   - Remove `audioOutput: AudioOutput { muted: true }`.
   - Fix `_syncPlayback()` to always pause `mediaPlayer` when `live` is false, regardless of visibility.
@@ -88,7 +88,7 @@ However, the moment audio plays (`playerctl play`), CPU jumps to **`13.0% – 19
   - Result: Completely unloads the video decoder and audio resampler when obscured or paused.
 
 #### Action 4: Hardware NVDEC Video Decoding & Framerate Pacing
-- **File**: [`wallpaper/Wallpaper.qml`](file:///home/pranc/.config/quickshell/cool-shell/wallpaper/Wallpaper.qml)
+- **File**: [`wallpaper/Wallpaper.qml`](file://$HOME/.config/quickshell/cool-shell/wallpaper/Wallpaper.qml)
 - **Analysis**:
   - Hardware probing revealed that `h264_cuvid` (NVIDIA CUVID/NVDEC) is installed and supported by the GTX 1650.
   - For live wallpapers, decoding at 30 FPS rather than 60 FPS halves CPU/GPU decode bandwidth while remaining completely fluid for scenic/ambient loops.
@@ -100,12 +100,12 @@ However, the moment audio plays (`playerctl play`), CPU jumps to **`13.0% – 19
 
 #### Action 5: Comprehensive Compositor Action Layer Expansion
 - **Files**:
-  - [`core/CompositorActionLayer.qml`](file:///home/pranc/.config/quickshell/cool-shell/core/CompositorActionLayer.qml)
-  - [`core/InteractionModel.qml`](file:///home/pranc/.config/quickshell/cool-shell/core/InteractionModel.qml)
-  - [`components/StashPocket.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/StashPocket.qml)
-  - [`components/BirdsEyeOverview.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/BirdsEyeOverview.qml)
-  - [`panels/RightSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/RightSidebar.qml)
-  - [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml)
+  - [`core/CompositorActionLayer.qml`](file://$HOME/.config/quickshell/cool-shell/core/CompositorActionLayer.qml)
+  - [`core/InteractionModel.qml`](file://$HOME/.config/quickshell/cool-shell/core/InteractionModel.qml)
+  - [`components/StashPocket.qml`](file://$HOME/.config/quickshell/cool-shell/components/StashPocket.qml)
+  - [`components/BirdsEyeOverview.qml`](file://$HOME/.config/quickshell/cool-shell/components/BirdsEyeOverview.qml)
+  - [`panels/RightSidebar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/RightSidebar.qml)
+  - [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml)
 - **Implementation**:
   1. Add approved intents to `CompositorActionLayer.qml`:
      - `moveToSpecialWorkspace`: dispatches `hl.dsp.window.move({ workspace = specialName, silent = true })`
@@ -117,15 +117,15 @@ However, the moment audio plays (`playerctl play`), CPU jumps to **`13.0% – 19
 
 #### Action 6: Theme Authority Unification & Renaming
 - **Files**:
-  - [`theme/Theme.qml`](file:///home/pranc/.config/quickshell/cool-shell/theme/Theme.qml) $\rightarrow$ [`theme/TacticalTheme.qml`](file:///home/pranc/.config/quickshell/cool-shell/theme/TacticalTheme.qml)
-  - [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml)
+  - [`theme/Theme.qml`](file://$HOME/.config/quickshell/cool-shell/theme/Theme.qml) $\rightarrow$ [`theme/TacticalTheme.qml`](file://$HOME/.config/quickshell/cool-shell/theme/TacticalTheme.qml)
+  - [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml)
 - **Implementation**:
   - Rename `theme/Theme.qml` to `TacticalTheme.qml` to eliminate name collision with `island/Theme.qml`.
   - Remove the ambiguous import restriction in `shell.qml`.
 
 #### Action 7: IPC Registry Modularization
 - **Files**:
-  - [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml)
+  - [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml)
   - `core/IpcRegistry.qml` (New component)
 - **Implementation**:
   - Extract the 23 `IpcHandler` definitions from `shell.qml` into a dedicated `IpcRegistry.qml`.

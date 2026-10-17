@@ -7,6 +7,7 @@ Singleton {
     id: root
 
     property bool screenReaderMode: false
+    readonly property bool screenReader: screenReaderMode
     property bool daemonConnected: false
     property bool daemonAvailable: true
 

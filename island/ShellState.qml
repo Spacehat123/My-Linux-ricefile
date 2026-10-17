@@ -28,7 +28,7 @@ Singleton {
         "caption": 420
     })
     readonly property var panelHeights: ({
-        "control": 386,
+        "control": 428,
         "launcher": 290,
         "clipboard": 80,
         "todo": 87,
@@ -68,11 +68,19 @@ Singleton {
         "caption": 22
     })
     signal openSettingsRequested(string category)
+    signal toggleTodayRequested()
+    signal openOnboardingRequested()
 
     function openSettings(category) {
         close();
         openSettingsRequested(category !== undefined && category !== null ? category : "");
     }
+
+    function openOnboarding() {
+        close();
+        openOnboardingRequested();
+    }
+
     property string activeScreenName: ""
     property string panel: "collapsed"
     property int noticeTick: 0
@@ -86,6 +94,7 @@ Singleton {
         return panelWidths[panel] || 145;
     }
     property alias nightLightTemperature: persistence.nightLightTemperature
+    property alias idleTimeoutSeconds: persistence.idleTimeoutSeconds
 
     // Game Mode State & Process Mediation
     property bool gameMode: false
@@ -297,6 +306,7 @@ Singleton {
     property int studyOvertimeSeconds: 0
     property string studySubject: "CA / ICAI Study"
     property int studyTargetDuration: 1800 // 30 minutes (1800s)
+    property int studyHistoryRevision: 0
 
     signal studyModeToggled(bool active)
 
@@ -313,6 +323,7 @@ Singleton {
     function stopStudyMode() {
         Quickshell.execDetached(["python3", Quickshell.shellPath("scripts/study-mode.py"), "stop"]);
         root.checkStudyStatus();
+        root.studyHistoryRevision += 1;
     }
 
     function checkStudyStatus() {
@@ -331,12 +342,16 @@ Singleton {
                 try {
                     const res = JSON.parse(text.trim());
                     if (res && res.active !== undefined) {
+                        const wasOvertime = root.studyOvertime;
                         root.studyActive = (res.active === true);
                         root.studyRemaining = res.remaining_seconds || 0;
                         root.studyOvertime = (res.overtime === true);
                         root.studyOvertimeSeconds = res.overtime_seconds || 0;
                         if (res.subject) root.studySubject = res.subject;
                         if (res.target_duration) root.studyTargetDuration = res.target_duration;
+                        if (!wasOvertime && root.studyOvertime) {
+                            root.studyHistoryRevision += 1;
+                        }
                     }
                 } catch (e) {}
             }
@@ -396,15 +411,23 @@ Singleton {
         }
     }
 
+    function refreshAllSubsystems() {
+        root.checkAiDaemonStatus();
+        root.checkGodsEyeStatus();
+        root.checkStudyStatus();
+        root.checkPhoneStatus();
+    }
+
+    // Event-driven active mode ticker: ONLY runs when at least one dynamic subsystem is active or Island is expanded
     Timer {
-        interval: root.studyActive ? 1000 : 3000
-        running: true
+        interval: root.studyActive ? 1000 : 4000
+        running: root.studyActive || root.aiDaemonLoaded || root.godsEyeActive || root.phoneSystemEnabled || root.expanded
         repeat: true
         onTriggered: {
-            root.checkAiDaemonStatus();
-            root.checkGodsEyeStatus();
-            root.checkStudyStatus();
-            root.checkPhoneStatus();
+            if (root.studyActive) root.checkStudyStatus();
+            if (root.aiDaemonLoaded || root.panel === "ai") root.checkAiDaemonStatus();
+            if (root.godsEyeActive) root.checkGodsEyeStatus();
+            if (root.phoneSystemEnabled || root.panel === "phone") root.checkPhoneStatus();
         }
     }
 
@@ -436,6 +459,15 @@ Singleton {
         }
         if (name === "settings") {
             openSettings("");
+            return;
+        }
+        if (name === "today") {
+            close();
+            toggleTodayRequested();
+            return;
+        }
+        if (name === "onboarding") {
+            openOnboarding();
             return;
         }
         if (name === "clock" || name === "collapsed") {
@@ -472,7 +504,7 @@ Singleton {
             setPanel(panel === "gamemode" ? "collapsed" : "gamemode");
             return;
         }
-        const panels = ["collapsed", "control", "launcher", "clipboard", "todo", "notes", "theme", "wallpaper", "capture", "power", "media", "notifications", "timer", "shelf", "weather", "phone"];
+        const panels = ["collapsed", "control", "launcher", "clipboard", "todo", "notes", "theme", "wallpaper", "capture", "power", "media", "notifications", "timer", "shelf", "weather", "phone", "ai"];
         const current = Math.max(0, panels.indexOf(panel));
         setPanel(panels[(current + offset + panels.length) % panels.length]);
     }
@@ -481,6 +513,7 @@ Singleton {
         id: persistence
 
         property int nightLightTemperature: 4500
+        property int idleTimeoutSeconds: 120
 
         reloadableId: "vyeos-notch-state"
     }

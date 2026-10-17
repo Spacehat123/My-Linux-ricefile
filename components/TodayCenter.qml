@@ -22,11 +22,15 @@ Item {
     readonly property bool hovered: rootHoverHandler.hovered
 
     // =========================================================================
-    // Calendar Computation Model
+    // Calendar Computation Model (Reactive to Wall Clock)
     // =========================================================================
-    readonly property var currentDate: new Date()
-    property int calYear: currentDate.getFullYear()
-    property int calMonth: currentDate.getMonth()
+    SystemClock {
+        id: wallClock
+        precision: SystemClock.Minutes
+    }
+    readonly property var currentDate: wallClock.date ? wallClock.date : new Date()
+    property int calYear: (new Date()).getFullYear()
+    property int calMonth: (new Date()).getMonth()
 
     readonly property string monthYearString: {
         const monthNames = [

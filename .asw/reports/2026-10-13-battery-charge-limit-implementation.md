@@ -2,7 +2,7 @@
 
 **Date**: 2026-10-13  
 **Status**: Implemented & Ready for User Verification  
-**Scope**: [`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml), [`scripts/battery-limit.sh`](file:///home/pranc/.config/quickshell/cool-shell/scripts/battery-limit.sh)  
+**Scope**: [`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml), [`scripts/battery-limit.sh`](file://$HOME/.config/quickshell/cool-shell/scripts/battery-limit.sh)  
 **Safety Constraint**: Did NOT test hardware activation on live system at 100% battery (as requested by user).
 
 ---
@@ -15,7 +15,7 @@ Implemented an 80% Battery Charge Limit (Health Mode) and custom threshold manag
 
 ## 2. Hardware Architecture & Actuator Backend
 
-The backend actuator is located at [`scripts/battery-limit.sh`](file:///home/pranc/.config/quickshell/cool-shell/scripts/battery-limit.sh):
+The backend actuator is located at [`scripts/battery-limit.sh`](file://$HOME/.config/quickshell/cool-shell/scripts/battery-limit.sh):
 
 1. **Multi-Backend Fallback Order**:
    - **Linux Sysfs**: Writes to `/sys/class/power_supply/BAT*/charge_control_end_threshold`, `charge_control_limit_max`, or `charge_stop_threshold`.
@@ -29,7 +29,7 @@ The backend actuator is located at [`scripts/battery-limit.sh`](file:///home/pra
 
 ## 3. UI Implementation in Settings
 
-In [`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml) under **Power & Battery**:
+In [`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml) under **Power & Battery**:
 - **Status Badge**: Displays `80% CAP ACTIVE` (or chosen limit) when on, and `OFF (100% FULL)` when off.
 - **Toggle Switch**: Toggles between 100% unrestricted charging and the configured limit.
 - **Quick Preset Pills**:

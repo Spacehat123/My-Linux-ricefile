@@ -41,7 +41,9 @@ PanelWindow {
     readonly property bool isExpanded: ShellState.expanded && isCurrentScreen
     readonly property real targetRadius: isExpanded ? (ShellState.panelRadii[ShellState.panel] || Theme.radius) : (collapsedHeight / 2)
     readonly property real collapsedLensWidth: Math.min(380, Math.max(220, Math.round((IslandHub.lensActionSnippet.length + 16) * 7.2 + 35)))
-    readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : (CaptionState.isProcessing ? 250 : (IslandHub.aiGenerating ? 240 : (window.hasLiveLyrics ? window.collapsedLyricWidth : (IslandHub.voicePlaying ? 260 : (IslandHub.lensActionActive ? collapsedLensWidth : 145)))))) + cornerWing * 2
+    readonly property real collapsedStudyWidth: Math.min(300, Math.max(190, Math.round((ShellState.studySubject.length + 8) * 6.8 + 44)))
+    readonly property real collapsedTransientWidth: Math.min(340, Math.max(165, Math.round(IslandHub.transientText.length * 6.6 + 36)))
+    readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : (ShellState.studyActive ? collapsedStudyWidth : (CaptionState.isProcessing ? 250 : (IslandHub.aiGenerating ? 240 : (window.hasLiveLyrics ? window.collapsedLyricWidth : (IslandHub.voicePlaying ? 260 : (IslandHub.lensActionActive ? collapsedLensWidth : (IslandHub.transientText.length > 0 ? collapsedTransientWidth : 145)))))))) + cornerWing * 2
     readonly property real targetVisualHeight: isExpanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : collapsedHeight
     readonly property real panelContentHeight: isExpanded ? Math.max(
         (ShellState.panel === "media" ? (window.hasLiveLyrics ? 265 : 220) : (ShellState.panelHeights[ShellState.panel] || 0)),
@@ -49,6 +51,7 @@ PanelWindow {
     ) : 0
     property bool clockRevealed: true
     property bool recBlinkOn: false
+    property real noticeFlashOpacity: 0.0
     // Staged reveal: panel content fades/slides in 150ms after the pill
     // has stretched, so the island grows around the content.
     property bool contentStaged: false
@@ -186,6 +189,7 @@ PanelWindow {
         && !window.isExpanded
         && !(collapsedMouseArea && collapsedMouseArea.containsMouse)
         && !IslandHub.noticeActive
+        && !CaptionState.isProcessing
         && !IslandHub.flashActive
         && !IslandHub.recordingActive
         && Boolean(fullscreenIdleMonitor.isIdle)
@@ -617,7 +621,7 @@ PanelWindow {
             color: "transparent"
             border.width: 2
             border.color: ShellState.gameMode ? Theme.red : (IslandHub.flashActive ? IslandHub.flashColor : (IslandHub.recordingActive ? Theme.red : Theme.foreground))
-            opacity: ShellState.gameMode ? 0.9 : (IslandHub.flashActive ? 1 : (IslandHub.recordingActive ? (recBlinkOn ? 1 : 0) : 0))
+            opacity: Math.max(window.noticeFlashOpacity, ShellState.gameMode ? 0.9 : (IslandHub.flashActive ? 1 : (IslandHub.recordingActive ? (recBlinkOn ? 1 : 0) : 0)))
 
             Behavior on opacity {
                 NumberAnimation {
@@ -1677,8 +1681,8 @@ PanelWindow {
         loops: 2
 
         NumberAnimation {
-            target: borderGlow
-            property: "opacity"
+            target: window
+            property: "noticeFlashOpacity"
             from: 0
             to: 1
             duration: 160
@@ -1686,8 +1690,8 @@ PanelWindow {
         }
 
         NumberAnimation {
-            target: borderGlow
-            property: "opacity"
+            target: window
+            property: "noticeFlashOpacity"
             to: 0
             duration: 380
             easing.type: Easing.InCubic

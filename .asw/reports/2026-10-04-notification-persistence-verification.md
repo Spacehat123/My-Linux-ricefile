@@ -11,30 +11,30 @@
 A critical defect was identified and resolved in the Quickshell notification subsystem. Previously, incoming desktop notifications would appear as transient toast popups, but opening the Dynamic Island Notification Center would display *"No notifications"*.
 
 ### Root Causes
-1. **Delegate Destruction Side-Effect**: In [`island/NotificationCard.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/NotificationCard.qml), a lifecycle hook `Component.onDestruction: notification.tracked = false` was present. Whenever a toast banner timed out and was unmounted, or whenever the Dynamic Island panel closed and its delegates were destroyed, this hook forcibly marked the underlying notification as untracked. In Quickshell, untracking a notification immediately expels it from `notificationServer.trackedNotifications`.
-2. **Server-Level Expiration on Toast Timers**: In [`island/NotificationCard.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/NotificationCard.qml), the automatic timeout timer called `root.notification.expire()`. This instructed DBus / Quickshell's notification server to expire and drop the notification after 4–6 seconds, ensuring the notification was dead before the user could ever open the Notification Center.
-3. **Coupling between Toast Popups and Tracked Notifications**: [`island/NotificationPopups.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/NotificationPopups.qml) directly bound its `model` to `notificationServer.trackedNotifications`. The author had conflated "hiding a transient toast from the screen" with "destroying/expiring the notification itself".
+1. **Delegate Destruction Side-Effect**: In [`island/NotificationCard.qml`](file://$HOME/.config/quickshell/cool-shell/island/NotificationCard.qml), a lifecycle hook `Component.onDestruction: notification.tracked = false` was present. Whenever a toast banner timed out and was unmounted, or whenever the Dynamic Island panel closed and its delegates were destroyed, this hook forcibly marked the underlying notification as untracked. In Quickshell, untracking a notification immediately expels it from `notificationServer.trackedNotifications`.
+2. **Server-Level Expiration on Toast Timers**: In [`island/NotificationCard.qml`](file://$HOME/.config/quickshell/cool-shell/island/NotificationCard.qml), the automatic timeout timer called `root.notification.expire()`. This instructed DBus / Quickshell's notification server to expire and drop the notification after 4–6 seconds, ensuring the notification was dead before the user could ever open the Notification Center.
+3. **Coupling between Toast Popups and Tracked Notifications**: [`island/NotificationPopups.qml`](file://$HOME/.config/quickshell/cool-shell/island/NotificationPopups.qml) directly bound its `model` to `notificationServer.trackedNotifications`. The author had conflated "hiding a transient toast from the screen" with "destroying/expiring the notification itself".
 
 ---
 
 ## 2. Architecture & Implementation Changes
 
 ### 2.1 Decoupling Ephemeral Toasts from Persistent Notification History
-In [`island/NotificationPopups.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/NotificationPopups.qml):
+In [`island/NotificationPopups.qml`](file://$HOME/.config/quickshell/cool-shell/island/NotificationPopups.qml):
 - Replaced the direct model binding to `trackedNotifications` with an explicit `property var activeToasts: []`.
 - Added `showToast(notification)` and `dismissToast(id)`.
 - Popups only manage active on-screen alert cards. When an alert times out, `dismissToast(id)` removes it from the screen without touching the notification's tracked state on the server.
 - Window visibility is constrained to `!IslandHub.dnd && activeToasts.length > 0`, avoiding empty overlay layers.
 
 ### 2.2 Mode-Aware Notification Cards
-In [`island/NotificationCard.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/NotificationCard.qml):
+In [`island/NotificationCard.qml`](file://$HOME/.config/quickshell/cool-shell/island/NotificationCard.qml):
 - Added `property bool isPopup: false` and `signal dismissToastRequested()`.
 - **Auto-expire Timer Guard**: `running: root.isPopup && root.timeout > 0 && !hoverArea.containsMouse`. When triggered in `isPopup` mode, it emits `dismissToastRequested()`, cleanly hiding the toast banner while keeping the notification alive in history.
 - **Removed Destruction Hook**: Deleted `Component.onDestruction: notification.tracked = false` entirely.
 - **Explicit Dismissal**: Clicking the `×` button or an action button dismisses the toast from the screen (if popup) and calls `notification.dismiss()` on the server.
 
 ### 2.3 Shell Notification Dispatch
-In [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml):
+In [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml):
 - In `NotificationServer.onNotification`:
   ```qml
   notificationPopups.showToast(notification);
@@ -45,7 +45,7 @@ In [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml):
   ```
 
 ### 2.4 Scrollable, High-Capacity Notification Center
-In [`island/panels/NotifCenterPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/NotifCenterPanel.qml):
+In [`island/panels/NotifCenterPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/NotifCenterPanel.qml):
 - Wrapped the notification list in a bounded, scrollable `Flickable` (`implicitHeight: Math.min(420, Math.max(80, content.implicitHeight))`).
 - Delegates run in `isPopup: false` mode (no auto-timeout).
 - "Dismiss all" safely iterates through all tracked notifications and dismisses each explicitly.
@@ -68,7 +68,7 @@ In [`island/panels/NotifCenterPanel.qml`](file:///home/pranc/.config/quickshell/
 
 ## 4. Modified Files Reference
 
-- [`island/NotificationCard.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/NotificationCard.qml) — Removed toxic destruction hook; added `isPopup` mode and non-destructive toast dismiss signal.
-- [`island/NotificationPopups.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/NotificationPopups.qml) — Decoupled toast display from persistent notification model.
-- [`island/panels/NotifCenterPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/NotifCenterPanel.qml) — Added `Flickable` scrolling and non-expiring delegates.
-- [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml) — Dispatches incoming toasts to `notificationPopups.showToast()` and reports `trackedCount`.
+- [`island/NotificationCard.qml`](file://$HOME/.config/quickshell/cool-shell/island/NotificationCard.qml) — Removed toxic destruction hook; added `isPopup` mode and non-destructive toast dismiss signal.
+- [`island/NotificationPopups.qml`](file://$HOME/.config/quickshell/cool-shell/island/NotificationPopups.qml) — Decoupled toast display from persistent notification model.
+- [`island/panels/NotifCenterPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/NotifCenterPanel.qml) — Added `Flickable` scrolling and non-expiring delegates.
+- [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml) — Dispatches incoming toasts to `notificationPopups.showToast()` and reports `trackedCount`.

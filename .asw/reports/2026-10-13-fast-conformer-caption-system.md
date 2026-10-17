@@ -63,6 +63,6 @@ Before initiating neural network inference:
 
 ## 4. Installed Files & Artifacts
 
-- [`scripts/caption.py`](file:///home/pranc/.config/quickshell/cool-shell/scripts/caption.py): Core captioning and extraction logic.
-- [`~/.local/bin/fast-caption`](file:///home/pranc/.local/bin/fast-caption): Global executable CLI wrapper.
+- [`scripts/caption.py`](file://$HOME/.config/quickshell/cool-shell/scripts/caption.py): Core captioning and extraction logic.
+- [`~/.local/bin/fast-caption`](file://$HOME/.local/bin/fast-caption): Global executable CLI wrapper.
 - Directory `~/Music/caption_extracts/`: Centralized archive repository for extracted and generated `.srt` files.

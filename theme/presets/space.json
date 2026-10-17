@@ -1,0 +1,30 @@
+{
+  "name": "Space",
+  "slug": "space",
+  "appearance": "dark",
+  "applications": {
+    "alacritty": "gruvbox_dark",
+    "folder_color": "brown"
+  },
+  "colors": {
+    "bg_dim": "#090807",
+    "bg0": "#12100e",
+    "bg1": "#1a1714",
+    "bg2": "#28231f",
+    "bg3": "#3d352e",
+    "bg4": "#55493f",
+    "primary_container": "#3a2d22",
+    "secondary_container": "#2c2621",
+    "foreground": "#f5f3f0",
+    "muted": "#b8aca0",
+    "muted_dark": "#7a6f64",
+    "red": "#d45d55",
+    "yellow": "#e0b36a",
+    "green": "#8ab07d",
+    "primary": "#d4a373",
+    "blue": "#84a59d",
+    "aqua": "#9bc1bc",
+    "orange": "#c97b48",
+    "purple": "#b5838d"
+  }
+}

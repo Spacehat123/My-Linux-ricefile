@@ -277,7 +277,32 @@ Item {
 
     Process {
         id: screenshotProc
-        command: ["bash", "-c", "mkdir -p ~/Pictures/Screenshots && file=~/Pictures/Screenshots/phone-$(date +%Y%m%d-%H%M%S).png && adb exec-out screencap -p > \"$file\" && qs -c cool-shell ipc call island shelfAdd \"$file\" && qs -c cool-shell ipc call island showTransient '📸 Captured Phone Screenshot' 3000"]
+        command: [
+            "bash", "-c",
+            "dir=\"${XDG_PICTURES_DIR:-$HOME/Pictures}/Screenshots\"; " +
+            "mkdir -p \"$dir\"; " +
+            "file=\"$dir/phone-$(date +%Y%m%d-%H%M%S).png\"; " +
+            "tmp=\"$file.tmp\"; " +
+            "if adb exec-out screencap -p > \"$tmp\" 2>/dev/null && [ -s \"$tmp\" ]; then " +
+            "  mv -f \"$tmp\" \"$file\" && printf '%s\n' \"$file\"; " +
+            "else " +
+            "  rm -f \"$tmp\"; exit 1; " +
+            "fi"
+        ]
         running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const savedPath = text.trim();
+                if (savedPath !== "") {
+                    ShelfState.addFile(savedPath);
+                    IslandHub.showTransient("📸 Captured Phone Screenshot", 3000);
+                }
+            }
+        }
+        onExited: (exitCode) => {
+            if (exitCode !== 0) {
+                IslandHub.showTransient("⚠️ Phone screenshot failed (check ADB)", 3000);
+            }
+        }
     }
 }

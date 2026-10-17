@@ -92,7 +92,7 @@ This engineering implementation delivers an Apple macOS Sequoia-style Android Sc
 
 | Test Case | Method | Result | Status |
 |---|---|---|---|
-| Binary Tool Presence | `which scrcpy adb` | `/home/pranc/.local/bin/scrcpy`, `/home/pranc/.local/bin/adb` | PASS |
+| Binary Tool Presence | `which scrcpy adb` | `$HOME/.local/bin/scrcpy`, `$HOME/.local/bin/adb` | PASS |
 | MIME Whitelist Enforcement | Push test text file vs shell script | Allowed `.txt` forwarded; Blocked `.sh` rejected with exit 1 & logged | PASS |
 | Quickshell Syntax & Load | `quickshell -c cool-shell -d` | Clean load, zero QML type errors | PASS |
 | IPC Handler `phone` | `qs -c cool-shell ipc call phone status` | Returns valid status JSON | PASS |

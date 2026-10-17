@@ -1,7 +1,7 @@
 # Verification & Completion Report: Performance Fixes (Part 1) & Architectural Integrity (Part 2)
 
 - **Date**: 2026-10-11
-- **Workspace**: `/home/pranc/.config/quickshell/cool-shell`
+- **Workspace**: `$HOME/.config/quickshell/cool-shell`
 - **Target Platform**: Hyprland / Wayland / Linux
 - **Framework**: Quickshell 0.3.1 / Qt 6
 - **Status**: Complete & Verified (Zero-Regression)
@@ -19,7 +19,7 @@ In accordance with user directives, the deep optimization and architectural stab
 ## 2. Part 1: Performance Tuning & Verification (Commit `e664f34`)
 
 ### 2.1 Media Ring Canvas Quantization
-- **File**: [`island/Notch.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml#L664-L735)
+- **File**: [`island/Notch.qml`](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml#L664-L735)
 - **Root Cause**: `mediaRing` Canvas previously ran a continuous 250ms `NumberAnimation` on `animatedFraction`. Every position change triggered `onAnimatedFractionChanged: requestPaint()`, forcing Qt Quick to run complex 2D trigonometric arc tracing at 60/144 FPS on `WlrLayer.Overlay` (consuming 5%–8% CPU).
 - **Resolution**:
   - Bound directly to `currentFraction: window.mediaFraction`.
@@ -27,12 +27,12 @@ In accordance with user directives, the deep optimization and architectural stab
   - Cut canvas repaints from **60/sec to ~1/sec** during playback with zero perceptible loss of precision.
 
 ### 2.2 Equalizer Double-Smoothing Elimination
-- **File**: [`island/CollapsedStatus.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/CollapsedStatus.qml#L313-L330)
+- **File**: [`island/CollapsedStatus.qml`](file://$HOME/.config/quickshell/cool-shell/island/CollapsedStatus.qml#L313-L330)
 - **Root Cause**: The 4 equalizer bars each had a 120ms `NumberAnimation` on `height`. Because audio levels arrive from `level-meter.py` every 80ms (12.5Hz), the animations never settled, keeping the render loop running at 144 FPS.
 - **Resolution**: Removed the redundant `Behavior on height`. Audio levels are already smoothed by Python's exponential moving average. The render thread now remains completely dormant between 80ms ticks.
 
 ### 2.3 Video Wallpaper Audio Resampling & Pause Sync
-- **File**: [`wallpaper/Wallpaper.qml`](file:///home/pranc/.config/quickshell/cool-shell/wallpaper/Wallpaper.qml#L20-L75)
+- **File**: [`wallpaper/Wallpaper.qml`](file://$HOME/.config/quickshell/cool-shell/wallpaper/Wallpaper.qml#L20-L75)
 - **Root Cause**: `AudioOutput { muted: true }` caused FFmpeg to spawn a background `QFFmpeg::AudioR` resampling thread. Furthermore, `_syncPlayback()` returned early when `!root.visible`, failing to pause playback when `live` transitioned to `false`.
 - **Resolution**:
   - Explicitly set `audioOutput: null`, preventing QtMultimedia from spinning up audio decoding threads.
@@ -51,7 +51,7 @@ In accordance with user directives, the deep optimization and architectural stab
 ## 3. Part 2: Architectural Integrity & Compositor Action Layer
 
 ### 3.1 Expansion of `core/CompositorActionLayer.qml`
-- **File**: [`core/CompositorActionLayer.qml`](file:///home/pranc/.config/quickshell/cool-shell/core/CompositorActionLayer.qml)
+- **File**: [`core/CompositorActionLayer.qml`](file://$HOME/.config/quickshell/cool-shell/core/CompositorActionLayer.qml)
 - Added new approved actions:
   - `moveToSpecialWorkspace(targetAddress, payload)`: Routes to `hl.dsp.window.move({ workspace = "special:stash", window = "...", silent = true })` via native in-process `Hyprland.dispatch`.
   - `toggleSpecialWorkspace(specialName, payload)`: Routes to `hl.dsp.workspace.toggle_special("stash")`.
@@ -61,7 +61,7 @@ In accordance with user directives, the deep optimization and architectural stab
   - Directly supports special workspace targets (`"special:stash"`) as well as numeric IDs.
 
 ### 3.2 Pre-Flight Validation in `core/InteractionModel.qml`
-- **File**: [`core/InteractionModel.qml`](file:///home/pranc/.config/quickshell/cool-shell/core/InteractionModel.qml)
+- **File**: [`core/InteractionModel.qml`](file://$HOME/.config/quickshell/cool-shell/core/InteractionModel.qml)
 - Added validation for `moveToSpecialWorkspace` and `toggleSpecialWorkspace`.
 - Added high-level API methods:
   - `requestMoveToSpecialWorkspace(targetAddress, specialWorkspace, silent)`
@@ -69,15 +69,15 @@ In accordance with user directives, the deep optimization and architectural stab
 
 ### 3.3 Eradication of Raw `hyprctl dispatch` CLI Forks
 - **Files**:
-  - [`components/StashPocket.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/StashPocket.qml): Window stashing, drawer toggling, and restoring routed via `compositorActionLayer.executeAction`.
-  - [`components/BirdsEyeOverview.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/BirdsEyeOverview.qml): Replaced external CLI process fork with `compositorActionLayer.focusSurface(cleanAddr)` with native `Hyprland.dispatch` fallback.
-  - [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml): Workspace switcher delegates now route via `interactionModel.requestWorkspaceSwitch` and `compositorActionLayer.switchWorkspace`.
-  - [`panels/RightSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/RightSidebar.qml): Window stash and un-stash actions now route via `compositorActionLayer.executeAction`.
-  - [`components/SpotifyWidget.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/SpotifyWidget.qml): Focus dispatch uses in-process `Hyprland.dispatch` without spawning CLI processes.
-  - [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml): Injected `compositorActionLayer` into both `RightSidebar` and `BottomBar`.
+  - [`components/StashPocket.qml`](file://$HOME/.config/quickshell/cool-shell/components/StashPocket.qml): Window stashing, drawer toggling, and restoring routed via `compositorActionLayer.executeAction`.
+  - [`components/BirdsEyeOverview.qml`](file://$HOME/.config/quickshell/cool-shell/components/BirdsEyeOverview.qml): Replaced external CLI process fork with `compositorActionLayer.focusSurface(cleanAddr)` with native `Hyprland.dispatch` fallback.
+  - [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml): Workspace switcher delegates now route via `interactionModel.requestWorkspaceSwitch` and `compositorActionLayer.switchWorkspace`.
+  - [`panels/RightSidebar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/RightSidebar.qml): Window stash and un-stash actions now route via `compositorActionLayer.executeAction`.
+  - [`components/SpotifyWidget.qml`](file://$HOME/.config/quickshell/cool-shell/components/SpotifyWidget.qml): Focus dispatch uses in-process `Hyprland.dispatch` without spawning CLI processes.
+  - [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml): Injected `compositorActionLayer` into both `RightSidebar` and `BottomBar`.
 
 ### 3.4 Theme Namespace Resolution
-- **File**: [`theme/TacticalTheme.qml`](file:///home/pranc/.config/quickshell/cool-shell/theme/TacticalTheme.qml)
+- **File**: [`theme/TacticalTheme.qml`](file://$HOME/.config/quickshell/cool-shell/theme/TacticalTheme.qml)
 - Created `TacticalTheme.qml` extending `theme/Theme.qml` to allow explicit type resolution when imported alongside `island/Theme.qml`, while preserving 100% of existing imports and bindings.
 
 ---

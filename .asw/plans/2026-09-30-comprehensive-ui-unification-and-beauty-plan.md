@@ -1,10 +1,10 @@
 # Comprehensive Visual Makeover & Unified Design Plan: Making Cool-Shell Truly Gorgeous
 
 **Date:** 2026-09-30  
-**Target:** [`cool-shell`](file:///home/pranc/.config/quickshell/cool-shell/)  
+**Target:** [`cool-shell`](file://$HOME/.config/quickshell/cool-shell/)  
 **Document Type:** Visual Design Architecture Plan & UI Surface Catalog  
 **Status:** Approved for Review (Planning Only — No Code Implemented)  
-**Rule Compliance:** [`.agents/rules/reports.md`](file:///home/pranc/.config/quickshell/cool-shell/.agents/rules/reports.md)
+**Rule Compliance:** [`.agents/rules/reports.md`](file://$HOME/.config/quickshell/cool-shell/.agents/rules/reports.md)
 
 ---
 
@@ -78,7 +78,7 @@ Below is the complete catalog of every user-visible surface in Cool-Shell, what 
 ---
 
 ### Surface 3: The Left Sidebar (Control & Quick Glance Drawer)
-* **File:** [`panels/LeftSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/LeftSidebar.qml) & [`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml)
+* **File:** [`panels/LeftSidebar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/LeftSidebar.qml) & [`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml)
 * **Current State:** 
   * Harsh 320px width rectangle with zero corner radius (`radius: 0` in `PanelSurface.qml`).
   * Monospace retro-cyber text: `"// CONTROL CENTER"`, `"SYS.ONLINE"`, `"WALLPAPER ENGINE ACTIVE // 60 FPS VSYNC"`, `"SYS // PRANC.SHELL v0.27"`.
@@ -95,7 +95,7 @@ Below is the complete catalog of every user-visible surface in Cool-Shell, what 
 ---
 
 ### Surface 4: The Right Sidebar (Window & Application Hub)
-* **File:** [`panels/RightSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/RightSidebar.qml) & [`components/ApplicationOverview.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ApplicationOverview.qml)
+* **File:** [`panels/RightSidebar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/RightSidebar.qml) & [`components/ApplicationOverview.qml`](file://$HOME/.config/quickshell/cool-shell/components/ApplicationOverview.qml)
 * **Current State:**
   * Cyber-tactical monospace layout with raw ASCII symbols: `"// SURFACES"`, `"WS 1"`, `"◈"`, `"◇"`, `"⛶"`, `"❐"`, `"⇄"`, `"×"`.
   * Hard rectangular cards with no app icons and confusing micro-buttons.
@@ -114,7 +114,7 @@ Below is the complete catalog of every user-visible surface in Cool-Shell, what 
 ---
 
 ### Surface 5: The Bottom Bar (Floating Liquid Dock)
-* **File:** [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml)
+* **File:** [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml)
 * **Current State:**
   * Flat 30px Waybar replica with hard 1px border and basic Nerd Font icons (``, ``).
   * No dock capsule, no spring animations, no frosted glass depth.
@@ -135,7 +135,7 @@ Below is the complete catalog of every user-visible surface in Cool-Shell, what 
 ---
 
 ### Surface 6: Edge Triggers & Screen Gestures
-* **File:** [`components/EdgeTrigger.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/EdgeTrigger.qml)
+* **File:** [`components/EdgeTrigger.qml`](file://$HOME/.config/quickshell/cool-shell/components/EdgeTrigger.qml)
 * **Current State:** 2px solid colored lines (`#00ff88`, `#00bfff`, `#ff0088`) at the bottom of the screen.
 * **The Makeover:**
   * Completely invisible at rest (0% opacity, zero Scene Graph overhead).
@@ -144,7 +144,7 @@ Below is the complete catalog of every user-visible surface in Cool-Shell, what 
 ---
 
 ### Surface 7: Toast Notifications & Popups
-* **File:** [`island/NotificationPopups.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/NotificationPopups.qml) & [`island/NotificationCard.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/NotificationCard.qml)
+* **File:** [`island/NotificationPopups.qml`](file://$HOME/.config/quickshell/cool-shell/island/NotificationPopups.qml) & [`island/NotificationCard.qml`](file://$HOME/.config/quickshell/cool-shell/island/NotificationCard.qml)
 * **Current State:** Flat cards in the top-right corner with basic outlines and instant dismissals.
 * **The Makeover:**
   * Floating frosted glass notification cards with 20px curvature and soft drop shadows.
@@ -155,7 +155,7 @@ Below is the complete catalog of every user-visible surface in Cool-Shell, what 
 ---
 
 ### Surface 8: Screen Capture & Region Selection Overlay
-* **File:** [`island/CaptureSelector.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/CaptureSelector.qml)
+* **File:** [`island/CaptureSelector.qml`](file://$HOME/.config/quickshell/cool-shell/island/CaptureSelector.qml)
 * **Current State:** Basic crosshair with hard 1px outlines and an unstyled coordinate tooltip.
 * **The Makeover:**
   * Dark semi-translucent backdrop (`rgba(0, 0, 0, 0.55)`) that dims background windows.
@@ -166,7 +166,7 @@ Below is the complete catalog of every user-visible surface in Cool-Shell, what 
 ---
 
 ### Surface 9: Workspace Spatial Transition HUD
-* **File:** [`desktop/DesktopTransition.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/DesktopTransition.qml)
+* **File:** [`desktop/DesktopTransition.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/DesktopTransition.qml)
 * **Current State:** Monospace military HUD reticle: `"FROM 01 ──► DEST 02"`.
 * **The Makeover:**
   * Minimalist, elegant floating glass pill in the exact center of the screen during workspace switching.
@@ -176,7 +176,7 @@ Below is the complete catalog of every user-visible surface in Cool-Shell, what 
 ---
 
 ### Surface 10: Desktop Ambient Layer (Idle Screensaver)
-* **File:** [`desktop/AmbientLayer.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/AmbientLayer.qml) & related ambient components
+* **File:** [`desktop/AmbientLayer.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/AmbientLayer.qml) & related ambient components
 * **Current State:** Tactical crosshairs and corner brackets.
 * **The Makeover:**
   * Peaceful, modern ambient mode when the computer goes idle.
@@ -186,7 +186,7 @@ Below is the complete catalog of every user-visible surface in Cool-Shell, what 
 ---
 
 ### Surface 11: Onboarding Welcome Guide
-* **File:** [`island/components/OnboardingManager.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/components/OnboardingManager.qml) & [`OnboardingCard.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/components/OnboardingCard.qml)
+* **File:** [`island/components/OnboardingManager.qml`](file://$HOME/.config/quickshell/cool-shell/island/components/OnboardingManager.qml) & [`OnboardingCard.qml`](file://$HOME/.config/quickshell/cool-shell/island/components/OnboardingCard.qml)
 * **Current State:** Basic introductory banner.
 * **The Makeover:**
   * A welcoming, high-end floating card that introduces the user to Cool-Shell's gestures:
@@ -231,7 +231,7 @@ To ensure that every component feels like part of a single, handcrafted operatin
 
 4. **Single Source of Truth Theme Engine:**
    * Completely retire the old diverging tokens in `theme/Theme.qml`.
-   * Every single surface, sidebar, dock, popup, and window will import and bind directly to [`island/Theme.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Theme.qml).
+   * Every single surface, sidebar, dock, popup, and window will import and bind directly to [`island/Theme.qml`](file://$HOME/.config/quickshell/cool-shell/island/Theme.qml).
    * Switching between *Catppuccin Mocha, Macchiato, Tokyo Night, Nord, and Midnight* in Settings will transform the entire desktop instantly.
 
 ---
@@ -257,7 +257,7 @@ To ensure that every component feels like part of a single, handcrafted operatin
 
 ### Wiring Flow:
 1. **Dynamic Island Trigger:**
-   * In [`island/panels/ControlPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/ControlPanel.qml), clicking the Header Gear Button (`󰒓`) or the "Settings" pill button triggers:
+   * In [`island/panels/ControlPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/ControlPanel.qml), clicking the Header Gear Button (`󰒓`) or the "Settings" pill button triggers:
      ```qml
      onClicked: {
          ShellState.close();

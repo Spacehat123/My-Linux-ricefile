@@ -189,9 +189,13 @@ Item {
             transformOrigin: Item.Center
             anchors.verticalCenter: parent.verticalCenter
             visible: text !== ""
-            width: root.hasLyrics
-                ? Math.min(implicitWidth, Math.max(160, root.width - (root.unread > 0 ? 24 : 0) - (waveRow.visible ? 20 : 0) - (root.weatherMini !== "" ? 45 : 0) - (root.micActive ? 12 : 0) - (root.camActive ? 12 : 0) - 24))
-                : Math.min(implicitWidth, root.weatherMini !== "" ? 68 : 104)
+            width: Math.min(
+                implicitWidth,
+                Math.max(
+                    root.weatherMini !== "" ? 68 : 104,
+                    root.width - (root.unread > 0 ? 24 : 0) - (waveRow.visible ? 20 : 0) - (root.weatherMini !== "" ? 45 : 0) - (root.micActive ? 12 : 0) - (root.camActive ? 12 : 0) - 24
+                )
+            )
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -387,7 +391,7 @@ Item {
             height: 8
             radius: 4
             visible: root.micActive
-            color: "#e5c535"
+            color: Theme.yellow
             transformOrigin: Item.Center
 
             ParallelAnimation {
@@ -430,7 +434,7 @@ Item {
             height: 8
             radius: 4
             visible: root.camActive
-            color: "#c678dd"
+            color: Theme.purple
             transformOrigin: Item.Center
 
             ParallelAnimation {

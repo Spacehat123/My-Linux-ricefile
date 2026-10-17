@@ -1,7 +1,7 @@
 # Cool-Shell Complete Zero-Regression Optimization Action Plan
 
 - **Date**: 2026-10-11
-- **Workspace**: `/home/pranc/.config/quickshell/cool-shell`
+- **Workspace**: `$HOME/.config/quickshell/cool-shell`
 - **Target Platform**: Hyprland / Wayland / Linux
 - **Framework**: Quickshell 0.3.1 / Qt 6
 - **Status**: Proposed Optimization Specification (Awaiting User Confirmation)
@@ -14,7 +14,7 @@ The user highlighted the audio level monitoring subsystem:
 > *"Two instances of level-meter.py one for the island and one for the media widget on the right. Now can you help me optimize it without losing any features/animations/ or loosing the feel. tell me what you'll do before doing it. i'll confirm its not destructive then we can proceed."*
 
 ### Empirical Finding on `level-meter.py`:
-Both the **Island Notch** ([`island/CollapsedStatus.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/CollapsedStatus.qml#L318)) and the **Right Media Widget** ([`panels/MediaWidget.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/MediaWidget.qml#L281)) already read from the exact same central state property:
+Both the **Island Notch** ([`island/CollapsedStatus.qml`](file://$HOME/.config/quickshell/cool-shell/island/CollapsedStatus.qml#L318)) and the **Right Media Widget** ([`panels/MediaWidget.qml`](file://$HOME/.config/quickshell/cool-shell/panels/MediaWidget.qml#L281)) already read from the exact same central state property:
 ```qml
 // island/CollapsedStatus.qml:318
 height: 2 + (IslandHub.levels[index] || 0) * 10
@@ -43,8 +43,8 @@ Every optimization described below adheres strictly to the **Zero-Regression Rul
 
 ### Pillar 1: Unified Single-Instance Audio Tap & Delta Throttling
 - **Affected Files**:
-  - [`island/scripts/level-meter.py`](file:///home/pranc/.config/quickshell/cool-shell/island/scripts/level-meter.py)
-  - [`island/IslandHub.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/IslandHub.qml)
+  - [`island/scripts/level-meter.py`](file://$HOME/.config/quickshell/cool-shell/island/scripts/level-meter.py)
+  - [`island/IslandHub.qml`](file://$HOME/.config/quickshell/cool-shell/island/IslandHub.qml)
 - **Bottlenecks Identified**:
   1. No singleton file lock in `level-meter.py` allows orphaned instances to pile up.
   2. `level-meter.py` writes to disk (`/tmp/cool-shell-levels.tmp` -> replace) 12.5 times a second unnecessarily (the old disk-polling loop was replaced with stdout streaming, making disk writes obsolete).
@@ -60,8 +60,8 @@ Every optimization described below adheres strictly to the **Zero-Regression Rul
 
 ### Pillar 2: Video Wallpaper Hardware Decode & Layer Unmapping
 - **Affected Files**:
-  - [`wallpaper/Wallpaper.qml`](file:///home/pranc/.config/quickshell/cool-shell/wallpaper/Wallpaper.qml)
-  - [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml)
+  - [`wallpaper/Wallpaper.qml`](file://$HOME/.config/quickshell/cool-shell/wallpaper/Wallpaper.qml)
+  - [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml)
 - **Bottlenecks Identified**:
   1. When opaque windows cover the desktop, `live` becomes `false` and `mediaPlayer.pause()` is called. However, QtMultimedia keeps 13 decoding worker threads looping.
   2. The `Wallpaper.qml` window stays mapped on `WlrLayer.Background` at 60 FPS VSync even when paused.
@@ -74,7 +74,7 @@ Every optimization described below adheres strictly to the **Zero-Regression Rul
 
 ### Pillar 3: MediaWidget 2D Canvas Gradient Caching & GPU Acceleration
 - **Affected Files**:
-  - [`panels/MediaWidget.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/MediaWidget.qml)
+  - [`panels/MediaWidget.qml`](file://$HOME/.config/quickshell/cool-shell/panels/MediaWidget.qml)
 - **Bottlenecks Identified**:
   1. In `onPaint`, the canvas creates 40 new linear gradients (`ctx.createLinearGradient(...)`) on *every single frame* at 60 FPS (2,400 gradient object allocations per second).
   2. Canvas uses default CPU rasterization rather than direct GPU Framebuffer Objects.
@@ -88,9 +88,9 @@ Every optimization described below adheres strictly to the **Zero-Regression Rul
 
 ### Pillar 4: Eliminate "IPC-Back-To-Self" Subprocess Overhead
 - **Affected Files**:
-  - [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml)
-  - [`panels/RightSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/RightSidebar.qml)
-  - [`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml)
+  - [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml)
+  - [`panels/RightSidebar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/RightSidebar.qml)
+  - [`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml)
 - **Bottlenecks Identified**:
   Components spawn `Quickshell.execDetached(["qs", "-c", "cool-shell", "ipc", "call", ...])` to trigger features inside the same application.
 - **Action Plan**:
@@ -104,11 +104,11 @@ Every optimization described below adheres strictly to the **Zero-Regression Rul
 
 ### Pillar 5: Compositor Mutation Normalization (Native Quickshell Dispatches)
 - **Affected Files**:
-  - [`core/CompositorActionLayer.qml`](file:///home/pranc/.config/quickshell/cool-shell/core/CompositorActionLayer.qml)
-  - [`components/StashPocket.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/StashPocket.qml)
-  - [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml)
-  - [`panels/RightSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/RightSidebar.qml)
-  - [`components/BirdsEyeOverview.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/BirdsEyeOverview.qml)
+  - [`core/CompositorActionLayer.qml`](file://$HOME/.config/quickshell/cool-shell/core/CompositorActionLayer.qml)
+  - [`components/StashPocket.qml`](file://$HOME/.config/quickshell/cool-shell/components/StashPocket.qml)
+  - [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml)
+  - [`panels/RightSidebar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/RightSidebar.qml)
+  - [`components/BirdsEyeOverview.qml`](file://$HOME/.config/quickshell/cool-shell/components/BirdsEyeOverview.qml)
 - **Bottlenecks Identified**:
   Bypassing the action barrier by calling `execDetached(["hyprctl", "dispatch", ...])` forks a separate process and connects to Hyprland's socket externally.
 - **Action Plan**:
@@ -124,7 +124,7 @@ Every optimization described below adheres strictly to the **Zero-Regression Rul
 
 ### Pillar 6: Ambient Reticle Offscreen Texture Caching
 - **Affected Files**:
-  - [`desktop/AmbientReticle.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/AmbientReticle.qml)
+  - [`desktop/AmbientReticle.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/AmbientReticle.qml)
 - **Bottlenecks Identified**:
   The 120-second infinite linear rotation continuously re-rasterizes the reticle geometry and tick marks every vsync frame.
 - **Action Plan**:
@@ -135,7 +135,7 @@ Every optimization described below adheres strictly to the **Zero-Regression Rul
 
 ### Pillar 7: Settings Window Lazy Component Loading
 - **Affected Files**:
-  - [`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml)
+  - [`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml)
 - **Bottlenecks Identified**:
   2,488 lines with 12 categories are all created at startup, keeping hundreds of inactive UI nodes alive in memory.
 - **Action Plan**:
@@ -146,7 +146,7 @@ Every optimization described below adheres strictly to the **Zero-Regression Rul
 
 ### Pillar 8: Clean Background Lifecycle & Dead Daemon Pruning
 - **Affected Files**:
-  - [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml)
+  - [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml)
 - **Bottlenecks Identified**:
   Shell starts `awww-daemon` and `wl-paste` watchers on startup via `execDetached` without ensuring idempotence or cleanup on shutdown.
 - **Action Plan**:

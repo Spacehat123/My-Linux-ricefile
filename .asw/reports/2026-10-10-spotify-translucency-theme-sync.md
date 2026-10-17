@@ -18,9 +18,9 @@ The external community theme `Hazy` applied conflicting grid CSS overrides and i
 
 ### Remediation & Architectural Resolution:
 1. **Reverted to Clean Layout (`Sleek` Theme):** Restored the rock-solid, standard Spotify layout provided by `Sleek` while removing `Hazy` and any external scripts.
-2. **Applied Clean Translucency (Frosted Glass):** Injected clean, non-destructive translucency CSS rules into [`Sleek/user.css`](file:///home/pranc/.config/spicetify/Themes/Sleek/user.css) allowing backdrop blur through to the desktop wallpaper via Hyprland's hardware-accelerated compositor rule (`opacity = 0.88`).
-3. **Mapped All 5 Desktop Themes:** Defined exact palette sections for `Cherry`, `Darth`, `Nature`, `Sea`, and `Space` in [`Sleek/color.ini`](file:///home/pranc/.config/spicetify/Themes/Sleek/color.ini).
-4. **Desktop Shell Integration:** Updated [`island/scripts/theme-system.sh`](file:///home/pranc/.config/quickshell/cool-shell/island/scripts/theme-system.sh) to automatically set the matching Spicetify color scheme and trigger an instant hot-reload via Hyprland key dispatch whenever a theme is clicked in the Island Theme Panel.
+2. **Applied Clean Translucency (Frosted Glass):** Injected clean, non-destructive translucency CSS rules into [`Sleek/user.css`](file://$HOME/.config/spicetify/Themes/Sleek/user.css) allowing backdrop blur through to the desktop wallpaper via Hyprland's hardware-accelerated compositor rule (`opacity = 0.88`).
+3. **Mapped All 5 Desktop Themes:** Defined exact palette sections for `Cherry`, `Darth`, `Nature`, `Sea`, and `Space` in [`Sleek/color.ini`](file://$HOME/.config/spicetify/Themes/Sleek/color.ini).
+4. **Desktop Shell Integration:** Updated [`island/scripts/theme-system.sh`](file://$HOME/.config/quickshell/cool-shell/island/scripts/theme-system.sh) to automatically set the matching Spicetify color scheme and trigger an instant hot-reload via Hyprland key dispatch whenever a theme is clicked in the Island Theme Panel.
 
 ---
 

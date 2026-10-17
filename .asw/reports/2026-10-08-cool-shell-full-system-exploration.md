@@ -1,7 +1,7 @@
 # Cool-Shell: Complete Architectural & System Exploration
 
 - **Date**: 2026-10-08
-- **Workspace**: `/home/pranc/.config/quickshell/cool-shell`
+- **Workspace**: `$HOME/.config/quickshell/cool-shell`
 - **Target Platform**: Hyprland / Wayland / Linux
 - **Framework**: Quickshell 0.3.1 / Qt 6
 - **Status**: Comprehensive Analysis & Context Locking Complete (Read-Only)
@@ -36,7 +36,7 @@
 ## 2. Directory Structure & Subsystem Topology
 
 ```text
-/home/pranc/.config/quickshell/cool-shell/
+$HOME/.config/quickshell/cool-shell/
 ├── shell.qml                     # Central shell root orchestrating singletons, variants, and 19 IPC targets
 ├── theme/
 │   └── Theme.qml                 # Desktop tactical theme adapter (delegates to island/Theme.qml)
@@ -228,17 +228,17 @@ UI components and external IPC scripts are strictly forbidden from executing dir
 
 | Singleton | Responsibilities & Persistence |
 | :--- | :--- |
-| [`ShellState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/ShellState.qml) | Master UI coordinator. Defines geometry tables (`panelWidths`, `panelHeights`, `panelRadii`), screen locking (`activeScreenName`), Game Mode state machine, and night light temperature. |
-| [`TimerState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/TimerState.qml) | Epoch-based stopwatch, Pomodoro focus mode (silences toasts via DND), countdown timers, and "DONE" hold blinking alert. |
-| [`ShelfState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/ShelfState.qml) | Staging shelf for up to 30 files (`island/shelf.json`). Probes `~/Downloads` for partial files (`*.crdownload`, `*.part`, etc.), computing real-time MB/s download rates. |
-| [`TodoState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/TodoState.qml) | Task management stored in `island/todos.json`. Features smart inline NLP: `#tag`, `!high`/`!med`/`!low`, `@today`/`@tomorrow`. |
-| [`NotesState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/NotesState.qml) | Backed by `island/scripts/notes-helper.py` (`~/Notes/Quick/*.md`). Atomic `FileView` write locking. |
-| [`AppearanceState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/AppearanceState.qml) | Dispatches theme and wallpaper changes to `island/scripts/theme-system.sh`. Triggers `Theme.reload()`. |
-| [`PowerState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/PowerState.qml) | UPower bridge. Detects AC power plug/unplug events and emits transient alerts. |
-| [`BtState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/BtState.qml) | Bluetooth device discovery and differential connection tracker; fires particle burst and azure laser sweeps upon connection. |
-| [`PrivacyState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/PrivacyState.qml) | Scans active PipeWire input streams (mic active) and probes `/dev/video*` via `fuser` (camera active). Renders indicator pips. |
-| [`WeatherState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/WeatherState.qml) | Fetches Open-Meteo / wttr.in JSON cached locally in `~/.cache/cool-shell-weather.json` every 30 minutes. |
-| [`AccessibilityState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/AccessibilityState.qml) | Screen reader vocalization via `speech-dispatcher` (`spd-say -C -e`). |
+| [`ShellState.qml`](file://$HOME/.config/quickshell/cool-shell/island/ShellState.qml) | Master UI coordinator. Defines geometry tables (`panelWidths`, `panelHeights`, `panelRadii`), screen locking (`activeScreenName`), Game Mode state machine, and night light temperature. |
+| [`TimerState.qml`](file://$HOME/.config/quickshell/cool-shell/island/TimerState.qml) | Epoch-based stopwatch, Pomodoro focus mode (silences toasts via DND), countdown timers, and "DONE" hold blinking alert. |
+| [`ShelfState.qml`](file://$HOME/.config/quickshell/cool-shell/island/ShelfState.qml) | Staging shelf for up to 30 files (`island/shelf.json`). Probes `~/Downloads` for partial files (`*.crdownload`, `*.part`, etc.), computing real-time MB/s download rates. |
+| [`TodoState.qml`](file://$HOME/.config/quickshell/cool-shell/island/TodoState.qml) | Task management stored in `island/todos.json`. Features smart inline NLP: `#tag`, `!high`/`!med`/`!low`, `@today`/`@tomorrow`. |
+| [`NotesState.qml`](file://$HOME/.config/quickshell/cool-shell/island/NotesState.qml) | Backed by `island/scripts/notes-helper.py` (`~/Notes/Quick/*.md`). Atomic `FileView` write locking. |
+| [`AppearanceState.qml`](file://$HOME/.config/quickshell/cool-shell/island/AppearanceState.qml) | Dispatches theme and wallpaper changes to `island/scripts/theme-system.sh`. Triggers `Theme.reload()`. |
+| [`PowerState.qml`](file://$HOME/.config/quickshell/cool-shell/island/PowerState.qml) | UPower bridge. Detects AC power plug/unplug events and emits transient alerts. |
+| [`BtState.qml`](file://$HOME/.config/quickshell/cool-shell/island/BtState.qml) | Bluetooth device discovery and differential connection tracker; fires particle burst and azure laser sweeps upon connection. |
+| [`PrivacyState.qml`](file://$HOME/.config/quickshell/cool-shell/island/PrivacyState.qml) | Scans active PipeWire input streams (mic active) and probes `/dev/video*` via `fuser` (camera active). Renders indicator pips. |
+| [`WeatherState.qml`](file://$HOME/.config/quickshell/cool-shell/island/WeatherState.qml) | Fetches Open-Meteo / wttr.in JSON cached locally in `~/.cache/cool-shell-weather.json` every 30 minutes. |
+| [`AccessibilityState.qml`](file://$HOME/.config/quickshell/cool-shell/island/AccessibilityState.qml) | Screen reader vocalization via `speech-dispatcher` (`spd-say -C -e`). |
 
 ### 4.4 Panel Catalog (`island/panels/`)
 
@@ -403,9 +403,9 @@ When Game Mode is engaged via Control Center, Notch, or IPC:
 ## 9. Current Working Tree State
 
 The repository is on branch `main` (1 commit ahead of origin). Three unstaged modifications exist from prior user development:
-1. **[`island/IslandHub.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/IslandHub.qml)**: Re-ordered `ShelfState.hasActiveDownload` above media playback in `compactText`, giving download tickers visual priority over track names.
-2. **[`island/Notch.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml)**: Expanded particle burst from 4 sparse dots to 12 celebratory multi-colored particles (`Easing.OutBack`, 480ms).
-3. **[`island/ShelfState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/ShelfState.qml)**: Improved transfer rate calculation, adaptive poll intervals (1500ms active vs 4000ms idle), and added render detection formatting (`🎬 Render: ...`).
+1. **[`island/IslandHub.qml`](file://$HOME/.config/quickshell/cool-shell/island/IslandHub.qml)**: Re-ordered `ShelfState.hasActiveDownload` above media playback in `compactText`, giving download tickers visual priority over track names.
+2. **[`island/Notch.qml`](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml)**: Expanded particle burst from 4 sparse dots to 12 celebratory multi-colored particles (`Easing.OutBack`, 480ms).
+3. **[`island/ShelfState.qml`](file://$HOME/.config/quickshell/cool-shell/island/ShelfState.qml)**: Improved transfer rate calculation, adaptive poll intervals (1500ms active vs 4000ms idle), and added render detection formatting (`🎬 Render: ...`).
 
 ---
 

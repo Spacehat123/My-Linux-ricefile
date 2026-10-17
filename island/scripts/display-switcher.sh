@@ -17,7 +17,8 @@ MODE_FILE="/tmp/hypr_display_current_mode.txt"
 PERSISTENT_MONITORS_LUA="$HOME/.config/hypr/monitors.lua"
 PERSISTENT_MONITORS_CONF="$HOME/.config/hypr/monitors.conf"
 WATCHDOG_SCRIPT="$SCRIPT_DIR/display-safety-watchdog.sh"
-JQ_BIN="/home/pranc/.local/bin/jq"
+export PATH="$HOME/.local/bin:$PATH"
+JQ_BIN="$(command -v jq || echo jq)"
 if ! command -v "$JQ_BIN" >/dev/null 2>&1; then
   JQ_BIN="jq"
 fi

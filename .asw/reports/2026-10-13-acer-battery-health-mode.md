@@ -15,7 +15,7 @@ Two specific factors caused this behavior:
 
 ### Factor A: Firmware Limitation (Fixed 80% Threshold)
 Unlike laptops from Asus or Lenovo (which support variable thresholds like 60%, 70%, or 85% via `sysfs`), the Acer firmware architecture for Aspire and Nitro models does **not** support arbitrary percentages.
-- As confirmed by reverse-engineering in `/home/pranc/Desktop/Acer nitrosene/Linux-NitroSense/core/device_regs.py`, Acer Embedded Controller register `0x03` (`BATTERYCHARGELIMIT`) operates as a **binary toggle**:
+- As confirmed by reverse-engineering in `$HOME/Desktop/Acer nitrosene/Linux-NitroSense/core/device_regs.py`, Acer Embedded Controller register `0x03` (`BATTERYCHARGELIMIT`) operates as a **binary toggle**:
   - `0x51` (81 dec): **80% Battery Health Mode** (Acer Care Center / NitroSense Care Mode).
   - `0x11` (17 dec): **100% Full Charge** (Charge Limit Disabled).
 - The hardware EC physically ignores or rejects values other than the factory health-mode flags.
@@ -29,7 +29,7 @@ Unlike laptops from Asus or Lenovo (which support variable thresholds like 60%, 
 
 ## 2. Implemented Fixes
 
-### 1. Actuator Refactoring ([`scripts/battery-limit.sh`](file:///home/pranc/.config/quickshell/cool-shell/scripts/battery-limit.sh))
+### 1. Actuator Refactoring ([`scripts/battery-limit.sh`](file://$HOME/.config/quickshell/cool-shell/scripts/battery-limit.sh))
 - **Direct Acer EC Access**: Interacts directly with register `0x03` via `/sys/kernel/debug/ec/ec0/io` (and `/dev/ec` fallback).
 - **Graceful Privilege Elevation**:
   1. Checks non-interactive `sudo -n "$0" "$@"`. If a sudoers rule exists, it executes instantly without delay or password prompts.
@@ -37,7 +37,7 @@ Unlike laptops from Asus or Lenovo (which support variable thresholds like 60%, 
   3. Falls back to `pkexec`.
 - **User-Safe IPC Notifications**: Resolves root vs unprivileged Quickshell socket boundaries by routing Dynamic Island notifications through the active desktop user session (`sudo -u "$SUDO_USER" qs -c cool-shell ...`).
 
-### 2. Settings UI Refactoring ([`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml))
+### 2. Settings UI Refactoring ([`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml))
 - **Removed Misleading Presets**: Removed arbitrary percentage sliders and preset buttons (60%, 70%, 85%, 90%) that the Acer EC cannot physically fulfill.
 - **Hardware-Aligned Mode Selector**:
   - **80% Health Mode**: Caps charging at 80% to preserve lithium chemistry when operating on AC power.
@@ -51,7 +51,7 @@ Unlike laptops from Asus or Lenovo (which support variable thresholds like 60%, 
 To enable instant, passwordless toggling directly from Settings or keyboard shortcuts without graphical password dialogs, execute the following one-line sudoers rule:
 
 ```bash
-echo "$USER ALL=(ALL) NOPASSWD: /home/pranc/.config/quickshell/cool-shell/scripts/battery-limit.sh" | sudo tee /etc/sudoers.d/cool-shell-battery
+echo "$USER ALL=(ALL) NOPASSWD: $HOME/.config/quickshell/cool-shell/scripts/battery-limit.sh" | sudo tee /etc/sudoers.d/cool-shell-battery
 ```
 
 ---

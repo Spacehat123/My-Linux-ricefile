@@ -87,14 +87,14 @@ Any non-essential user application is terminated via `SIGTERM` followed by `SIGK
 
 ## 4. UI & Shell Components
 
-1. **Backend Engine**: [`island/scripts/feather-mode.py`](file:///home/pranc/.config/quickshell/cool-shell/island/scripts/feather-mode.py)
+1. **Backend Engine**: [`island/scripts/feather-mode.py`](file://$HOME/.config/quickshell/cool-shell/island/scripts/feather-mode.py)
    - Exposes: `status`, `enable` (`on`), `disable` (`off`), `toggle`, `dry-run`.
-2. **CLI Shortcut**: [`island/scripts/feather`](file:///home/pranc/.config/quickshell/cool-shell/island/scripts/feather)
+2. **CLI Shortcut**: [`island/scripts/feather`](file://$HOME/.config/quickshell/cool-shell/island/scripts/feather)
    - Usage: `island/scripts/feather off` or `on`.
-3. **Left Sidebar Card**: [`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml)
+3. **Left Sidebar Card**: [`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml)
    - **Inactive**: *"Absolute battery • Bare-minimum Hyprland"*.
    - **Active**: *"Active • <N> pruned • Bare Hyprland"*, emerald eco styling, animated pill switch.
-4. **Settings Window**: [`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml)
+4. **Settings Window**: [`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml)
    - Power & Battery settings category reflects bare-minimum Hyprland mode.
 5. **IPC Endpoint**: `shell.qml` -> `quickshell ipc -c cool-shell call feather status` / `toggle`.
 

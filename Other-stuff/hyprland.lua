@@ -1,5 +1,3 @@
-
-
 ------------------
 ---- MONITORS ----
 ------------------
@@ -23,6 +21,22 @@ local terminal    = "kitty"
 local fileManager = "dolphin"
 local menu        = "hyprlauncher"
 
+local home        = os.getenv("HOME") or "~"
+local shellDir    = home .. "/.config/quickshell/cool-shell"
+
+-- Resilient Quickshell IPC dispatcher:
+-- 1. Standard `-c cool-shell` IPC
+-- 2. Default active instance `qs ipc call` (if launched by path)
+-- 3. `quickshell ipc -c cool-shell call`
+-- 4. Direct `--pid` fallback if multiple Quickshell instances exist
+local function qs_ipc(target_and_args)
+    return "qs -c cool-shell ipc call " .. target_and_args
+        .. " >/dev/null 2>&1 || qs ipc call " .. target_and_args
+        .. " >/dev/null 2>&1 || quickshell ipc -c cool-shell call " .. target_and_args
+        .. " >/dev/null 2>&1 || qs -c My-Linux-ricefile-main ipc call " .. target_and_args
+        .. " >/dev/null 2>&1 || (pid=$(pgrep -n -f 'quickshell|qs'); [ -n \"$pid\" ] && qs --pid \"$pid\" ipc call " .. target_and_args .. " >/dev/null 2>&1)"
+end
+
 
 -------------------
 ---- AUTOSTART ----
@@ -40,7 +54,7 @@ local menu        = "hyprlauncher"
 -- end)
 -- exec-once = awww-daemon
 hl.on("hyprland.start", function()
-    hl.exec_cmd("quickshell -c cool-shell")
+    hl.exec_cmd("pkill -x quickshell 2>/dev/null; quickshell -c cool-shell")
 end)
 
 hl.on("hyprland.start", function()
@@ -277,22 +291,26 @@ hl.bind("SUPER + L", hl.dsp.exec_cmd("hyprlock"))
 -- 🏝️ Dynamic Island Binds
 -- =========================
 
-hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd("qs -c cool-shell ipc call notch toggle launcher"), { release = true })
+hl.bind("SUPER + SUPER_L", hl.dsp.exec_cmd(qs_ipc("notch toggle launcher")), { release = true })
 
-hl.bind("SUPER + A", hl.dsp.exec_cmd("qs -c cool-shell ipc call notch toggle wallpaper"))
+hl.bind("SUPER + A", hl.dsp.exec_cmd(qs_ipc("notch toggle wallpaper")))
 
-hl.bind("SUPER + C", hl.dsp.exec_cmd("qs -c cool-shell ipc call notch toggle theme"))
+hl.bind("SUPER + C", hl.dsp.exec_cmd(qs_ipc("notch toggle theme")))
 
-hl.bind("SUPER + X", hl.dsp.exec_cmd("qs -c cool-shell ipc call notch toggle power"))
+hl.bind("SUPER + X", hl.dsp.exec_cmd(qs_ipc("notch toggle power")))
 
-hl.bind("SUPER + G", hl.dsp.exec_cmd("qs -c cool-shell ipc call notch toggle media"))
+hl.bind("SUPER + M", hl.dsp.exec_cmd(qs_ipc("notch toggle media")))
 
-hl.bind("SUPER + N", hl.dsp.exec_cmd("qs -c cool-shell ipc call notch toggle notifications"))
+hl.bind("SUPER + N", hl.dsp.exec_cmd(qs_ipc("notch toggle notifications")))
 
-hl.bind("SUPER + TAB", hl.dsp.exec_cmd("qs -c cool-shell ipc call overview toggle"))
+hl.bind("SUPER + G", hl.dsp.exec_cmd(qs_ipc("notch toggle ai")))
 
-hl.bind("SUPER + P", hl.dsp.exec_cmd("qs -c cool-shell ipc call displays cycle"))
-hl.bind("SUPER + SHIFT + P", hl.dsp.exec_cmd("qs -c cool-shell ipc call displays confirm"))
+hl.bind("SUPER + I", hl.dsp.exec_cmd(qs_ipc("settings toggle")))
+
+hl.bind("SUPER + TAB", hl.dsp.exec_cmd(qs_ipc("overview toggle")))
+
+hl.bind("SUPER + P", hl.dsp.exec_cmd(qs_ipc("displays cycle")))
+hl.bind("SUPER + SHIFT + P", hl.dsp.exec_cmd(qs_ipc("displays confirm")))
 
 hl.bind("ALT + F12", hl.dsp.window.move({ workspace = 1 }))
 -- =========================
@@ -314,7 +332,7 @@ hl.bind("SUPER + Q", hl.dsp.window.close())
 hl.bind("SUPER + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind("SUPER + D", hl.dsp.window.float({ action = "toggle" }))
 
-hl.bind("SUPER + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
+-- hl.bind("SUPER + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
 
 
 hl.bind("SUPER + J", hl.dsp.layout("togglesplit"))
@@ -324,7 +342,7 @@ hl.bind("SUPER + J", hl.dsp.layout("togglesplit"))
 -- 🦅 Bird's-Eye View & Horizontal Scrolling Navigation
 -- =========================
 
-hl.bind("SUPER + R", hl.dsp.exec_cmd("quickshell ipc -c cool-shell call birdseye toggle"))
+hl.bind("SUPER + R", hl.dsp.exec_cmd(qs_ipc("birdseye toggle")))
 hl.bind("SUPER + H", hl.dsp.focus({ direction = "left" }))
 hl.bind("SUPER + K", hl.dsp.focus({ direction = "right" }))
 
@@ -365,7 +383,7 @@ end
 hl.bind("SUPER + S",
     hl.dsp.workspace.toggle_special("stash"))
 
-hl.bind("SUPER + SHIFT + S",
+hl.bind("SUPER + ALT + S",
     hl.dsp.window.move({ workspace = "special:stash" }))
 
 
@@ -409,10 +427,10 @@ hl.bind("Print", hl.dsp.exec_cmd('grim -g "$(slurp)" - | wl-copy'))
 hl.bind("SUPER + Print", hl.dsp.exec_cmd('grim -g "$(slurp)" - | swappy -f -'))
 
 -- SUPER + SHIFT + S → Universal Screen Lens (OCR, QR, Color to Clipboard & Dynamic Island)
-hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd("/home/pranc/.config/quickshell/cool-shell/scripts/screen-lens.sh"))
+hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd(shellDir .. "/scripts/screen-lens.sh"))
 
 -- SUPER + ALT + P → CoolPhone Android Screen Mirroring Toggle
-hl.bind("SUPER + ALT + P", hl.dsp.exec_cmd("/home/pranc/.config/quickshell/cool-shell/scripts/phone-ctl.sh toggle"))
+hl.bind("SUPER + ALT + P", hl.dsp.exec_cmd(shellDir .. "/scripts/phone-ctl.sh toggle"))
 --------------------------------
 ---- WINDOWS AND WORKSPACES ----
 --------------------------------
@@ -472,5 +490,3 @@ hl.window_rule({
     rounding = 20,
     opaque = true,
 })
-
-

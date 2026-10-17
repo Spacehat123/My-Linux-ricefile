@@ -1,0 +1,30 @@
+{
+  "name": "Cherry",
+  "slug": "cherry",
+  "appearance": "dark",
+  "applications": {
+    "alacritty": "cherry",
+    "folder_color": "pink"
+  },
+  "colors": {
+    "bg_dim": "#160d14",
+    "bg0": "#1f121b",
+    "bg1": "#281723",
+    "bg2": "#3b1f32",
+    "bg3": "#522b46",
+    "bg4": "#6e395e",
+    "primary_container": "#4a1e36",
+    "secondary_container": "#361933",
+    "foreground": "#fce8f0",
+    "muted": "#cda3b8",
+    "muted_dark": "#8a6279",
+    "red": "#e04b73",
+    "yellow": "#f6c48e",
+    "green": "#9bc892",
+    "primary": "#e8799e",
+    "blue": "#a098d6",
+    "aqua": "#cca8dd",
+    "orange": "#ea9381",
+    "purple": "#b868b4"
+  }
+}

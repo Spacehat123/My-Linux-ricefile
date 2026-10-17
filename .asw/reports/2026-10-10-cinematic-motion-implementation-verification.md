@@ -3,8 +3,8 @@
 **Document Date**: 2026-10-10  
 **Target Platform**: Hyprland 0.56.2 (Arch Linux) & Quickshell 0.3.1 (Qt Quick 6)  
 **Configuration Targets**:  
-- Compositor: `/home/pranc/.config/hypr/hyprland.lua`  
-- Desktop Shell: `/home/pranc/.config/quickshell/cool-shell/`  
+- Compositor: `$HOME/.config/hypr/hyprland.lua`  
+- Desktop Shell: `$HOME/.config/quickshell/cool-shell/`  
 **Execution Status**: Successfully Implemented, Calibrated, & Verified  
 
 ---
@@ -53,8 +53,8 @@ The cinematic motion system has been fully implemented across both the native Hy
 
 | File | Section / Symbols | Modification | Rationale |
 | :--- | :--- | :--- | :--- |
-| `/home/pranc/.config/hypr/hyprland.lua` | Decoration | Added `inactive_opacity = 0.95`, `dim_inactive = true`, `dim_strength = 0.08`. | Introduces subtle dark depth between active and inactive windows on the two-column tape. |
-| `/home/pranc/.config/hypr/hyprland.lua` | Curves & Animations | Added `cinematicGlide`, `cinematicSpring`, and `magneticSpring`. Bound `magneticSpring` to `workspaces` (`slide`), `windowsMove`, and `specialWorkspace` (`slidevert`). Added `fadeDim` and `fadeShadow`. | Establishes physical magnetic snap across workspaces and scrolling tape. |
+| `$HOME/.config/hypr/hyprland.lua` | Decoration | Added `inactive_opacity = 0.95`, `dim_inactive = true`, `dim_strength = 0.08`. | Introduces subtle dark depth between active and inactive windows on the two-column tape. |
+| `$HOME/.config/hypr/hyprland.lua` | Curves & Animations | Added `cinematicGlide`, `cinematicSpring`, and `magneticSpring`. Bound `magneticSpring` to `workspaces` (`slide`), `windowsMove`, and `specialWorkspace` (`slidevert`). Added `fadeDim` and `fadeShadow`. | Establishes physical magnetic snap across workspaces and scrolling tape. |
 | `theme/Theme.qml` | Lines 29–46, 101, 236–242 | Added `animDurationFast` (160ms), `animDurationNormal` (240ms), `animDurationSlow` (320ms), `springStiffness` (4.2), `springDamping` (0.35), `springEpsilon` (0.005), `spatialTransitionDuration` (750ms), `spatialTransitionOffset` (36px). | Centralizes semantic motion tokens for Qt Quick. |
 | `core/DesktopState.qml` | Line 63 | Bound `_transitionAnim.duration` to `theme.spatialTransitionDuration > 0 ? theme.spatialTransitionDuration : 750`. | Aligns presentation state transition flag with visual HUD envelope. |
 | `desktop/DesktopTransition.qml` | Lines 50–108 | Updated `enterExitAnim`: 160ms scale/fade entrance, 380ms hold, 200ms scale/fade exit (740ms total). Slot translation 360–420ms (`OutCubic`). | Provides generous, comfortable viewing window for the floating transition pill HUD. |

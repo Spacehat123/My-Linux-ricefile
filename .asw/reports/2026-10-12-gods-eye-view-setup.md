@@ -2,13 +2,13 @@
 
 **Date**: 2026-10-12  
 **Status**: Successfully Installed & Verified  
-**Installation Location**: `/home/pranc/Desktop/gods-eye-view`  
+**Installation Location**: `$HOME/Desktop/gods-eye-view`  
 
 ---
 
 ## 1. Executive Summary
 
-**God's Eye View** (`bilawalsidhu/gods-eye-view`) has been cloned, configured, and verified in `/home/pranc/Desktop/gods-eye-view`. It is a real-time browser-based 3D geospatial intelligence globe and simulator integrating live public tracking feeds for aircraft, ships, satellites, earthquakes, wildfires, and weather.
+**God's Eye View** (`bilawalsidhu/gods-eye-view`) has been cloned, configured, and verified in `$HOME/Desktop/gods-eye-view`. It is a real-time browser-based 3D geospatial intelligence globe and simulator integrating live public tracking feeds for aircraft, ships, satellites, earthquakes, wildfires, and weather.
 
 ---
 
@@ -24,7 +24,7 @@
   * Space Missions: Launch Library 2 public access
   * Terrain: Keyless 3D global elevation
 * **Dev Server**: Vite v6.4.3 verified on `http://localhost:4173` (HTTP 200 OK)
-* **Launcher**: Created executable launcher [`/home/pranc/Desktop/gods-eye-view/start.sh`](file:///home/pranc/Desktop/gods-eye-view/start.sh)
+* **Launcher**: Created executable launcher [`$HOME/Desktop/gods-eye-view/start.sh`](file://$HOME/Desktop/gods-eye-view/start.sh)
 
 ---
 

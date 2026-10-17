@@ -1,9 +1,9 @@
 # Cool-Shell Aesthetic Transformation Plan: Making the UI Gorgeous
 
 **Date:** 2026-09-30  
-**Target:** [`cool-shell`](file:///home/pranc/.config/quickshell/cool-shell/)  
+**Target:** [`cool-shell`](file://$HOME/.config/quickshell/cool-shell/)  
 **Document Intent:** Human-Readable Visual Design & Polish Blueprint  
-**Policy Compliance:** [`.agents/rules/reports.md`](file:///home/pranc/.config/quickshell/cool-shell/.agents/rules/reports.md)
+**Policy Compliance:** [`.agents/rules/reports.md`](file://$HOME/.config/quickshell/cool-shell/.agents/rules/reports.md)
 
 ---
 

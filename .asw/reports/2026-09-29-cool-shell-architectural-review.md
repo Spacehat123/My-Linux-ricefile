@@ -12,20 +12,20 @@
 
 `cool-shell` is a high-performance, dual-heritage Wayland desktop shell running natively on Hyprland via Quickshell 0.3.1. Totaling **19,486 lines of code** across **77 files** (QML, Python, Bash, and GLSL), the codebase represents a fusion of two fundamentally distinct desktop shell philosophies:
 
-1. **The `pranc-shell` Instrument Surface:** A cyber-tactical desktop telemetry system (`core/`, `components/`, `panels/`, `desktop/`, `theme/`) featuring edge-triggered slide-out sidebars (Control Center and Application Overview), bottom workspace bar, idle-activated ambient telemetry HUD ([`desktop/AmbientLayer.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/AmbientLayer.qml)), directional spatial workspace transitions ([`desktop/DesktopTransition.qml`](file:///home/pranc/.config/quickshell/cool-shell/desktop/DesktopTransition.qml)), and a 16-target headless IPC query/mutation pipeline.
-2. **The `vyeos` / `dotarch` Dynamic Island:** A macOS-inspired "Live Activities" dynamic pill at the top of the screen ([`island/Notch.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml)), mediated by a central state arbiter ([`island/IslandHub.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/IslandHub.qml)) and a unified backend singleton ([`island/Backend.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Backend.qml)). It hosts 14 feature panels (launcher, clipboard manager, markdown notes, todo list, media player, notification center, timers/stopwatch, file shelf/downloads, weather, themes, wallpapers, capture, power), an interactive region/window capture overlay ([`island/CaptureSelector.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/CaptureSelector.qml)), and real-time audio waveform level meters ([`island/scripts/level-meter.py`](file:///home/pranc/.config/quickshell/cool-shell/island/scripts/level-meter.py)).
+1. **The `pranc-shell` Instrument Surface:** A cyber-tactical desktop telemetry system (`core/`, `components/`, `panels/`, `desktop/`, `theme/`) featuring edge-triggered slide-out sidebars (Control Center and Application Overview), bottom workspace bar, idle-activated ambient telemetry HUD ([`desktop/AmbientLayer.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/AmbientLayer.qml)), directional spatial workspace transitions ([`desktop/DesktopTransition.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/DesktopTransition.qml)), and a 16-target headless IPC query/mutation pipeline.
+2. **The `vyeos` / `dotarch` Dynamic Island:** A macOS-inspired "Live Activities" dynamic pill at the top of the screen ([`island/Notch.qml`](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml)), mediated by a central state arbiter ([`island/IslandHub.qml`](file://$HOME/.config/quickshell/cool-shell/island/IslandHub.qml)) and a unified backend singleton ([`island/Backend.qml`](file://$HOME/.config/quickshell/cool-shell/island/Backend.qml)). It hosts 14 feature panels (launcher, clipboard manager, markdown notes, todo list, media player, notification center, timers/stopwatch, file shelf/downloads, weather, themes, wallpapers, capture, power), an interactive region/window capture overlay ([`island/CaptureSelector.qml`](file://$HOME/.config/quickshell/cool-shell/island/CaptureSelector.qml)), and real-time audio waveform level meters ([`island/scripts/level-meter.py`](file://$HOME/.config/quickshell/cool-shell/island/scripts/level-meter.py)).
 
 ### Critical Architectural Findings
-- **Island Click Routing Bug:** In [`island/Notch.qml` line 789](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml#L789), clicking the collapsed Dynamic Island unconditionally executes `ShellState.show("control")`. Although `IslandHub.qml` defines an intelligent `primaryPanel()` priority router (mapping active media to `media`, recording to `capture`, timers to `timer`, and unread alerts to `notifications`), the click handler never invokes it.
-- **Tri-Theme Schism:** Three separate styling authorities operate independently: [`theme/Theme.qml`](file:///home/pranc/.config/quickshell/cool-shell/theme/Theme.qml) (cyber-tactical cyan/crimson tokens), [`island/Theme.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Theme.qml) (dynamic Everforest pastel tokens loaded via `theme-system.sh`), and [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml) (hardcoded Waybar CSS colors). Changing themes in the island does not affect the sidebars, ambient layer, or bottom bar.
+- **Island Click Routing Bug:** In [`island/Notch.qml` line 789](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml#L789), clicking the collapsed Dynamic Island unconditionally executes `ShellState.show("control")`. Although `IslandHub.qml` defines an intelligent `primaryPanel()` priority router (mapping active media to `media`, recording to `capture`, timers to `timer`, and unread alerts to `notifications`), the click handler never invokes it.
+- **Tri-Theme Schism:** Three separate styling authorities operate independently: [`theme/Theme.qml`](file://$HOME/.config/quickshell/cool-shell/theme/Theme.qml) (cyber-tactical cyan/crimson tokens), [`island/Theme.qml`](file://$HOME/.config/quickshell/cool-shell/island/Theme.qml) (dynamic Everforest pastel tokens loaded via `theme-system.sh`), and [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml) (hardcoded Waybar CSS colors). Changing themes in the island does not affect the sidebars, ambient layer, or bottom bar.
 - **Process Polling Overhead:** Several background timers repeatedly fork external subshells:
   - Spawning `/bin/cat` every **150ms** (~6.7 forks/sec) in `IslandHub.qml` to read audio levels from tmpfs while music plays.
   - Spawning `wpctl get-volume` every **2,000ms** in `BottomBar.qml` despite `Quickshell.Services.Pipewire` already being linked into the process.
   - Spawning `wl-paste | md5sum` every **2,000ms** in `Backend.qml` to detect external screenshots.
   - Spawning `fuser /dev/video*` every **2,000ms** in `PrivacyState.qml` to check webcam activity.
   - Spawning `find ~/Downloads` every **5,000ms** in `ShelfState.qml` to track browser downloads.
-- **Disabled Organic Bézier Shoulders:** In [`island/Notch.qml` lines 662 and 703](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml#L662), two `PathCubic` Bézier curves designed to flare the top corners of the pill smoothly into the monitor bezel are hardcoded to `visible: false`.
-- **Permanent Debug Artifacts:** Four 8x8 colored debug rectangles (`#80ffffff`, `#00ff88`, `#00bfff`, `#ff0088`) are permanently rendered in the top-left corner of the layer window in [`shell.qml` lines 1407–1440](file:///home/pranc/.config/quickshell/cool-shell/shell.qml#L1407-L1440).
+- **Disabled Organic Bézier Shoulders:** In [`island/Notch.qml` lines 662 and 703](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml#L662), two `PathCubic` Bézier curves designed to flare the top corners of the pill smoothly into the monitor bezel are hardcoded to `visible: false`.
+- **Permanent Debug Artifacts:** Four 8x8 colored debug rectangles (`#80ffffff`, `#00ff88`, `#00bfff`, `#ff0088`) are permanently rendered in the top-left corner of the layer window in [`shell.qml` lines 1407–1440](file://$HOME/.config/quickshell/cool-shell/shell.qml#L1407-L1440).
 
 ---
 
@@ -215,9 +215,9 @@ The project encompasses **19,486 lines of code** across **77 files**:
    ```bash
    qs -c cool-shell ipc call notch toggle launcher
    ```
-2. **IPC Handler Routing:** In [`shell.qml` line 1212](file:///home/pranc/.config/quickshell/cool-shell/shell.qml#L1212), `IpcHandler { target: "notch" }` receives `toggle("launcher")`, invoking [`ShellState.show("launcher")`](file:///home/pranc/.config/quickshell/cool-shell/island/ShellState.qml#L77).
+2. **IPC Handler Routing:** In [`shell.qml` line 1212](file://$HOME/.config/quickshell/cool-shell/shell.qml#L1212), `IpcHandler { target: "notch" }` receives `toggle("launcher")`, invoking [`ShellState.show("launcher")`](file://$HOME/.config/quickshell/cool-shell/island/ShellState.qml#L77).
 3. **State Transition:** `ShellState.panel` flips from `"clock"` to `"launcher"`. `ShellState.expanded` becomes `true`. `ShellState.targetWidth` transitions to `panelWidths["launcher"]` (410px).
-4. **Surface Reaction:** In [`island/Notch.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml#L128-L153):
+4. **Surface Reaction:** In [`island/Notch.qml`](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml#L128-L153):
    - `onPanelChanged` triggers.
    - `window.clockRevealed = false` immediately hides `CollapsedStatus` (fades in 90ms).
    - `snapPop.restart()` executes scale micro-overshoot on `notchSurface` (1.0 $\to$ 0.8 $\to$ 1.0 over 300ms).
@@ -232,7 +232,7 @@ The project encompasses **19,486 lines of code** across **77 files**:
 ### Flow 2: Volume Step Takeover & Dynamic Restoration
 1. **Hardware / Keybind Input:** Multimedia volume key sends volume step via `wpctl`.
 2. **Compositor / PipeWire Event:** PipeWire updates default sink volume. Native service `Quickshell.Services.Pipewire` emits `onVolumeChanged`.
-3. **Takeover Assertion:** [`island/IslandHub.qml` lines 181–191](file:///home/pranc/.config/quickshell/cool-shell/island/IslandHub.qml#L181-L191) `Connections { target: root.sinkAudio }` catches the change and calls `root.showVolume()`.
+3. **Takeover Assertion:** [`island/IslandHub.qml` lines 181–191](file://$HOME/.config/quickshell/cool-shell/island/IslandHub.qml#L181-L191) `Connections { target: root.sinkAudio }` catches the change and calls `root.showVolume()`.
 4. **Pill Transformation:**
    - `IslandHub.volumeActive = true`, `volumePercent = Math.round(vol * 100)`.
    - `volumeTimer` (1,000ms) restarts.
@@ -242,12 +242,12 @@ The project encompasses **19,486 lines of code** across **77 files**:
 
 ### Flow 3: External Screenshot Detection & Surface Wave
 1. **User Executes Screenshot:** User hits `Print` key $\to$ Hyprland runs `grim -g "$(slurp)" - | wl-copy`.
-2. **Polling Daemon Detection:** In [`island/Backend.qml` lines 347–384](file:///home/pranc/.config/quickshell/cool-shell/island/Backend.qml#L347-L384), a recurring 2,000ms `Timer` fires `clipSigProcess`:
+2. **Polling Daemon Detection:** In [`island/Backend.qml` lines 347–384](file://$HOME/.config/quickshell/cool-shell/island/Backend.qml#L347-L384), a recurring 2,000ms `Timer` fires `clipSigProcess`:
    ```bash
    wl-paste --type image/png | head -c 16384 | md5sum
    ```
 3. **Fingerprint Qualification:** If MD5 differs from `lastClipImageSig` and is outside the internal capture suppression window (`Date.now() - ownCaptureAt > 4000`), `Backend.captureTick` increments.
-4. **Hub Dispatch:** [`island/IslandHub.qml` lines 288–296](file:///home/pranc/.config/quickshell/cool-shell/island/IslandHub.qml#L288-L296) catches `onCaptureTickChanged`:
+4. **Hub Dispatch:** [`island/IslandHub.qml` lines 288–296](file://$HOME/.config/quickshell/cool-shell/island/IslandHub.qml#L288-L296) catches `onCaptureTickChanged`:
    - `showTransient("Screenshot captured", 1500)`
    - `flashBorder("white", 700)`
    - `burst()`
@@ -263,18 +263,18 @@ The project encompasses **19,486 lines of code** across **77 files**:
 ## 5. DYNAMIC ISLAND REVIEW
 
 ### Geometry, Anchoring, and Boundary Masking
-- **Top Bézier Curves (Disabled Defect):** Lines 658–738 of [`island/Notch.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml#L658-L738) contain two `Shape` items (`leftShoulderPath` and `rightShoulderPath`) using `PathCubic` Bézier curves designed to flare the top corners of the pill smoothly into the monitor's top bezel. **Both items have `visible: false` hardcoded (lines 662 and 703)!** The pill floats with standard rounded corners rather than continuous organic Bézier shoulders.
+- **Top Bézier Curves (Disabled Defect):** Lines 658–738 of [`island/Notch.qml`](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml#L658-L738) contain two `Shape` items (`leftShoulderPath` and `rightShoulderPath`) using `PathCubic` Bézier curves designed to flare the top corners of the pill smoothly into the monitor's top bezel. **Both items have `visible: false` hardcoded (lines 662 and 703)!** The pill floats with standard rounded corners rather than continuous organic Bézier shoulders.
 - **Top Anchoring & Transform Origin:** Set to `Item.TopCenter` on `notchSurface`. All scale pops (`snapPop`, `arrivalPop`) and vertical height expansions grow downwards into the screen without altering the 10px bezel margin (`topGap: 10`).
 - **Input Pass-Through Mask:** Handled cleanly via `mask: Region { item: notchBody; topLeftRadius: notchBody.radius; ... }` on the `PanelWindow`. All clicks outside the rounded rectangle pass through directly to underlying Hyprland toplevels.
 - **Collapsed Dimensions:** Width 145px (plus 24px wings = 169px total), Height 24px.
 - **Expanded Dimensions:** Width ranges from 365px (`clipboard`, `notifications`) to 520px (`control`, `media`). Height is dynamically evaluated via `Math.max(ShellState.panelHeights[panel], requestedPanel.implicitHeight) + padding`, ranging from 56px (`power`) to 430px (`notes`).
 
 ### State Arbitration & Actual Routing
-The collapsed status priority ladder in [`island/IslandHub.qml` lines 138–161](file:///home/pranc/.config/quickshell/cool-shell/island/IslandHub.qml#L138-L161) resolves competing background tasks cleanly:
+The collapsed status priority ladder in [`island/IslandHub.qml` lines 138–161](file://$HOME/.config/quickshell/cool-shell/island/IslandHub.qml#L138-L161) resolves competing background tasks cleanly:
 $$\text{Volume Takeover (P0)} \to \text{Transients (P1)} \to \text{Recording (P2)} \to \text{Timer Completion Hold (P3)} \to \text{Timer Active (P4)} \to \text{Media Playing (P5)} \to \text{Unread Notifications (P6)} \to \text{Downloads (P7)} \to \text{Paused Media (P8)} \to \text{Idle / Weather (P9)}$$
 
 **The Click Routing Disconnect:**  
-The shell defines `function primaryPanel()` in `IslandHub.qml`, which correctly maps the highest-priority activity to its panel (`recordingActive` $\to$ `capture`, `hasActive` $\to$ `timer`, `mediaPlaying` $\to$ `media`, `unreadCount > 0` $\to$ `notifications`, etc.). However, in [`island/Notch.qml` line 789](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml#L789), **the click handler never calls `IslandHub.primaryPanel()`:**
+The shell defines `function primaryPanel()` in `IslandHub.qml`, which correctly maps the highest-priority activity to its panel (`recordingActive` $\to$ `capture`, `hasActive` $\to$ `timer`, `mediaPlaying` $\to$ `media`, `unreadCount > 0` $\to$ `notifications`, etc.). However, in [`island/Notch.qml` line 789](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml#L789), **the click handler never calls `IslandHub.primaryPanel()`:**
 ```qml
 // Notch.qml lines 788-790
 // Plain click always opens control center (hub for everything).
@@ -351,7 +351,7 @@ Exhaustive inventory of all 42 primary animations across the shell:
 ### 1. Hyprland 0.47+ Lua Dispatch Integration
 - Direct native C++ bindings via `Quickshell.Hyprland` singletons:
   - `Hyprland.workspaces` and `Hyprland.toplevels` are tracked reactively by `WorkspaceManager.qml` and `SurfaceManager.qml`.
-  - Window mutations in [`core/CompositorActionLayer.qml`](file:///home/pranc/.config/quickshell/cool-shell/core/CompositorActionLayer.qml#L290-L330) and [`island/scripts/shell-actions.sh`](file:///home/pranc/.config/quickshell/cool-shell/island/scripts/shell-actions.sh#L183) execute Hyprland 0.47+ Lua dispatch commands:
+  - Window mutations in [`core/CompositorActionLayer.qml`](file://$HOME/.config/quickshell/cool-shell/core/CompositorActionLayer.qml#L290-L330) and [`island/scripts/shell-actions.sh`](file://$HOME/.config/quickshell/cool-shell/island/scripts/shell-actions.sh#L183) execute Hyprland 0.47+ Lua dispatch commands:
     ```lua
     hl.dsp.window.move({ workspace = <id>, window = "address:<addr>" })
     hl.dsp.window.fullscreen({ window = "address:<addr>" })
@@ -361,9 +361,9 @@ Exhaustive inventory of all 42 primary animations across the shell:
 
 ### 2. Audio & PipeWire Polling Inefficiency
 - While volume and mute are handled reactively via `Quickshell.Services.Pipewire`, the audio waveform visualizer is severely inefficient:
-  - [`island/scripts/level-meter.py`](file:///home/pranc/.config/quickshell/cool-shell/island/scripts/level-meter.py) captures audio from default sink monitor ports via `pw-record` and writes 4 RMS values to `$XDG_RUNTIME_DIR/cool-shell-levels` at 12Hz.
-  - In [`island/IslandHub.qml` lines 244–271](file:///home/pranc/.config/quickshell/cool-shell/island/IslandHub.qml#L244-L271), Quickshell spawns `/bin/cat` via `Process` every **150ms** (~6.7 forks/sec) while music is playing.
-  - In [`panels/BottomBar.qml` lines 79–106](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L79-L106), `BottomBar` spawns `wpctl get-volume @DEFAULT_AUDIO_SINK@` every **2,000ms**, completely ignoring the native `Pipewire` singleton already linked in the process.
+  - [`island/scripts/level-meter.py`](file://$HOME/.config/quickshell/cool-shell/island/scripts/level-meter.py) captures audio from default sink monitor ports via `pw-record` and writes 4 RMS values to `$XDG_RUNTIME_DIR/cool-shell-levels` at 12Hz.
+  - In [`island/IslandHub.qml` lines 244–271](file://$HOME/.config/quickshell/cool-shell/island/IslandHub.qml#L244-L271), Quickshell spawns `/bin/cat` via `Process` every **150ms** (~6.7 forks/sec) while music is playing.
+  - In [`panels/BottomBar.qml` lines 79–106](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml#L79-L106), `BottomBar` spawns `wpctl get-volume @DEFAULT_AUDIO_SINK@` every **2,000ms**, completely ignoring the native `Pipewire` singleton already linked in the process.
 
 ### 3. MPRIS & Media Seeker
 - `Quickshell.Services.Mpris` provides reactive player models, album art URLs, and metadata.
@@ -371,21 +371,21 @@ Exhaustive inventory of all 42 primary animations across the shell:
 
 ### 4. BlueZ & Bluetooth
 - `Quickshell.Bluetooth` provides reactive adapter and device objects.
-- In [`island/BtState.qml` lines 51–72](file:///home/pranc/.config/quickshell/cool-shell/island/BtState.qml#L51-L72), a 3,000ms `Timer` diffs `connectedNames` against `prevConnected` to detect connect/disconnect events and trigger island sweeps.
+- In [`island/BtState.qml` lines 51–72](file://$HOME/.config/quickshell/cool-shell/island/BtState.qml#L51-L72), a 3,000ms `Timer` diffs `connectedNames` against `prevConnected` to detect connect/disconnect events and trigger island sweeps.
 
 ### 5. UPower & Battery Alert Loopback
 - `Quickshell.Services.UPower` tracks battery percentage and charging state.
-- In [`island/PowerState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/PowerState.qml#L25), a 2,000ms `Timer` polls `charging` and `onBattery` transitions rather than using Qt signal connections.
-- In [`island/LowBatteryMonitor.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/LowBatteryMonitor.qml#L21), when battery is $< 10\%$, Quickshell executes `gdbus call --session --dest org.freedesktop.Notifications ...` via `Process` to send a notification over D-Bus, which then loops back into Quickshell's own `NotificationServer`.
+- In [`island/PowerState.qml`](file://$HOME/.config/quickshell/cool-shell/island/PowerState.qml#L25), a 2,000ms `Timer` polls `charging` and `onBattery` transitions rather than using Qt signal connections.
+- In [`island/LowBatteryMonitor.qml`](file://$HOME/.config/quickshell/cool-shell/island/LowBatteryMonitor.qml#L21), when battery is $< 10\%$, Quickshell executes `gdbus call --session --dest org.freedesktop.Notifications ...` via `Process` to send a notification over D-Bus, which then loops back into Quickshell's own `NotificationServer`.
 
 ### 6. Screenshots & Screen Recording
 - Grim + wl-copy: `island/scripts/shell-actions.sh` captures fullscreen or geometry to `~/Pictures/Screenshots/`.
 - Screen recording: `wf-recorder` is spawned in the background, writing to `~/Videos/Recordings/`. Its PID is tracked in `$XDG_RUNTIME_DIR/quickshell-wf-recorder.pid`. Toggling sends `kill -INT $pid`.
-- Interactive Capture Overlay: [`island/CaptureSelector.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/CaptureSelector.qml) creates an overlay surface on `WlrLayer.Overlay`. In region mode, it handles drag selection with dimensions tooltip. In window mode, it highlights window bounding boxes.
+- Interactive Capture Overlay: [`island/CaptureSelector.qml`](file://$HOME/.config/quickshell/cool-shell/island/CaptureSelector.qml) creates an overlay surface on `WlrLayer.Overlay`. In region mode, it handles drag selection with dimensions tooltip. In window mode, it highlights window bounding boxes.
 
 ### 7. File Shelf & Download Watcher
-- File Shelf: Files dragged onto `Notch.qml` are appended to [`island/shelf.json`](file:///home/pranc/.config/quickshell/cool-shell/island/shelf.json) via `FileView`. Clicking an item executes `xdg-open` via `Quickshell.execDetached`.
-- Download Watcher: In [`island/ShelfState.qml` lines 181–192](file:///home/pranc/.config/quickshell/cool-shell/island/ShelfState.qml#L181-L192), a 5,000ms `Timer` spawns `find ~/Downloads -maxdepth 1 \( -name '*.part' -o -name '*.crdownload' -o -name '*.aria2' \) -printf '%s\t%f\n'` to track active browser downloads.
+- File Shelf: Files dragged onto `Notch.qml` are appended to [`island/shelf.json`](file://$HOME/.config/quickshell/cool-shell/island/shelf.json) via `FileView`. Clicking an item executes `xdg-open` via `Quickshell.execDetached`.
+- Download Watcher: In [`island/ShelfState.qml` lines 181–192](file://$HOME/.config/quickshell/cool-shell/island/ShelfState.qml#L181-L192), a 5,000ms `Timer` spawns `find ~/Downloads -maxdepth 1 \( -name '*.part' -o -name '*.crdownload' -o -name '*.aria2' \) -printf '%s\t%f\n'` to track active browser downloads.
 
 ---
 
@@ -449,7 +449,7 @@ The shell exhibits an identity conflict between two well-executed but incompatib
 ## 11. HIGH-VALUE IMPROVEMENTS
 
 ### 1. Fix Dynamic Island Click Routing
-- **Change:** In [`island/Notch.qml` lines 788–790](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml#L788-L790), replace `ShellState.show("control")` with `ShellState.show(IslandHub.primaryPanel())`.
+- **Change:** In [`island/Notch.qml` lines 788–790](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml#L788-L790), replace `ShellState.show("control")` with `ShellState.show(IslandHub.primaryPanel())`.
 - **Rationale:** Restores the core Live Activities functionality: clicking the island during media playback opens `media`, during recording opens `capture`, with unread notifications opens `notifications`, and during timers opens `timer`.
 - **Involved Files:** `island/Notch.qml`, `island/IslandHub.qml`.
 - **Preserved Functionality:** Plain idle click still falls back to `"control"`. `completionHold` logic remains untouched.
@@ -463,14 +463,14 @@ The shell exhibits an identity conflict between two well-executed but incompatib
 - **Risk:** Low.
 
 ### 3. Re-enable & Tune Bézier Shoulder Curves
-- **Change:** In [`island/Notch.qml` lines 662 and 703](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml#L662), change `visible: false` to `visible: !ShellState.expanded` and verify alignment against the top screen bezel.
+- **Change:** In [`island/Notch.qml` lines 662 and 703](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml#L662), change `visible: false` to `visible: !ShellState.expanded` and verify alignment against the top screen bezel.
 - **Rationale:** Re-establishes the organic physical flare curving the collapsed pill into the top monitor bezel.
 - **Involved Files:** `island/Notch.qml`.
 - **Preserved Functionality:** Smooth expansion and collapse.
 - **Risk:** Low; must verify that shoulder shapes do not clip expanded panel contents.
 
 ### 4. Remove Permanent On-Screen Debug Rectangles
-- **Change:** Delete the test/debug indicator `Row` in [`shell.qml` lines 1407–1440](file:///home/pranc/.config/quickshell/cool-shell/shell.qml#L1407-L1440).
+- **Change:** Delete the test/debug indicator `Row` in [`shell.qml` lines 1407–1440](file://$HOME/.config/quickshell/cool-shell/shell.qml#L1407-L1440).
 - **Rationale:** Removes four 8x8 colored debug rectangles permanently visible in the top-left of the display.
 - **Involved Files:** `shell.qml`.
 - **Preserved Functionality:** Edge triggers remain fully functional.
@@ -565,9 +565,9 @@ If `cool-shell` evolves into an enterprise-grade "Live Activities Hub", it shoul
 ## 16. RECOMMENDED NEXT STEPS
 
 1. **Apply High-Value Bugfixes (Priority 1):**
-   - In [`island/Notch.qml` line 789](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml#L789), replace `ShellState.show("control")` with `ShellState.show(IslandHub.primaryPanel())`.
-   - Remove the four debug indicator rectangles in [`shell.qml` lines 1407–1440](file:///home/pranc/.config/quickshell/cool-shell/shell.qml#L1407-L1440).
-   - Re-enable shoulder Bézier shapes in [`island/Notch.qml` lines 662 and 703](file:///home/pranc/.config/quickshell/cool-shell/island/Notch.qml#L662).
+   - In [`island/Notch.qml` line 789](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml#L789), replace `ShellState.show("control")` with `ShellState.show(IslandHub.primaryPanel())`.
+   - Remove the four debug indicator rectangles in [`shell.qml` lines 1407–1440](file://$HOME/.config/quickshell/cool-shell/shell.qml#L1407-L1440).
+   - Re-enable shoulder Bézier shapes in [`island/Notch.qml` lines 662 and 703](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml#L662).
 2. **Optimize Audio Level Pipeline (Priority 2):**
    - Refactor `level-meter.py` to pipe levels directly to stdout, eliminating the 150ms `cat` execution.
 3. **Codebase Cleanup (Priority 3):**

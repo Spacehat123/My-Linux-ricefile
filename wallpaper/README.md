@@ -40,7 +40,7 @@ qs -c cool-shell ipc call wallpaper setEnabled true
 qs -c cool-shell ipc call wallpaper setEnabled false
 
 # Set specific video or image wallpaper
-qs -c cool-shell ipc call wallpaper setMedia "/home/pranc/Pictures/Wallpapers/live/black-hole-event-horizon.mp4" "video"
+qs -c cool-shell ipc call wallpaper setMedia "$HOME/Pictures/Wallpapers/live/black-hole-event-horizon.mp4" "video"
 
 # Query status properties
 qs -c cool-shell ipc prop get wallpaper enabled

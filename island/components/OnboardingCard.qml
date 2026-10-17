@@ -11,26 +11,46 @@ Rectangle {
         {
             "icon": "󰮯",
             "title": "Welcome to Cool-Shell",
-            "desc": "The Dynamic Island at the top expands dynamically to show track progress, notifications, and status."
+            "desc": "The Dynamic Island at the top morphs to display live track progress, synced lyrics, study timers, and system alerts. Hover to preview or click to expand."
         },
         {
             "icon": "󰍉",
-            "title": "Smart Launcher",
-            "desc": "Launch apps, solve math expressions instantly, or prefix queries with 'file:' to find documents."
+            "title": "Smart Launcher & Quick Tools",
+            "desc": "Tap Super to open the launcher. Search apps, evaluate math expressions, prefix 'file:' to find documents, or jump to Clipboard, Notes, Tasks, and AI Studio."
         },
         {
             "icon": "󰕾",
-            "title": "Live Control Center",
-            "desc": "Click the island anytime to adjust volume, switch devices, control per-app streams, and manage Wi-Fi."
+            "title": "Edge Drawers & Control Center",
+            "desc": "Hover the bottom-left edge for the Control Center & System Modes, bottom-center for the Workspace Dock, or bottom-right for Today & Notifications."
+        },
+        {
+            "icon": "󰆾",
+            "title": "Spatial & Bird's-Eye Overviews",
+            "desc": "Press Super+Tab for the 3D Spatial Workspace Map or Super+R for the Bird's-Eye window canvas with live thumbnails and instant type-to-filter search."
+        },
+        {
+            "icon": "󰄀",
+            "title": "Screen Lens & Phone Bridge",
+            "desc": "Press Super+Shift+S to extract OCR text, QR codes, or hex colors with Kokoro voice readout, and Super+Alt+P to mirror your Android phone wirelessly."
         }
     ]
 
-    width: 320
-    height: 180
+    width: 360
+    height: 204
     radius: Theme.radius
     color: Theme.bg1
     border.width: 1
     border.color: Theme.primary
+
+    // Top specular highlight
+    Rectangle {
+        anchors.top: parent.top
+        anchors.topMargin: 1
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: parent.width - 28
+        height: 1
+        color: Theme.glassSpecularTop
+    }
 
     Column {
         anchors.fill: parent
@@ -42,21 +62,24 @@ Rectangle {
             spacing: 10
 
             Rectangle {
-                width: 36
-                height: 36
-                radius: 18
+                width: 38
+                height: 38
+                radius: 19
                 color: Theme.primaryContainer
+                border.width: 1
+                border.color: Theme.glassBorderActive
 
                 ShellText {
                     anchors.centerIn: parent
                     text: root.steps[root.currentStep].icon
+                    font.family: Theme.iconFontFamily
                     font.pixelSize: 18
                     color: Theme.primary
                 }
             }
 
             Column {
-                width: parent.width - 46
+                width: parent.width - 86
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 2
 
@@ -75,15 +98,36 @@ Rectangle {
                     color: Theme.muted
                 }
             }
+
+            Rectangle {
+                width: 28
+                height: 24
+                radius: 8
+                anchors.verticalCenter: parent.verticalCenter
+                color: skipHover.hovered ? Theme.bg2 : "transparent"
+
+                ShellText {
+                    anchors.centerIn: parent
+                    text: "Skip"
+                    font.pixelSize: 10
+                    color: skipHover.hovered ? Theme.foreground : Theme.muted
+                }
+
+                HoverHandler { id: skipHover }
+                TapHandler {
+                    onTapped: root.finished()
+                }
+            }
         }
 
         ShellText {
             width: parent.width
+            height: 64
             text: root.steps[root.currentStep].desc
             font.pixelSize: 11
             color: Theme.foreground
             wrapMode: Text.WordWrap
-            maximumLineCount: 3
+            maximumLineCount: 4
         }
 
         Item {
@@ -111,30 +155,63 @@ Rectangle {
                 }
             }
 
-            Rectangle {
+            Row {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                width: 80
-                height: 28
-                radius: 14
-                color: Theme.primary
+                spacing: 8
 
-                ShellText {
-                    anchors.centerIn: parent
-                    text: root.currentStep === root.steps.length - 1 ? "Got it!" : "Next"
-                    font.pixelSize: 11
-                    font.weight: Font.Bold
-                    color: Theme.bgDim
+                Rectangle {
+                    visible: root.currentStep > 0
+                    width: 64
+                    height: 28
+                    radius: 14
+                    color: prevMouse.containsMouse ? Theme.bg3 : Theme.bg2
+                    border.width: 1
+                    border.color: Theme.glassBorderSubtle
+
+                    ShellText {
+                        anchors.centerIn: parent
+                        text: "Back"
+                        font.pixelSize: 11
+                        font.weight: Font.Medium
+                        color: Theme.foreground
+                    }
+
+                    MouseArea {
+                        id: prevMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (root.currentStep > 0)
+                                root.currentStep -= 1;
+                        }
+                    }
                 }
 
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (root.currentStep < root.steps.length - 1) {
-                            root.currentStep += 1;
-                        } else {
-                            root.finished();
+                Rectangle {
+                    width: 84
+                    height: 28
+                    radius: 14
+                    color: Theme.primary
+
+                    ShellText {
+                        anchors.centerIn: parent
+                        text: root.currentStep === root.steps.length - 1 ? "Finish" : "Next"
+                        font.pixelSize: 11
+                        font.weight: Font.Bold
+                        color: Theme.bgDim
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (root.currentStep < root.steps.length - 1) {
+                                root.currentStep += 1;
+                            } else {
+                                root.finished();
+                            }
                         }
                     }
                 }

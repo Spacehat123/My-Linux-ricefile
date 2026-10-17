@@ -27,7 +27,7 @@ An interactive **Spatial Workspace Map (Mission Control)** has been implemented 
 
 ## 2. Architecture & Components
 
-### 2.1 Geometry Extraction ([`core/SurfaceModel.qml`](file:///home/pranc/.config/quickshell/cool-shell/core/SurfaceModel.qml))
+### 2.1 Geometry Extraction ([`core/SurfaceModel.qml`](file://$HOME/.config/quickshell/cool-shell/core/SurfaceModel.qml))
 - Extended projected surface items with:
   - `geomX: tl.lastIpcObject.at[0]`
   - `geomY: tl.lastIpcObject.at[1]`
@@ -35,17 +35,17 @@ An interactive **Spatial Workspace Map (Mission Control)** has been implemented 
   - `geomHeight: tl.lastIpcObject.size[1]`
 - Enables real-world spatial positioning of mini window tiles on 16:9 cards without guesswork.
 
-### 2.2 Spatial Workspace Component ([`components/SpatialWorkspaceMap.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/SpatialWorkspaceMap.qml))
+### 2.2 Spatial Workspace Component ([`components/SpatialWorkspaceMap.qml`](file://$HOME/.config/quickshell/cool-shell/components/SpatialWorkspaceMap.qml))
 - `PanelWindow` on `WlrLayershell.layer: WlrLayer.Overlay`.
 - Fullscreen coverage with `WlrKeyboardFocus.Exclusive` when open.
 - Frosted dark acrylic backdrop with smooth fade (`Qt.rgba(0.04, 0.04, 0.06, 0.82)`).
 - Card layout powered by responsive `Flow` layout with spring animation scale and opacity transitions.
 
-### 2.3 Compositor Keybinding ([`~/.config/hypr/hyprland.lua`](file:///home/pranc/.config/hypr/hyprland.lua))
+### 2.3 Compositor Keybinding ([`~/.config/hypr/hyprland.lua`](file://$HOME/.config/hypr/hyprland.lua))
 - Bound `SUPER + TAB` directly to `qs -c cool-shell ipc call overview toggle`.
 - Reloaded into running compositor with zero restart required.
 
-### 2.4 Bottom Bar Quick Actions ([`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml))
+### 2.4 Bottom Bar Quick Actions ([`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml))
 - Added `overviewBtn` (`󰕰`) next to the workspace capsule row.
 - Added right-click event handling on all workspace pills to launch the overview.
 

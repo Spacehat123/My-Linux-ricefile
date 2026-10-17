@@ -8,14 +8,14 @@
 
 ## 1. Executive Summary
 
-In response to the user's video reference (`recording-20261010-190511.mp4`), [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml) has been transformed from an edge-to-edge dock into an exact floating pill capsule bar matching the Ukishima design language.
+In response to the user's video reference (`recording-20261010-190511.mp4`), [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml) has been transformed from an edge-to-edge dock into an exact floating pill capsule bar matching the Ukishima design language.
 
 The transformation delivers:
 1. **Floating Pill Capsule Structure**: Centered horizontally (`anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom`), height `38px`, radius `19px`, dynamic content-driven width (`width: dockRow.implicitWidth + 30`), 1px subtle glass border, and deep theme tint over `#07070a`.
 2. **Minimalist Workspaces (`• • • —`)**: Inactive workspaces display as 6px circular dots (`radius: 3px`) in muted tones (`Island.Theme.muted`), while the active workspace smoothly morphs into an 18px horizontal capsule glowing with the theme accent (`Island.Theme.primary`). Transitions use cubic out-easing (`180ms`). Left-click switches workspace; right-click toggles overview.
 3. **Stacked Typographic Clock & Date**: Hairline-divided centered time block displaying `hh:mm` DemiBold (14px) stacked over uppercase tracking date `ddd d MMM` (8px). Clicking opens the Today / Calendar island panel.
 4. **Complete Status & Module Cluster**: Exact icon arrangement faithfully reproduced:
-   - **Weather**: Live cloud glyph `☁` + temperature text (`25°`) reading from [`Island.WeatherState.tempC`](file:///home/pranc/.config/quickshell/cool-shell/island/WeatherState.qml).
+   - **Weather**: Live cloud glyph `☁` + temperature text (`25°`) reading from [`Island.WeatherState.tempC`](file://$HOME/.config/quickshell/cool-shell/island/WeatherState.qml).
    - **Audio / Volume**: Volume glyph (`󰕾`/`󰖁`) with mute indication, hover-triggered volume popover, mouse wheel direct volume adjustment, and click-to-mute.
    - **Wi-Fi**: Live network glyph (`󰤨`/``) with hover-triggered connection popover.
    - **Bluetooth**: Bluetooth glyph (`󰂯`) with click-to-open control center.

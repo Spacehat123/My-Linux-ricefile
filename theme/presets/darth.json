@@ -1,0 +1,30 @@
+{
+  "name": "Darth",
+  "slug": "darth",
+  "appearance": "dark",
+  "applications": {
+    "alacritty": "darth",
+    "folder_color": "red"
+  },
+  "colors": {
+    "bg_dim": "#070707",
+    "bg0": "#0e0e0e",
+    "bg1": "#161616",
+    "bg2": "#252020",
+    "bg3": "#382828",
+    "bg4": "#4f3232",
+    "primary_container": "#421215",
+    "secondary_container": "#2b1416",
+    "foreground": "#f5f0f0",
+    "muted": "#b39e9e",
+    "muted_dark": "#735f5f",
+    "red": "#ff2a2a",
+    "yellow": "#e5a93c",
+    "green": "#6bbf7b",
+    "primary": "#e61919",
+    "blue": "#8c7a7a",
+    "aqua": "#e84545",
+    "orange": "#e65c2e",
+    "purple": "#b33b5b"
+  }
+}

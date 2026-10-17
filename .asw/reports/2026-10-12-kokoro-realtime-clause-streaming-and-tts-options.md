@@ -32,7 +32,7 @@ When the user snipped text and ran the initial clause streaming implementation, 
 
 ## 2. Solution Implemented: Decoupled Lookahead Cushion Streaming
 
-We restructured [`scripts/voice-engine.py`](file:///home/pranc/.config/quickshell/cool-shell/scripts/voice-engine.py) to decouple generation from consumption using a thread-safe producer-consumer queue and a **Lookahead Cushion Pre-Buffer**:
+We restructured [`scripts/voice-engine.py`](file://$HOME/.config/quickshell/cool-shell/scripts/voice-engine.py) to decouple generation from consumption using a thread-safe producer-consumer queue and a **Lookahead Cushion Pre-Buffer**:
 
 ```
 +-------------------------------------------------------------+
@@ -83,7 +83,7 @@ We benchmarked the local 25 MB `kitten_tts_nano_v0_8.onnx` model on the exact sa
 ### Path C: NVIDIA GTX 1650 GPU Acceleration (CUDA / cuDNN 9 Active)
 - **Status**: **Fully Implemented & Active**
 - **Hardware Profile**: **NVIDIA GeForce GTX 1650 Mobile** (TU117, 4GB VRAM, driver 615.71).
-- **Libraries Utilized**: Leveraged existing local CUDA 13 and cuDNN 9 libraries located under `/home/pranc/.unsloth/studio/unsloth_studio/lib/python3.13/site-packages/nvidia/`:
+- **Libraries Utilized**: Leveraged existing local CUDA 13 and cuDNN 9 libraries located under `$HOME/.unsloth/studio/unsloth_studio/lib/python3.13/site-packages/nvidia/`:
   - `nvidia/cu13/lib/libcublas.so.13` & `libcublasLt.so.13`
   - `nvidia/cu13/lib/libcudart.so.13`
   - `nvidia/cudnn/lib/libcudnn.so.9`
@@ -114,8 +114,8 @@ We benchmarked the local 25 MB `kitten_tts_nano_v0_8.onnx` model on the exact sa
 ## 5. Verification Checklist
 
 - [x] Root cause identified (Buffer starvation due to CPU RTF ~1.06x on naive single-chunk streaming).
-- [x] Lookahead buffer implemented in [`scripts/voice-engine.py`](file:///home/pranc/.config/quickshell/cool-shell/scripts/voice-engine.py).
-- [x] Unsloth CUDA 13 and cuDNN 9 libraries discovered and wired into [`scripts/voice-engine.sh`](file:///home/pranc/.config/quickshell/cool-shell/scripts/voice-engine.sh) and [`scripts/voice-engine.py`](file:///home/pranc/.config/quickshell/cool-shell/scripts/voice-engine.py).
+- [x] Lookahead buffer implemented in [`scripts/voice-engine.py`](file://$HOME/.config/quickshell/cool-shell/scripts/voice-engine.py).
+- [x] Unsloth CUDA 13 and cuDNN 9 libraries discovered and wired into [`scripts/voice-engine.sh`](file://$HOME/.config/quickshell/cool-shell/scripts/voice-engine.sh) and [`scripts/voice-engine.py`](file://$HOME/.config/quickshell/cool-shell/scripts/voice-engine.py).
 - [x] GPU acceleration verified with live PipeWire speech playback on GTX 1650 (19.11s audio generated in 8.61s, 2.22x realtime).
 - [x] Time-to-first-audio tested at ~1.8s with zero pauses between sentences.
 - [x] Automatic fallback to CPUExecutionProvider maintained in case GPU is sleeping.

@@ -1,9 +1,9 @@
 # Zero-Overhead Features Implementation & Post-Work Verification Review
 
 **Date:** 2026-09-30  
-**Target:** [`cool-shell`](file:///home/pranc/.config/quickshell/cool-shell/)  
-**Plan Executed:** [`.asw/plans/2026-09-30-zero-overhead-features-implementation-plan.md`](file:///home/pranc/.config/quickshell/cool-shell/.asw/plans/2026-09-30-zero-overhead-features-implementation-plan.md)  
-**Policy Compliance:** [`.agents/rules/reports.md`](file:///home/pranc/.config/quickshell/cool-shell/.agents/rules/reports.md)
+**Target:** [`cool-shell`](file://$HOME/.config/quickshell/cool-shell/)  
+**Plan Executed:** [`.asw/plans/2026-09-30-zero-overhead-features-implementation-plan.md`](file://$HOME/.config/quickshell/cool-shell/.asw/plans/2026-09-30-zero-overhead-features-implementation-plan.md)  
+**Policy Compliance:** [`.agents/rules/reports.md`](file://$HOME/.config/quickshell/cool-shell/.agents/rules/reports.md)
 
 ---
 
@@ -25,15 +25,15 @@ In the original specification plan, `"title": "Firefox", "class": "firefox"` was
 
 | Feature | Target File(s) | Implementation Details | Verification Evidence & Proof |
 | :--- | :--- | :--- | :--- |
-| **1. Per-App Audio Mixer** | [`island/panels/ControlPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/ControlPanel.qml) | Added `appAudioStreams` model filtering `Pipewire.nodes` with a **100ms stream coalescing timer**; added tabbed selector ("Devices" vs "App Streams") with per-stream volume sliders and mute toggles. | Tested via IPC `notch toggle control`; verified app stream list updates cleanly with 0 subprocesses. |
-| **2. Window Crash Recovery** | [`core/WindowRecovery.qml`](file:///home/pranc/.config/quickshell/cool-shell/core/WindowRecovery.qml), [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml) | Created `WindowRecovery` component hooked to `SurfaceManager`; atomic JSON persistence to `~/.local/state/cool-shell/window-recovery.json` with a **5,000ms idle debounce timer**. | Inspected file on disk; verified real window coordinates (`kitty`, `dolphin`) written atomically with version 1 schema. |
-| **3. Screen Reader State** | [`island/AccessibilityState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/AccessibilityState.qml) | Created singleton with async `systemctl --user start speech-dispatcher` guard, transient error alerts on missing daemon, and `spd-say -C` speech cancellation. | Verified file syntax and QML compilation; dormant with 0% CPU when disabled. |
-| **4. Bounded Notifications & Texture Eviction** | [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml), [`island/panels/NotifCenterPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/NotifCenterPanel.qml) | Capped tracked notifications to **50 items**; explicit texture eviction on buffer limit; added `gc()` call on dismiss-all to free GPU VRAM. | Verified `shell.qml` notification server handler logic and `NotifCenterPanel.qml` clear-all handler. |
-| **5. In-Memory Frecency App Ranking** | [`island/panels/LauncherPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/LauncherPanel.qml) | Atomic JSON persistence to `launcher-frecency.json`; in-memory exponential decay formula; scores sorted on launcher open; clamp at 10,000 count. | Inspected `launcher-frecency.json`; verified sorting logic applies only when search box is empty. |
-| **6. Prefix-Gated Scoped File Search** | [`island/panels/LauncherPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/LauncherPanel.qml) | Prefix trigger `file:` / `doc:`; min 2 chars; **350ms input debounce**; in-flight `kill()` on previous search process; scoped to Documents/Downloads. | Tested IPC `notch toggle launcher`; verified search input and delegate handling. |
-| **7. Rest-State Edge Hover Guidance** | [`components/EdgeTrigger.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/EdgeTrigger.qml) | Replaced static rectangle with finite 150ms opacity transition; `visible: opacity > 0.01` ensures complete Scene Graph cull (0 FPS at rest). | Verified hover entered/exited animations in live shell session. |
-| **8. Lightweight Onboarding Manager** | [`island/components/OnboardingManager.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/components/OnboardingManager.qml), [`island/components/OnboardingCard.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/components/OnboardingCard.qml), [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml) | Versioned (`CURRENT_VERSION: 1`) integer tracking in `onboarding.json`; 3-step vector card tour; unloads component upon finish (0 RAM). | Verified `onboardingWindow` PanelWindow instantiated and rendered in `shell.qml`. |
-| **9. Passive Display Metadata** | [`island/panels/ControlPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/ControlPanel.qml) | Added `displayInfoRow` passively rendering `Quickshell.screens` metadata (`name`, `width`, `height`); 0 DRM mode queries. | Verified rendered output under Control Panel navigation grid. |
+| **1. Per-App Audio Mixer** | [`island/panels/ControlPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/ControlPanel.qml) | Added `appAudioStreams` model filtering `Pipewire.nodes` with a **100ms stream coalescing timer**; added tabbed selector ("Devices" vs "App Streams") with per-stream volume sliders and mute toggles. | Tested via IPC `notch toggle control`; verified app stream list updates cleanly with 0 subprocesses. |
+| **2. Window Crash Recovery** | [`core/WindowRecovery.qml`](file://$HOME/.config/quickshell/cool-shell/core/WindowRecovery.qml), [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml) | Created `WindowRecovery` component hooked to `SurfaceManager`; atomic JSON persistence to `~/.local/state/cool-shell/window-recovery.json` with a **5,000ms idle debounce timer**. | Inspected file on disk; verified real window coordinates (`kitty`, `dolphin`) written atomically with version 1 schema. |
+| **3. Screen Reader State** | [`island/AccessibilityState.qml`](file://$HOME/.config/quickshell/cool-shell/island/AccessibilityState.qml) | Created singleton with async `systemctl --user start speech-dispatcher` guard, transient error alerts on missing daemon, and `spd-say -C` speech cancellation. | Verified file syntax and QML compilation; dormant with 0% CPU when disabled. |
+| **4. Bounded Notifications & Texture Eviction** | [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml), [`island/panels/NotifCenterPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/NotifCenterPanel.qml) | Capped tracked notifications to **50 items**; explicit texture eviction on buffer limit; added `gc()` call on dismiss-all to free GPU VRAM. | Verified `shell.qml` notification server handler logic and `NotifCenterPanel.qml` clear-all handler. |
+| **5. In-Memory Frecency App Ranking** | [`island/panels/LauncherPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/LauncherPanel.qml) | Atomic JSON persistence to `launcher-frecency.json`; in-memory exponential decay formula; scores sorted on launcher open; clamp at 10,000 count. | Inspected `launcher-frecency.json`; verified sorting logic applies only when search box is empty. |
+| **6. Prefix-Gated Scoped File Search** | [`island/panels/LauncherPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/LauncherPanel.qml) | Prefix trigger `file:` / `doc:`; min 2 chars; **350ms input debounce**; in-flight `kill()` on previous search process; scoped to Documents/Downloads. | Tested IPC `notch toggle launcher`; verified search input and delegate handling. |
+| **7. Rest-State Edge Hover Guidance** | [`components/EdgeTrigger.qml`](file://$HOME/.config/quickshell/cool-shell/components/EdgeTrigger.qml) | Replaced static rectangle with finite 150ms opacity transition; `visible: opacity > 0.01` ensures complete Scene Graph cull (0 FPS at rest). | Verified hover entered/exited animations in live shell session. |
+| **8. Lightweight Onboarding Manager** | [`island/components/OnboardingManager.qml`](file://$HOME/.config/quickshell/cool-shell/island/components/OnboardingManager.qml), [`island/components/OnboardingCard.qml`](file://$HOME/.config/quickshell/cool-shell/island/components/OnboardingCard.qml), [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml) | Versioned (`CURRENT_VERSION: 1`) integer tracking in `onboarding.json`; 3-step vector card tour; unloads component upon finish (0 RAM). | Verified `onboardingWindow` PanelWindow instantiated and rendered in `shell.qml`. |
+| **9. Passive Display Metadata** | [`island/panels/ControlPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/ControlPanel.qml) | Added `displayInfoRow` passively rendering `Quickshell.screens` metadata (`name`, `width`, `height`); 0 DRM mode queries. | Verified rendered output under Control Panel navigation grid. |
 
 ---
 
@@ -50,10 +50,10 @@ In the original specification plan, `"title": "Firefox", "class": "firefox"` was
 ```
 
 ### New Files Created:
-1. [`core/WindowRecovery.qml`](file:///home/pranc/.config/quickshell/cool-shell/core/WindowRecovery.qml) — 168 lines
-2. [`island/AccessibilityState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/AccessibilityState.qml) — 60 lines
-3. [`island/components/OnboardingCard.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/components/OnboardingCard.qml) — 158 lines
-4. [`island/components/OnboardingManager.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/components/OnboardingManager.qml) — 67 lines
+1. [`core/WindowRecovery.qml`](file://$HOME/.config/quickshell/cool-shell/core/WindowRecovery.qml) — 168 lines
+2. [`island/AccessibilityState.qml`](file://$HOME/.config/quickshell/cool-shell/island/AccessibilityState.qml) — 60 lines
+3. [`island/components/OnboardingCard.qml`](file://$HOME/.config/quickshell/cool-shell/island/components/OnboardingCard.qml) — 158 lines
+4. [`island/components/OnboardingManager.qml`](file://$HOME/.config/quickshell/cool-shell/island/components/OnboardingManager.qml) — 67 lines
 
 ---
 
@@ -95,7 +95,7 @@ In the original specification plan, `"title": "Firefox", "class": "firefox"` was
    - `quickshell ipc -c cool-shell call notch toggle launcher` (PASSED)
    - `quickshell ipc -c cool-shell call notch close` (PASSED)
 4. **Bug Cleanup:**
-   - Cleaned out residual `netProc` reference in [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml#L332), eliminating a recurring `ReferenceError`.
+   - Cleaned out residual `netProc` reference in [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml#L332), eliminating a recurring `ReferenceError`.
 
 ---
 

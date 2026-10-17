@@ -2,29 +2,92 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../theme"
+import "../island" as Island
 
 Item {
     id: root
 
-    property bool active: true
+    property bool active: false
     property var historyData: ({})
     property int totalSessions: 0
+    property int todaySessions: 0
+    property int currentStreak: 0
     property string hoveredInfo: ""
 
-    implicitWidth: 480
-    implicitHeight: 120
+    implicitWidth: 492
+    implicitHeight: 126
 
     Theme {
         id: theme
     }
 
-    // Refresh history data periodically
+    SystemClock {
+        id: wallClock
+        precision: SystemClock.Hours
+    }
+
+    // Monday of the first week in the 24-week window (20 weeks back + current week + 3 weeks ahead)
+    readonly property var startMonday: {
+        const now = wallClock.date ? new Date(wallClock.date) : new Date();
+        const day = now.getDay(); // 0=Sun, 1=Mon, ...
+        const diffToMon = (day === 0 ? -6 : 1 - day);
+        const thisMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMon);
+        return new Date(thisMonday.getTime() - (20 * 7 * 86400000));
+    }
+
+    readonly property string todayKey: {
+        const now = wallClock.date ? new Date(wallClock.date) : new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const d = String(now.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+    }
+
+    readonly property var monthHeaders: {
+        const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const labels = [];
+        for (let i = 0; i < 6; ++i) {
+            const wIndex = i * 4;
+            const d = new Date(root.startMonday.getTime() + wIndex * 7 * 86400000);
+            labels.push(names[d.getMonth()]);
+        }
+        return labels;
+    }
+
+    function refreshHistory() {
+        if (!historyProc.running) {
+            historyProc.running = true;
+        }
+    }
+
+    onActiveChanged: {
+        if (active) {
+            refreshHistory();
+        }
+    }
+
+    Component.onCompleted: {
+        refreshHistory();
+    }
+
+    Connections {
+        target: Island.ShellState
+        function onStudyHistoryRevisionChanged() {
+            root.refreshHistory();
+        }
+        function onStudyActiveChanged() {
+            if (!Island.ShellState.studyActive) {
+                root.refreshHistory();
+            }
+        }
+    }
+
+    // Refresh only while Ambient HUD is visible (60s cadence; zero background subprocesses when hidden)
     Timer {
-        interval: 3000
-        running: true
+        interval: 60000
+        running: root.active
         repeat: true
-        triggeredOnStart: true
-        onTriggered: historyProc.running = true
+        onTriggered: root.refreshHistory()
     }
 
     Process {
@@ -34,76 +97,148 @@ Item {
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
-                    const parsed = JSON.parse(text);
+                    const parsed = JSON.parse(text.trim() || "{}");
                     root.historyData = parsed;
                     let sum = 0;
                     for (let d in parsed) {
                         sum += (parsed[d] || 0);
                     }
                     root.totalSessions = sum;
+                    root.todaySessions = parsed[root.todayKey] || 0;
+
+                    // Compute consecutive day streak up to today
+                    let streak = 0;
+                    const now = wallClock.date ? new Date(wallClock.date) : new Date();
+                    const base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    for (let back = 0; back < 365; ++back) {
+                        const check = new Date(base.getTime() - back * 86400000);
+                        const ky = check.getFullYear();
+                        const km = String(check.getMonth() + 1).padStart(2, "0");
+                        const kd = String(check.getDate()).padStart(2, "0");
+                        const key = `${ky}-${km}-${kd}`;
+                        if ((parsed[key] || 0) > 0) {
+                            streak += 1;
+                        } else if (back === 0) {
+                            continue;
+                        } else {
+                            break;
+                        }
+                    }
+                    root.currentStreak = streak;
                 } catch (e) {}
             }
         }
     }
 
-    // Glass Background Card
+    // Smoked Obsidian Glass Card (Theme-Synchronized)
     Rectangle {
         anchors.fill: parent
         radius: 14
-        color: Qt.rgba(0.06, 0.08, 0.11, 0.75) // Dark translucent background
-        border.color: Qt.rgba(1.0, 1.0, 1.0, 0.10)
+        color: Qt.rgba(Island.Theme.bgDim.r, Island.Theme.bgDim.g, Island.Theme.bgDim.b, 0.82)
+        border.color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.22)
         border.width: 1
+
+        // Top Specular Refraction Line
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 12
+            anchors.rightMargin: 12
+            height: 1
+            color: Qt.rgba(1.0, 1.0, 1.0, 0.14)
+        }
 
         Column {
             anchors.fill: parent
             anchors.margins: 12
-            spacing: 8
+            spacing: 7
 
-            // Header Row: Count & Settings
-            Row {
+            // Header Row: Total Sessions, Today Badge & Streak
+            Item {
                 width: parent.width
-                Item {
-                    width: parent.width
-                    height: 16
+                height: 16
+
+                Row {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 6
 
                     Text {
-                        anchors.left: parent.left
+                        text: "󰑴"
+                        font.family: theme.iconFontFamily
+                        font.pixelSize: 12
+                        color: Island.Theme.green
                         anchors.verticalCenter: parent.verticalCenter
-                        text: root.hoveredInfo !== "" ? root.hoveredInfo : (root.totalSessions + " study sessions completed")
+                    }
+
+                    Text {
+                        text: root.hoveredInfo !== ""
+                            ? root.hoveredInfo
+                            : (root.totalSessions + (root.totalSessions === 1 ? " study session completed" : " study sessions completed"))
                         font.family: theme.fontFamily
                         font.pixelSize: 11
                         font.bold: true
-                        color: root.hoveredInfo !== "" ? "#58a6ff" : "#e6edf3"
+                        color: root.hoveredInfo !== "" ? Island.Theme.primary : Island.Theme.foreground
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                Row {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 8
+
+                    Text {
+                        visible: root.todaySessions > 0
+                        text: "TODAY: " + root.todaySessions
+                        font.family: theme.fontFamily
+                        font.pixelSize: 9
+                        font.bold: true
+                        font.letterSpacing: 0.6
+                        color: Island.Theme.green
+                        anchors.verticalCenter: parent.verticalCenter
                     }
 
-                    Row {
-                        anchors.right: parent.right
+                    Text {
+                        visible: root.currentStreak > 0
+                        text: "🔥 " + root.currentStreak + "d streak"
+                        font.family: theme.fontFamily
+                        font.pixelSize: 9
+                        font.bold: true
+                        color: Island.Theme.orange
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 4
+                    }
 
-                        Text {
-                            text: "2026"
-                            font.family: theme.fontFamily
-                            font.pixelSize: 9
-                            color: "#8b949e"
-                        }
+                    Text {
+                        text: String((wallClock.date ? wallClock.date : new Date()).getFullYear())
+                        font.family: theme.fontFamily
+                        font.pixelSize: 9
+                        font.bold: true
+                        color: Island.Theme.mutedDark
+                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
             }
 
-            // Month Labels Header
+            // Dynamic Month Labels Header
             Row {
                 width: parent.width
                 spacing: 4
-                Item { width: 22; height: 10 } // Day label offset
+                Item { width: 22; height: 10 }
                 Row {
-                    spacing: 34
-                    Text { text: "Oct"; font.pixelSize: 8; color: "#7d8590"; font.family: theme.fontFamily }
-                    Text { text: "Nov"; font.pixelSize: 8; color: "#7d8590"; font.family: theme.fontFamily }
-                    Text { text: "Dec"; font.pixelSize: 8; color: "#7d8590"; font.family: theme.fontFamily }
-                    Text { text: "Jan"; font.pixelSize: 8; color: "#7d8590"; font.family: theme.fontFamily }
-                    Text { text: "Feb"; font.pixelSize: 8; color: "#7d8590"; font.family: theme.fontFamily }
-                    Text { text: "Mar"; font.pixelSize: 8; color: "#7d8590"; font.family: theme.fontFamily }
+                    spacing: 36
+                    Repeater {
+                        model: root.monthHeaders
+                        delegate: Text {
+                            required property string modelData
+                            text: modelData
+                            font.pixelSize: 8
+                            font.bold: true
+                            color: Island.Theme.muted
+                            font.family: theme.fontFamily
+                        }
+                    }
                 }
             }
 
@@ -115,11 +250,11 @@ Item {
                 Column {
                     spacing: 3
                     Item { width: 18; height: 10 }
-                    Text { text: "Mon"; font.pixelSize: 7; color: "#7d8590"; font.family: theme.fontFamily }
+                    Text { text: "Mon"; font.pixelSize: 7; color: Island.Theme.mutedDark; font.family: theme.fontFamily }
                     Item { width: 18; height: 10 }
-                    Text { text: "Wed"; font.pixelSize: 7; color: "#7d8590"; font.family: theme.fontFamily }
+                    Text { text: "Wed"; font.pixelSize: 7; color: Island.Theme.mutedDark; font.family: theme.fontFamily }
                     Item { width: 18; height: 10 }
-                    Text { text: "Fri"; font.pixelSize: 7; color: "#7d8590"; font.family: theme.fontFamily }
+                    Text { text: "Fri"; font.pixelSize: 7; color: Island.Theme.mutedDark; font.family: theme.fontFamily }
                     Item { width: 18; height: 10 }
                 }
 
@@ -128,14 +263,14 @@ Item {
                     spacing: 3
 
                     Repeater {
-                        model: 24 // 24 Weeks displayed horizontally
+                        model: 24
                         delegate: Column {
                             id: weekCol
                             required property int index
                             spacing: 3
 
                             Repeater {
-                                model: 7 // 7 Days (Mon=0 to Sun=6)
+                                model: 7
                                 delegate: Rectangle {
                                     id: dayCell
                                     required property int index
@@ -143,38 +278,36 @@ Item {
                                     height: 10
                                     radius: 2
 
-                                    // Compute date string for this cell
                                     readonly property string dateKey: {
-                                        // Base start date: 2026-10-12 (Today)
-                                        // Week index + day index
-                                        const now = new Date(2026, 9, 12); // Oct 12, 2026
                                         const daysOffset = (weekCol.index * 7) + dayCell.index;
-                                        const cellDate = new Date(now.getTime() + daysOffset * 86400000);
+                                        const cellDate = new Date(root.startMonday.getTime() + daysOffset * 86400000);
                                         const y = cellDate.getFullYear();
-                                        const m = String(cellDate.getMonth() + 1).padStart(2, '0');
-                                        const d = String(cellDate.getDate()).padStart(2, '0');
+                                        const m = String(cellDate.getMonth() + 1).padStart(2, "0");
+                                        const d = String(cellDate.getDate()).padStart(2, "0");
                                         return `${y}-${m}-${d}`;
                                     }
 
                                     readonly property int count: root.historyData[dateKey] || 0
+                                    readonly property bool isToday: dateKey === root.todayKey
 
-                                    // GitHub style green shades
                                     color: {
-                                        if (count <= 0) return "#161b22"; // GitHub empty
-                                        if (count === 1) return "#0e4429"; // 1 session
-                                        if (count === 2) return "#006d32"; // 2 sessions
-                                        if (count === 3) return "#26a641"; // 3 sessions
-                                        return "#39d353";                 // 4+ sessions
+                                        if (count <= 0) return Qt.rgba(1.0, 1.0, 1.0, 0.05);
+                                        if (count === 1) return Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.35);
+                                        if (count === 2) return Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.58);
+                                        if (count === 3) return Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.80);
+                                        return Island.Theme.green;
                                     }
 
-                                    border.color: (count > 0) ? Qt.rgba(0.2, 0.8, 0.4, 0.2) : Qt.rgba(1.0, 1.0, 1.0, 0.04)
-                                    border.width: 1
+                                    border.color: isToday
+                                        ? Island.Theme.primary
+                                        : ((count > 0) ? Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.4) : Qt.rgba(1.0, 1.0, 1.0, 0.05))
+                                    border.width: isToday ? 1.5 : 1
 
                                     HoverHandler {
                                         id: cellHover
                                         onHoveredChanged: {
                                             if (hovered) {
-                                                root.hoveredInfo = (dayCell.count === 0 ? "No" : dayCell.count) + " sessions on " + dayCell.dateKey;
+                                                root.hoveredInfo = (dayCell.count === 0 ? "No" : dayCell.count) + (dayCell.count === 1 ? " session on " : " sessions on ") + dayCell.dateKey;
                                             } else if (root.hoveredInfo.endsWith(dayCell.dateKey)) {
                                                 root.hoveredInfo = "";
                                             }
@@ -196,21 +329,21 @@ Item {
                     text: "Less"
                     font.family: theme.fontFamily
                     font.pixelSize: 8
-                    color: "#7d8590"
+                    color: Island.Theme.mutedDark
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                Rectangle { width: 8; height: 8; radius: 2; color: "#161b22"; anchors.verticalCenter: parent.verticalCenter }
-                Rectangle { width: 8; height: 8; radius: 2; color: "#0e4429"; anchors.verticalCenter: parent.verticalCenter }
-                Rectangle { width: 8; height: 8; radius: 2; color: "#006d32"; anchors.verticalCenter: parent.verticalCenter }
-                Rectangle { width: 8; height: 8; radius: 2; color: "#26a641"; anchors.verticalCenter: parent.verticalCenter }
-                Rectangle { width: 8; height: 8; radius: 2; color: "#39d353"; anchors.verticalCenter: parent.verticalCenter }
+                Rectangle { width: 8; height: 8; radius: 2; color: Qt.rgba(1.0, 1.0, 1.0, 0.05); anchors.verticalCenter: parent.verticalCenter }
+                Rectangle { width: 8; height: 8; radius: 2; color: Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.35); anchors.verticalCenter: parent.verticalCenter }
+                Rectangle { width: 8; height: 8; radius: 2; color: Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.58); anchors.verticalCenter: parent.verticalCenter }
+                Rectangle { width: 8; height: 8; radius: 2; color: Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.80); anchors.verticalCenter: parent.verticalCenter }
+                Rectangle { width: 8; height: 8; radius: 2; color: Island.Theme.green; anchors.verticalCenter: parent.verticalCenter }
 
                 Text {
                     text: "More"
                     font.family: theme.fontFamily
                     font.pixelSize: 8
-                    color: "#7d8590"
+                    color: Island.Theme.mutedDark
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }

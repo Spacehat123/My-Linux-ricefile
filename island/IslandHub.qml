@@ -44,10 +44,14 @@ Singleton {
     property bool recordingActive: Backend.recording
     property int recElapsedSec: 0
     property double recStartEpoch: 0
+    property bool recBlinkOn: true
     onRecordingActiveChanged: {
         if (recordingActive) {
             recStartEpoch = Date.now() / 1000;
             recElapsedSec = 0;
+            recBlinkOn = true;
+        } else {
+            recBlinkOn = true;
         }
     }
 
@@ -56,7 +60,10 @@ Singleton {
         interval: 1000
         running: root.recordingActive
         repeat: true
-        onTriggered: root.recElapsedSec = Math.max(0, Math.floor(Date.now() / 1000 - root.recStartEpoch))
+        onTriggered: {
+            root.recElapsedSec = Math.max(0, Math.floor(Date.now() / 1000 - root.recStartEpoch));
+            root.recBlinkOn = !root.recBlinkOn;
+        }
     }
 
     function formatElapsed(totalSec) {
@@ -142,6 +149,7 @@ Singleton {
         }
         flashBorder(Theme.primary, 300);
     }
+
     // -- transient border flash (screenshot white, bt, ...) --
     property color flashColor: "white"
     property bool flashActive: false
@@ -214,6 +222,12 @@ Singleton {
     // -- AI Generation state --
     property bool aiGenerating: false
     property string aiStatusMsg: ""
+
+    // -- Aggregate active notice flag (used by Notch fullscreen idle suppression & dynamic pill sizing) --
+    readonly property bool noticeActive: transientText.length > 0
+        || lensActionActive
+        || voicePlaying
+        || aiGenerating
 
     function setAiGenerating(val, msg) {
         root.aiGenerating = (val === true || val === "true" || val === 1 || val === "1");
@@ -289,7 +303,7 @@ Singleton {
         if (TimerState.hasActive)
             return TimerState.compactText;
         if (ShelfState.hasActiveDownload)
-            return ShelfState.compactText;
+            return TimerState.hasActive ? TimerState.compactText : ShelfState.compactText;
         if (root.liveLyric && root.liveLyric.length > 0 && root.mediaPlaying)
             return "♪ " + root.liveLyric;
         if (mediaPlaying && playerTitle)

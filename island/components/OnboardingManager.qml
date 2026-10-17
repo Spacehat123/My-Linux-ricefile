@@ -17,6 +17,14 @@ Item {
     height: onboardingLoader.item ? onboardingLoader.item.height : 0
     visible: onboardingLoader.active
 
+    function replay() {
+        try {
+            onboardingStateFile.setText(JSON.stringify({ "version": 0 }) + "\n");
+        } catch (e) {}
+        onboardingLoader.active = false;
+        onboardingLoader.active = true;
+    }
+
     Process {
         id: mkdirProcess
         command: ["mkdir", "-p", root.stateDir]

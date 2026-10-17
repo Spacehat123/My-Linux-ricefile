@@ -10,7 +10,7 @@
 
 Previously, Game Mode kept the monolithic `quickshell -c cool-shell` process resident, merely hiding unused windows and collapsing the island. Because Qt Quick initializes hardware acceleration via Mesa Gallium drivers and LLVM JIT shader compilers (allocating ~130MB of driver structures alone) and eagerly instantiates 15 panels across monitors, Quickshell retained **470 MB of RSS**.
 
-Per user instruction (*"max 50-100mb"*), we re-architected Game Mode into a **process-swapped, software-rasterized standalone island** ([`island/GameModeIsland.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/GameModeIsland.qml)):
+Per user instruction (*"max 50-100mb"*), we re-architected Game Mode into a **process-swapped, software-rasterized standalone island** ([`island/GameModeIsland.qml`](file://$HOME/.config/quickshell/cool-shell/island/GameModeIsland.qml)):
 
 | Metric | Before (Monolithic Process) | After (GameModeIsland) | Reduction |
 |---|---|---|---|

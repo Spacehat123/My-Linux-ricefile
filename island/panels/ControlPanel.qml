@@ -1250,54 +1250,133 @@ FocusScope {
             }
         }
 
-        Row {
+        // Interactive Mini Now-Playing Deck (click track info to expand full Media & Lyrics view)
+        Rectangle {
             id: mediaTransport
-
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 10
+            width: parent.width
+            height: 48
+            radius: 14
             enabled: root.expandedSection === ""
+            color: mediaInfoMouse.containsMouse ? Theme.bg2 : Theme.bg1
+            border.color: (root.player && root.player.isPlaying) ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.45) : Theme.glassBorderSubtle
+            border.width: 1
 
-            IconButton {
-                width: 28
-                height: 28
-                anchors.verticalCenter: parent.verticalCenter
-                icon: "\uf04ae"
-                accessibleName: "Previous track"
-                onClicked: {
-                    if (root.player && root.player.canGoPrevious)
-                        root.player.previous();
+            Behavior on color { ColorAnimation { duration: Theme.animationFast } }
 
+            Item {
+                anchors.fill: parent
+                anchors.leftMargin: 10
+                anchors.rightMargin: 10
+
+                // Left: Album Artwork or Musical Emblem + Track Metadata
+                Row {
+                    anchors.left: parent.left
+                    anchors.right: transportBtns.left
+                    anchors.rightMargin: 10
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 10
+
+                    Rectangle {
+                        width: 32
+                        height: 32
+                        radius: 8
+                        color: Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.16)
+                        border.color: Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.35)
+                        border.width: 1
+                        anchors.verticalCenter: parent.verticalCenter
+                        clip: true
+
+                        Image {
+                            anchors.fill: parent
+                            source: (root.player && root.player.trackArtUrl) ? root.player.trackArtUrl : ""
+                            fillMode: Image.PreserveAspectCrop
+                            visible: status === Image.Ready
+                        }
+
+                        ShellText {
+                            anchors.centerIn: parent
+                            visible: !(root.player && root.player.trackArtUrl)
+                            text: (root.player && root.player.isPlaying) ? "󰎈" : "󰝚"
+                            font.family: Theme.iconFontFamily
+                            font.pixelSize: 15
+                            color: Theme.primary
+                        }
+                    }
+
+                    Column {
+                        width: Math.max(80, parent.width - 44)
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 1
+
+                        ShellText {
+                            width: parent.width
+                            text: (root.player && root.player.trackTitle) ? root.player.trackTitle : "No Active Media"
+                            font.pixelSize: 11
+                            font.weight: Font.DemiBold
+                            color: Theme.foreground
+                            elide: Text.ElideRight
+                        }
+
+                        ShellText {
+                            width: parent.width
+                            text: (root.player && root.player.trackArtist)
+                                ? root.player.trackArtist
+                                : ((root.player && root.player.identity) ? root.player.identity : "Click to open Media Deck")
+                            font.pixelSize: 9
+                            color: (root.player && root.player.isPlaying) ? Theme.primary : Theme.muted
+                            elide: Text.ElideRight
+                        }
+                    }
+                }
+
+                MouseArea {
+                    id: mediaInfoMouse
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.right: transportBtns.left
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: ShellState.show("media")
+                }
+
+                // Right: Transport Controls
+                Row {
+                    id: transportBtns
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 6
+
+                    IconButton {
+                        width: 28
+                        height: 28
+                        anchors.verticalCenter: parent.verticalCenter
+                        icon: "\uf04ae"
+                        accessibleName: "Previous track"
+                        onClicked: IslandHub.mediaPrevious()
+                    }
+
+                    IconButton {
+                        width: 34
+                        height: 34
+                        anchors.verticalCenter: parent.verticalCenter
+                        icon: root.player && root.player.isPlaying ? "\uf04c" : "\uf04b"
+                        accessibleName: root.player && root.player.isPlaying ? "Pause" : "Play"
+                        backgroundColor: (root.player && root.player.isPlaying) ? Theme.primary : Theme.foreground
+                        foregroundColor: Theme.bgDim
+                        onClicked: IslandHub.mediaPlayPause()
+                    }
+
+                    IconButton {
+                        width: 28
+                        height: 28
+                        anchors.verticalCenter: parent.verticalCenter
+                        icon: "\uf04ad"
+                        accessibleName: "Next track"
+                        onClicked: IslandHub.mediaNext()
+                    }
                 }
             }
-
-            IconButton {
-                width: 42
-                height: 42
-                anchors.verticalCenter: parent.verticalCenter
-                icon: root.player && root.player.isPlaying ? "\uf04c" : "\uf04b"
-                accessibleName: root.player && root.player.isPlaying ? "Pause" : "Play"
-                backgroundColor: Theme.foreground
-                foregroundColor: Theme.bgDim
-                onClicked: {
-                    if (root.player && root.player.canTogglePlaying)
-                        root.player.togglePlaying();
-
-                }
-            }
-
-            IconButton {
-                width: 28
-                height: 28
-                anchors.verticalCenter: parent.verticalCenter
-                icon: "\uf04ad"
-                accessibleName: "Next track"
-                onClicked: {
-                    if (root.player && root.player.canGoNext)
-                        root.player.next();
-
-                }
-            }
-
         }
 
         Row {
@@ -1343,45 +1422,33 @@ FocusScope {
             spacing: 6
 
             Repeater {
-                model: [{
-                    key: "clipboard",
-                    label: "Clipboard"
-                }, {
-                    key: "todo",
-                    label: "Todo"
-                }, {
-                    key: "notes",
-                    label: "Notes"
-                }, {
-                    key: "capture",
-                    label: "Capture"
-                }, {
-                    key: "shelf",
-                    label: "Pocket"
-                }, {
-                    key: "notifications",
-                    label: "Notifs"
-                }, {
-                    key: "timer",
-                    label: "Timer"
-                }, {
-                    key: "weather",
-                    label: "Weather"
-                }, {
-                    key: "theme",
-                    label: "Theme"
-                }, {
-                    key: "settings",
-                    label: "Settings"
-                }]
+                model: [
+                    { key: "launcher", label: "Apps", icon: "󰀻" },
+                    { key: "clipboard", label: "Clips", icon: "󰅍" },
+                    { key: "todo", label: "Tasks", icon: "󰄬" },
+                    { key: "notes", label: "Notes", icon: "󰠮" },
+                    { key: "capture", label: "Capture", icon: "󰄀" },
+                    { key: "shelf", label: "Pocket", icon: "󰉋" },
+                    { key: "notifications", label: "Alerts", icon: "󰂚" },
+                    { key: "timer", label: "Timer", icon: "󰔛" },
+                    { key: "weather", label: "Weather", icon: "󰖕" },
+                    { key: "ai", label: "AI Studio", icon: "󱨊" },
+                    { key: "phone", label: "Phone", icon: "󰄜" },
+                    { key: "theme", label: "Theme", icon: "󰏘" },
+                    { key: "wallpaper", label: "Walls", icon: "󰸉" },
+                    { key: "power", label: "Session", icon: "󰐥" },
+                    { key: "settings", label: "Settings", icon: "󰒓" }
+                ]
 
                 delegate: Rectangle {
                     required property var modelData
 
                     width: (panelNavGrid.width - panelNavGrid.spacing * 4) / 5
-                    height: 30
-                    radius: 15
+                    height: 28
+                    radius: 10
                     color: navMouse.containsMouse ? Theme.primaryContainer : Theme.bg1
+                    border.color: navMouse.containsMouse ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.45) : Theme.glassBorderSubtle
+                    border.width: 1
 
                     Behavior on color {
                         ColorAnimation {
@@ -1389,10 +1456,25 @@ FocusScope {
                         }
                     }
 
-                    ShellText {
+                    Row {
                         anchors.centerIn: parent
-                        text: parent.modelData.label
-                        font.pixelSize: 12
+                        spacing: 5
+
+                        ShellText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: modelData.icon
+                            font.family: Theme.iconFontFamily
+                            font.pixelSize: 11
+                            color: navMouse.containsMouse ? Theme.primary : Theme.muted
+                        }
+
+                        ShellText {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: modelData.label
+                            font.pixelSize: 10
+                            font.weight: Font.Medium
+                            color: Theme.foreground
+                        }
                     }
 
                     MouseArea {

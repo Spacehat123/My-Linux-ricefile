@@ -1,4 +1,4 @@
-#!/home/pranc/.unsloth/studio/unsloth_studio/bin/python3
+#!/usr/bin/env python3
 """
 Cool-Shell AI Image Studio Daemon (Native 512x512)
 Features:
@@ -165,7 +165,7 @@ def load_pipeline():
     print(f"[*] Pipeline loaded in {time.time()-t0:.2f}s (Resident in CPU RAM, 0 MB VRAM).")
     return pipe
 
-def run_generation(prompt: str, out_path: str = None) -> dict:
+def run_generation(prompt: str, out_path: str = None, open_viewer: bool = False) -> dict:
     global pipe, last_activity_time
     last_activity_time = time.time()
     t_start = time.time()
@@ -233,15 +233,16 @@ def run_generation(prompt: str, out_path: str = None) -> dict:
         elapsed = time.time() - t_start
         print(f"[+] Generation successful: {out_path} in {elapsed:.2f}s (Idle VRAM: 0 MB)")
 
-        # Open in swappy (with xdg-open fallback)
-        try:
-            subprocess.Popen(["swappy", "-f", out_path], env=os.environ.copy(), start_new_session=True)
-        except Exception as e:
-            print(f"[-] Swappy launch failed: {e}", file=sys.stderr)
+        # Open in swappy (with xdg-open fallback) only when requested directly
+        if open_viewer:
             try:
-                subprocess.Popen(["xdg-open", out_path], env=os.environ.copy(), start_new_session=True)
-            except Exception:
-                pass
+                subprocess.Popen(["swappy", "-f", out_path], env=os.environ.copy(), start_new_session=True)
+            except Exception as e:
+                print(f"[-] Swappy launch failed: {e}", file=sys.stderr)
+                try:
+                    subprocess.Popen(["xdg-open", out_path], env=os.environ.copy(), start_new_session=True)
+                except Exception:
+                    pass
 
         last_activity_time = time.time()
         return {"status": "ok", "path": out_path, "elapsed": round(elapsed, 2)}
@@ -364,5 +365,5 @@ if __name__ == "__main__":
         if not prompt:
             print("Usage: image-daemon.py [--daemon | <prompt>]")
             sys.exit(1)
-        res = run_generation(prompt)
+        res = run_generation(prompt, open_viewer=True)
         print(json.dumps(res))

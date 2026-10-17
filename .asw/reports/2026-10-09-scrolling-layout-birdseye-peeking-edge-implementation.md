@@ -2,7 +2,7 @@
 
 **Date**: 2026-10-09  
 **Target Environment**: Hyprland 0.56.2 on Arch Linux (`pranav-arch`)  
-**Workspace**: `/home/pranc/.config/quickshell/cool-shell` & `/home/pranc/.config/hypr/hyprland.lua`  
+**Workspace**: `$HOME/.config/quickshell/cool-shell` & `$HOME/.config/hypr/hyprland.lua`  
 **Subject**: Implementation of Xiaomi Fold / Canvas Multitasking: Infinite Horizontal Scrolling, Bird's-Eye View (`SUPER + R`), and Interactive Peeking Edge Tabs.
 
 ---
@@ -19,7 +19,7 @@ By leveraging **Hyprland's native `scrolling` layout** combined with **`cool-she
 
 ---
 
-## 2. Hyprland Configuration (`/home/pranc/.config/hypr/hyprland.lua`)
+## 2. Hyprland Configuration (`$HOME/.config/hypr/hyprland.lua`)
 
 Hyprland's configuration was updated to activate the scrolling layout engine and bind the new navigation controls:
 
@@ -90,7 +90,7 @@ When you run `sudo pacman -Syu`:
 ### If You Ever Need to Recompile or Update Components Manually
 
 #### Scenario 1: Reloading Hyprland Configuration After Editing
-If you make changes to `/home/pranc/.config/hypr/hyprland.lua`:
+If you make changes to `$HOME/.config/hypr/hyprland.lua`:
 ```bash
 hyprctl reload
 ```

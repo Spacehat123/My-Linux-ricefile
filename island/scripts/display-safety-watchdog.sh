@@ -5,6 +5,7 @@
 # Only intervenes if ALL screens are completely disabled/blackout.
 # ==============================================================================
 set -u
+export PATH="$HOME/.local/bin:$PATH"
 
 LOCK_FILE="/tmp/hypr_display_safety_watchdog.pid"
 BACKUP_CONFIG="/tmp/hypr_display_last_working.lua"
@@ -47,7 +48,7 @@ while true; do
   sleep 2
 
   # Check active monitors count
-  active_count=$(hyprctl monitors -j 2>/dev/null | /home/pranc/.local/bin/jq 'length' 2>/dev/null || echo "1")
+  active_count=$(hyprctl monitors -j 2>/dev/null | jq 'length' 2>/dev/null || echo "1")
 
   # Only intervene if ALL displays are lost (0 active displays)
   if [[ "$active_count" -eq 0 ]]; then

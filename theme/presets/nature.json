@@ -1,0 +1,30 @@
+{
+  "name": "Nature",
+  "slug": "nature",
+  "appearance": "dark",
+  "applications": {
+    "alacritty": "everforest_dark",
+    "folder_color": "green"
+  },
+  "colors": {
+    "bg_dim": "#0b130e",
+    "bg0": "#111c16",
+    "bg1": "#18271f",
+    "bg2": "#23382c",
+    "bg3": "#2f4c3c",
+    "bg4": "#3e634f",
+    "primary_container": "#1f3d2e",
+    "secondary_container": "#1c333f",
+    "foreground": "#e5f3eb",
+    "muted": "#9ab8a6",
+    "muted_dark": "#638270",
+    "red": "#e67e80",
+    "yellow": "#dbbc7f",
+    "green": "#52b788",
+    "primary": "#52b788",
+    "blue": "#4ea8de",
+    "aqua": "#74c69d",
+    "orange": "#e69875",
+    "purple": "#b892b0"
+  }
+}

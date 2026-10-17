@@ -1,7 +1,7 @@
 # Bottom Bar Hit Box Continuity, Cinematic Pacing, and Zero-Overhead Optimization Verification Report
 
 **Date**: 2026-10-10  
-**Target File**: [`panels/BottomBar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/BottomBar.qml)  
+**Target File**: [`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml)  
 **Status**: Verified & Live  
 
 ---

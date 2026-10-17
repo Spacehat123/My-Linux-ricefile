@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MIRROR_SCRIPT="${SCRIPT_DIR}/phone-mirror.sh"
 DAEMON_SCRIPT="${SCRIPT_DIR}/phone-bridge-daemon.py"
 FILTER_SCRIPT="${SCRIPT_DIR}/scrcpy-adb-filter.sh"
-PID_FILE="/tmp/phone-bridge-daemon.pid"
+PID_FILE="/tmp/coolphone-bridge.pid"
 
 ensure_daemon() {
     if [[ -f "${PID_FILE}" ]] && kill -0 "$(cat "${PID_FILE}")" 2>/dev/null; then
@@ -162,7 +162,6 @@ case "${1:-status}" in
 
         if [[ -z "${IP}" ]]; then
             if [[ -n "${WAYLAND_DISPLAY:-}" || -n "${DISPLAY:-}" ]] && command -v zenity >/dev/null 2>&1; then
-                local form_res
                 form_res=$(zenity --forms \
                     --title="CoolPhone Wireless Pairing" \
                     --text="Open 'Wireless Debugging' on your phone and tap 'Pair device with pairing code':" \
@@ -172,7 +171,6 @@ case "${1:-status}" in
                     --separator="|" 2>/dev/null || true)
                 if [[ -n "$form_res" ]]; then
                     IP=$(echo "$form_res" | cut -d'|' -f1 | tr -d ' ')
-                    local p_port p_code
                     p_port=$(echo "$form_res" | cut -d'|' -f2 | tr -d ' ')
                     p_code=$(echo "$form_res" | cut -d'|' -f3 | tr -d ' ')
                     if [[ -n "$p_port" && -n "$p_code" ]]; then

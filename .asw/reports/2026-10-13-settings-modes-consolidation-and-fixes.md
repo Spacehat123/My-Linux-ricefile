@@ -8,17 +8,17 @@
 
 ## 1. Executive Summary
 
-Resolved lifecycle bugs and syntax errors preventing Settings from opening cleanly, and consolidated all tactical operating modes (**Game Mode**, **The Feather**, **Study Mode**, and **God's Eye View Mode**) into a unified, high-performance **System Modes** category in [`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml).
+Resolved lifecycle bugs and syntax errors preventing Settings from opening cleanly, and consolidated all tactical operating modes (**Game Mode**, **The Feather**, **Study Mode**, and **God's Eye View Mode**) into a unified, high-performance **System Modes** category in [`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml).
 
 ---
 
 ## 2. Problem Statement & Issues Fixed
 
 1. **Game Mode Blocked Settings from Opening**:
-   - In [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml), `onOpenSettingsRequested` checked `if (!ShellState.gameMode)`. When Game Mode was active, clicking the settings button in Control Center or requesting exceptions management completely failed to open Settings.
+   - In [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml), `onOpenSettingsRequested` checked `if (!ShellState.gameMode)`. When Game Mode was active, clicking the settings button in Control Center or requesting exceptions management completely failed to open Settings.
    - **Fix**: Removed the blocking check so settings can always be opened on-demand, allowing users to configure whitelist exceptions or turn off modes.
 2. **`ReferenceError: NetworkDeviceType is not defined`**:
-   - In [`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml#L41), Wi-Fi device detection relied on an unexported global enum `NetworkDeviceType.Wifi`.
+   - In [`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml#L41), Wi-Fi device detection relied on an unexported global enum `NetworkDeviceType.Wifi`.
    - **Fix**: Replaced with safe string/property introspection `(d.type && String(d.type).toLowerCase().indexOf("wifi") !== -1) || d.networks !== undefined`.
 3. **Scattered / Incomplete Mode Controls**:
    - Game Mode was isolated in category `gamemode` without an input field to add new whitelisted applications.

@@ -1,9 +1,9 @@
 # GPU-Accelerated Animated Wallpaper Exploration Report
 
 **Date:** 2026-10-04  
-**Target:** [`cool-shell`](file:///home/pranc/.config/quickshell/cool-shell/)  
+**Target:** [`cool-shell`](file://$HOME/.config/quickshell/cool-shell/)  
 **Topic:** GPU-Accelerated Animated Wallpaper Architecture & Environment Exploration  
-**Policy Compliance:** [`.agents/rules/reports.md`](file:///home/pranc/.config/quickshell/cool-shell/.agents/rules/reports.md)
+**Policy Compliance:** [`.agents/rules/reports.md`](file://$HOME/.config/quickshell/cool-shell/.agents/rules/reports.md)
 
 ---
 
@@ -23,7 +23,7 @@ This exploration investigated the architecture, codebase, and runtime environmen
 ## 2. Architecture & `shell.qml` Structure
 
 ### 2.1 Shell Hierarchy & Lifecycle
-In [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml), the top-level element is `ShellRoot { id: shellRoot }`. Authoritative singletons, compositors, and state models are declared at the root level:
+In [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml), the top-level element is `ShellRoot { id: shellRoot }`. Authoritative singletons, compositors, and state models are declared at the root level:
 - `IdleManager` (compositor-wide idle tracking)
 - `WorkspaceManager` & `SurfaceManager` (Hyprland Wayland tracking)
 - `WorkspaceModel`, `SurfaceModel`, `DesktopModel` (reactive composition graph)
@@ -110,7 +110,7 @@ Re-enabling this requires instantiating the revived `Wallpaper` component inside
 ## 3. Investigation of `wallpaper/` Subsystem
 
 ### 3.1 Current Status of `wallpaper/Wallpaper.qml`
-The current file [`wallpaper/Wallpaper.qml`](file:///home/pranc/.config/quickshell/cool-shell/wallpaper/Wallpaper.qml) is a stub:
+The current file [`wallpaper/Wallpaper.qml`](file://$HOME/.config/quickshell/cool-shell/wallpaper/Wallpaper.qml) is a stub:
 ```qml
 import QtQuick
 
@@ -132,7 +132,7 @@ In commit `1f51c48`, `wallpaper/Wallpaper.qml` had a full 3-layer architecture:
 - **Layer 3: Video Surface (`MediaPlayer` + `VideoOutput`):** Handled hardware video looping via QtMultimedia with audio muted.
 
 ### 3.4 Review of `wallpaper/README.md`
-The existing [`wallpaper/README.md`](file:///home/pranc/.config/quickshell/cool-shell/wallpaper/README.md) documents the architectural guarantees:
+The existing [`wallpaper/README.md`](file://$HOME/.config/quickshell/cool-shell/wallpaper/README.md) documents the architectural guarantees:
 - **Surface Layer:** `PanelWindow` on `WlrLayer.Background` with `ExclusionMode.Ignore`.
 - **Input Transparency:** Complete click-through via `mask: Region {}` and `WlrKeyboardFocus.None`.
 - **Rendering Pipeline:** Qt 6 QRHI via `ShaderEffect` and compiled `.qsb` binaries.
@@ -146,7 +146,7 @@ The existing [`wallpaper/README.md`](file:///home/pranc/.config/quickshell/cool-
 ## 4. IPC Handlers in `cool-shell`
 
 ### 4.1 Global IPC Landscape
-All IPC handlers in `cool-shell` are declared in [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml). There are 17 registered targets:
+All IPC handlers in `cool-shell` are declared in [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml). There are 17 registered targets:
 1. `workspace`: Workspace ID, name, count, JSON state snapshots.
 2. `surface`: Focused toplevel address, title, urgency, window lists.
 3. `shell`: Central shell facade with scalar queries and delegated managers.
@@ -244,8 +244,8 @@ Exhaustive inspection of all `PanelWindow` instances reveals exact architectural
 
 ### 6.1 Shader Assets in Codebase
 The repository contains:
-- Source: [`wallpaper/shaders/wallpaper.frag`](file:///home/pranc/.config/quickshell/cool-shell/wallpaper/shaders/wallpaper.frag) (48 lines)
-- Precompiled binary: [`wallpaper/shaders/wallpaper.frag.qsb`](file:///home/pranc/.config/quickshell/cool-shell/wallpaper/shaders/wallpaper.frag.qsb) (2,954 bytes)
+- Source: [`wallpaper/shaders/wallpaper.frag`](file://$HOME/.config/quickshell/cool-shell/wallpaper/shaders/wallpaper.frag) (48 lines)
+- Precompiled binary: [`wallpaper/shaders/wallpaper.frag.qsb`](file://$HOME/.config/quickshell/cool-shell/wallpaper/shaders/wallpaper.frag.qsb) (2,954 bytes)
 
 ### 6.2 Fragment Shader Code Analysis
 ```glsl

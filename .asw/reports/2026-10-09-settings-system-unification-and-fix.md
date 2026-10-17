@@ -1,8 +1,8 @@
 # Settings System Fix & Comprehensive 12-Category Expansion Report
 
 - **Date**: 2026-10-09
-- **Workspace**: `/home/pranc/.config/quickshell/cool-shell`
-- **Component**: [`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml), [`island/ShellState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/ShellState.qml), [`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml), [`island/panels/ControlPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/ControlPanel.qml), [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml)
+- **Workspace**: `$HOME/.config/quickshell/cool-shell`
+- **Component**: [`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml), [`island/ShellState.qml`](file://$HOME/.config/quickshell/cool-shell/island/ShellState.qml), [`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml), [`island/panels/ControlPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/ControlPanel.qml), [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml)
 - **Status**: Verified & Operational
 
 ---
@@ -10,9 +10,9 @@
 ## 1. Root Cause Analysis: Settings Icons Failure
 
 ### The Issue
-- **Symptom**: Clicking the settings gear icon on the Dynamic Island ([`island/panels/ControlPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/ControlPanel.qml)) or on the sidebar ([`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml)) failed to open the Settings window. However, clicking the gear icon on the Game Mode card succeeded in opening Settings.
+- **Symptom**: Clicking the settings gear icon on the Dynamic Island ([`island/panels/ControlPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/ControlPanel.qml)) or on the sidebar ([`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml)) failed to open the Settings window. However, clicking the gear icon on the Game Mode card succeeded in opening Settings.
 - **Root Cause**:
-  1. In [`island/ShellState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/ShellState.qml), the signal was declared with a typed parameter:
+  1. In [`island/ShellState.qml`](file://$HOME/.config/quickshell/cool-shell/island/ShellState.qml), the signal was declared with a typed parameter:
      ```qml
      signal openSettingsRequested(string category)
      ```
@@ -25,14 +25,14 @@
      ```qml
      openSettingsRequested("gamemode") // 1 argument provided -> Success
      ```
-  4. In [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml), `onOpenSettingsRequested` called `settingsWindow.toggle()` when `category` was empty, which failed to guarantee that the modal became visible, and did not close the open sidebar drawers.
+  4. In [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml), `onOpenSettingsRequested` called `settingsWindow.toggle()` when `category` was empty, which failed to guarantee that the modal became visible, and did not close the open sidebar drawers.
 
 ---
 
 ## 2. Implemented Fixes
 
 ### 2.1 Parameter Safety & Helper Method in `ShellState.qml`
-In [`island/ShellState.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/ShellState.qml):
+In [`island/ShellState.qml`](file://$HOME/.config/quickshell/cool-shell/island/ShellState.qml):
 1. Added a robust helper function that always guarantees a string argument is passed to the signal:
    ```qml
    signal openSettingsRequested(string category)
@@ -51,9 +51,9 @@ In [`island/ShellState.qml`](file:///home/pranc/.config/quickshell/cool-shell/is
    ```
 
 ### 2.2 Caller Standardization in `ControlPanel.qml` and `ControlCenter.qml`
-1. In [`island/panels/ControlPanel.qml`](file:///home/pranc/.config/quickshell/cool-shell/island/panels/ControlPanel.qml):
+1. In [`island/panels/ControlPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/ControlPanel.qml):
    Updated the header `IconButton` to call `ShellState.openSettings("")`.
-2. In [`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml):
+2. In [`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml):
    Updated both `gearTap` (top header gear) and `prefTap` (bottom quick preferences tile) to dismiss the sidebar and call `Island.ShellState.openSettings("")`:
    ```qml
    TapHandler {
@@ -66,7 +66,7 @@ In [`island/ShellState.qml`](file:///home/pranc/.config/quickshell/cool-shell/is
    ```
 
 ### 2.3 Window Binding & Drawer Dismissal in `shell.qml`
-In [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml):
+In [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml):
 1. Bound `SettingsWindow` explicitly to the active screen:
    ```qml
    SettingsWindow {
@@ -96,7 +96,7 @@ In [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml):
 
 ## 3. Comprehensive 12-Category Settings Redesign
 
-[`panels/SettingsWindow.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/SettingsWindow.qml) was completely overhauled into a modern, Windows-Settings style layout—organized cleanly, privacy-first, and lightweight:
+[`panels/SettingsWindow.qml`](file://$HOME/.config/quickshell/cool-shell/panels/SettingsWindow.qml) was completely overhauled into a modern, Windows-Settings style layout—organized cleanly, privacy-first, and lightweight:
 
 | Category ID | Display Name | Icon | Capabilities & Hardware Bindings |
 | :--- | :--- | :--- | :--- |

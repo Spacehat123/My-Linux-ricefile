@@ -23,22 +23,40 @@ Singleton {
         if (fetchProcess.running)
             return;
         loading = true;
-        fetchProcess.exec(["sh", "-c", "curl -s --max-time 15 'https://wttr.in/?format=j1' -o '" + root.cachePath.replace(/'/g, "'\\''") + "' && echo OK || echo FAIL"]);
+        const safePath = root.cachePath.replace(/'/g, "'\\''");
+        fetchProcess.exec([
+            "sh", "-c",
+            "tmp='" + safePath + ".tmp'; " +
+            "if curl -sf --max-time 15 'https://wttr.in/?format=j1' -o \"$tmp\" && [ -s \"$tmp\" ] && grep -q 'current_condition' \"$tmp\" 2>/dev/null; then " +
+            "mv -f \"$tmp\" '" + safePath + "' && echo OK; " +
+            "else rm -f \"$tmp\"; echo FAIL; fi"
+        ]);
     }
 
     function loadCache() {
-        readProcess.running = true;
+        if (!readProcess.running)
+            readProcess.running = true;
     }
 
     readonly property bool collapsedVisible: pinned && tempC !== ""
+
+    Component.onCompleted: {
+        loadCache();
+    }
 
     Process {
         id: fetchProcess
         stdout: StdioCollector {
             onStreamFinished: {
                 root.loading = false;
-                if (text.trim() === "OK")
+                if (text.trim() === "OK") {
+                    root.stale = false;
                     root.loadCache();
+                } else {
+                    root.stale = true;
+                    if (root.tempC === "")
+                        root.loadCache();
+                }
             }
         }
     }
@@ -55,9 +73,9 @@ Singleton {
                     if (cur) {
                         root.tempC = cur.temp_C + "°";
                         root.condition = cur.weatherDesc && cur.weatherDesc[0] ? cur.weatherDesc[0].value : "";
-                        root.stale = false;
                         const d = new Date();
-                        root.updatedAt = d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0");
+                        if (root.updatedAt === "" || !root.stale)
+                            root.updatedAt = d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0");
                     }
                     if (near)
                         root.area = near.areaName && near.areaName[0] ? near.areaName[0].value : "";

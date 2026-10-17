@@ -113,9 +113,34 @@ Item {
         precision: SystemClock.Minutes
     }
 
-    Column {
+    Flickable {
+        id: mainFlickable
         anchors.fill: parent
-        spacing: 16
+        contentWidth: width
+        contentHeight: mainColumn.implicitHeight + 8
+        boundsBehavior: Flickable.StopAtBounds
+        flickDeceleration: 3500
+        maximumFlickVelocity: 1800
+        clip: true
+
+        // Subtle vertical scroll indicator when content overflows
+        Rectangle {
+            anchors.right: parent.right
+            anchors.rightMargin: -4
+            y: mainFlickable.visibleArea.yPosition * mainFlickable.height
+            width: 3
+            height: Math.max(24, mainFlickable.visibleArea.heightRatio * mainFlickable.height)
+            radius: 1.5
+            color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.45)
+            visible: mainFlickable.contentHeight > mainFlickable.height + 2
+            opacity: mainFlickable.moving ? 0.9 : 0.35
+            Behavior on opacity { NumberAnimation { duration: 150 } }
+        }
+
+    Column {
+        id: mainColumn
+        width: parent.width
+        spacing: 12
 
         // =====================================================================
         // SECTION 1: HEADER & GREETING
@@ -240,6 +265,7 @@ Item {
 
             // 2. Ambient Overlay Toggle (Cycles Dynamic -> Always On -> Disabled)
             Rectangle {
+                id: ambTile
                 width: (parent.width - 10) / 2
                 height: 72
                 radius: 16
@@ -270,7 +296,7 @@ Item {
                         text: root.ambientAlwaysOn ? "󰈈" : "󰍹"
                         font.family: Island.Theme.iconFontFamily
                         font.pixelSize: 18
-                        color: root.ambientEnabled ? parent.parent.activeColor : Island.Theme.muted
+                        color: root.ambientEnabled ? ambTile.activeColor : Island.Theme.muted
                     }
 
                     Text {
@@ -285,13 +311,14 @@ Item {
                         text: !root.ambientEnabled ? "Disabled" : (root.ambientAlwaysOn ? "Always On" : "Dynamic")
                         font.pixelSize: 9
                         font.family: Island.Theme.fontFamily
-                        color: root.ambientEnabled ? parent.parent.activeColor : Island.Theme.muted
+                        color: root.ambientEnabled ? ambTile.activeColor : Island.Theme.muted
                     }
                 }
             }
 
             // 3. Do Not Disturb Toggle
             Rectangle {
+                id: dndTile
                 width: (parent.width - 10) / 2
                 height: 72
                 radius: 16
@@ -325,7 +352,7 @@ Item {
                         text: "󰂛"
                         font.family: Island.Theme.iconFontFamily
                         font.pixelSize: 18
-                        color: parent.parent.dndActive ? Island.Theme.purple : Island.Theme.muted
+                        color: dndTile.dndActive ? Island.Theme.purple : Island.Theme.muted
                     }
 
                     Text {
@@ -337,16 +364,17 @@ Item {
                     }
 
                     Text {
-                        text: parent.parent.dndActive ? "Silenced" : "Alerts On"
+                        text: dndTile.dndActive ? "Silenced" : "Alerts On"
                         font.pixelSize: 9
                         font.family: Island.Theme.fontFamily
-                        color: parent.parent.dndActive ? Island.Theme.purple : Island.Theme.muted
+                        color: dndTile.dndActive ? Island.Theme.purple : Island.Theme.muted
                     }
                 }
             }
 
             // 4. Night Light Toggle
             Rectangle {
+                id: nlTile
                 width: (parent.width - 10) / 2
                 height: 72
                 radius: 16
@@ -381,7 +409,7 @@ Item {
                         text: "󰖔"
                         font.family: Island.Theme.iconFontFamily
                         font.pixelSize: 18
-                        color: parent.parent.nightLightActive ? Island.Theme.orange : Island.Theme.muted
+                        color: nlTile.nightLightActive ? Island.Theme.orange : Island.Theme.muted
                     }
 
                     Text {
@@ -393,10 +421,10 @@ Item {
                     }
 
                     Text {
-                        text: parent.parent.nightLightActive ? "Warm 4200K" : "Standard 6500K"
+                        text: nlTile.nightLightActive ? "Warm 4200K" : "Standard 6500K"
                         font.pixelSize: 9
                         font.family: Island.Theme.fontFamily
-                        color: parent.parent.nightLightActive ? Island.Theme.orange : Island.Theme.muted
+                        color: nlTile.nightLightActive ? Island.Theme.orange : Island.Theme.muted
                     }
                 }
             }
@@ -809,6 +837,7 @@ Item {
         // SECTION 2D: AI IMAGE STUDIO DAEMON (WARM RAM • 0 VRAM • 3M AUTO-EXIT)
         // =====================================================================
         Rectangle {
+            id: aiCard
             width: parent.width
             height: 64
             radius: 16
@@ -857,7 +886,7 @@ Item {
                             width: 36
                             height: 36
                             radius: 10
-                            color: parent.parent.parent.parent.aiActive
+                            color: aiCard.aiActive
                                 ? Island.Theme.purple
                                 : Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.15)
                             anchors.verticalCenter: parent.verticalCenter
@@ -867,7 +896,7 @@ Item {
                                 text: "󱨊"
                                 font.family: Island.Theme.iconFontFamily
                                 font.pixelSize: 18
-                                color: parent.parent.parent.parent.parent.aiActive ? "#0a0a0f" : Island.Theme.purple
+                                color: aiCard.aiActive ? "#0a0a0f" : Island.Theme.purple
                             }
                         }
 
@@ -891,7 +920,7 @@ Item {
                                 }
 
                                 Rectangle {
-                                    visible: parent.parent.parent.parent.parent.parent.aiActive
+                                    visible: aiCard.aiActive
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: 48
                                     height: 16
@@ -912,12 +941,12 @@ Item {
                             }
 
                             Text {
-                                text: parent.parent.parent.parent.parent.aiActive
+                                text: aiCard.aiActive
                                     ? "Loaded in RAM • 0 VRAM • 3m auto-exit"
                                     : "Unloaded • 0 MB RAM • Preload on Super+G"
                                 font.pixelSize: 10
                                 font.family: Island.Theme.fontFamily
-                                color: parent.parent.parent.parent.parent.aiActive ? Island.Theme.purple : Island.Theme.muted
+                                color: aiCard.aiActive ? Island.Theme.purple : Island.Theme.muted
                                 elide: Text.ElideRight
                             }
                         }
@@ -930,8 +959,8 @@ Item {
                     width: 40
                     height: 22
                     radius: 11
-                    color: parent.parent.aiActive ? Island.Theme.purple : Island.Theme.glassCardHover
-                    border.color: parent.parent.aiActive ? Island.Theme.purple : Island.Theme.glassBorderSubtle
+                    color: aiCard.aiActive ? Island.Theme.purple : Island.Theme.glassCardHover
+                    border.color: aiCard.aiActive ? Island.Theme.purple : Island.Theme.glassBorderSubtle
                     border.width: 1
 
                     Behavior on color { ColorAnimation { duration: 120 } }
@@ -939,11 +968,11 @@ Item {
 
                     Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
-                        x: parent.parent.parent.aiActive ? parent.width - width - 2 : 2
+                        x: aiCard.aiActive ? parent.width - width - 2 : 2
                         width: 18
                         height: 18
                         radius: 9
-                        color: parent.parent.parent.aiActive ? "#0a0a0f" : Island.Theme.muted
+                        color: aiCard.aiActive ? "#0a0a0f" : Island.Theme.muted
 
                         Behavior on x {
                             NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
@@ -1151,6 +1180,7 @@ Item {
         // SECTION 2F: STUDY MODE (HARD-LOCKOUT DEEP WORK & WHITELIST)
         // =====================================================================
         Rectangle {
+            id: studyCard
             width: parent.width
             height: 64
             radius: 16
@@ -1200,7 +1230,7 @@ Item {
                             height: 36
                             radius: 10
                             color: root.studyActive
-                                ? parent.parent.parent.parent.accentColor
+                                ? studyCard.accentColor
                                 : Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.15)
                             anchors.verticalCenter: parent.verticalCenter
 
@@ -1208,7 +1238,7 @@ Item {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: parent.parent.parent.parent.parent.isFlow ? "󰐊" : "󰑴"
+                                text: studyCard.isFlow ? "󰐊" : "󰑴"
                                 font.family: Island.Theme.iconFontFamily
                                 font.pixelSize: 18
                                 color: root.studyActive ? "#0a0a0f" : Island.Theme.green
@@ -1237,20 +1267,20 @@ Item {
                                 Rectangle {
                                     visible: root.studyActive
                                     anchors.verticalCenter: parent.verticalCenter
-                                    width: parent.parent.parent.parent.parent.parent.isFlow ? 42 : 54
+                                    width: studyCard.isFlow ? 42 : 54
                                     height: 16
                                     radius: 8
-                                    color: Qt.rgba(parent.parent.parent.parent.parent.accentColor.r, parent.parent.parent.parent.parent.accentColor.g, parent.parent.parent.parent.parent.accentColor.b, 0.25)
-                                    border.color: parent.parent.parent.parent.parent.accentColor
+                                    color: Qt.rgba(studyCard.accentColor.r, studyCard.accentColor.g, studyCard.accentColor.b, 0.25)
+                                    border.color: studyCard.accentColor
                                     border.width: 1
 
                                     Text {
                                         anchors.centerIn: parent
-                                        text: parent.parent.parent.parent.parent.parent.parent.isFlow ? "FLOW" : "LOCKED"
+                                        text: studyCard.isFlow ? "FLOW" : "LOCKED"
                                         font.pixelSize: 8
                                         font.bold: true
                                         font.family: Island.Theme.fontFamily
-                                        color: parent.parent.parent.parent.parent.parent.accentColor
+                                        color: studyCard.accentColor
                                     }
                                 }
                             }
@@ -1260,14 +1290,14 @@ Item {
                                     if (!root.studyActive) {
                                         return "Hard lockout • ICAI & Notes whitelist";
                                     }
-                                    if (parent.parent.parent.parent.parent.isFlow) {
+                                    if (studyCard.isFlow) {
                                         return "Flow State (+" + root.formatStudyDuration(root.studyOvertimeSeconds) + ") • Tap to finish";
                                     }
                                     return "Locked in Focus • " + root.formatStudyDuration(root.studyRemaining) + " left";
                                 }
                                 font.pixelSize: 10
                                 font.family: Island.Theme.fontFamily
-                                color: root.studyActive ? parent.parent.parent.parent.accentColor : Island.Theme.muted
+                                color: root.studyActive ? studyCard.accentColor : Island.Theme.muted
                                 elide: Text.ElideRight
                             }
                         }
@@ -1280,8 +1310,8 @@ Item {
                     width: 40
                     height: 22
                     radius: 11
-                    color: root.studyActive ? parent.parent.accentColor : Island.Theme.glassCardHover
-                    border.color: root.studyActive ? parent.parent.accentColor : Island.Theme.glassBorderSubtle
+                    color: root.studyActive ? studyCard.accentColor : Island.Theme.glassCardHover
+                    border.color: root.studyActive ? studyCard.accentColor : Island.Theme.glassBorderSubtle
                     border.width: 1
 
                     Behavior on color { ColorAnimation { duration: 120 } }
@@ -1311,6 +1341,7 @@ Item {
         // SECTION 2G: COOLPHONE MIRROR & FILTERED FILE BRIDGE
         // =====================================================================
         Rectangle {
+            id: phoneCard
             width: parent.width
             height: 64
             radius: 16
@@ -1357,17 +1388,17 @@ Item {
                             width: 36
                             height: 36
                             radius: 10
-                            color: parent.parent.parent.parent.phoneOn
+                            color: phoneCard.phoneOn
                                 ? Island.Theme.primary
                                 : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.4)
                             anchors.verticalCenter: parent.verticalCenter
 
                             Text {
                                 anchors.centerIn: parent
-                                text: parent.parent.parent.parent.parent.phoneOn ? (root.phoneMirrorActive ? "󰍹" : "📱") : "󰂲"
+                                text: phoneCard.phoneOn ? (root.phoneMirrorActive ? "󰍹" : "📱") : "󰂲"
                                 font.family: Island.Theme.iconFontFamily
                                 font.pixelSize: 16
-                                color: parent.parent.parent.parent.parent.phoneOn ? "#0a0a0f" : Island.Theme.muted
+                                color: phoneCard.phoneOn ? "#0a0a0f" : Island.Theme.muted
                             }
                         }
 
@@ -1389,7 +1420,7 @@ Item {
                                 }
 
                                 Rectangle {
-                                    visible: parent.parent.parent.parent.parent.phoneOn && root.phoneConnected
+                                    visible: phoneCard.phoneOn && root.phoneConnected
                                     anchors.verticalCenter: parent.verticalCenter
                                     height: 16
                                     implicitWidth: phoneConnBadgeText.implicitWidth + 8
@@ -1413,7 +1444,7 @@ Item {
                             }
 
                             Text {
-                                text: parent.parent.parent.parent.parent.phoneOn
+                                text: phoneCard.phoneOn
                                     ? (root.phoneMirrorActive
                                         ? "Mirroring screen • Super+Alt+P"
                                         : (root.phoneConnected
@@ -1422,7 +1453,7 @@ Item {
                                     : "Completely Off • 0% CPU & RAM load"
                                 font.pixelSize: 10
                                 font.family: Island.Theme.fontFamily
-                                color: parent.parent.parent.parent.parent.phoneOn ? Island.Theme.primary : Island.Theme.muted
+                                color: phoneCard.phoneOn ? Island.Theme.primary : Island.Theme.muted
                                 elide: Text.ElideRight
                             }
                         }
@@ -1435,8 +1466,8 @@ Item {
                     width: 40
                     height: 22
                     radius: 11
-                    color: parent.parent.phoneOn ? Island.Theme.primary : Island.Theme.glassCardHover
-                    border.color: parent.parent.phoneOn ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                    color: phoneCard.phoneOn ? Island.Theme.primary : Island.Theme.glassCardHover
+                    border.color: phoneCard.phoneOn ? Island.Theme.primary : Island.Theme.glassBorderSubtle
                     border.width: 1
 
                     Behavior on color { ColorAnimation { duration: 120 } }
@@ -1444,11 +1475,11 @@ Item {
 
                     Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
-                        x: parent.parent.parent.phoneOn ? parent.width - width - 2 : 2
+                        x: phoneCard.phoneOn ? parent.width - width - 2 : 2
                         width: 18
                         height: 18
                         radius: 9
-                        color: parent.parent.parent.phoneOn ? "#0a0a0f" : Island.Theme.muted
+                        color: phoneCard.phoneOn ? "#0a0a0f" : Island.Theme.muted
 
                         Behavior on x {
                             NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
@@ -1554,6 +1585,7 @@ Item {
 
                     // 1. Live Lyrics Toggle
                     Rectangle {
+                        id: lyricsToggleCard
                         width: (parent.width - 8) / 2
                         height: 30
                         radius: 10
@@ -1586,20 +1618,21 @@ Item {
                                 text: "♪"
                                 font.pixelSize: 12
                                 font.bold: true
-                                color: parent.parent.active ? Island.Theme.primary : Island.Theme.muted
+                                color: lyricsToggleCard.active ? Island.Theme.primary : Island.Theme.muted
                             }
                             Text {
-                                text: parent.parent.active ? "Lyrics On" : "Lyrics Off"
+                                text: lyricsToggleCard.active ? "Lyrics On" : "Lyrics Off"
                                 font.pixelSize: 10
                                 font.bold: true
                                 font.family: Island.Theme.fontFamily
-                                color: parent.parent.active ? Island.Theme.foreground : Island.Theme.muted
+                                color: lyricsToggleCard.active ? Island.Theme.foreground : Island.Theme.muted
                             }
                         }
                     }
 
                     // 2. Waveform Meter Toggle
                     Rectangle {
+                        id: vizToggleCard
                         width: (parent.width - 8) / 2
                         height: 30
                         radius: 10
@@ -1632,14 +1665,14 @@ Item {
                                 text: "󰎆"
                                 font.family: Island.Theme.iconFontFamily
                                 font.pixelSize: 12
-                                color: parent.parent.active ? Island.Theme.aqua : Island.Theme.muted
+                                color: vizToggleCard.active ? Island.Theme.aqua : Island.Theme.muted
                             }
                             Text {
-                                text: parent.parent.active ? "Waveform On" : "Waveform Off"
+                                text: vizToggleCard.active ? "Waveform On" : "Waveform Off"
                                 font.pixelSize: 10
                                 font.bold: true
                                 font.family: Island.Theme.fontFamily
-                                color: parent.parent.active ? Island.Theme.foreground : Island.Theme.muted
+                                color: vizToggleCard.active ? Island.Theme.foreground : Island.Theme.muted
                             }
                         }
                     }
@@ -1835,6 +1868,7 @@ Item {
                 }
             }
         }
+    }
     }
 
     // =========================================================================

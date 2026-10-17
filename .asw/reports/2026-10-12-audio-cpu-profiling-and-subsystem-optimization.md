@@ -30,10 +30,10 @@ When profiling active system processes during Spotify music playback across the 
 1. **Guarded Level-Meter Daemon**:
    - Added `IslandHub.visualizerEnabled` (default: `false`).
    - If disabled, `level-meter.py` **never spawns**, the watchdog restart timer never triggers, and `waveRow` in `CollapsedStatus.qml` does not animate.
-2. **Dual Toggles in Left Sidebar** ([`components/ControlCenter.qml`](file:///home/pranc/.config/quickshell/cool-shell/components/ControlCenter.qml#L735-L815)):
+2. **Dual Toggles in Left Sidebar** ([`components/ControlCenter.qml`](file://$HOME/.config/quickshell/cool-shell/components/ControlCenter.qml#L735-L815)):
    - **`♪ Lyrics On / Off`**: Toggles `IslandHub.lyricsEnabled`. When off, kills `sptlrx` via SIGTERM and disables auto-restart.
    - **`󰎆 Waveform On / Off`**: Toggles `IslandHub.visualizerEnabled`. When off, terminates `level-meter.py` and stops all SceneGraph 60 FPS bar animations.
-3. **IPC Controls Added to [`shell.qml`](file:///home/pranc/.config/quickshell/cool-shell/shell.qml#L1755-L1775)**:
+3. **IPC Controls Added to [`shell.qml`](file://$HOME/.config/quickshell/cool-shell/shell.qml#L1755-L1775)**:
    - `qs -c cool-shell ipc call island setLyricsEnabled <bool>`
    - `qs -c cool-shell ipc call island setVisualizerEnabled <bool>`
    - `qs -c cool-shell ipc call island toggleLyrics`
