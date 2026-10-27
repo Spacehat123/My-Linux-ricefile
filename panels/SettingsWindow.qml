@@ -38,10 +38,65 @@ PanelWindow {
     // =========================================================================
 
     // Networking
-    readonly property var wifiDevice: Networking.devices ? Networking.devices.values.find((d) => (d.type && String(d.type).toLowerCase().indexOf("wifi") !== -1) || d.networks !== undefined) : null
-    readonly property var wifiNetworks: wifiDevice ? wifiDevice.networks.values.slice().sort((a, b) => (b.strength || 0) - (a.strength || 0)) : []
-    readonly property var connectedWifi: wifiNetworks.find((n) => n.connected)
+    readonly property var wifiDevice: {
+        if (!Networking.devices || !Networking.devices.values) return null;
+        return Networking.devices.values.find((d) => d.type === DeviceType.Wifi || d.type === 2) || null;
+    }
+    readonly property var wifiNetworks: {
+        let list = [];
+        if (wifiDevice && wifiDevice.networks && wifiDevice.networks.values) {
+            list = wifiDevice.networks.values.slice().sort((a, b) => {
+                if (a.connected !== b.connected) return a.connected ? -1 : 1;
+                let sa = (a.signalStrength !== undefined ? a.signalStrength : (a.strength || 0));
+                let sb = (b.signalStrength !== undefined ? b.signalStrength : (b.strength || 0));
+                return sb - sa;
+            });
+        }
+        if (list.length === 0 && fallbackNetworks.length > 0) {
+            return fallbackNetworks;
+        }
+        return list;
+    }
+    readonly property var connectedWifi: {
+        if (wifiNetworks && wifiNetworks.length > 0) {
+            let found = wifiNetworks.find((n) => n.connected);
+            if (found) return found;
+        }
+        if (wifiDevice && wifiDevice.connected) return wifiDevice;
+        return fallbackConnected;
+    }
+    property var fallbackNetworks: []
+    property var fallbackConnected: null
     property var pendingWifiNetwork: null
+
+    function getConnectedSsid() {
+        if (connectedWifi) {
+            if (connectedWifi.ssid) return connectedWifi.ssid;
+            if (connectedWifi.name) return connectedWifi.name;
+        }
+        if (wifiDevice && wifiDevice.activeAccessPoint && wifiDevice.activeAccessPoint.ssid) {
+            return wifiDevice.activeAccessPoint.ssid;
+        }
+        if (fallbackConnected && fallbackConnected.ssid) {
+            return fallbackConnected.ssid;
+        }
+        return "";
+    }
+
+    function getConnectedSignalPct() {
+        let target = connectedWifi || fallbackConnected;
+        if (!target) return 0;
+        let s = target.signalStrength !== undefined ? target.signalStrength : (target.strength !== undefined ? target.strength : null);
+        if (s === null && wifiDevice && wifiDevice.activeAccessPoint && wifiDevice.activeAccessPoint.strength !== undefined) {
+            s = wifiDevice.activeAccessPoint.strength;
+        }
+        if (s === null && fallbackConnected) {
+            s = fallbackConnected.signalStrength;
+        }
+        if (s === null || s === undefined) return 75;
+        if (s > 1) return Math.round(s);
+        return Math.round(s * 100);
+    }
 
     // Bluetooth
     readonly property var adapter: Bluetooth.defaultAdapter
@@ -75,6 +130,7 @@ PanelWindow {
 
     function toggle() {
         open = !open;
+        if (open) refreshTelemetry();
     }
 
     function show() {
@@ -94,9 +150,25 @@ PanelWindow {
         show();
     }
 
+    onOpenChanged: {
+        if (open) refreshTelemetry();
+    }
+
+    onActiveCategoryChanged: {
+        if (open && activeCategory === "network") {
+            refreshTelemetry();
+        }
+    }
+
+    Component.onCompleted: {
+        refreshTelemetry();
+    }
+
     function refreshTelemetry() {
         if (!getBrightnessProc.running) getBrightnessProc.running = true;
         if (wifiDevice && Networking.wifiEnabled) wifiDevice.scannerEnabled = true;
+        if (!nmcliWifiProc.running) nmcliWifiProc.running = true;
+        if (!nmcliActiveProc.running) nmcliActiveProc.running = true;
         if (!getExceptionsProc.running) getExceptionsProc.running = true;
         if (!getBatteryLimitProc.running) getBatteryLimitProc.running = true;
     }
@@ -271,6 +343,105 @@ PanelWindow {
                     let data = JSON.parse(text.trim());
                     if (data.enabled !== undefined) root.batteryLimitEnabled = (data.enabled === true);
                     if (data.limit !== undefined) root.batteryLimitPercent = data.limit;
+                } catch (e) {}
+            }
+        }
+    }
+
+    Process {
+        id: nmcliWifiProc
+        command: ["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY,BARS", "device", "wifi", "list", "--rescan", "no"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    let lines = text.trim().split("\n");
+                    let seen = new Map();
+                    let activeNet = null;
+                    for (let i = 0; i < lines.length; i++) {
+                        let line = lines[i].trim();
+                        if (!line) continue;
+                        let parts = line.split(":");
+                        if (parts.length >= 4) {
+                            let inUse = parts[0].trim() === "*";
+                            let ssid = parts[1].trim();
+                            if (!ssid || ssid === "--") continue;
+                            let sig = parseInt(parts[2], 10) || 0;
+                            let sec = parts[3] || "Secured";
+                            if (seen.has(ssid)) {
+                                let existing = seen.get(ssid);
+                                if (inUse) {
+                                    existing.connected = true;
+                                    activeNet = existing;
+                                }
+                                if (sig > existing.rawSig) {
+                                    existing.rawSig = sig;
+                                    existing.signalStrength = sig / 100.0;
+                                    existing.strength = sig / 100.0;
+                                }
+                            } else {
+                                let netObj = {
+                                    ssid: ssid,
+                                    name: ssid,
+                                    rawSig: sig,
+                                    signalStrength: sig / 100.0,
+                                    strength: sig / 100.0,
+                                    connected: inUse,
+                                    security: sec,
+                                    known: inUse,
+                                    isFallback: true,
+                                    connect: function() {
+                                        Quickshell.execDetached(["nmcli", "dev", "wifi", "connect", ssid]);
+                                    },
+                                    disconnect: function() {
+                                        Quickshell.execDetached(["nmcli", "c", "down", "id", ssid]);
+                                    }
+                                };
+                                seen.set(ssid, netObj);
+                                if (inUse) activeNet = netObj;
+                            }
+                        }
+                    }
+                    root.fallbackNetworks = Array.from(seen.values()).sort((a, b) => {
+                        if (a.connected !== b.connected) return a.connected ? -1 : 1;
+                        return b.rawSig - a.rawSig;
+                    });
+                    if (activeNet) root.fallbackConnected = activeNet;
+                } catch (e) {}
+            }
+        }
+    }
+
+    Process {
+        id: nmcliActiveProc
+        command: ["nmcli", "-t", "-f", "NAME,TYPE,DEVICE,STATE", "connection", "show", "--active"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    let lines = text.trim().split("\n");
+                    for (let i = 0; i < lines.length; i++) {
+                        let parts = lines[i].trim().split(":");
+                        if (parts.length >= 4 && (parts[1] === "802-11-wireless" || parts[1] === "wifi") && parts[3] === "activated") {
+                            let ssid = parts[0];
+                            if (!root.fallbackConnected || !root.fallbackConnected.connected || root.fallbackConnected.ssid !== ssid) {
+                                root.fallbackConnected = {
+                                    ssid: ssid,
+                                    name: ssid,
+                                    signalStrength: 0.8,
+                                    strength: 0.8,
+                                    connected: true,
+                                    security: "Secured",
+                                    known: true,
+                                    isFallback: true,
+                                    disconnect: function() {
+                                        Quickshell.execDetached(["nmcli", "c", "down", "id", ssid]);
+                                    }
+                                };
+                            }
+                            break;
+                        }
+                    }
                 } catch (e) {}
             }
         }
@@ -646,7 +817,7 @@ PanelWindow {
                                                 color: Island.Theme.foreground
                                             }
                                             Text {
-                                                text: Networking.wifiEnabled ? (root.connectedWifi ? ("Connected to " + root.connectedWifi.ssid) : "Enabled (Scanning)") : "Disabled"
+                                                text: (Networking.wifiEnabled || root.connectedWifi !== null) ? (root.getConnectedSsid() !== "" ? ("Connected to " + root.getConnectedSsid()) : "Enabled (Scanning)") : "Disabled"
                                                 font.pixelSize: 10
                                                 color: Island.Theme.muted
                                             }
@@ -677,7 +848,11 @@ PanelWindow {
                                                 cursorShape: Qt.PointingHandCursor
                                                 onClicked: {
                                                     Networking.wifiEnabled = !Networking.wifiEnabled;
-                                                    if (Networking.wifiEnabled && root.wifiDevice) root.wifiDevice.scannerEnabled = true;
+                                                    if (Networking.wifiEnabled) {
+                                                        if (root.wifiDevice) root.wifiDevice.scannerEnabled = true;
+                                                        if (!nmcliWifiProc.running) nmcliWifiProc.running = true;
+                                                        if (!nmcliActiveProc.running) nmcliActiveProc.running = true;
+                                                    }
                                                 }
                                             }
                                         }
@@ -686,7 +861,7 @@ PanelWindow {
 
                                 // Active Connected Network Card
                                 Rectangle {
-                                    visible: Networking.wifiEnabled && root.connectedWifi !== undefined && root.connectedWifi !== null
+                                    visible: (Networking.wifiEnabled || root.connectedWifi !== null) && root.getConnectedSsid() !== ""
                                     width: parent.width
                                     height: 80
                                     radius: 12
@@ -712,13 +887,13 @@ PanelWindow {
                                             width: parent.width - 150
                                             spacing: 3
                                             Text {
-                                                text: root.connectedWifi ? root.connectedWifi.ssid : ""
+                                                text: root.getConnectedSsid()
                                                 font.pixelSize: 13
                                                 font.bold: true
                                                 color: Island.Theme.foreground
                                             }
                                             Text {
-                                                text: "Signal: " + (root.connectedWifi ? Math.round(root.connectedWifi.strength * 100) : 0) + "% • Active Default Route"
+                                                text: "Signal: " + root.getConnectedSignalPct() + "% • Active Default Route"
                                                 font.pixelSize: 10
                                                 color: Island.Theme.primary
                                             }
@@ -746,7 +921,12 @@ PanelWindow {
                                                 hoverEnabled: true
                                                 cursorShape: Qt.PointingHandCursor
                                                 onClicked: {
-                                                    if (root.connectedWifi) root.connectedWifi.disconnect();
+                                                    if (root.connectedWifi && typeof root.connectedWifi.disconnect === "function") {
+                                                        root.connectedWifi.disconnect();
+                                                    } else {
+                                                        let cur = root.getConnectedSsid();
+                                                        if (cur) Quickshell.execDetached(["nmcli", "c", "down", "id", cur]);
+                                                    }
                                                 }
                                             }
                                         }
@@ -756,7 +936,7 @@ PanelWindow {
                                 // Available Networks List Header
                                 Row {
                                     width: parent.width
-                                    visible: Networking.wifiEnabled
+                                    visible: Networking.wifiEnabled || root.wifiNetworks.length > 0
                                     Text {
                                         text: "AVAILABLE NETWORKS (" + root.wifiNetworks.length + ")"
                                         font.pixelSize: 10
@@ -775,6 +955,8 @@ PanelWindow {
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: {
                                                 if (root.wifiDevice) root.wifiDevice.scannerEnabled = true;
+                                                if (!nmcliWifiProc.running) nmcliWifiProc.running = true;
+                                                if (!nmcliActiveProc.running) nmcliActiveProc.running = true;
                                             }
                                         }
                                     }
@@ -783,10 +965,10 @@ PanelWindow {
                                 Column {
                                     width: parent.width
                                     spacing: 6
-                                    visible: Networking.wifiEnabled
+                                    visible: Networking.wifiEnabled || root.wifiNetworks.length > 0
 
                                     Repeater {
-                                        model: root.wifiNetworks.slice(0, 10)
+                                        model: root.wifiNetworks
 
                                         delegate: Rectangle {
                                             id: netCard
@@ -805,7 +987,11 @@ PanelWindow {
 
                                                 Text {
                                                     anchors.verticalCenter: parent.verticalCenter
-                                                    text: modelData.strength > 0.7 ? "󰤨" : (modelData.strength > 0.4 ? "󰤥" : "󰤟")
+                                                    property real strVal: {
+                                                        let s = modelData.signalStrength !== undefined ? modelData.signalStrength : (modelData.strength !== undefined ? modelData.strength : 0.5);
+                                                        return s > 1 ? s / 100.0 : s;
+                                                    }
+                                                    text: strVal > 0.7 ? "󰤨" : (strVal > 0.4 ? "󰤥" : "󰤟")
                                                     font.family: Island.Theme.iconFontFamily
                                                     font.pixelSize: 15
                                                     color: modelData.connected ? Island.Theme.primary : Island.Theme.muted
@@ -814,7 +1000,7 @@ PanelWindow {
                                                 Text {
                                                     anchors.verticalCenter: parent.verticalCenter
                                                     width: parent.width - 150
-                                                    text: modelData.ssid || "Hidden Network"
+                                                    text: modelData.ssid || modelData.name || "Hidden Network"
                                                     font.pixelSize: 11
                                                     font.bold: modelData.connected
                                                     color: Island.Theme.foreground
@@ -823,9 +1009,9 @@ PanelWindow {
 
                                                 Text {
                                                     anchors.verticalCenter: parent.verticalCenter
-                                                    text: modelData.known ? "Saved" : ""
+                                                    text: modelData.connected ? "Active" : (modelData.known ? "Saved" : (modelData.security ? modelData.security : ""))
                                                     font.pixelSize: 9
-                                                    color: Island.Theme.mutedDark
+                                                    color: modelData.connected ? Island.Theme.primary : Island.Theme.mutedDark
                                                 }
 
                                                 Rectangle {
@@ -850,7 +1036,16 @@ PanelWindow {
                                                         hoverEnabled: true
                                                         cursorShape: Qt.PointingHandCursor
                                                         onClicked: {
-                                                            if (!modelData.connected) modelData.connect();
+                                                            if (!modelData.connected) {
+                                                                if (typeof modelData.connect === "function") {
+                                                                    modelData.connect();
+                                                                } else {
+                                                                    let sName = modelData.ssid || modelData.name;
+                                                                    if (sName) {
+                                                                        Quickshell.execDetached(["nmcli", "dev", "wifi", "connect", sName]);
+                                                                    }
+                                                                }
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -859,6 +1054,34 @@ PanelWindow {
                                                 id: netMouse
                                                 anchors.fill: parent
                                                 hoverEnabled: true
+                                            }
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        visible: root.wifiNetworks.length === 0
+                                        width: parent.width
+                                        height: 52
+                                        radius: 10
+                                        color: Island.Theme.glassCard
+                                        border.color: Island.Theme.glassBorderSubtle
+                                        border.width: 1
+
+                                        Row {
+                                            anchors.centerIn: parent
+                                            spacing: 8
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "󰑐"
+                                                font.family: Island.Theme.iconFontFamily
+                                                font.pixelSize: 13
+                                                color: Island.Theme.muted
+                                            }
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "Scanning for nearby Wi-Fi networks..."
+                                                font.pixelSize: 11
+                                                color: Island.Theme.muted
                                             }
                                         }
                                     }
@@ -2427,6 +2650,7 @@ PanelWindow {
                                 // 3. STUDY MODE: FOCUS & DISTRACTION LOCKDOWN CARD
                                 // -------------------------------------------------
                                 Rectangle {
+                                    id: studyCardRoot
                                     width: parent.width
                                     radius: 12
                                     color: (Island.ShellState && Island.ShellState.studyActive) ? Qt.rgba(Island.Theme.orange.r, Island.Theme.orange.g, Island.Theme.orange.b, 0.12) : Island.Theme.glassCard
@@ -2437,6 +2661,47 @@ PanelWindow {
 
                                     Behavior on color { ColorAnimation { duration: 140 } }
                                     Behavior on border.color { ColorAnimation { duration: 140 } }
+
+                                    property bool isCustomSelected: false
+                                    property int customDays: 30
+                                    property int customHours: 0
+
+                                    function applyCustomDuration() {
+                                        let total = (customDays * 86400) + (customHours * 3600);
+                                        if (total < 1800) total = 1800;
+                                        if (Island.ShellState) Island.ShellState.studyTargetDuration = total;
+                                    }
+
+                                    function formatStudyTimeFriendly(sec) {
+                                        if (sec >= 86400) {
+                                            const d = Math.floor(sec / 86400);
+                                            const h = Math.floor((sec % 86400) / 3600);
+                                            return d + "d" + (h > 0 ? " " + h + "h" : "");
+                                        }
+                                        if (sec >= 3600) {
+                                            const h = Math.floor(sec / 3600);
+                                            const m = Math.floor((sec % 3600) / 60);
+                                            return h + "h" + (m > 0 ? " " + m + "m" : "");
+                                        }
+                                        const m = Math.floor(sec / 60);
+                                        return m + "m";
+                                    }
+
+                                    function formatRemainingFriendly(sec) {
+                                        if (sec >= 86400) {
+                                            const d = Math.floor(sec / 86400);
+                                            const h = Math.floor((sec % 86400) / 3600);
+                                            return d + "d " + (h < 10 ? "0" : "") + h + "h";
+                                        }
+                                        if (sec >= 3600) {
+                                            const h = Math.floor(sec / 3600);
+                                            const m = Math.floor((sec % 3600) / 60);
+                                            return (h < 10 ? "0" : "") + h + "h " + (m < 10 ? "0" : "") + m + "m";
+                                        }
+                                        const m = Math.floor(sec / 60);
+                                        const s = sec % 60;
+                                        return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+                                    }
 
                                     Column {
                                         id: studyCol
@@ -2486,8 +2751,8 @@ PanelWindow {
                                                             id: studyBadgeText
                                                             anchors.centerIn: parent
                                                             text: (Island.ShellState && Island.ShellState.studyActive)
-                                                                ? ("LOCKED IN • " + Math.floor(Island.ShellState.studyRemaining / 60) + "m REMAINING")
-                                                                : "STANDBY"
+                                                                ? ("LOCKED IN • " + studyCardRoot.formatRemainingFriendly(Island.ShellState.studyRemaining) + " LEFT")
+                                                                : ((studyCardRoot.isCustomSelected || (Island.ShellState && Island.ShellState.studyTargetDuration >= 14400)) ? "EXAM PROFILE" : "STANDBY")
                                                             font.pixelSize: 9
                                                             font.bold: true
                                                             color: (Island.ShellState && Island.ShellState.studyActive) ? Island.Theme.orange : Island.Theme.muted
@@ -2496,7 +2761,7 @@ PanelWindow {
                                                 }
 
                                                 Text {
-                                                    text: "Terminates distracting apps & browser tabs, blocks games/social media, shields offline PDF/study tools."
+                                                    text: "Anti-jailbreak focus shielding: Blocks games/social media, allows ICAI / PDFs / study tools. Exam Profile (≥4h) unlocks Gemini, Spotify, Hotstar (1h/day) & Chess (1h/day)."
                                                     font.pixelSize: 10
                                                     color: Island.Theme.muted
                                                     elide: Text.ElideRight
@@ -2504,7 +2769,7 @@ PanelWindow {
                                                 }
                                             }
 
-                                            // Start Focus Session Button
+                                            // Start Focus Session Button (Standby)
                                             Rectangle {
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 width: 110
@@ -2527,34 +2792,137 @@ PanelWindow {
                                                 HoverHandler { id: studyStartHover }
                                                 TapHandler {
                                                     onTapped: {
-                                                        Quickshell.execDetached(["python3", Quickshell.shellPath("scripts/study-mode.py"), "prompt-and-start", "--duration", (Island.ShellState ? Island.ShellState.studyTargetDuration.toString() : "1800")]);
+                                                        let dur = (Island.ShellState ? Island.ShellState.studyTargetDuration : 1800);
+                                                        let isCustom = studyCardRoot.isCustomSelected || dur >= 14400;
+                                                        let args = ["python3", Quickshell.shellPath("scripts/study-mode.py"), "prompt-and-start", "--duration", dur.toString()];
+                                                        if (isCustom) args.push("--custom");
+                                                        Quickshell.execDetached(args);
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Active Session Dashboard / Controls
+                                        Column {
+                                            width: parent.width
+                                            spacing: 8
+                                            visible: Boolean(Island.ShellState && Island.ShellState.studyActive)
+
+                                            Rectangle {
+                                                width: parent.width
+                                                implicitHeight: activeRow.implicitHeight + 16
+                                                radius: 8
+                                                color: Qt.rgba(Island.Theme.orange.r, Island.Theme.orange.g, Island.Theme.orange.b, 0.1)
+                                                border.color: Island.Theme.orange
+                                                border.width: 1
+
+                                                Row {
+                                                    id: activeRow
+                                                    anchors.left: parent.left
+                                                    anchors.right: parent.right
+                                                    anchors.top: parent.top
+                                                    anchors.margins: 8
+                                                    spacing: 12
+
+                                                    Text {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        text: (Island.ShellState && Island.ShellState.studyOvertime) ? "󰐊" : "󰌾"
+                                                        font.family: Island.Theme.iconFontFamily
+                                                        font.pixelSize: 22
+                                                        color: (Island.ShellState && Island.ShellState.studyOvertime) ? Island.Theme.primary : Island.Theme.orange
+                                                    }
+
+                                                    Column {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        width: parent.width - 150
+                                                        spacing: 3
+
+                                                        Text {
+                                                            text: (Island.ShellState && Island.ShellState.studyOvertime)
+                                                                ? "Target Met! Overtime Flow Active (+" + studyCardRoot.formatStudyTimeFriendly(Island.ShellState.studyOvertimeSeconds) + ")"
+                                                                : "Lockdown Active: " + studyCardRoot.formatRemainingFriendly(Island.ShellState.studyRemaining) + " remaining"
+                                                            font.pixelSize: 12
+                                                            font.bold: true
+                                                            color: Island.Theme.foreground
+                                                        }
+
+                                                        Text {
+                                                            text: {
+                                                                let isExam = (Island.ShellState && Island.ShellState.studyIsLongSession);
+                                                                let chessRem = (Island.ShellState ? Island.ShellState.studyChessQuotaRemaining : 3600);
+                                                                let chessMin = Math.floor(chessRem / 60);
+                                                                let hotstarRem = (Island.ShellState ? Island.ShellState.studyHotstarQuotaRemaining : 3600);
+                                                                let hotstarMin = Math.floor(hotstarRem / 60);
+                                                                return isExam
+                                                                    ? ("Exam Profile: Gemini/Spotify • Hotstar: " + hotstarMin + "m left • Chess: " + chessMin + "m left • Kitty terminal safe")
+                                                                    : "Sprint Mode: Pure offline study whitelist • Distractions blocked";
+                                                            }
+                                                            font.pixelSize: 10
+                                                            color: Island.Theme.muted
+                                                            elide: Text.ElideRight
+                                                            width: parent.width
+                                                        }
+                                                    }
+
+                                                    // Stop / Finish Session or Locked Button
+                                                    Rectangle {
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        width: 120
+                                                        height: 28
+                                                        radius: 8
+                                                        readonly property bool canStop: Boolean(Island.ShellState && (Island.ShellState.studyOvertime || Island.ShellState.studyRemaining <= 0))
+                                                        color: canStop ? Island.Theme.green : Qt.rgba(1, 1, 1, 0.08)
+                                                        border.color: canStop ? Island.Theme.green : Island.Theme.glassBorderSubtle
+                                                        border.width: 1
+
+                                                        Text {
+                                                            anchors.centerIn: parent
+                                                            text: parent.canStop ? "Finish Session ✨" : "Locked (No Exit) 🔒"
+                                                            font.pixelSize: 10
+                                                            font.bold: true
+                                                            color: parent.canStop ? "#0a0a0f" : Island.Theme.muted
+                                                        }
+
+                                                        TapHandler {
+                                                            onTapped: {
+                                                                if (parent.canStop) {
+                                                                    if (Island.ShellState) Island.ShellState.stopStudyMode();
+                                                                } else {
+                                                                    Island.IslandHub.showTransient("🔒 Hard Lock Active: Cannot exit early! (" + studyCardRoot.formatStudyTimeFriendly(Island.ShellState.studyRemaining) + " left)", 4000);
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
 
                                         // Duration Selection Pills (when standby)
-                                        Row {
+                                        Flow {
                                             width: parent.width
-                                            height: 26
                                             spacing: 6
                                             visible: !(Island.ShellState && Island.ShellState.studyActive)
 
                                             Repeater {
                                                 model: [
-                                                    { name: "15 min", seconds: 900 },
-                                                    { name: "30 min", seconds: 1800 },
-                                                    { name: "45 min", seconds: 2700 },
-                                                    { name: "60 min", seconds: 3600 },
-                                                    { name: "90 min", seconds: 5400 }
+                                                    { name: "30 min", seconds: 1800, isCustom: false },
+                                                    { name: "1 hr", seconds: 3600, isCustom: false },
+                                                    { name: "2 hr", seconds: 7200, isCustom: false },
+                                                    { name: "4 hr", seconds: 14400, isCustom: false },
+                                                    { name: "1 Day", seconds: 86400, isCustom: false },
+                                                    { name: "1 Week", seconds: 604800, isCustom: false },
+                                                    { name: "1 Month", seconds: 2592000, isCustom: false },
+                                                    { name: "Custom ⚙", seconds: 0, isCustom: true }
                                                 ]
 
                                                 delegate: Rectangle {
                                                     required property var modelData
-                                                    width: (studyCol.width - 24) / 5
+                                                    width: Math.max(54, pillText.implicitWidth + 16)
                                                     height: 26
                                                     radius: 8
-                                                    readonly property bool isSelected: (Island.ShellState ? Island.ShellState.studyTargetDuration : 1800) === modelData.seconds
+                                                    readonly property bool isSelected: modelData.isCustom
+                                                        ? studyCardRoot.isCustomSelected
+                                                        : (!studyCardRoot.isCustomSelected && (Island.ShellState ? Island.ShellState.studyTargetDuration : 1800) === modelData.seconds)
                                                     color: isSelected
                                                         ? Island.Theme.orange
                                                         : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.5)
@@ -2562,6 +2930,7 @@ PanelWindow {
                                                     border.width: 1
 
                                                     Text {
+                                                        id: pillText
                                                         anchors.centerIn: parent
                                                         text: modelData.name
                                                         font.pixelSize: 10
@@ -2571,8 +2940,186 @@ PanelWindow {
 
                                                     TapHandler {
                                                         onTapped: {
-                                                            if (Island.ShellState) Island.ShellState.studyTargetDuration = modelData.seconds;
+                                                            if (modelData.isCustom) {
+                                                                studyCardRoot.isCustomSelected = true;
+                                                                studyCardRoot.applyCustomDuration();
+                                                            } else {
+                                                                studyCardRoot.isCustomSelected = false;
+                                                                if (Island.ShellState) Island.ShellState.studyTargetDuration = modelData.seconds;
+                                                            }
                                                         }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Custom Duration Stepper Box (Shown when Custom is selected)
+                                        Rectangle {
+                                            width: parent.width
+                                            height: 38
+                                            radius: 8
+                                            visible: !(Island.ShellState && Island.ShellState.studyActive) && studyCardRoot.isCustomSelected
+                                            color: Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.4)
+                                            border.color: Island.Theme.orange
+                                            border.width: 1
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 20
+
+                                                // Days stepper
+                                                Row {
+                                                    spacing: 6
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    Text {
+                                                        text: "Days:"
+                                                        font.pixelSize: 11
+                                                        font.family: Island.Theme.fontFamily
+                                                        color: Island.Theme.muted
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                    }
+                                                    Rectangle {
+                                                        width: 22
+                                                        height: 22
+                                                        radius: 5
+                                                        color: Qt.rgba(1, 1, 1, 0.1)
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        Text { anchors.centerIn: parent; text: "−"; font.bold: true; color: Island.Theme.foreground }
+                                                        TapHandler {
+                                                            onTapped: {
+                                                                if (studyCardRoot.customDays > 0) studyCardRoot.customDays -= 1;
+                                                                studyCardRoot.applyCustomDuration();
+                                                            }
+                                                        }
+                                                    }
+                                                    Text {
+                                                        text: studyCardRoot.customDays.toString()
+                                                        font.pixelSize: 12
+                                                        font.bold: true
+                                                        font.family: Island.Theme.fontFamily
+                                                        color: Island.Theme.orange
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        horizontalAlignment: Text.AlignHCenter
+                                                        width: 28
+                                                    }
+                                                    Rectangle {
+                                                        width: 22
+                                                        height: 22
+                                                        radius: 5
+                                                        color: Qt.rgba(1, 1, 1, 0.1)
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        Text { anchors.centerIn: parent; text: "+"; font.bold: true; color: Island.Theme.foreground }
+                                                        TapHandler {
+                                                            onTapped: {
+                                                                if (studyCardRoot.customDays < 365) studyCardRoot.customDays += 1;
+                                                                studyCardRoot.applyCustomDuration();
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                // Hours stepper
+                                                Row {
+                                                    spacing: 6
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    Text {
+                                                        text: "Hours:"
+                                                        font.pixelSize: 11
+                                                        font.family: Island.Theme.fontFamily
+                                                        color: Island.Theme.muted
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                    }
+                                                    Rectangle {
+                                                        width: 22
+                                                        height: 22
+                                                        radius: 5
+                                                        color: Qt.rgba(1, 1, 1, 0.1)
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        Text { anchors.centerIn: parent; text: "−"; font.bold: true; color: Island.Theme.foreground }
+                                                        TapHandler {
+                                                            onTapped: {
+                                                                if (studyCardRoot.customHours > 0) studyCardRoot.customHours -= 1;
+                                                                studyCardRoot.applyCustomDuration();
+                                                            }
+                                                        }
+                                                    }
+                                                    Text {
+                                                        text: studyCardRoot.customHours.toString()
+                                                        font.pixelSize: 12
+                                                        font.bold: true
+                                                        font.family: Island.Theme.fontFamily
+                                                        color: Island.Theme.orange
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        horizontalAlignment: Text.AlignHCenter
+                                                        width: 24
+                                                    }
+                                                    Rectangle {
+                                                        width: 22
+                                                        height: 22
+                                                        radius: 5
+                                                        color: Qt.rgba(1, 1, 1, 0.1)
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        Text { anchors.centerIn: parent; text: "+"; font.bold: true; color: Island.Theme.foreground }
+                                                        TapHandler {
+                                                            onTapped: {
+                                                                if (studyCardRoot.customHours < 23) studyCardRoot.customHours += 1;
+                                                                studyCardRoot.applyCustomDuration();
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: "= " + studyCardRoot.formatStudyTimeFriendly(studyCardRoot.customDays * 86400 + studyCardRoot.customHours * 3600) + " lockdown"
+                                                    font.pixelSize: 10
+                                                    font.bold: true
+                                                    color: Island.Theme.foreground
+                                                }
+                                            }
+                                        }
+
+                                        // Profile Info Banner (Standby only)
+                                        Rectangle {
+                                            width: parent.width
+                                            height: 44
+                                            radius: 8
+                                            visible: !(Island.ShellState && Island.ShellState.studyActive)
+                                            readonly property bool isExam: studyCardRoot.isCustomSelected || (Island.ShellState && Island.ShellState.studyTargetDuration >= 14400)
+                                            color: isExam ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.12) : Qt.rgba(1, 1, 1, 0.04)
+                                            border.color: isExam ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                            border.width: 1
+
+                                            Row {
+                                                anchors.fill: parent
+                                                anchors.margins: 8
+                                                spacing: 10
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: parent.parent.isExam ? "🎓" : "⚡"
+                                                    font.pixelSize: 18
+                                                }
+
+                                                Column {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    spacing: 2
+
+                                                    Text {
+                                                        text: parent.parent.parent.isExam
+                                                            ? "Exam Profile (≥ 4h / Custom Timer Locked In)"
+                                                            : "Sprint Profile (< 4h Deep Work)"
+                                                        font.pixelSize: 11
+                                                        font.bold: true
+                                                        color: parent.parent.parent.isExam ? Island.Theme.primary : Island.Theme.foreground
+                                                    }
+
+                                                    Text {
+                                                        text: parent.parent.parent.isExam
+                                                            ? "Gemini AI allowed • Spotify permitted • Hotstar 1h/day quota • Chess.com 1h/day quota • Kitty whitelisted • Anti-jailbreak lock"
+                                                            : "Strict distraction blocking • Spotify paused • Offline PDFs & ICAI focus"
+                                                        font.pixelSize: 9
+                                                        color: Island.Theme.muted
                                                     }
                                                 }
                                             }
@@ -2887,15 +3434,16 @@ PanelWindow {
 
                                             // 80% Health Mode Tile
                                             Rectangle {
+                                                id: tile80
                                                 width: (parent.width - 8) / 2
                                                 height: parent.height
                                                 radius: 10
                                                 readonly property bool isSelected: root.batteryLimitEnabled
-                                                color: isSelected
+                                                color: tile80.isSelected
                                                     ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.2)
                                                     : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.4)
-                                                border.color: isSelected ? Island.Theme.primary : Island.Theme.glassBorderSubtle
-                                                border.width: isSelected ? 1.5 : 1
+                                                border.color: tile80.isSelected ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                                border.width: tile80.isSelected ? 1.5 : 1
 
                                                 Row {
                                                     anchors.fill: parent
@@ -2907,7 +3455,7 @@ PanelWindow {
                                                         text: "󱈑"
                                                         font.family: Island.Theme.iconFontFamily
                                                         font.pixelSize: 20
-                                                        color: isSelected ? Island.Theme.primary : Island.Theme.muted
+                                                        color: tile80.isSelected ? Island.Theme.primary : Island.Theme.muted
                                                     }
 
                                                     Column {
@@ -2918,7 +3466,7 @@ PanelWindow {
                                                             text: "80% Health Mode"
                                                             font.pixelSize: 11
                                                             font.bold: true
-                                                            color: isSelected ? Island.Theme.foreground : Island.Theme.muted
+                                                            color: tile80.isSelected ? Island.Theme.foreground : Island.Theme.muted
                                                         }
 
                                                         Text {
@@ -2936,15 +3484,16 @@ PanelWindow {
 
                                             // 100% Full Capacity Tile
                                             Rectangle {
+                                                id: tile100
                                                 width: (parent.width - 8) / 2
                                                 height: parent.height
                                                 radius: 10
                                                 readonly property bool isSelected: !root.batteryLimitEnabled
-                                                color: isSelected
+                                                color: tile100.isSelected
                                                     ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.2)
                                                     : Qt.rgba(Island.Theme.glassCardHover.r, Island.Theme.glassCardHover.g, Island.Theme.glassCardHover.b, 0.4)
-                                                border.color: isSelected ? Island.Theme.primary : Island.Theme.glassBorderSubtle
-                                                border.width: isSelected ? 1.5 : 1
+                                                border.color: tile100.isSelected ? Island.Theme.primary : Island.Theme.glassBorderSubtle
+                                                border.width: tile100.isSelected ? 1.5 : 1
 
                                                 Row {
                                                     anchors.fill: parent
@@ -2956,7 +3505,7 @@ PanelWindow {
                                                         text: "󱈏"
                                                         font.family: Island.Theme.iconFontFamily
                                                         font.pixelSize: 20
-                                                        color: isSelected ? Island.Theme.primary : Island.Theme.muted
+                                                        color: tile100.isSelected ? Island.Theme.primary : Island.Theme.muted
                                                     }
 
                                                     Column {
@@ -2967,7 +3516,7 @@ PanelWindow {
                                                             text: "100% Full Charge"
                                                             font.pixelSize: 11
                                                             font.bold: true
-                                                            color: isSelected ? Island.Theme.foreground : Island.Theme.muted
+                                                            color: tile100.isSelected ? Island.Theme.foreground : Island.Theme.muted
                                                         }
 
                                                         Text {

@@ -11,7 +11,12 @@ case "${1:-status}" in
     start)
         duration="${2:-1800}"
         subject="${3:-CA / ICAI Study}"
-        python3 "$PYTHON_SCRIPT" start --duration "$duration" --subject "$subject"
+        is_custom="${4:-false}"
+        extra=""
+        if [ "$is_custom" = "true" ] || [ "$is_custom" = "1" ] || [ "$is_custom" = "custom" ]; then
+            extra="--custom"
+        fi
+        python3 "$PYTHON_SCRIPT" start --duration "$duration" --subject "$subject" $extra
         ;;
     stop)
         python3 "$PYTHON_SCRIPT" stop
@@ -29,7 +34,12 @@ case "${1:-status}" in
     prompt|prompt-and-start)
         duration="${2:-1800}"
         subject="${3:-CA / ICAI Study}"
-        python3 "$PYTHON_SCRIPT" prompt-and-start --duration "$duration" --subject "$subject"
+        is_custom="${4:-false}"
+        extra=""
+        if [ "$is_custom" = "true" ] || [ "$is_custom" = "1" ] || [ "$is_custom" = "custom" ]; then
+            extra="--custom"
+        fi
+        python3 "$PYTHON_SCRIPT" prompt-and-start --duration "$duration" --subject "$subject" $extra
         ;;
     *)
         echo "Usage: $0 {start [duration] [subject]|stop|status|history|verify [password]}"

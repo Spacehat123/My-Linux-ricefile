@@ -306,17 +306,91 @@ Singleton {
     property int studyOvertimeSeconds: 0
     property string studySubject: "CA / ICAI Study"
     property int studyTargetDuration: 1800 // 30 minutes (1800s)
+    property bool studyIsLongSession: false
+    property int studyChessQuotaRemaining: 3600
+    property int studyHotstarQuotaRemaining: 3600
+    property bool studyChessOpen: false
+    property bool studyHotstarOpen: false
+
+    // Real-time reactive detection of entertainment quota windows
+    readonly property bool detectedChessOpen: {
+        if (typeof Hyprland === "undefined" || !Hyprland.toplevels) return root.studyChessOpen;
+        const list = Hyprland.toplevels.values;
+        for (let i = 0; i < list.length; ++i) {
+            const t = (list[i].title || "").toLowerCase();
+            if (t.indexOf("chess.com") !== -1 || t.indexOf("chess") !== -1) return true;
+        }
+        return root.studyChessOpen;
+    }
+
+    readonly property bool detectedHotstarOpen: {
+        if (typeof Hyprland === "undefined" || !Hyprland.toplevels) return root.studyHotstarOpen;
+        const list = Hyprland.toplevels.values;
+        for (let i = 0; i < list.length; ++i) {
+            const t = (list[i].title || "").toLowerCase();
+            if (t.indexOf("hotstar") !== -1 || t.indexOf("jiohotstar") !== -1 || t.indexOf("disneyplus") !== -1) return true;
+        }
+        return root.studyHotstarOpen;
+    }
+
+    property string studyPausedSite: ""
+    property int studyPausedRemaining: 0
+    property bool studyPauseActive: false
+
+    Timer {
+        id: studyPauseTimer
+        interval: 3000
+        repeat: false
+        onTriggered: {
+            root.studyPauseActive = false;
+        }
+    }
+
+    onDetectedChessOpenChanged: {
+        if (!detectedChessOpen && (studyChessQuotaRemaining > 0)) {
+            studyPausedSite = "Chess";
+            studyPausedRemaining = studyChessQuotaRemaining;
+            studyPauseActive = true;
+            studyPauseTimer.restart();
+        }
+    }
+
+    onDetectedHotstarOpenChanged: {
+        if (!detectedHotstarOpen && (studyHotstarQuotaRemaining > 0)) {
+            studyPausedSite = "JioHotstar";
+            studyPausedRemaining = studyHotstarQuotaRemaining;
+            studyPauseActive = true;
+            studyPauseTimer.restart();
+        }
+    }
+
+    function formatQuotaTime(sec) {
+        if (sec >= 3600) {
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            return h + "h " + (m < 10 ? "0" : "") + m + "m";
+        }
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
+    }
+
     property int studyHistoryRevision: 0
 
     signal studyModeToggled(bool active)
 
-    function startStudyMode(durationSeconds, subject) {
+    function startStudyMode(durationSeconds, subject, isCustom) {
         const dur = durationSeconds || root.studyTargetDuration;
         const subj = subject || root.studySubject;
-        Quickshell.execDetached(["python3", Quickshell.shellPath("scripts/study-mode.py"), "start", "--duration", dur.toString(), "--subject", subj]);
+        let args = ["python3", Quickshell.shellPath("scripts/study-mode.py"), "start", "--duration", dur.toString(), "--subject", subj];
+        if (isCustom || dur >= 14400) {
+            args.push("--custom");
+        }
+        Quickshell.execDetached(args);
         root.studyActive = true;
         root.studyOvertime = false;
         root.studyRemaining = dur;
+        root.studyIsLongSession = Boolean(isCustom || dur >= 14400);
         root.studyModeToggled(true);
     }
 
@@ -349,6 +423,11 @@ Singleton {
                         root.studyOvertimeSeconds = res.overtime_seconds || 0;
                         if (res.subject) root.studySubject = res.subject;
                         if (res.target_duration) root.studyTargetDuration = res.target_duration;
+                        if (res.is_long_session !== undefined) root.studyIsLongSession = (res.is_long_session === true);
+                        if (res.chess_quota_remaining !== undefined) root.studyChessQuotaRemaining = res.chess_quota_remaining;
+                        if (res.hotstar_quota_remaining !== undefined) root.studyHotstarQuotaRemaining = res.hotstar_quota_remaining;
+                        if (res.chess_open !== undefined) root.studyChessOpen = (res.chess_open === true);
+                        if (res.hotstar_open !== undefined) root.studyHotstarOpen = (res.hotstar_open === true);
                         if (!wasOvertime && root.studyOvertime) {
                             root.studyHistoryRevision += 1;
                         }
@@ -420,11 +499,17 @@ Singleton {
 
     // Event-driven active mode ticker: ONLY runs when at least one dynamic subsystem is active or Island is expanded
     Timer {
-        interval: root.studyActive ? 1000 : 4000
-        running: root.studyActive || root.aiDaemonLoaded || root.godsEyeActive || root.phoneSystemEnabled || root.expanded
+        interval: (root.studyActive || root.detectedChessOpen || root.detectedHotstarOpen) ? 1000 : 4000
+        running: root.studyActive || root.detectedChessOpen || root.detectedHotstarOpen || root.aiDaemonLoaded || root.godsEyeActive || root.phoneSystemEnabled || root.expanded
         repeat: true
         onTriggered: {
-            if (root.studyActive) root.checkStudyStatus();
+            if (root.detectedChessOpen) {
+                root.studyChessQuotaRemaining = Math.max(0, root.studyChessQuotaRemaining - 1);
+            }
+            if (root.detectedHotstarOpen) {
+                root.studyHotstarQuotaRemaining = Math.max(0, root.studyHotstarQuotaRemaining - 1);
+            }
+            if (root.studyActive || root.detectedChessOpen || root.detectedHotstarOpen) root.checkStudyStatus();
             if (root.aiDaemonLoaded || root.panel === "ai") root.checkAiDaemonStatus();
             if (root.godsEyeActive) root.checkGodsEyeStatus();
             if (root.phoneSystemEnabled || root.panel === "phone") root.checkPhoneStatus();

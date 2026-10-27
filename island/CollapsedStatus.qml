@@ -592,6 +592,71 @@ Item {
                 }
             }
         }
+
+
+        // Dual Live Activity Divider & Trailing Entertainment / Quota Chip
+        Rectangle {
+            width: 1
+            height: 12
+            radius: 0.5
+            color: Qt.rgba(1, 1, 1, 0.22)
+            anchors.verticalCenter: parent.verticalCenter
+            visible: (ShellState.detectedChessOpen || ShellState.detectedHotstarOpen || ShellState.studyPauseActive)
+        }
+
+        Row {
+            spacing: 5
+            anchors.verticalCenter: parent.verticalCenter
+            visible: (ShellState.detectedChessOpen || ShellState.detectedHotstarOpen || ShellState.studyPauseActive)
+
+            Text {
+                text: {
+                    if (ShellState.studyPauseActive) return "⏸";
+                    if (ShellState.detectedChessOpen) return "♟";
+                    if (ShellState.detectedHotstarOpen) return "🍿";
+                    return "";
+                }
+                font.family: Theme.iconFontFamily
+                font.pixelSize: 12
+                color: {
+                    if (ShellState.studyPauseActive) return Theme.orange;
+                    if (ShellState.detectedChessOpen) return Theme.green;
+                    return Theme.primary;
+                }
+                anchors.verticalCenter: parent.verticalCenter
+
+                SequentialAnimation on scale {
+                    loops: Animation.Infinite
+                    running: ShellState.detectedChessOpen || ShellState.detectedHotstarOpen
+                    NumberAnimation { from: 1.0; to: 1.15; duration: 600; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 1.15; to: 1.0; duration: 600; easing.type: Easing.InOutSine }
+                }
+            }
+
+            Text {
+                text: {
+                    if (ShellState.studyPauseActive) {
+                        return "Paused (" + ShellState.formatQuotaTime(ShellState.studyPausedRemaining) + " left)";
+                    }
+                    if (ShellState.detectedChessOpen) {
+                        return "Chess " + ShellState.formatQuotaTime(ShellState.studyChessQuotaRemaining);
+                    }
+                    if (ShellState.detectedHotstarOpen) {
+                        return "JioHotstar " + ShellState.formatQuotaTime(ShellState.studyHotstarQuotaRemaining);
+                    }
+                    return "";
+                }
+                font.family: Theme.fontFamily
+                font.pixelSize: 10
+                font.bold: true
+                color: {
+                    if (ShellState.studyPauseActive) return Theme.orange;
+                    if (ShellState.detectedChessOpen) return Theme.green;
+                    return Theme.primary;
+                }
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
     }
 
     // Volume takeover: exclusive state over the fill, nothing else visible.

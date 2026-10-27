@@ -124,12 +124,24 @@ Singleton {
     // only in the tick handler's finish branches.
     property string completedLabel: ""
     property bool completionHold: false
+
+    function playAlarmSound() {
+        Quickshell.execDetached([Quickshell.shellPath("scripts/play-timer-alarm.sh")]);
+    }
+
+    function stopAlarmSound() {
+        Quickshell.execDetached(["pkill", "-f", "play-timer-alarm.sh"]);
+        Quickshell.execDetached(["pkill", "-f", "alarm-clock-elapsed.oga"]);
+    }
+
     function clearCompletionHold() {
         completionHold = false;
+        stopAlarmSound();
     }
     function raiseCompletion(label) {
         completedLabel = label || "Timer";
         completionHold = true;
+        playAlarmSound();
         IslandHub.showTransient(completedLabel + " DONE", 1500);
         IslandHub.flashBorder(Theme.primary, 1200);
         IslandHub.burst();

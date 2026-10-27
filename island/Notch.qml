@@ -41,9 +41,13 @@ PanelWindow {
     readonly property bool isExpanded: ShellState.expanded && isCurrentScreen
     readonly property real targetRadius: isExpanded ? (ShellState.panelRadii[ShellState.panel] || Theme.radius) : (collapsedHeight / 2)
     readonly property real collapsedLensWidth: Math.min(380, Math.max(220, Math.round((IslandHub.lensActionSnippet.length + 16) * 7.2 + 35)))
-    readonly property real collapsedStudyWidth: Math.min(300, Math.max(190, Math.round((ShellState.studySubject.length + 8) * 6.8 + 44)))
+    readonly property bool hasEntertainmentActivity: (ShellState.detectedChessOpen || ShellState.detectedHotstarOpen || ShellState.studyPauseActive)
+    readonly property bool studyHasDualActivity: (TimerState.hasActive || TimerState.completionHold || hasEntertainmentActivity)
+    readonly property real collapsedStudyWidth: studyHasDualActivity
+        ? Math.min(430, Math.max(300, Math.round((ShellState.studySubject.length + 8) * 6.6 + 160)))
+        : Math.min(300, Math.max(190, Math.round((ShellState.studySubject.length + 8) * 6.8 + 44)))
     readonly property real collapsedTransientWidth: Math.min(340, Math.max(165, Math.round(IslandHub.transientText.length * 6.6 + 36)))
-    readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : (ShellState.studyActive ? collapsedStudyWidth : (CaptionState.isProcessing ? 250 : (IslandHub.aiGenerating ? 240 : (window.hasLiveLyrics ? window.collapsedLyricWidth : (IslandHub.voicePlaying ? 260 : (IslandHub.lensActionActive ? collapsedLensWidth : (IslandHub.transientText.length > 0 ? collapsedTransientWidth : 145)))))))) + cornerWing * 2
+    readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : (ShellState.studyActive ? collapsedStudyWidth : (hasEntertainmentActivity ? 290 : (CaptionState.isProcessing ? 250 : (IslandHub.aiGenerating ? 240 : (window.hasLiveLyrics ? window.collapsedLyricWidth : (IslandHub.voicePlaying ? 260 : (IslandHub.lensActionActive ? collapsedLensWidth : (IslandHub.transientText.length > 0 ? collapsedTransientWidth : 145))))))))) + cornerWing * 2
     readonly property real targetVisualHeight: isExpanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : collapsedHeight
     readonly property real panelContentHeight: isExpanded ? Math.max(
         (ShellState.panel === "media" ? (window.hasLiveLyrics ? 265 : 220) : (ShellState.panelHeights[ShellState.panel] || 0)),
@@ -257,6 +261,14 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         width: window.targetVisualWidth
         height: window.targetVisualHeight
+        scale: (!window.isExpanded && collapsedMouseArea.containsMouse) ? 1.025 : 1.0
+        Behavior on scale {
+            SpringAnimation {
+                spring: 4.8
+                damping: 0.35
+                epsilon: 0.005
+            }
+        }
         opacity: window.islandSurfaceOpacity
         visible: opacity > 0.001
         focus: true
@@ -286,7 +298,15 @@ PanelWindow {
             width: parent.width - window.cornerWing * 2
             height: parent.height
             radius: window.targetRadius
-            color: Theme.shellBackground
+            color: window.isExpanded ? Theme.shellBackground : "#08080c"
+            border.color: TimerState.completionHold
+                ? Theme.green
+                : ((collapsedMouseArea.containsMouse && !window.isExpanded) ? Qt.rgba(1, 1, 1, 0.28) : Qt.rgba(1, 1, 1, 0.12))
+            border.width: 1
+
+            Behavior on border.color {
+                ColorAnimation { duration: 150 }
+            }
 
             Behavior on radius {
                 SpringAnimation {
@@ -294,6 +314,17 @@ PanelWindow {
                     damping: 0.32
                     epsilon: 0.2
                 }
+            }
+
+            // Top specular inner glass highlight (Apple lens sheen)
+            Rectangle {
+                anchors.top: parent.top
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: Math.max(0, parent.width - 24)
+                height: 1
+                radius: 0.5
+                color: Qt.rgba(1, 1, 1, 0.18)
+                visible: !window.isExpanded
             }
 
             // Timer countdown: thin progress line along the pill bottom.
@@ -981,6 +1012,16 @@ PanelWindow {
             readonly property bool isOvertime: ShellState.studyOvertime || (ShellState.studyActive && ShellState.studyRemaining <= 0)
 
             function formatStudyTime(sec) {
+                if (sec >= 86400) {
+                    const d = Math.floor(sec / 86400);
+                    const h = Math.floor((sec % 86400) / 3600);
+                    return d + "d " + (h < 10 ? "0" : "") + h + "h";
+                }
+                if (sec >= 3600) {
+                    const h = Math.floor(sec / 3600);
+                    const m = Math.floor((sec % 3600) / 60);
+                    return (h < 10 ? "0" : "") + h + "h " + (m < 10 ? "0" : "") + m + "m";
+                }
                 const m = Math.floor(sec / 60);
                 const s = sec % 60;
                 return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
@@ -1027,6 +1068,74 @@ PanelWindow {
                 font.bold: true
                 color: studyPillRow.isOvertime ? Theme.primary : Theme.green
                 anchors.verticalCenter: parent.verticalCenter
+            }
+
+            // Dual Live Activity Divider & Trailing Activity Chip (Apple Dynamic Island style)
+            Rectangle {
+                width: 1
+                height: 12
+                radius: 0.5
+                color: Qt.rgba(1, 1, 1, 0.22)
+                anchors.verticalCenter: parent.verticalCenter
+                visible: (TimerState.hasActive || TimerState.completionHold || window.hasEntertainmentActivity)
+            }
+
+            Row {
+                spacing: 5
+                anchors.verticalCenter: parent.verticalCenter
+                visible: (TimerState.hasActive || TimerState.completionHold || window.hasEntertainmentActivity)
+
+                // Trailing Icon
+                Text {
+                    text: {
+                        if (ShellState.studyPauseActive) return "⏸";
+                        if (ShellState.detectedChessOpen) return "♟";
+                        if (ShellState.detectedHotstarOpen) return "🍿";
+                        return TimerState.completionHold ? "󰄬" : "󱎫";
+                    }
+                    font.family: Theme.iconFontFamily
+                    font.pixelSize: 12
+                    color: {
+                        if (ShellState.studyPauseActive) return Theme.orange;
+                        if (ShellState.detectedChessOpen) return Theme.green;
+                        if (ShellState.detectedHotstarOpen) return Theme.primary;
+                        return TimerState.completionHold ? Theme.green : Theme.primary;
+                    }
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    SequentialAnimation on scale {
+                        loops: Animation.Infinite
+                        running: TimerState.completionHold || ShellState.detectedChessOpen || ShellState.detectedHotstarOpen
+                        NumberAnimation { from: 1.0; to: 1.15; duration: 600; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 1.15; to: 1.0; duration: 600; easing.type: Easing.InOutSine }
+                    }
+                }
+
+                // Trailing Label & Countdown
+                Text {
+                    text: {
+                        if (ShellState.studyPauseActive) {
+                            return "Paused (" + ShellState.formatQuotaTime(ShellState.studyPausedRemaining) + " left)";
+                        }
+                        if (ShellState.detectedChessOpen) {
+                            return "Chess " + ShellState.formatQuotaTime(ShellState.studyChessQuotaRemaining);
+                        }
+                        if (ShellState.detectedHotstarOpen) {
+                            return "JioHotstar " + ShellState.formatQuotaTime(ShellState.studyHotstarQuotaRemaining);
+                        }
+                        return TimerState.compactText;
+                    }
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 10
+                    font.bold: true
+                    color: {
+                        if (ShellState.studyPauseActive) return Theme.orange;
+                        if (ShellState.detectedChessOpen) return Theme.green;
+                        if (ShellState.detectedHotstarOpen) return Theme.primary;
+                        return TimerState.completionHold ? Theme.green : Theme.primary;
+                    }
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
         }
 
@@ -1368,6 +1477,7 @@ PanelWindow {
                 width: parent.width
                 visible: window.displayedPanel === "caption"
             }
+
 
             Behavior on opacity {
                 NumberAnimation {

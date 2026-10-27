@@ -26,7 +26,12 @@ STATE_FILE = STUDY_DIR / "state.json"
 AUTH_FILE = STUDY_DIR / "auth.hash"
 HISTORY_FILE = STUDY_DIR / "history.json"
 PID_FILE = STUDY_DIR / "daemon.pid"
+CHESS_QUOTA_FILE = STUDY_DIR / "chess_quota.json"
+HOTSTAR_QUOTA_FILE = STUDY_DIR / "hotstar_quota.json"
 LOFI_DIR = Path.home() / "Music/study"
+
+MAX_DAILY_CHESS_SECONDS = 3600  # 1 hour per day (date-based)
+MAX_DAILY_HOTSTAR_SECONDS = 3600  # 1 hour per day (date-based)
 
 STUDY_DIR.mkdir(parents=True, exist_ok=True)
 LOFI_DIR.mkdir(parents=True, exist_ok=True)
@@ -108,12 +113,21 @@ ALLOWED_CLASSES = {
     "kwrite",
     "org.kde.kwrite",
 
-    # Terminals & System
+    # Terminals & System (Guaranteed Whitelist - Never Closed)
     "foot",
     "kitty",
+    "kitty-dropterm",
+    "xterm-kitty",
     "alacritty",
     "quickshell",
     "rofi"
+}
+
+# Whitelist allowed classes only during long/custom exam sessions (>= 4h or custom)
+LONG_SESSION_ALLOWED_CLASSES = {
+    "spotify",
+    "spotify-launcher",
+    "Spotify"
 }
 
 # Whitelist allowed domains / keywords in Brave browser window titles
@@ -128,18 +142,87 @@ ALLOWED_BRAVE_KEYWORDS = [
     # File actions & download dialogs
     "save", "save file", "save as", "open file", "open", "upload", "download", "downloads", "print",
 
-    # Allowed study tools
+    # Allowed study & AI assistance tools
+    "gemini", "gemini.google.com", "google.com/gemini", "aistudio.google.com",
+    "hotstar", "hotstar.com", "www.hotstar.com", "jiohotstar", "jiohotstar.com", "disneyplus",
     "notebook", "gemini notebook", "notebooklm", "whatsapp",
     "new tab", "untitled", "settings", "extensions", "sign in", "login",
     "accounts.google", "drive.google", "docs.google"
 ]
 
 # Explicit distraction titles that trigger immediate tab closure
-DISTRACTION_KEYWORDS = [
+BASE_DISTRACTION_KEYWORDS = [
     "youtube", "reddit", "twitter", "x.com", "instagram", "twitch",
     "tiktok", "netflix", "prime video", "anime", "manga", "facebook",
-    "discord", "chess", "kick.com", "hulu", "steam"
+    "discord", "kick.com", "hulu", "steam"
 ]
+
+def format_seconds_friendly(sec: int) -> str:
+    if sec >= 86400:
+        days = sec // 86400
+        hrs = (sec % 86400) // 3600
+        return f"{days}d {hrs}h" if hrs > 0 else f"{days}d"
+    elif sec >= 3600:
+        hrs = sec // 3600
+        mins = (sec % 3600) // 60
+        return f"{hrs}h {mins}m" if mins > 0 else f"{hrs}h"
+    elif sec >= 60:
+        return f"{sec // 60}m"
+    return f"{sec}s"
+
+def get_chess_quota() -> dict:
+    today = time.strftime("%Y-%m-%d")
+    if not CHESS_QUOTA_FILE.exists():
+        return {"date": today, "seconds_used": 0}
+    try:
+        with open(CHESS_QUOTA_FILE, "r") as f:
+            data = json.load(f)
+        if data.get("date") != today:
+            return {"date": today, "seconds_used": 0}
+        return data
+    except Exception:
+        return {"date": today, "seconds_used": 0}
+
+def update_chess_quota(delta_seconds: float) -> int:
+    today = time.strftime("%Y-%m-%d")
+    data = get_chess_quota()
+    data["date"] = today
+    data["seconds_used"] = int(data.get("seconds_used", 0) + delta_seconds)
+    tmp = CHESS_QUOTA_FILE.with_suffix(".tmp")
+    try:
+        with open(tmp, "w") as f:
+            json.dump(data, f)
+        os.replace(tmp, CHESS_QUOTA_FILE)
+    except Exception:
+        pass
+    return data["seconds_used"]
+
+def get_hotstar_quota() -> dict:
+    today = time.strftime("%Y-%m-%d")
+    if not HOTSTAR_QUOTA_FILE.exists():
+        return {"date": today, "seconds_used": 0}
+    try:
+        with open(HOTSTAR_QUOTA_FILE, "r") as f:
+            data = json.load(f)
+        if data.get("date") != today:
+            return {"date": today, "seconds_used": 0}
+        return data
+    except Exception:
+        return {"date": today, "seconds_used": 0}
+
+def update_hotstar_quota(delta_seconds: float) -> int:
+    today = time.strftime("%Y-%m-%d")
+    data = get_hotstar_quota()
+    data["date"] = today
+    data["seconds_used"] = int(data.get("seconds_used", 0) + delta_seconds)
+    tmp = HOTSTAR_QUOTA_FILE.with_suffix(".tmp")
+    try:
+        with open(tmp, "w") as f:
+            json.dump(data, f)
+        os.replace(tmp, HOTSTAR_QUOTA_FILE)
+    except Exception:
+        pass
+    return data["seconds_used"]
 
 def is_file_manager_or_dialog(c_class: str, c_initial: str, c_title: str) -> bool:
     cls = (c_class or "").lower()
@@ -168,12 +251,16 @@ def is_file_manager_or_dialog(c_class: str, c_initial: str, c_title: str) -> boo
 
     return False
 
-def is_allowed_class(c_class: str, c_initial: str, c_title: str) -> bool:
+def is_allowed_class(c_class: str, c_initial: str, c_title: str, is_long: bool = False) -> bool:
     cls = (c_class or "").lower()
     init_cls = (c_initial or "").lower()
 
     if cls in ALLOWED_CLASSES or init_cls in ALLOWED_CLASSES:
         return True
+
+    if is_long:
+        if any(cls == sc.lower() or init_cls == sc.lower() for sc in LONG_SESSION_ALLOWED_CLASSES):
+            return True
 
     if is_file_manager_or_dialog(c_class, c_initial, c_title):
         return True
@@ -299,14 +386,21 @@ def hypr_close_tab(addr: str):
     subprocess.run(["hyprctl", "repl", lua_send], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=1)
 
 def enforce_distractions():
-    # 1. Ensure Spotify playback is paused
-    try:
-        subprocess.run(["playerctl", "-p", "spotify", "pause"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=1)
-    except Exception:
-        pass
+    state = get_state()
+    is_long = (state.get("target_duration", 1800) >= 14400) or state.get("is_custom", False)
+
+    # 1. Manage Spotify playback: Only auto-pause for short/strict study sessions (< 4 hours)
+    if not is_long:
+        try:
+            subprocess.run(["playerctl", "-p", "spotify", "pause"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=1)
+        except Exception:
+            pass
 
     # 2. Check running windows
     clients = get_hyprland_clients()
+    chess_is_open = False
+    hotstar_is_open = False
+
     for client in clients:
         c_class = (client.get("class") or "").lower()
         c_initial_class = (client.get("initialClass") or "").lower()
@@ -317,8 +411,8 @@ def enforce_distractions():
         if not c_addr:
             continue
 
-        # Check application whitelist (all whitelisted apps, all file managers, portals, and file dialogs)
-        if not is_allowed_class(c_class, c_initial_class, c_title):
+        # Check application whitelist (all whitelisted apps, file managers, portals, and Spotify in long sessions)
+        if not is_allowed_class(c_class, c_initial_class, c_title, is_long=is_long):
             hypr_close_window(c_addr, c_pid)
             continue
 
@@ -328,8 +422,45 @@ def enforce_distractions():
             if is_file_manager_or_dialog(c_class, c_initial_class, c_title):
                 continue
 
+            # Check Chess: In long sessions, quota is 1 hour/day; in short sessions, it's a strict distraction
+            is_chess = "chess.com" in c_title or "chess" in c_title
+            if is_chess:
+                if is_long:
+                    quota = get_chess_quota()
+                    used = quota.get("seconds_used", 0)
+                    if used >= MAX_DAILY_CHESS_SECONDS:
+                        hypr_close_tab(c_addr)
+                        notify_island("⏳ Chess.com daily 1hr quota reached! Resets tomorrow.", 4000)
+                        continue
+                    else:
+                        chess_is_open = True
+                        continue
+                else:
+                    hypr_close_tab(c_addr)
+                    notify_island("🚫 Study Mode: Blocked Chess (Only allowed in >4h or custom sessions)", 3000)
+                    continue
+
+            # Check Hotstar / JioHotstar: In long sessions, quota is 1 hour per day (date-based); in short sessions, it's blocked
+            is_hotstar = "hotstar" in c_title or "jiohotstar" in c_title or "hotstar.com" in c_title or "disneyplus" in c_title
+            if is_hotstar:
+                if is_long:
+                    h_quota = get_hotstar_quota()
+                    h_used = h_quota.get("seconds_used", 0)
+                    if h_used >= MAX_DAILY_HOTSTAR_SECONDS:
+                        hypr_close_tab(c_addr)
+                        notify_island("⏳ JioHotstar daily 1hr quota reached! Resets tomorrow.", 4000)
+                        continue
+                    else:
+                        hotstar_is_open = True
+                        continue
+                else:
+                    hypr_close_tab(c_addr)
+                    notify_island("🚫 Study Mode: Blocked JioHotstar (Only allowed in >4h or custom sessions)", 3000)
+                    continue
+
+            # Standard distractions check
             blocked = False
-            for dist in DISTRACTION_KEYWORDS:
+            for dist in BASE_DISTRACTION_KEYWORDS:
                 if dist in c_title:
                     hypr_close_tab(c_addr)
                     notify_island(f"🚫 Study Mode: Blocked {dist.capitalize()}", 3000)
@@ -339,7 +470,7 @@ def enforce_distractions():
             if not blocked and c_title:
                 clean_title = re.sub(r'[\s\-—]+brave.*$', '', c_title, flags=re.IGNORECASE).strip().lower()
                 if clean_title:
-                    # Allow all PDF documents, Board of Studies (BOS) files, and whitelisted domains
+                    # Allow all PDF documents, Board of Studies (BOS) files, Gemini, Hotstar, and whitelisted domains
                     is_allowed = (
                         ".pdf" in clean_title
                         or clean_title.endswith(".pdf")
@@ -347,7 +478,9 @@ def enforce_distractions():
                     )
                     if not is_allowed:
                         hypr_close_tab(c_addr)
-                        notify_island("🚫 Study Mode: Whitelist Only (ICAI / Notebook / WhatsApp / PDFs)", 3000)
+                        notify_island("🚫 Study Mode: Whitelist Only (ICAI / Gemini / Hotstar / PDFs)", 3000)
+
+    return chess_is_open, hotstar_is_open
 
 def is_pid_alive(pid: int) -> bool:
     if pid <= 0:
@@ -442,11 +575,18 @@ def run_daemon():
             now = time.time()
             expiry = state.get("expiry_time", 0)
             target = state.get("target_duration", 1800)
+            is_long = (target >= 14400) or state.get("is_custom", False)
 
             # Hyprland distraction enforcement every 300ms
             if now - last_hypr_check >= 0.3:
+                delta = now - last_hypr_check if last_hypr_check > 0 else 0.3
                 try:
-                    enforce_distractions()
+                    chess_open, hotstar_open = enforce_distractions()
+                    if is_long:
+                        if chess_open:
+                            update_chess_quota(delta)
+                        if hotstar_open:
+                            update_hotstar_quota(delta)
                 except Exception:
                     pass
                 last_hypr_check = now
@@ -459,7 +599,7 @@ def run_daemon():
                     state["credited"] = True
                     state["overtime"] = True
                     save_state(state)
-                    target_str = f"{target // 60}m" if target >= 60 else f"{target}s"
+                    target_str = format_seconds_friendly(target)
                     notify_island(f"🎉 Session Complete ({target_str})! Overtime Flow Active", 6000)
 
                 # Overtime milestone crediting: every 1800s (30m) of overtime
@@ -485,19 +625,23 @@ def run_daemon():
         except Exception:
             pass
 
-def cmd_start(duration: int, subject: str):
+def cmd_start(duration: int, subject: str, is_custom: bool = False):
     state = get_state()
     now = time.time()
 
     # If already active and within lock, prevent restarting
     if state.get("active") and now < state.get("expiry_time", 0):
         remaining = int(state.get("expiry_time") - now)
+        rem_str = format_seconds_friendly(remaining)
         return {
             "success": False,
             "locked": True,
             "remaining": remaining,
-            "message": f"Lockdown already active ({remaining}s remaining)"
+            "formatted_remaining": rem_str,
+            "message": f"Lockdown already active ({rem_str} remaining)"
         }
+
+    is_custom_mode = bool(is_custom or (duration >= 14400))
 
     new_state = {
         "active": True,
@@ -509,7 +653,8 @@ def cmd_start(duration: int, subject: str):
         "overtime_seconds": 0,
         "credited": False,
         "bonus_sessions_credited": 0,
-        "lofi_enabled": True
+        "lofi_enabled": True,
+        "is_custom": is_custom_mode
     }
     save_state(new_state)
 
@@ -533,12 +678,15 @@ def cmd_start(duration: int, subject: str):
         close_fds=True
     )
 
-    dur_str = f"{duration // 60}m" if duration >= 60 else f"{duration}s"
+    dur_str = format_seconds_friendly(duration)
     notify_island(f"󰑴 Study Mode Started ({dur_str} lock)", 4000)
     return {
         "success": True,
         "expiry": new_state["expiry_time"],
         "duration": duration,
+        "formatted_duration": dur_str,
+        "is_custom": is_custom_mode,
+        "is_long_session": is_custom_mode,
         "subject": new_state["subject"]
     }
 
@@ -555,11 +703,13 @@ def cmd_stop():
     # Hard lock check: if not in overtime and timer hasn't expired, REFUSE to stop!
     if not is_overtime:
         remaining = int(expiry - now)
+        rem_str = format_seconds_friendly(remaining)
         return {
             "success": False,
             "locked": True,
             "remaining": remaining,
-            "message": f"Hard Lock Active: Cannot exit early! ({remaining}s remaining)"
+            "formatted_remaining": rem_str,
+            "message": f"Hard Lock Active: Cannot exit early! ({rem_str} remaining)"
         }
 
     # In overtime or expired: Exit cleanly!
@@ -591,6 +741,7 @@ def cmd_status() -> dict:
     active = state.get("active", False)
     expiry = state.get("expiry_time", 0)
     target = state.get("target_duration", 1800)
+    is_long = (target >= 14400) or state.get("is_custom", False)
 
     if active:
         if now < expiry:
@@ -612,14 +763,42 @@ def cmd_status() -> dict:
         overtime = False
         overtime_seconds = 0
 
+    quota = get_chess_quota()
+    chess_used = quota.get("seconds_used", 0)
+    chess_rem = max(0, MAX_DAILY_CHESS_SECONDS - chess_used)
+
+    h_quota = get_hotstar_quota()
+    h_used = h_quota.get("seconds_used", 0)
+    h_rem = max(0, MAX_DAILY_HOTSTAR_SECONDS - h_used)
+
+    clients = get_hyprland_clients()
+    chess_open = False
+    hotstar_open = False
+    for client in clients:
+        t = (client.get("title") or "").lower()
+        if "chess.com" in t or "chess" in t:
+            chess_open = True
+        if "hotstar" in t or "jiohotstar" in t or "disneyplus" in t:
+            hotstar_open = True
+
     return {
         "active": active,
         "remaining_seconds": remaining,
+        "formatted_remaining": format_seconds_friendly(remaining),
         "target_duration": target,
+        "formatted_duration": format_seconds_friendly(target),
         "expiry_time": expiry,
         "subject": state.get("subject", "CA / ICAI Study"),
         "overtime": overtime,
         "overtime_seconds": overtime_seconds,
+        "is_custom": state.get("is_custom", False),
+        "is_long_session": is_long,
+        "chess_quota_used": chess_used,
+        "chess_quota_remaining": chess_rem,
+        "chess_open": chess_open,
+        "hotstar_quota_used": h_used,
+        "hotstar_quota_remaining": h_rem,
+        "hotstar_open": hotstar_open,
         "today_sessions": today_sessions,
         "total_sessions": total_sessions
     }
@@ -659,7 +838,7 @@ def prompt_password_gui() -> str | None:
 
     return None
 
-def cmd_prompt_and_start(duration: int, subject: str):
+def cmd_prompt_and_start(duration: int, subject: str, is_custom: bool = False):
     pwd = prompt_password_gui()
     if pwd is None:
         notify_island("Study Mode activation cancelled", 3000)
@@ -678,7 +857,7 @@ def cmd_prompt_and_start(duration: int, subject: str):
         return {"success": False, "valid": False, "message": "Incorrect password"}
 
     # Password verified! Start study mode
-    return cmd_start(duration, subject)
+    return cmd_start(duration, subject, is_custom=is_custom)
 
 def main():
     parser = argparse.ArgumentParser(description="Cool-Shell Study Mode")
@@ -687,6 +866,7 @@ def main():
     parser.add_argument("--duration", type=int, default=1800, help="Duration in seconds (default: 1800s / 30m)")
     parser.add_argument("--subject", type=str, default="CA / ICAI Study", help="Study subject name")
     parser.add_argument("--password", type=str, default="", help="Password to verify")
+    parser.add_argument("--custom", action="store_true", help="Enable long/custom session profile")
 
     args = parser.parse_args()
 
@@ -695,10 +875,10 @@ def main():
         is_valid = verify_password(pwd)
         print(json.dumps({"valid": is_valid}))
     elif args.action in ("prompt-and-start", "prompt"):
-        res = cmd_prompt_and_start(args.duration, args.subject)
+        res = cmd_prompt_and_start(args.duration, args.subject, is_custom=args.custom)
         print(json.dumps(res))
     elif args.action == "start":
-        res = cmd_start(args.duration, args.subject)
+        res = cmd_start(args.duration, args.subject, is_custom=args.custom)
         print(json.dumps(res))
     elif args.action == "stop":
         res = cmd_stop()

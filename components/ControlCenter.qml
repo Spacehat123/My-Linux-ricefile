@@ -61,6 +61,16 @@ Item {
     property string studyPasswordError: ""
 
     function formatStudyDuration(sec) {
+        if (sec >= 86400) {
+            const d = Math.floor(sec / 86400);
+            const h = Math.floor((sec % 86400) / 3600);
+            return d + "d " + (h < 10 ? "0" : "") + h + "h";
+        }
+        if (sec >= 3600) {
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            return (h < 10 ? "0" : "") + h + "h " + (m < 10 ? "0" : "") + m + "m";
+        }
         const m = Math.floor(sec / 60);
         const s = sec % 60;
         return (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s;
@@ -89,6 +99,52 @@ Item {
 
     function togglePhoneMirror() {
         if (Island.ShellState) Island.ShellState.togglePhoneMirror();
+    }
+
+    // =========================================================================
+    // StarkCAD Studio Server Lifecycle State & Management
+    // =========================================================================
+    property bool starkcadActive: false
+
+    Process {
+        id: starkcadCheckProc
+        command: ["systemctl", "--user", "is-active", "starkcad-studio.service"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.starkcadActive = (text || "").trim() === "active";
+            }
+        }
+    }
+
+    Process {
+        id: starkcadActionProc
+        onExited: (code) => {
+            starkcadCheckProc.running = true;
+        }
+    }
+
+    Timer {
+        id: starkcadPollTimer
+        interval: 2500
+        running: true
+        repeat: true
+        onTriggered: {
+            if (!starkcadCheckProc.running && !starkcadActionProc.running) {
+                starkcadCheckProc.running = true;
+            }
+        }
+    }
+
+    function toggleStarkcad() {
+        if (starkcadActive) {
+            starkcadActive = false;
+            starkcadActionProc.command = ["sh", "-c", "systemctl --user stop starkcad-studio.service; pkill -9 -f 'starkcad.studio_server' || true"];
+            starkcadActionProc.running = true;
+        } else {
+            starkcadActive = true;
+            starkcadActionProc.command = ["systemctl", "--user", "start", "starkcad-studio.service"];
+            starkcadActionProc.running = true;
+        }
     }
 
     // Action Signals (Unidirectional Event Flow to shellRoot)
@@ -425,6 +481,122 @@ Item {
                         font.pixelSize: 9
                         font.family: Island.Theme.fontFamily
                         color: nlTile.nightLightActive ? Island.Theme.orange : Island.Theme.muted
+                    }
+                }
+            }
+        }
+
+        // =====================================================================
+        // SECTION 2A: STARKCAD STUDIO TOGGLE CARD
+        // =====================================================================
+        Rectangle {
+            id: starkcadCard
+            width: parent.width
+            height: 64
+            radius: 16
+            color: root.starkcadActive
+                ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.16)
+                : (starkTileHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
+            border.color: root.starkcadActive
+                ? Island.Theme.primary
+                : (starkTileHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+            border.width: root.starkcadActive ? 1.5 : 1
+
+            Behavior on color { ColorAnimation { duration: 120 } }
+            Behavior on border.color { ColorAnimation { duration: 120 } }
+
+            HoverHandler { id: starkTileHover }
+
+            Row {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 10
+
+                // Main Clickable Toggle Zone (Badge + Text)
+                Item {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width - (root.starkcadActive ? 84 : 0)
+                    height: parent.height
+
+                    scale: starkMainTap.pressed ? 0.98 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 80 } }
+
+                    HoverHandler { id: starkMainHover }
+                    TapHandler {
+                        id: starkMainTap
+                        onTapped: root.toggleStarkcad()
+                    }
+
+                    Row {
+                        anchors.fill: parent
+                        spacing: 10
+
+                        Rectangle {
+                            width: 36
+                            height: 36
+                            radius: 10
+                            color: root.starkcadActive
+                                ? Island.Theme.primary
+                                : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15)
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰆧"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 18
+                                color: root.starkcadActive ? "#0a0a0f" : Island.Theme.primary
+                            }
+                        }
+
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: parent.width - 46
+                            spacing: 2
+
+                            Text {
+                                text: "StarkCAD"
+                                font.pixelSize: 12
+                                font.bold: true
+                                font.family: Island.Theme.fontFamily
+                                color: Island.Theme.foreground
+                            }
+
+                            Text {
+                                text: root.starkcadActive ? "Studio Online • Port 8420" : "Server Offline • Tap to Start"
+                                font.pixelSize: 10
+                                font.family: Island.Theme.fontFamily
+                                color: root.starkcadActive ? Island.Theme.primary : Island.Theme.muted
+                            }
+                        }
+                    }
+                }
+
+                // Launch HUD button when active
+                Rectangle {
+                    visible: root.starkcadActive
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 74
+                    height: 32
+                    radius: 8
+                    color: hudBtnHover.hovered ? Island.Theme.primary : Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.2)
+                    border.color: Island.Theme.primary
+                    border.width: 1
+
+                    HoverHandler { id: hudBtnHover }
+                    TapHandler {
+                        onTapped: {
+                            Quickshell.execDetached(["xdg-open", "http://127.0.0.1:8420"]);
+                        }
+                    }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "OPEN HUD"
+                        font.pixelSize: 9
+                        font.bold: true
+                        font.family: Island.Theme.fontFamily
+                        color: hudBtnHover.hovered ? "#0a0a0f" : Island.Theme.primary
                     }
                 }
             }
