@@ -158,7 +158,7 @@ FocusScope {
         });
     }
 
-    implicitWidth: 392
+    implicitWidth: 480
     implicitHeight: content.implicitHeight
 
     Keys.onPressed: (event) => {
@@ -331,9 +331,9 @@ FocusScope {
             id: taskList
 
             width: parent.width
-            height: count > 0 ? Math.min(6, count) * 38 : 42
+            height: count > 0 ? Math.min(3, count) * 36 : 42
             clip: true
-            interactive: count > 6
+            interactive: count > 3
             boundsBehavior: Flickable.StopAtBounds
             currentIndex: count > 0 ? 0 : -1
             model: root.visibleTodos
@@ -368,7 +368,7 @@ FocusScope {
                 }
 
                 width: ListView.view.width
-                height: 38
+                height: 34
                 activeFocusOnTab: true
 
                 Keys.onReturnPressed: root.showDetails(task.id)

@@ -1433,6 +1433,16 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
 
+        IslandSpacer {
+            required property var modelData
+
+            screen: modelData
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
         Notch {
             required property var modelData
 

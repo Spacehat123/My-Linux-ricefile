@@ -354,7 +354,7 @@ Singleton {
     }
 
     // -- real audio levels for the waveform (level-meter.py daemon) --
-    property bool visualizerEnabled: false
+    property bool visualizerEnabled: true
     readonly property string levelHelper: Quickshell.shellPath("island/scripts/level-meter.py").toString().replace(/^file:\/\//, "")
     readonly property string levelFile: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/cool-shell-levels"
     property var levels: [0, 0, 0, 0]
@@ -530,6 +530,13 @@ Singleton {
             if (root.lyricsEnabled && root.mediaPlaying && !lyricsProc.running)
                 root.startLyrics();
         }
+    }
+
+    Component.onCompleted: {
+        if (root.mediaPlaying && root.visualizerEnabled)
+            root.startLevels();
+        if (root.mediaPlaying && root.lyricsEnabled)
+            root.startLyrics();
     }
 
     Component.onDestruction: {

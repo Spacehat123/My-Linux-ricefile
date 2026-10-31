@@ -47,7 +47,7 @@ FocusScope {
             item.forceActiveFocus(Qt.TabFocusReason);
     }
 
-    implicitWidth: 352
+    implicitWidth: 400
     implicitHeight: content.implicitHeight
 
     Timer {

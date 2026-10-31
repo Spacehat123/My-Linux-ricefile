@@ -103,8 +103,12 @@ def stream_levels(proc, out_path, current_sink):
             bars = []
             for s in range(4):
                 seg = vals[s * q:(s + 1) * q]
-                rms = math.sqrt(sum(v * v for v in seg) / max(1, len(seg)))
-                bars.append(min(1.0, rms * 2.5))
+                s_sum = sum(v * v for v in seg)
+                if not math.isfinite(s_sum) or s_sum < 0:
+                    rms = 0.0
+                else:
+                    rms = math.sqrt(s_sum / max(1, len(seg)))
+                bars.append(max(0.0, min(1.0, rms * 3.0)))
             now = time.monotonic()
             for i in range(4):
                 if bars[i] > smooth[i]:
@@ -166,7 +170,7 @@ def capture_session(out_path, tag):
         return False
     try:
         proc = subprocess.Popen(
-            ["pw-record", "--target=0", "--channels=2",
+            ["pw-record", "--raw", "--target=0", "--channels=2",
              "--rate=%d" % RATE, "--format=f32",
              "-P", "{media.name=%s}" % tag, "-"],
             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,

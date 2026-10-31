@@ -208,7 +208,7 @@ FocusScope {
         }
     }
 
-    implicitWidth: 382
+    implicitWidth: 500
     implicitHeight: content.implicitHeight
 
     ScriptModel {
@@ -247,7 +247,7 @@ FocusScope {
         id: content
 
         width: parent.width
-        spacing: 8
+        spacing: 6
 
         PanelNav {
             title: "Launcher"
@@ -256,7 +256,7 @@ FocusScope {
 
         Rectangle {
             width: parent.width
-            height: 42
+            height: 36
             color: "transparent"
 
             ShellText {
@@ -336,13 +336,16 @@ FocusScope {
 
             Behavior on height {
                 NumberAnimation {
-                    duration: Theme.animationFast
+                    duration: 220
+                    easing.type: Easing.OutBack
+                    easing.overshoot: 1.15
                 }
             }
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: Theme.animationFast
+                    duration: 180
+                    easing.type: Easing.InOutCubic
                 }
             }
         }
@@ -351,8 +354,8 @@ FocusScope {
             id: results
 
             width: parent.width
-            height: Math.min(5, count) * 48
-            spacing: 4
+            height: Math.min(4, count) * 38
+            spacing: 2
             clip: true
             interactive: contentHeight > height
 
@@ -366,7 +369,7 @@ FocusScope {
                 readonly property string fileDir: isFileItem ? String(modelData) : ""
 
                 width: results.width
-                height: 44
+                height: 36
                 radius: Theme.radiusSmall
                 color: index === root.selectedIndex && !root.hasAnswer ? Theme.primaryContainer : "transparent"
 

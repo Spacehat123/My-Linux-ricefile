@@ -92,7 +92,7 @@ FocusScope {
         ShellState.close();
     }
 
-    implicitWidth: 337
+    implicitWidth: 480
     implicitHeight: content.implicitHeight
 
     Timer {
@@ -110,7 +110,7 @@ FocusScope {
 
         Rectangle {
             width: parent.width
-            height: 42
+            height: 34
             color: "transparent"
 
             ShellText {
@@ -162,7 +162,7 @@ FocusScope {
             id: clipboardList
 
             width: parent.width
-            height: Math.min(5, count) * 46
+            height: Math.min(3, count) * 40
             spacing: 2
             clip: true
 
@@ -187,7 +187,7 @@ FocusScope {
                 required property int index
 
                 width: clipboardList.width
-                height: 44
+                height: 38
                 radius: Theme.radiusSmall
                 color: index === root.selectedIndex ? Theme.primaryContainer : "transparent"
 
@@ -232,7 +232,7 @@ FocusScope {
 
         Rectangle {
             width: parent.width
-            height: root.previewVisible ? 156 : 0
+            height: root.previewVisible ? 90 : 0
             radius: Theme.radiusSmall
             color: Theme.bg0
             border.width: 1
@@ -291,10 +291,10 @@ FocusScope {
 
             Behavior on height {
                 NumberAnimation {
-                    duration: Theme.animationFast
-                    easing.type: Easing.OutCubic
+                    duration: 220
+                    easing.type: Easing.OutBack
+                    easing.overshoot: 1.15
                 }
-
             }
 
         }

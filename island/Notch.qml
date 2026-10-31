@@ -10,18 +10,18 @@ import "panels"
 PanelWindow {
     id: window
 
-    readonly property int contentPadding: 14
+    readonly property int contentPadding: 10
     readonly property bool hasLiveLyrics: IslandHub.mediaPlaying && IslandHub.liveLyric.length > 0 && !ShellState.gameMode
     readonly property real collapsedLyricWidth: Math.min(380, Math.max(220, Math.round(IslandHub.liveLyric.length * 7.2 + 65)))
-    readonly property int collapsedHeight: (!isExpanded && window.hasLiveLyrics) ? 30 : 24
-    readonly property int cornerWing: 12
-    readonly property int topGap: 10
-    readonly property int canvasWidth: 600
-    readonly property int canvasHeight: 600
-    readonly property int requestedTopPadding: ShellState.panel === "launcher" ? 10 : (ShellState.panel === "power" ? 8 : contentPadding)
-    readonly property int requestedBottomPadding: ShellState.panel === "launcher" ? 4 : (ShellState.panel === "power" ? 8 : contentPadding)
-    readonly property int displayedTopPadding: displayedPanel === "launcher" ? 10 : (displayedPanel === "power" ? 8 : contentPadding)
-    readonly property int displayedBottomPadding: displayedPanel === "launcher" ? 4 : (displayedPanel === "power" ? 8 : contentPadding)
+    readonly property int collapsedHeight: (!isExpanded && window.hasLiveLyrics) ? 38 : 36
+    readonly property int cornerWing: 13
+    readonly property int topGap: 0
+    readonly property int canvasWidth: 820
+    readonly property int canvasHeight: 650
+    readonly property int requestedTopPadding: ShellState.panel === "launcher" ? 8 : (ShellState.panel === "power" ? 6 : contentPadding)
+    readonly property int requestedBottomPadding: ShellState.panel === "launcher" ? 8 : (ShellState.panel === "power" ? 6 : contentPadding)
+    readonly property int displayedTopPadding: displayedPanel === "launcher" ? 8 : (displayedPanel === "power" ? 6 : contentPadding)
+    readonly property int displayedBottomPadding: displayedPanel === "launcher" ? 8 : (displayedPanel === "power" ? 6 : contentPadding)
     readonly property HyprlandMonitor activeMonitor: {
         if (typeof Hyprland !== "undefined") {
             if (Hyprland.focusedWorkspace && Hyprland.focusedWorkspace.monitor)
@@ -47,11 +47,12 @@ PanelWindow {
         ? Math.min(430, Math.max(300, Math.round((ShellState.studySubject.length + 8) * 6.6 + 160)))
         : Math.min(300, Math.max(190, Math.round((ShellState.studySubject.length + 8) * 6.8 + 44)))
     readonly property real collapsedTransientWidth: Math.min(340, Math.max(165, Math.round(IslandHub.transientText.length * 6.6 + 36)))
-    readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : (ShellState.studyActive ? collapsedStudyWidth : (hasEntertainmentActivity ? 290 : (CaptionState.isProcessing ? 250 : (IslandHub.aiGenerating ? 240 : (window.hasLiveLyrics ? window.collapsedLyricWidth : (IslandHub.voicePlaying ? 260 : (IslandHub.lensActionActive ? collapsedLensWidth : (IslandHub.transientText.length > 0 ? collapsedTransientWidth : 145))))))))) + cornerWing * 2
+    readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : (ShellState.studyActive ? collapsedStudyWidth : (hasEntertainmentActivity ? 290 : (CaptionState.isProcessing ? 250 : (IslandHub.aiGenerating ? 240 : (window.hasLiveLyrics ? window.collapsedLyricWidth : (IslandHub.voicePlaying ? 260 : (IslandHub.lensActionActive ? collapsedLensWidth : (IslandHub.transientText.length > 0 ? collapsedTransientWidth : (mediaActive ? 210 : 154)))))))))) + cornerWing * 2
     readonly property real targetVisualHeight: isExpanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : collapsedHeight
-    readonly property real panelContentHeight: isExpanded ? Math.max(
-        (ShellState.panel === "media" ? (window.hasLiveLyrics ? 265 : 220) : (ShellState.panelHeights[ShellState.panel] || 0)),
-        requestedPanel ? requestedPanel.implicitHeight : 0
+    readonly property real panelContentHeight: isExpanded ? (
+        ShellState.panel === "media"
+            ? (window.hasLiveLyrics ? 185 : 150)
+            : (ShellState.panelHeights[ShellState.panel] || (requestedPanel ? Math.min(380, requestedPanel.implicitHeight) : 200))
     ) : 0
     property bool clockRevealed: true
     property bool recBlinkOn: false
@@ -196,6 +197,7 @@ PanelWindow {
         && !CaptionState.isProcessing
         && !IslandHub.flashActive
         && !IslandHub.recordingActive
+        && !IslandHub.volumeActive
         && Boolean(fullscreenIdleMonitor.isIdle)
 
     property real islandSurfaceOpacity: isFullscreenIdle ? 0.0 : 1.0
@@ -261,14 +263,7 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         width: window.targetVisualWidth
         height: window.targetVisualHeight
-        scale: (!window.isExpanded && collapsedMouseArea.containsMouse) ? 1.025 : 1.0
-        Behavior on scale {
-            SpringAnimation {
-                spring: 4.8
-                damping: 0.35
-                epsilon: 0.005
-            }
-        }
+        scale: 1.0
         opacity: window.islandSurfaceOpacity
         visible: opacity > 0.001
         focus: true
@@ -297,26 +292,38 @@ PanelWindow {
             y: 0
             width: parent.width - window.cornerWing * 2
             height: parent.height
+            topLeftRadius: 0
+            topRightRadius: 0
+            bottomLeftRadius: window.targetRadius
+            bottomRightRadius: window.targetRadius
             radius: window.targetRadius
             color: window.isExpanded ? Theme.shellBackground : "#08080c"
-            border.color: TimerState.completionHold
-                ? Theme.green
-                : ((collapsedMouseArea.containsMouse && !window.isExpanded) ? Qt.rgba(1, 1, 1, 0.28) : Qt.rgba(1, 1, 1, 0.12))
-            border.width: 1
+            border.color: TimerState.completionHold ? Theme.green : Qt.rgba(1, 1, 1, 0.12)
+            border.width: window.isExpanded ? 1 : 0
 
             Behavior on border.color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation { duration: 180; easing.type: Easing.InOutCubic }
             }
 
             Behavior on radius {
-                SpringAnimation {
-                    spring: 4.0
-                    damping: 0.32
-                    epsilon: 0.2
+                NumberAnimation {
+                    duration: 320
+                    easing.type: Easing.OutBack
+                    easing.overshoot: 1.18
                 }
             }
 
-            // Top specular inner glass highlight (Apple lens sheen)
+
+            // Nectar 13px Concave Top Bezel Bridge Wings (anchored flush with 1px overlap to eliminate sub-pixel gaps)
+            NectarWings {
+                anchors.fill: parent
+                fillColor: notchBody.color
+                strokeColor: "transparent"
+                impacted: window.topGap === 0 && window.islandSurfaceOpacity > 0.001
+                wingSize: window.cornerWing
+            }
+
+            // Top specular inner glass highlight disabled to maintain seamless flush bezel bridge
             Rectangle {
                 anchors.top: parent.top
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -324,7 +331,7 @@ PanelWindow {
                 height: 1
                 radius: 0.5
                 color: Qt.rgba(1, 1, 1, 0.18)
-                visible: !window.isExpanded
+                visible: false
             }
 
             // Timer countdown: thin progress line along the pill bottom.
@@ -447,46 +454,6 @@ PanelWindow {
                         duration: 260
                         easing.type: Easing.OutCubic
                     }
-                }
-            }
-        }
-
-        Item {
-            id: volumeFillClip
-
-            // Inset by the border width so the fill stays strictly inside
-            // the pill edge at every level (never touches the outline).
-            x: notchBody.x + 2
-            y: notchBody.y + 2
-            width: notchBody.width - 4
-            height: notchBody.height - 4
-            clip: true
-            visible: opacity > 0
-            opacity: IslandHub.volumeActive ? 1 : 0
-
-            Rectangle {
-                id: volumeFill
-
-                // Horizontal fill, left to right: width = volume %.
-                width: parent.width * (IslandHub.volumeActive ? Math.max(0, Math.min(100, IslandHub.volumePercent)) : 0) / 100
-                height: parent.height
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                radius: Math.max(0, notchBody.radius - 2)
-                color: Theme.primary
-
-                Behavior on width {
-                    NumberAnimation {
-                        duration: 180
-                        easing.type: Easing.OutCubic
-                    }
-                }
-            }
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 150
-                    easing.type: Easing.OutCubic
                 }
             }
         }
@@ -715,7 +682,7 @@ PanelWindow {
             y: notchBody.y
             width: notchBody.width
             height: notchBody.height
-            visible: !window.isExpanded && window.mediaActive && !IslandHub.volumeActive
+            visible: false
             opacity: 1
 
             property real currentFraction: window.mediaFraction
@@ -867,89 +834,8 @@ PanelWindow {
             }
         }
 
-        Shape {
-            x: 0
-            width: window.cornerWing
-            height: window.cornerWing
-            visible: false
-            preferredRendererType: Shape.CurveRenderer
-
-            ShapePath {
-                id: leftShoulderPath
-
-                readonly property real size: window.cornerWing
-
-                strokeWidth: Math.max(borderGlow.opacity * 2, window.mediaActive ? 2 : 0)
-                strokeColor: borderGlow.opacity > 0.01 ? Theme.foreground : Theme.primary
-                fillColor: Theme.shellBackground
-                startX: 0
-                startY: 0
-
-                PathLine {
-                    x: leftShoulderPath.size + 2
-                    y: 0
-                }
-
-                PathLine {
-                    x: leftShoulderPath.size + 2
-                    y: leftShoulderPath.size
-                }
-
-                PathCubic {
-                    control1X: leftShoulderPath.size + 2
-                    control1Y: leftShoulderPath.size * 0.448
-                    control2X: leftShoulderPath.size * 0.552
-                    control2Y: 0
-                    x: 0
-                    y: 0
-                }
-
-            }
-
-        }
-
-        Shape {
-            x: parent.width - width
-            width: window.cornerWing
-            height: window.cornerWing
-            visible: false
-            preferredRendererType: Shape.CurveRenderer
-
-            ShapePath {
-                id: rightShoulderPath
-
-                readonly property real size: window.cornerWing
-
-                strokeWidth: Math.max(borderGlow.opacity * 2, window.mediaActive ? 2 : 0)
-                strokeColor: borderGlow.opacity > 0.01 ? Theme.foreground : Theme.primary
-                fillColor: Theme.shellBackground
-                startX: rightShoulderPath.size
-                startY: 0
-
-                PathLine {
-                    x: -2
-                    y: 0
-                }
-
-                PathLine {
-                    x: -2
-                    y: rightShoulderPath.size
-                }
-
-                PathCubic {
-                    control1X: -2
-                    control1Y: rightShoulderPath.size * 0.448
-                    control2X: rightShoulderPath.size * 0.448
-                    control2Y: 0
-                    x: rightShoulderPath.size
-                    y: 0
-                }
-
-            }
-
-        }
-
-        CollapsedStatus {
+        // Nectar Collapsed Status Pill (3-Segment Apple Dynamic Island Layout)
+        NectarCollapsed {
             anchors.left: notchBody.left
             anchors.right: notchBody.right
             anchors.top: parent.top
@@ -969,10 +855,11 @@ PanelWindow {
             volumeText: IslandHub.volumeText
             volumeMuted: IslandHub.volumeMuted
             btConnected: BtState.connectedNames.length > 0 ? BtState.connectedNames[0] : ""
+            player: window.islandPlayer
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 90
+                    duration: 120
                     easing.type: Easing.OutCubic
                 }
             }
@@ -1141,7 +1028,7 @@ PanelWindow {
 
         MouseArea {
             id: collapsedMouseArea
-            anchors.fill: parent
+            anchors.fill: notchBody
             enabled: !window.isExpanded
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
@@ -1339,10 +1226,10 @@ PanelWindow {
                 y: window.contentStaged ? 0 : 8
 
                 Behavior on y {
-                    SpringAnimation {
-                        spring: 4.0
-                        damping: 0.35
-                        epsilon: 0.2
+                    NumberAnimation {
+                        duration: 340
+                        easing.type: Easing.OutBack
+                        easing.overshoot: 1.20
                     }
                 }
             }
@@ -1608,22 +1495,21 @@ PanelWindow {
         SequentialAnimation {
             id: absorbPop
 
-            SpringAnimation {
+            NumberAnimation {
                 target: notchBody
                 property: "scale"
-                to: 1.12
-                spring: 5.0
-                damping: 0.75
-                epsilon: 0.01
+                to: 1.10
+                duration: 150
+                easing.type: Easing.OutQuad
             }
 
-            SpringAnimation {
+            NumberAnimation {
                 target: notchBody
                 property: "scale"
                 to: 1
-                spring: 4.0
-                damping: 0.32
-                epsilon: 0.005
+                duration: 260
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.25
             }
 
             onFinished: shelfRelease.stop()
@@ -1635,22 +1521,21 @@ PanelWindow {
         SequentialAnimation {
             id: snapPop
 
-            SpringAnimation {
+            NumberAnimation {
                 target: notchSurface
                 property: "scale"
-                to: ShellState.expanded ? 0.97 : 0.94
-                spring: 5.0
-                damping: 0.75
-                epsilon: 0.01
+                to: ShellState.expanded ? 0.96 : 0.94
+                duration: 120
+                easing.type: Easing.InOutCubic
             }
 
-            SpringAnimation {
+            NumberAnimation {
                 target: notchSurface
                 property: "scale"
                 to: 1
-                spring: 4.0
-                damping: 0.32
-                epsilon: 0.005
+                duration: 280
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.25
             }
         }
 
@@ -1658,40 +1543,39 @@ PanelWindow {
         SequentialAnimation {
             id: arrivalPop
 
-            SpringAnimation {
+            NumberAnimation {
                 target: notchSurface
                 property: "scale"
-                to: 1.04
-                spring: 5.0
-                damping: 0.75
-                epsilon: 0.01
+                to: 1.05
+                duration: 130
+                easing.type: Easing.InOutCubic
             }
 
-            SpringAnimation {
+            NumberAnimation {
                 target: notchSurface
                 property: "scale"
                 to: 1
-                spring: 4.0
-                damping: 0.32
-                epsilon: 0.005
+                duration: 260
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.20
             }
         }
 
         Behavior on width {
-            SpringAnimation {
-                spring: 4.2
-                damping: 0.32
-                epsilon: 0.5
+            NumberAnimation {
+                duration: 380
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.25
             }
         }
 
         Behavior on height {
             enabled: !clipboardPanel.previewTransitionActive
 
-            SpringAnimation {
-                spring: 4.2
-                damping: 0.32
-                epsilon: 0.5
+            NumberAnimation {
+                duration: 360
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.20
             }
         }
 
@@ -1845,8 +1729,8 @@ PanelWindow {
 
     mask: Region {
         item: (window.islandSurfaceOpacity > 0.001) ? notchBody : null
-        topLeftRadius: notchBody ? notchBody.radius : 0
-        topRightRadius: notchBody ? notchBody.radius : 0
+        topLeftRadius: 0
+        topRightRadius: 0
         bottomLeftRadius: notchBody ? notchBody.radius : 0
         bottomRightRadius: notchBody ? notchBody.radius : 0
     }

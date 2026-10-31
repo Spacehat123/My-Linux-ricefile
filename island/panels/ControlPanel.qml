@@ -336,7 +336,7 @@ FocusScope {
         return minutes + ":" + String(Math.floor(seconds % 60)).padStart(2, "0");
     }
 
-    implicitWidth: 492
+    implicitWidth: 540
     implicitHeight: content.implicitHeight
     onWifiDeviceChanged: {
         if (root.wifiDevice && root.expandedSection === "wifi")

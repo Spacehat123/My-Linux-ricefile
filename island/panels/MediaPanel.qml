@@ -33,8 +33,8 @@ FocusScope {
 
     readonly property bool hasLyrics: IslandHub.liveLyric.length > 0 && IslandHub.mediaPlaying
 
-    implicitWidth: hasLyrics ? 540 : 460
-    implicitHeight: content.implicitHeight
+    implicitWidth: 500
+    implicitHeight: root.hasLyrics ? 185 : 150
 
     Timer {
         interval: 1000
@@ -47,20 +47,14 @@ FocusScope {
         id: content
 
         width: parent.width
-        spacing: 8
-
-        ShellText {
-            text: "Now Playing"
-            font.pixelSize: 15
-            font.weight: Font.Bold
-        }
+        spacing: 0
 
         Rectangle {
             id: mediaCard
 
             width: parent.width
-            height: root.hasLyrics ? 230 : 190
-            radius: 24
+            height: root.hasLyrics ? 185 : 150
+            radius: 18
             clip: true
 
             Image {
@@ -100,8 +94,8 @@ FocusScope {
                 anchors.right: controls.left
                 anchors.top: parent.top
                 anchors.bottom: progress.top
-                anchors.margins: 12
-                spacing: 3
+                anchors.margins: 9
+                spacing: 1
 
                 transform: Translate {
                     id: trackSlide
@@ -110,20 +104,15 @@ FocusScope {
                 ShellText {
                     text: root.sink ? "  " + (root.sink.description || "Default output") : "  No audio output"
                     color: Theme.muted
-                    font.pixelSize: 9
+                    font.pixelSize: 8
                     elide: Text.ElideRight
                     width: parent.width
-                }
-
-                Item {
-                    width: 1
-                    height: 5
                 }
 
                 ShellText {
                     width: parent.width
                     text: root.player ? (root.player.trackTitle || "Unknown title") : "Nothing playing"
-                    font.pixelSize: 18
+                    font.pixelSize: 13
                     font.weight: Font.Bold
                     elide: Text.ElideRight
                 }
@@ -132,33 +121,33 @@ FocusScope {
                     width: parent.width
                     text: root.player ? (root.player.trackArtist || root.player.identity || "Unknown artist") : "Open a media player to begin"
                     color: Theme.muted
-                    font.pixelSize: 10
+                    font.pixelSize: 9
                     elide: Text.ElideRight
                 }
 
                 Item {
                     visible: root.hasLyrics
                     width: parent.width
-                    height: 24
+                    height: 18
 
                     Row {
                         anchors.fill: parent
-                        spacing: 6
+                        spacing: 5
 
                         ShellText {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "♪"
                             color: Theme.primary
-                            font.pixelSize: 11
+                            font.pixelSize: 10
                             font.weight: Font.Bold
                         }
 
                         ShellText {
                             anchors.verticalCenter: parent.verticalCenter
-                            width: parent.width - 20
+                            width: parent.width - 18
                             text: IslandHub.liveLyric
                             color: Theme.foreground
-                            font.pixelSize: 11
+                            font.pixelSize: 10
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
                         }
@@ -171,27 +160,26 @@ FocusScope {
                 id: controls
 
                 anchors.right: parent.right
-                anchors.rightMargin: 12
+                anchors.rightMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 5
+                spacing: 4
 
                 IconButton {
-                    width: 28
-                    height: 28
+                    width: 24
+                    height: 24
                     icon: "\uf04ae"
                     accessibleName: "Previous track"
                     onClicked: {
                         if (root.player && root.player.canGoPrevious)
                             root.player.previous();
-
                     }
                 }
 
                 IconButton {
                     id: playButton
 
-                    width: 42
-                    height: 42
+                    width: 34
+                    height: 34
                     icon: root.player && root.player.isPlaying ? "\uf04c" : "\uf04b"
                     accessibleName: root.player && root.player.isPlaying ? "Pause" : "Play"
                     backgroundColor: Theme.foreground
@@ -199,19 +187,17 @@ FocusScope {
                     onClicked: {
                         if (root.player && root.player.canTogglePlaying)
                             root.player.togglePlaying();
-
                     }
                 }
 
                 IconButton {
-                    width: 28
-                    height: 28
+                    width: 24
+                    height: 24
                     icon: "\uf04ad"
                     accessibleName: "Next track"
                     onClicked: {
                         if (root.player && root.player.canGoNext)
                             root.player.next();
-
                     }
                 }
 
@@ -251,15 +237,16 @@ FocusScope {
                         property: "opacity"
                         to: 1
                         duration: 180
-                        easing.type: Easing.OutCubic
+                        easing.type: Easing.InOutCubic
                     }
 
                     NumberAnimation {
                         target: trackSlide
                         property: "x"
                         to: 0
-                        duration: 180
-                        easing.type: Easing.OutCubic
+                        duration: 240
+                        easing.type: Easing.OutBack
+                        easing.overshoot: 1.20
                     }
                 }
             }

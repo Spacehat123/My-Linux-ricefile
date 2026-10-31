@@ -47,7 +47,7 @@ FocusScope {
         }
     }
 
-    implicitWidth: 367
+    implicitWidth: 480
     implicitHeight: content.implicitHeight
 
     PwObjectTracker {
@@ -436,11 +436,11 @@ FocusScope {
                         border.color: root.accent
 
                         Behavior on width {
-                            NumberAnimation { duration: Theme.animationNormal; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
                         }
 
                         Behavior on height {
-                            NumberAnimation { duration: Theme.animationNormal; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
                         }
 
                         Row {
