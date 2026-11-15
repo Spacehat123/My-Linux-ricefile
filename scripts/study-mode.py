@@ -19,6 +19,8 @@ import argparse
 import subprocess
 import signal
 import re
+import urllib.request
+from urllib.parse import urlparse
 from pathlib import Path
 
 STUDY_DIR = Path.home() / ".local/share/cool-shell/study"
@@ -112,6 +114,9 @@ ALLOWED_CLASSES = {
     "org.kde.kate",
     "kwrite",
     "org.kde.kwrite",
+    "zcode",
+    "ZCode",
+    "zcode.desktop",
 
     # Terminals & System (Guaranteed Whitelist - Never Closed)
     "foot",
@@ -146,6 +151,8 @@ ALLOWED_BRAVE_KEYWORDS = [
     "gemini", "gemini.google.com", "google.com/gemini", "aistudio.google.com",
     "hotstar", "hotstar.com", "www.hotstar.com", "jiohotstar", "jiohotstar.com", "disneyplus",
     "notebook", "gemini notebook", "notebooklm", "whatsapp",
+    "spotify", "open.spotify.com", "spotify.com",
+    "localhost", "127.0.0.1", "0.0.0.0", "::1", "zcode",
     "new tab", "untitled", "settings", "extensions", "sign in", "login",
     "accounts.google", "drive.google", "docs.google"
 ]
@@ -254,6 +261,9 @@ def is_file_manager_or_dialog(c_class: str, c_initial: str, c_title: str) -> boo
 def is_allowed_class(c_class: str, c_initial: str, c_title: str, is_long: bool = False) -> bool:
     cls = (c_class or "").lower()
     init_cls = (c_initial or "").lower()
+
+    if "zcode" in cls or "zcode" in init_cls:
+        return True
 
     if cls in ALLOWED_CLASSES or init_cls in ALLOWED_CLASSES:
         return True
@@ -380,6 +390,28 @@ def hypr_close_window(addr: str, pid: int = None):
         except Exception:
             pass
 
+def check_brave_cdp_whitelisted(clean_title: str) -> bool:
+    try:
+        with urllib.request.urlopen("http://localhost:9222/json", timeout=0.15) as resp:
+            tabs = json.loads(resp.read().decode())
+            for t in tabs:
+                if t.get("type") == "page":
+                    t_title = (t.get("title") or "").strip().lower()
+                    t_url = (t.get("url") or "").strip().lower()
+                    # Check if window title corresponds to this tab
+                    if t_title and (t_title in clean_title or clean_title in t_title):
+                        parsed = urlparse(t_url)
+                        host = (parsed.hostname or "").lower()
+                        # Allow all subdomains of spotify.com (*.spotify.com, spotify.com)
+                        if host == "spotify.com" or host.endswith(".spotify.com") or "spotify" in host:
+                            return True
+                        # Allow all localhost / loopback IPs with any port
+                        if host in ("localhost", "127.0.0.1", "0.0.0.0", "::1") or host.endswith(".localhost"):
+                            return True
+    except Exception:
+        pass
+    return False
+
 def hypr_close_tab(addr: str):
     raw_addr = addr.replace("address:", "")
     lua_send = f'hl.dispatch(hl.dsp.send_shortcut({{ mods = "CTRL", key = "w", window = "address:{raw_addr}" }}))'
@@ -389,7 +421,7 @@ def enforce_distractions():
     state = get_state()
     is_long = (state.get("target_duration", 1800) >= 14400) or state.get("is_custom", False)
 
-    # 1. Manage Spotify playback: Only auto-pause for short/strict study sessions (< 4 hours)
+    # 1. Manage desktop Spotify client playback (leave browser-based media alone)
     if not is_long:
         try:
             subprocess.run(["playerctl", "-p", "spotify", "pause"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=1)
@@ -475,6 +507,7 @@ def enforce_distractions():
                         ".pdf" in clean_title
                         or clean_title.endswith(".pdf")
                         or any(kw in clean_title for kw in ALLOWED_BRAVE_KEYWORDS)
+                        or check_brave_cdp_whitelisted(clean_title)
                     )
                     if not is_allowed:
                         hypr_close_tab(c_addr)
