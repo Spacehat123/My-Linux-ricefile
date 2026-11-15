@@ -265,7 +265,7 @@ PanelWindow {
         height: window.targetVisualHeight
         scale: 1.0
         opacity: window.islandSurfaceOpacity
-        visible: opacity > 0.001
+        visible: window.isExpanded && opacity > 0.001
         focus: true
         Keys.onPressed: (event) => {
             if (event.key === Qt.Key_Escape) {

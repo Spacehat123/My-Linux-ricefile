@@ -1443,7 +1443,7 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
 
-        Notch {
+        TopConvexBar {
             required property var modelData
 
             screen: modelData
