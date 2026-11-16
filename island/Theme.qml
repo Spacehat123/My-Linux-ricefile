@@ -17,6 +17,8 @@ Singleton {
     })
     property string name: "Cherry"
     property string slug: "cherry"
+    property string mode: "dark"
+    readonly property bool isLightMode: mode === "light"
     readonly property string helper: Quickshell.shellPath("island/scripts/theme-system.sh")
 
     readonly property color bgDim: palette.bg_dim
@@ -42,22 +44,22 @@ Singleton {
     readonly property color cyan: palette.aqua
     readonly property color orange: palette.orange
     readonly property color purple: palette.purple
-    readonly property color shellBackground: "#000000"
-    readonly property color shellForeground: "#ffffff"
+    readonly property color shellBackground: isLightMode ? "#ede6dc" : "#000000"
+    readonly property color shellForeground: isLightMode ? "#241e24" : "#ffffff"
 
-    // Master Surface Materials (Solid Opaque Sidebars & Bars + Obsidian Elevations)
+    // Master Surface Materials (Solid Opaque Sidebars & Bars + Dynamic Surface Elevations)
     readonly property color surfaceOpaque: Qt.rgba(bg0.r, bg0.g, bg0.b, 1.0)
-    readonly property color surfaceDeep: Qt.rgba(bgDim.r * 0.45, bgDim.g * 0.45, bgDim.b * 0.45, 1.0)
-    readonly property color surfaceElevated: Qt.rgba(bg1.r, bg1.g, bg1.b, 0.72)
+    readonly property color surfaceDeep: isLightMode ? Qt.rgba(bgDim.r, bgDim.g, bgDim.b, 1.0) : Qt.rgba(bgDim.r * 0.45, bgDim.g * 0.45, bgDim.b * 0.45, 1.0)
+    readonly property color surfaceElevated: isLightMode ? Qt.rgba(1.0, 1.0, 1.0, 0.70) : Qt.rgba(bg1.r, bg1.g, bg1.b, 0.72)
     readonly property color glassBackground: surfaceOpaque
-    readonly property color glassBackgroundSubtle: Qt.rgba(bgDim.r, bgDim.g, bgDim.b, 0.80)
-    readonly property color glassCard: Qt.rgba(1.0, 1.0, 1.0, 0.04)
-    readonly property color glassCardHover: Qt.rgba(1.0, 1.0, 1.0, 0.08)
-    readonly property color glassBorder: Qt.rgba(1.0, 1.0, 1.0, 0.12)
-    readonly property color glassBorderSubtle: Qt.rgba(1.0, 1.0, 1.0, 0.07)
+    readonly property color glassBackgroundSubtle: isLightMode ? Qt.rgba(bgDim.r, bgDim.g, bgDim.b, 0.95) : Qt.rgba(bgDim.r, bgDim.g, bgDim.b, 0.80)
+    readonly property color glassCard: isLightMode ? Qt.rgba(1.0, 1.0, 1.0, 0.55) : Qt.rgba(1.0, 1.0, 1.0, 0.04)
+    readonly property color glassCardHover: isLightMode ? Qt.rgba(1.0, 1.0, 1.0, 0.85) : Qt.rgba(1.0, 1.0, 1.0, 0.08)
+    readonly property color glassBorder: isLightMode ? Qt.rgba(0.12, 0.10, 0.12, 0.09) : Qt.rgba(1.0, 1.0, 1.0, 0.12)
+    readonly property color glassBorderSubtle: isLightMode ? Qt.rgba(0.12, 0.10, 0.12, 0.05) : Qt.rgba(1.0, 1.0, 1.0, 0.07)
     readonly property color glassBorderActive: Qt.rgba(primary.r, primary.g, primary.b, 0.75)
-    readonly property color glassSpecularTop: Qt.rgba(1.0, 1.0, 1.0, 0.24)
-    readonly property color glassSpecularSide: Qt.rgba(1.0, 1.0, 1.0, 0.10)
+    readonly property color glassSpecularTop: isLightMode ? Qt.rgba(1.0, 1.0, 1.0, 0.80) : Qt.rgba(1.0, 1.0, 1.0, 0.24)
+    readonly property color glassSpecularSide: isLightMode ? Qt.rgba(0.12, 0.10, 0.12, 0.04) : Qt.rgba(1.0, 1.0, 1.0, 0.10)
     readonly property int glassBorderWidth: 1
 
     readonly property string fontFamily: "Geist"
@@ -90,6 +92,7 @@ Singleton {
                     const value = JSON.parse(text);
                     root.name = value.name;
                     root.slug = value.slug;
+                    root.mode = value.appearance || "dark";
                     root.palette = value.colors;
                 } catch (error) {
                     console.warn("Unable to load desktop theme:", error);

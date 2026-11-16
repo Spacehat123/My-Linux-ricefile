@@ -26,5 +26,26 @@
     "aqua": "#cca8dd",
     "orange": "#ea9381",
     "purple": "#b868b4"
+  },
+  "light_colors": {
+    "bg_dim": "#ebe1e5",
+    "bg0": "#f7f1f3",
+    "bg1": "#fcf7f9",
+    "bg2": "#e6d7dd",
+    "bg3": "#d6c3cc",
+    "bg4": "#c2adb8",
+    "primary_container": "#fad9e4",
+    "secondary_container": "#f5e0ec",
+    "foreground": "#261b22",
+    "muted": "#6c5965",
+    "muted_dark": "#998592",
+    "red": "#c93259",
+    "yellow": "#b87e23",
+    "green": "#32874d",
+    "primary": "#c73866",
+    "blue": "#59529e",
+    "aqua": "#79529e",
+    "orange": "#c75b43",
+    "purple": "#9c4197"
   }
 }

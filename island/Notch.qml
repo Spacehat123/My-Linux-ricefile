@@ -1301,12 +1301,7 @@ PanelWindow {
                 visible: window.displayedPanel === "power"
             }
 
-            MediaPanel {
-                id: mediaPanel
 
-                width: parent.width
-                visible: window.displayedPanel === "media"
-            }
 
             NotifCenterPanel {
                 id: notifCenterPanel

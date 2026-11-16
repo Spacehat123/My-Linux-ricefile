@@ -62,13 +62,16 @@ def ensure_daemon_running() -> bool:
             print(f"[-] Failed to spawn image daemon: {e}", file=sys.stderr)
             return False
 
-    # Wait up to 45s for daemon to initialize and load weights into CPU RAM
+    # Wait up to 180s for daemon to initialize and load weights into CPU RAM
     t_start = time.time()
-    while time.time() - t_start < 45:
-        time.sleep(0.4)
+    while time.time() - t_start < 180:
+        time.sleep(0.5)
         if is_socket_alive():
             print(f"[+] Daemon ready in {time.time()-t_start:.1f}s", file=sys.stderr)
             return True
+        if not is_daemon_process_alive():
+            print("[-] Daemon process terminated unexpectedly.", file=sys.stderr)
+            break
 
     print("[-] Daemon did not respond in time.", file=sys.stderr)
     return False
@@ -150,21 +153,15 @@ def open_viewer(path: str):
         pass
 
 def notify_island_done():
-    try:
-        subprocess.run(
-            ["qs", "-c", "cool-shell", "ipc", "call", "island", "setAiGenerating", "false", ""],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=3
-        )
-    except Exception:
+    for cmd in [
+        ["qs", "-c", "cool-shell", "ipc", "call", "island", "setAiGenerating", "false", ""],
+        ["qs", "-p", "/home/pranc/.config/quickshell/cool-shell", "ipc", "call", "island", "setAiGenerating", "false", ""],
+        ["quickshell", "-c", "cool-shell", "ipc", "call", "island", "setAiGenerating", "false", ""]
+    ]:
         try:
-            subprocess.run(
-                ["quickshell", "-c", "cool-shell", "ipc", "call", "island", "setAiGenerating", "false", ""],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                timeout=3
-            )
+            res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=2)
+            if res.returncode == 0:
+                break
         except Exception:
             pass
 

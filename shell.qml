@@ -1867,6 +1867,16 @@ ShellRoot {
             AppearanceState.refreshThemes();
             AppearanceState.refreshWallpapers();
         }
+
+        function toggleMode(): string {
+            AppearanceState.toggleMode();
+            return JSON.stringify({ success: true });
+        }
+
+        function setMode(mode: string): string {
+            AppearanceState.setMode(mode);
+            return JSON.stringify({ success: true, mode: mode });
+        }
     }
 
     Process {
@@ -2133,6 +2143,7 @@ ShellRoot {
                 // 4. Middle-right -> controls independent media widget opening
                 EdgeTrigger {
                     id: mediaTrigger
+                    enabled: false
                     edge: "right"
                     triggerWidth: 3
                     triggerHeight: 200
@@ -2202,11 +2213,18 @@ ShellRoot {
                     }
                 }
 
+                property bool wasHovered: false
                 onHoveredChanged: {
-                    if (!hovered && !leftTrigger.active) {
-                        monitorScope.leftSidebarOpen = false
-                        if (shellRoot.desktopState) shellRoot.desktopState.setLeftSidebarOpen(false)
+                    if (hovered) {
+                        wasHovered = true;
+                    } else if (wasHovered && !leftTrigger.active) {
+                        wasHovered = false;
+                        monitorScope.leftSidebarOpen = false;
+                        if (shellRoot.desktopState) shellRoot.desktopState.setLeftSidebarOpen(false);
                     }
+                }
+                onOpenChanged: {
+                    if (!open) wasHovered = false;
                 }
             }
 
@@ -2257,33 +2275,10 @@ ShellRoot {
                 }
             }
 
-            // Floating independent media widget surface (middle-right edge trigger)
-            MediaWidget {
-                id: mediaWidget
+            // Floating Media Player Companion Pill (anchored to top-left visualizer, draggable & pinnable)
+            FloatingMediaCompanion {
+                id: mediaCompanion
                 screen: monitorScope.modelData
-                desktopState: shellRoot.desktopState
-                open: (monitorScope.mediaWidgetOpen || (shellRoot.desktopState && shellRoot.desktopState.mediaWidgetOpen)) && !ShellState.gameMode
-
-                Timer {
-                    id: mediaCloseDebounce
-                    interval: 380
-                    repeat: false
-                    onTriggered: {
-                        if (!mediaWidget.hovered && !mediaTrigger.active) {
-                            mediaWidget.open = false
-                            monitorScope.mediaWidgetOpen = false
-                            if (shellRoot.desktopState) shellRoot.desktopState.setMediaWidgetOpen(false)
-                        }
-                    }
-                }
-
-                onHoveredChanged: {
-                    if (hovered) {
-                        mediaCloseDebounce.stop()
-                    } else if (!mediaTrigger.active) {
-                        mediaCloseDebounce.restart()
-                    }
-                }
             }
 
             // Stash Pocket & Drop Zone on the right edge (special:stash)

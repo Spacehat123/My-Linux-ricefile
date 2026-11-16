@@ -1,0 +1,1946 @@
+{
+  ".asw/start-work/state.json": {
+    "mtime": 1792857717.4963233,
+    "seen": 1794841260.6717286,
+    "ast_hash": "1e48c34747b375aedb18954067e29a35",
+    "semantic_hash": ""
+  },
+  "Other-stuff/01-system-packages.sh": {
+    "mtime": 1792857717.4965339,
+    "seen": 1794841260.671735,
+    "ast_hash": "e8740d36a6839335fe7f257b6fffa82c",
+    "semantic_hash": ""
+  },
+  "Other-stuff/02-python-environment.sh": {
+    "mtime": 1792857717.4974668,
+    "seen": 1794841260.6717374,
+    "ast_hash": "631bee6b67bf11c0b03730cb50acdfa3",
+    "semantic_hash": ""
+  },
+  "Other-stuff/03-light-models-tts-ocr.sh": {
+    "mtime": 1792857717.497221,
+    "seen": 1794841260.6717389,
+    "ast_hash": "636c984b30153679847908b87c433b2b",
+    "semantic_hash": ""
+  },
+  "Other-stuff/04-heavy-ai-image-models.sh": {
+    "mtime": 1792857717.4969256,
+    "seen": 1794841260.6717405,
+    "ast_hash": "cbea56d400029710940bd776d5f583ce",
+    "semantic_hash": ""
+  },
+  "Other-stuff/05-godseye-globe.sh": {
+    "mtime": 1792857717.4970784,
+    "seen": 1794841260.6717415,
+    "ast_hash": "18247c00cd304a895ee30883039b1f4d",
+    "semantic_hash": ""
+  },
+  "Other-stuff/hyprland.lua": {
+    "mtime": 1792857717.4968286,
+    "seen": 1794841260.671743,
+    "ast_hash": "8a0f9c293e389d2f2b8928e5f33d5177",
+    "semantic_hash": ""
+  },
+  "Other-stuff/install-models.sh": {
+    "mtime": 1792857717.4977276,
+    "seen": 1794841260.671744,
+    "ast_hash": "3378678f2dfe3968ae5bf8814b5e4af8",
+    "semantic_hash": ""
+  },
+  "Other-stuff/setup-godseye.sh": {
+    "mtime": 1792857717.4970033,
+    "seen": 1794841260.671745,
+    "ast_hash": "6140167ab524c91bc181c61bce353da5",
+    "semantic_hash": ""
+  },
+  "Other-stuff/setup-python-env.sh": {
+    "mtime": 1792857717.4973812,
+    "seen": 1794841260.671746,
+    "ast_hash": "6da12a15f1e5ce7ed36fbffee2f1e2c6",
+    "semantic_hash": ""
+  },
+  "install.sh": {
+    "mtime": 1792857717.1734447,
+    "seen": 1794841260.671747,
+    "ast_hash": "ceab96271a7827dc61856ebf728f747b",
+    "semantic_hash": ""
+  },
+  "island/Expression.js": {
+    "mtime": 1792857717.468597,
+    "seen": 1794841260.6717484,
+    "ast_hash": "c13b1a77ba4918e3d275742d52d73fb0",
+    "semantic_hash": ""
+  },
+  "island/MarkdownBlocks.js": {
+    "mtime": 1792857717.4680247,
+    "seen": 1794841260.6717494,
+    "ast_hash": "2b41d097ee7b623243493e51c7b7fbca",
+    "semantic_hash": ""
+  },
+  "island/scripts/capture-windows.py": {
+    "mtime": 1792857717.4719222,
+    "seen": 1794841260.6717503,
+    "ast_hash": "582680b1e33b110e90ebe14967a0ae77",
+    "semantic_hash": ""
+  },
+  "island/scripts/display-safety-watchdog.sh": {
+    "mtime": 1792857717.471328,
+    "seen": 1794841260.6717515,
+    "ast_hash": "5f5dd85a0084fe0af697dd867772754b",
+    "semantic_hash": ""
+  },
+  "island/scripts/display-switcher.sh": {
+    "mtime": 1792857717.470841,
+    "seen": 1794841260.6717522,
+    "ast_hash": "dfe7c38ad9a4df98717b2c3ab1d11491",
+    "semantic_hash": ""
+  },
+  "island/scripts/feather": {
+    "mtime": 1792857717.4716907,
+    "seen": 1794841260.6717532,
+    "ast_hash": "c2c6792f2fe471d81ff8db5853f07651",
+    "semantic_hash": ""
+  },
+  "island/scripts/feather-mode.py": {
+    "mtime": 1792857717.4720676,
+    "seen": 1794841260.6717546,
+    "ast_hash": "77fcfbf0c565da3ba206f8b6f3bf6c07",
+    "semantic_hash": ""
+  },
+  "island/scripts/game-mode.py": {
+    "mtime": 1792857717.4717317,
+    "seen": 1794841260.6717556,
+    "ast_hash": "501ccc0bf02aaf530512e5149b5b3087",
+    "semantic_hash": ""
+  },
+  "island/scripts/level-meter.py": {
+    "mtime": 1793097254.5663052,
+    "seen": 1794841260.6717563,
+    "ast_hash": "c048325716e0dc2fe3087de7fb6fb11c",
+    "semantic_hash": ""
+  },
+  "island/scripts/lyrics-daemon.sh": {
+    "mtime": 1792857717.4720323,
+    "seen": 1794841260.6717572,
+    "ast_hash": "97f3e2e50bed8f1cc4975b08a727bf58",
+    "semantic_hash": ""
+  },
+  "island/scripts/notes-helper.py": {
+    "mtime": 1792857717.4712245,
+    "seen": 1794841260.6717584,
+    "ast_hash": "cb3301aaba94bd9d99dabb398edce012",
+    "semantic_hash": ""
+  },
+  "island/scripts/shell-actions.sh": {
+    "mtime": 1792857717.4719706,
+    "seen": 1794841260.6717594,
+    "ast_hash": "0ca724431cbdca6183ff9d04652fc965",
+    "semantic_hash": ""
+  },
+  "island/scripts/theme-system.sh": {
+    "mtime": 1794840730.876049,
+    "seen": 1794841260.6717603,
+    "ast_hash": "d331882c2199fbe7f549c8069baf4eeb",
+    "semantic_hash": ""
+  },
+  "island/shelf.json": {
+    "mtime": 1792857717.4685674,
+    "seen": 1794841260.6717615,
+    "ast_hash": "d751713988987e9331980363e24189ce",
+    "semantic_hash": ""
+  },
+  "scripts/battery-limit.sh": {
+    "mtime": 1792857717.465121,
+    "seen": 1794841260.6717622,
+    "ast_hash": "ce409c3209051fba16fda1111e988382",
+    "semantic_hash": ""
+  },
+  "scripts/caption.py": {
+    "mtime": 1792857717.4664552,
+    "seen": 1794841260.6717632,
+    "ast_hash": "a27c21c86856b21aae4c99d22d356675",
+    "semantic_hash": ""
+  },
+  "scripts/generate-palette.sh": {
+    "mtime": 1792857717.4659622,
+    "seen": 1794841260.6717641,
+    "ast_hash": "183ddb27115923a5e3e0ad05676b0d5c",
+    "semantic_hash": ""
+  },
+  "scripts/gods-eye.sh": {
+    "mtime": 1792857717.4656825,
+    "seen": 1794841260.6717653,
+    "ast_hash": "a0a84b57f97185aa5f7421666b44e142",
+    "semantic_hash": ""
+  },
+  "scripts/image-daemon.py": {
+    "mtime": 1794836430.746104,
+    "seen": 1794841260.6717663,
+    "ast_hash": "5769573752d3028fb8ed3ac83c45795a",
+    "semantic_hash": ""
+  },
+  "scripts/image-engine.py": {
+    "mtime": 1794836423.465214,
+    "seen": 1794841260.671767,
+    "ast_hash": "57f3dd65c4765039de8dfd53e1635305",
+    "semantic_hash": ""
+  },
+  "scripts/image-engine.sh": {
+    "mtime": 1794836217.2967565,
+    "seen": 1794841260.671768,
+    "ast_hash": "cc73c7e3ecd9f9c5657bf49d37b61a88",
+    "semantic_hash": ""
+  },
+  "scripts/media-picker.py": {
+    "mtime": 1792857717.4658318,
+    "seen": 1794841260.671769,
+    "ast_hash": "22d9c9f0b3c412bbd0b3609ef492131b",
+    "semantic_hash": ""
+  },
+  "scripts/phone-bridge-daemon.py": {
+    "mtime": 1792857717.466648,
+    "seen": 1794841260.6717699,
+    "ast_hash": "5216cc0d5a5ee79a97953b138f703928",
+    "semantic_hash": ""
+  },
+  "scripts/phone-ctl.sh": {
+    "mtime": 1792857717.466168,
+    "seen": 1794841260.6717708,
+    "ast_hash": "d2af134ab5d92579eba3df184bad674a",
+    "semantic_hash": ""
+  },
+  "scripts/phone-mirror.sh": {
+    "mtime": 1792857717.4665504,
+    "seen": 1794841260.6717718,
+    "ast_hash": "0601561c7351ac65aa81bbb37bf0d9ca",
+    "semantic_hash": ""
+  },
+  "scripts/play-timer-alarm.sh": {
+    "mtime": 1793039768.6979594,
+    "seen": 1794841260.6717727,
+    "ast_hash": "e592245488248c72c50d3fefaf9095a0",
+    "semantic_hash": ""
+  },
+  "scripts/scrcpy-adb-filter.sh": {
+    "mtime": 1792857717.4660354,
+    "seen": 1794841260.6717737,
+    "ast_hash": "eacd253de1585a89621180b149bdef7d",
+    "semantic_hash": ""
+  },
+  "scripts/screen-lens.py": {
+    "mtime": 1792857717.4644623,
+    "seen": 1794841260.6717744,
+    "ast_hash": "645eaaab34c6014290e7f0425851c3cb",
+    "semantic_hash": ""
+  },
+  "scripts/screen-lens.sh": {
+    "mtime": 1792857717.4650207,
+    "seen": 1794841260.6717756,
+    "ast_hash": "29d5ad4f58dd7ab9f929cd1d4b082d92",
+    "semantic_hash": ""
+  },
+  "scripts/screenshot-region.sh": {
+    "mtime": 1792857717.4662542,
+    "seen": 1794841260.6717765,
+    "ast_hash": "eba84f465fe87a62cb861fdc02b19ac2",
+    "semantic_hash": ""
+  },
+  "scripts/study-mode.py": {
+    "mtime": 1794240233.8461244,
+    "seen": 1794841260.6717775,
+    "ast_hash": "cfb2b984a33b017330fc925b83f51a05",
+    "semantic_hash": ""
+  },
+  "scripts/study-mode.sh": {
+    "mtime": 1793039179.931514,
+    "seen": 1794841260.6717782,
+    "ast_hash": "09616af83311c45276b823b89f8f2ed2",
+    "semantic_hash": ""
+  },
+  "scripts/voice-engine.py": {
+    "mtime": 1792857717.4648716,
+    "seen": 1794841260.67178,
+    "ast_hash": "77881ab02ba816ed24c2d688b4ee9db6",
+    "semantic_hash": ""
+  },
+  "scripts/voice-engine.sh": {
+    "mtime": 1792857717.465226,
+    "seen": 1794841260.671781,
+    "ast_hash": "7343c30272f9d4c0f639f837d32503b6",
+    "semantic_hash": ""
+  },
+  "theme/presets/cherry.json": {
+    "mtime": 1794840490.0589008,
+    "seen": 1794841260.6717823,
+    "ast_hash": "b6daeb9e8f2b76882695c21d4927148e",
+    "semantic_hash": ""
+  },
+  "theme/presets/darth.json": {
+    "mtime": 1794840548.1708376,
+    "seen": 1794841260.6717832,
+    "ast_hash": "d3d624f32c932c3fd880f8717555960a",
+    "semantic_hash": ""
+  },
+  "theme/presets/nature.json": {
+    "mtime": 1794840470.07859,
+    "seen": 1794841260.6717842,
+    "ast_hash": "5bd7e55d350cfc91afff5d7428a83e0b",
+    "semantic_hash": ""
+  },
+  "theme/presets/sea.json": {
+    "mtime": 1794840509.5862105,
+    "seen": 1794841260.671785,
+    "ast_hash": "9039d1541440276cacb4fb4d60ecc81e",
+    "semantic_hash": ""
+  },
+  "theme/presets/space.json": {
+    "mtime": 1794840529.5015316,
+    "seen": 1794841260.6717863,
+    "ast_hash": "3e8ed6fb6eaed4dbb0fc89c99babca00",
+    "semantic_hash": ""
+  },
+  ".agents/agents/asw-librarian/agent.md": {
+    "mtime": 1792857717.4788606,
+    "seen": 1794841260.6717873,
+    "ast_hash": "5ed86f636740afb512df4471030f08cf",
+    "semantic_hash": ""
+  },
+  ".agents/agents/asw-plan-audit/agent.md": {
+    "mtime": 1792857717.4789155,
+    "seen": 1794841260.6717882,
+    "ast_hash": "cca22d3075838cc073b6ced6cba2ab5b",
+    "semantic_hash": ""
+  },
+  ".agents/agents/asw-planning-analysis/agent.md": {
+    "mtime": 1792857717.4790916,
+    "seen": 1794841260.6717892,
+    "ast_hash": "a7eac36e441086f97157dd569904cc1d",
+    "semantic_hash": ""
+  },
+  ".agents/agents/hs_architect/agent.md": {
+    "mtime": 1792857717.4792666,
+    "seen": 1794841260.6717901,
+    "ast_hash": "d95df6ea84185717d61acc3d683a71fa",
+    "semantic_hash": ""
+  },
+  ".agents/agents/hs_security-reviewer/agent.md": {
+    "mtime": 1792857717.4794438,
+    "seen": 1794841260.671791,
+    "ast_hash": "f04e02cabf6b4fd21e919b45fb3fb619",
+    "semantic_hash": ""
+  },
+  ".agents/agents/hs_web-performance-auditor/agent.md": {
+    "mtime": 1792857717.4795606,
+    "seen": 1794841260.671792,
+    "ast_hash": "42c44e1edae55b4b5b1c8bad3e84454e",
+    "semantic_hash": ""
+  },
+  ".agents/agents/prp-implement/agent.md": {
+    "mtime": 1792857717.479742,
+    "seen": 1794841260.6717932,
+    "ast_hash": "6a57340df8bdfe35ce7ca693b6e86d44",
+    "semantic_hash": ""
+  },
+  ".agents/rules/anti-slop.md": {
+    "mtime": 1792857717.4801824,
+    "seen": 1794841260.671794,
+    "ast_hash": "c0fb5bee0a2304ddfa825a8540bc6890",
+    "semantic_hash": ""
+  },
+  ".agents/rules/cos-rules.md": {
+    "mtime": 1792857717.4800613,
+    "seen": 1794841260.6717951,
+    "ast_hash": "7e7f9950553f0cd208107cd32f8e8ba2",
+    "semantic_hash": ""
+  },
+  ".agents/rules/reports.md": {
+    "mtime": 1792857717.479869,
+    "seen": 1794841260.671796,
+    "ast_hash": "3e72f311d121aedf017c2ad55610beb5",
+    "semantic_hash": ""
+  },
+  ".agents/skills/agentic-execution/SKILL.md": {
+    "mtime": 1792857717.4735253,
+    "seen": 1794841260.671797,
+    "ast_hash": "c52ed64b904226a5b8817c3a1f0bfd82",
+    "semantic_hash": ""
+  },
+  ".agents/skills/anti-slop/SKILL.md": {
+    "mtime": 1792857717.4737828,
+    "seen": 1794841260.671798,
+    "ast_hash": "2f9ce661a029c1f15bf26c0b273311c4",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-cleanup/SKILL.md": {
+    "mtime": 1792857717.4739158,
+    "seen": 1794841260.6717992,
+    "ast_hash": "7396fee26ae6444f167284fb809ff230",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-comment-check/SKILL.md": {
+    "mtime": 1792857717.4741464,
+    "seen": 1794841260.6718004,
+    "ast_hash": "daa5759db1b4095a031ce1275cd5343e",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-debug/SKILL.md": {
+    "mtime": 1792857717.4745216,
+    "seen": 1794841260.6718013,
+    "ast_hash": "c767017faf8246d0cbc0c1a94f1f5f13",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-goal/SKILL.md": {
+    "mtime": 1792857717.4750023,
+    "seen": 1794841260.671802,
+    "ast_hash": "6b4aec5ec19b1fc67259532a25eca7fd",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-loop/SKILL.md": {
+    "mtime": 1792857717.47544,
+    "seen": 1794841260.6718032,
+    "ast_hash": "037e0cf33a5952474f0bfa9dd538a329",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-lsp/SKILL.md": {
+    "mtime": 1792857717.475509,
+    "seen": 1794841260.6718042,
+    "ast_hash": "8d06e880ebb3c319fc559a73119a093b",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-plan/SKILL.md": {
+    "mtime": 1792857717.4758759,
+    "seen": 1794841260.6718051,
+    "ast_hash": "b927acd565b65870899f0851833a1366",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-programming/SKILL.md": {
+    "mtime": 1792857717.4759474,
+    "seen": 1794841260.671806,
+    "ast_hash": "0c10c761d52541e9ebbe4e3f0d240776",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-refactor/SKILL.md": {
+    "mtime": 1792857717.4761183,
+    "seen": 1794841260.6718073,
+    "ast_hash": "393b2a41c80aed3792e28b2f1c421f71",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-remove-ai-slops/SKILL.md": {
+    "mtime": 1792857717.476324,
+    "seen": 1794841260.6718082,
+    "ast_hash": "acf4e3532cc5b08961810e3421b4c052",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-review/SKILL.md": {
+    "mtime": 1792857717.4765248,
+    "seen": 1794841260.671809,
+    "ast_hash": "70fac0751c19ab570e9830df0c3b331a",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-rules/SKILL.md": {
+    "mtime": 1792857717.476703,
+    "seen": 1794841260.6718102,
+    "ast_hash": "f369fcba746e1aae7bf53e0c1c11498d",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-start-work/SKILL.md": {
+    "mtime": 1792857717.477057,
+    "seen": 1794841260.671811,
+    "ast_hash": "fb3cdf6a41ea73161b14204c1df239ac",
+    "semantic_hash": ""
+  },
+  ".agents/skills/asw-ui-ux/SKILL.md": {
+    "mtime": 1792857717.4771252,
+    "seen": 1794841260.671812,
+    "ast_hash": "a0dd0d4d6d35122bc7392a9b7b7bbbc6",
+    "semantic_hash": ""
+  },
+  ".agents/skills/prp-implement/UNSKILL.md": {
+    "mtime": 1792857717.4785223,
+    "seen": 1794841260.6718128,
+    "ast_hash": "ace1b948122a0fdc8f24815bdf064022",
+    "semantic_hash": ""
+  },
+  ".asw/plans/2026-09-30-aesthetic-ui-ux-design-plan.md": {
+    "mtime": 1792857717.4813707,
+    "seen": 1794841260.671814,
+    "ast_hash": "21826fbbf6fd714bdea62c6b9e93ca3d",
+    "semantic_hash": ""
+  },
+  ".asw/plans/2026-09-30-comprehensive-ui-unification-and-beauty-plan.md": {
+    "mtime": 1792857717.480419,
+    "seen": 1794841260.671815,
+    "ast_hash": "cd3e15bf8b049a866159a7ed557d911f",
+    "semantic_hash": ""
+  },
+  ".asw/plans/2026-09-30-ui-ux-roadmap-implementation-plan.md": {
+    "mtime": 1792857717.481148,
+    "seen": 1794841260.6718159,
+    "ast_hash": "489c8237ddc9ea02a6f1207acda6fd97",
+    "semantic_hash": ""
+  },
+  ".asw/plans/2026-09-30-zero-overhead-features-implementation-plan.md": {
+    "mtime": 1792857717.4807413,
+    "seen": 1794841260.6718166,
+    "ast_hash": "f16d4dd7e35ccd6d7732efeda5fae675",
+    "semantic_hash": ""
+  },
+  ".asw/plans/2026-10-04-spatial-workspace-carousel-mission-control.md": {
+    "mtime": 1792857717.4810007,
+    "seen": 1794841260.6718178,
+    "ast_hash": "fb1de73d21795a78264e412dda60173d",
+    "semantic_hash": ""
+  },
+  ".asw/plans/2026-10-04-spatial-workspace-map.md": {
+    "mtime": 1792857717.4812841,
+    "seen": 1794841260.6718187,
+    "ast_hash": "0b9310bc201eed1e78566538826cadc2",
+    "semantic_hash": ""
+  },
+  ".asw/plans/2026-10-10-cinematic-motion-architecture-plan.md": {
+    "mtime": 1792857717.4805741,
+    "seen": 1794841260.6718194,
+    "ast_hash": "294f4c6e72efb81dd621655c93f8bbc9",
+    "semantic_hash": ""
+  },
+  ".asw/plans/Review.txt": {
+    "mtime": 1792857717.480909,
+    "seen": 1794841260.6718209,
+    "ast_hash": "676b35b73756ce989c891ad5276da681",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-29-cool-shell-architectural-review.md": {
+    "mtime": 1792857717.493579,
+    "seen": 1794841260.6718216,
+    "ast_hash": "79cb1a9715316eb7e0a6062eeb835fce",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-30-aesthetic-ui-ux-design-plan.md": {
+    "mtime": 1792857717.4895225,
+    "seen": 1794841260.6718278,
+    "ast_hash": "21826fbbf6fd714bdea62c6b9e93ca3d",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-30-comprehensive-ui-unification-and-beauty-plan.md": {
+    "mtime": 1792857717.482626,
+    "seen": 1794841260.6718287,
+    "ast_hash": "ed286a8e115453cde03902f3dda95b16",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-30-comprehensive-ui-unification-verification.md": {
+    "mtime": 1792857717.4920335,
+    "seen": 1794841260.6718297,
+    "ast_hash": "2dff44ca84839858b186f3997fd6859d",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-30-cool-shell-correction-and-verification.md": {
+    "mtime": 1792857717.4851654,
+    "seen": 1794841260.671831,
+    "ast_hash": "13011cc0ec5d688c6aa9e1b19f6766a5",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-30-cool-shell-implementation-and-verification.md": {
+    "mtime": 1792857717.483148,
+    "seen": 1794841260.6718316,
+    "ast_hash": "221fe50848cf34b94a92f42a59458dd7",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-30-dynamic-island-routing-spring-physics.md": {
+    "mtime": 1792857717.495471,
+    "seen": 1794841260.6718326,
+    "ast_hash": "d1cccd1b339276ff38917335567e996f",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-30-extreme-game-mode-implementation.md": {
+    "mtime": 1792857717.4876518,
+    "seen": 1794841260.6718335,
+    "ast_hash": "9423c68b388199f2ae7f2407463346e0",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-30-game-mode-exceptions-management.md": {
+    "mtime": 1792857717.490807,
+    "seen": 1794841260.6718347,
+    "ast_hash": "172e32a55b2d02ea8f69a37fabf8623f",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-30-game-mode-ram-optimization.md": {
+    "mtime": 1792857717.4923382,
+    "seen": 1794841260.6718354,
+    "ast_hash": "4644c5fecca05a586eb251bf0859877e",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-30-media-progress-perimeter-border-ring.md": {
+    "mtime": 1792857717.4874175,
+    "seen": 1794841260.6718364,
+    "ast_hash": "86ea55943ce5b11335b36b9babc785c9",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-30-performance-and-resource-tradeoff-audit.md": {
+    "mtime": 1792857717.492768,
+    "seen": 1794841260.6718373,
+    "ast_hash": "c6356fcf276c8cc30b0ee400bec826f9",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-30-zero-overhead-features-implementation-plan.md": {
+    "mtime": 1792857717.495743,
+    "seen": 1794841260.6718383,
+    "ast_hash": "f16d4dd7e35ccd6d7732efeda5fae675",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-09-30-zero-overhead-features-review.md": {
+    "mtime": 1792857717.486803,
+    "seen": 1794841260.6718392,
+    "ast_hash": "39080f4cab170c79d65abdae70bc4f03",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-04-blackhole-wallpaper-architectural-review.md": {
+    "mtime": 1792857717.4824517,
+    "seen": 1794841260.6718402,
+    "ast_hash": "572f0884c8827b68ff00384f9d3e7960",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-04-blackhole-wallpaper-exploration.md": {
+    "mtime": 1792857717.4850233,
+    "seen": 1794841260.6718414,
+    "ast_hash": "90ffc049969d5352d1c7ab934fcc99c2",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-04-custom-themes-overhaul.md": {
+    "mtime": 1792857717.4843254,
+    "seen": 1794841260.6718423,
+    "ast_hash": "e3c56023b026dd32c2f191d950a96474",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-04-island-media-controls.md": {
+    "mtime": 1792857717.4891407,
+    "seen": 1794841260.6718538,
+    "ast_hash": "78e3808f9236301a7117c70d72d5ca2f",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-04-live-mp4-wallpaper-implementation.md": {
+    "mtime": 1792857717.4889417,
+    "seen": 1794841260.6718547,
+    "ast_hash": "2c6d5f2fd8eac22804415091384b02a1",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-04-notification-persistence-verification.md": {
+    "mtime": 1792857717.484887,
+    "seen": 1794841260.671856,
+    "ast_hash": "c79c0ef70dc9f828974541432012552b",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-04-spatial-workspace-carousel-verification.md": {
+    "mtime": 1792857717.4835858,
+    "seen": 1794841260.6718569,
+    "ast_hash": "5d28a8f1da61f5774538256f33256ae9",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-04-spatial-workspace-map-verification.md": {
+    "mtime": 1792857717.489866,
+    "seen": 1794841260.6718578,
+    "ast_hash": "13756f5a9e7d632e249499f1778e867e",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-04-wallpaper-architectural-review.md": {
+    "mtime": 1792857717.4879143,
+    "seen": 1794841260.6718588,
+    "ast_hash": "ede205885b0e5a953e8fef8c97b6cce1",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-04-wallpaper-exploration.md": {
+    "mtime": 1792857717.486139,
+    "seen": 1794841260.6718597,
+    "ast_hash": "5df2d81aff60c61136e4acbd27634a4f",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-04-wallpaper-implementation.md": {
+    "mtime": 1792857717.490993,
+    "seen": 1794841260.6718607,
+    "ast_hash": "3e2df0d7db0a44e1a77fcad31cd3a634",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-04-wallpaper-opacity-and-island-volume.md": {
+    "mtime": 1792857717.4959185,
+    "seen": 1794841260.6718614,
+    "ast_hash": "53a87b5ad080ee698d568379d0cbb4c6",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-04-wallpaper-verification.md": {
+    "mtime": 1792857717.4952958,
+    "seen": 1794841260.6718626,
+    "ast_hash": "cac139279f7b007bb80512504cd42164",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-07-audio-subsystem-restoration.md": {
+    "mtime": 1792857717.4863536,
+    "seen": 1794841260.6718636,
+    "ast_hash": "568af5a321bb273ba20c1021fca10a84",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-07-island-media-controls-fix.md": {
+    "mtime": 1792857717.4820254,
+    "seen": 1794841260.6718643,
+    "ast_hash": "ff94a191191814161b1a5ebec92cea15",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-08-cool-shell-full-system-exploration.md": {
+    "mtime": 1792857717.484181,
+    "seen": 1794841260.6718652,
+    "ast_hash": "3e77b346054e2b1c54b0ddc7f12a24f0",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-09-hyprscroller-architectural-evaluation.md": {
+    "mtime": 1792857717.4943123,
+    "seen": 1794841260.6718664,
+    "ast_hash": "599060dccc67d44ccd155e402d68aa92",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-09-independent-media-widget-and-display-switcher.md": {
+    "mtime": 1792857717.4899833,
+    "seen": 1794841260.6718671,
+    "ast_hash": "4d7efd55aa19c240436a96a75ace6531",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-09-performance-widgets-nightlight-ambient.md": {
+    "mtime": 1792857717.484595,
+    "seen": 1794841260.671868,
+    "ast_hash": "3f68031b34884cdba7148b532a5ff521",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-09-scrolling-layout-birdseye-peeking-edge-implementation.md": {
+    "mtime": 1792857717.483445,
+    "seen": 1794841260.671869,
+    "ast_hash": "da90ba9f72415987fe7f5623b731d908",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-09-settings-system-unification-and-fix.md": {
+    "mtime": 1792857717.4837282,
+    "seen": 1794841260.67187,
+    "ast_hash": "2729e937551868b48b5628b98e599664",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-09-the-feather-battery-mode.md": {
+    "mtime": 1792857717.4870214,
+    "seen": 1794841260.671871,
+    "ast_hash": "937b3d7d0b52d1624083320c74852f57",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-09-window-stash-pocket-implementation.md": {
+    "mtime": 1792857717.4829898,
+    "seen": 1794841260.671872,
+    "ast_hash": "2ed1a594578f40a7e001ed7a526612a5",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-10-bottombar-hitbox-and-performance-optimization.md": {
+    "mtime": 1792857717.485607,
+    "seen": 1794841260.6718729,
+    "ast_hash": "fe5ddef1725133724a3714158032074d",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-10-bottombar-popovers-and-side-widgets-verification.md": {
+    "mtime": 1792857717.4922404,
+    "seen": 1794841260.6718738,
+    "ast_hash": "1f4999f2a0f8019b6bd89915c0d17b96",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-10-cinematic-motion-architecture-plan.md": {
+    "mtime": 1792857717.4913793,
+    "seen": 1794841260.6718748,
+    "ast_hash": "294f4c6e72efb81dd621655c93f8bbc9",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-10-cinematic-motion-implementation-verification.md": {
+    "mtime": 1792857717.494835,
+    "seen": 1794841260.6718755,
+    "ast_hash": "d5500371e5f39ab4257a3bf9af96a0ed",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-10-cool-shell-comprehensive-review-and-architecture-evaluation.md": {
+    "mtime": 1792857717.482295,
+    "seen": 1794841260.6718767,
+    "ast_hash": "f6a6e0cecead0318a60793c4450a786e",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-10-display-switcher-hyprland-lua-fix.md": {
+    "mtime": 1792857717.4906228,
+    "seen": 1794841260.6718776,
+    "ast_hash": "59e2b21e405a402850ccbfc4c6c56bd5",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-10-fullscreen-idle-island-and-reimagined-right-sidebar.md": {
+    "mtime": 1792857717.4904082,
+    "seen": 1794841260.6718786,
+    "ast_hash": "eae422b6b78432b2c59c87bdadb40fa2",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-10-region-recording-capture-verification.md": {
+    "mtime": 1792857717.490164,
+    "seen": 1794841260.6718795,
+    "ast_hash": "78b6a682e4922f31f7d324d085e7680e",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-10-spotify-translucency-theme-sync.md": {
+    "mtime": 1792857717.4940193,
+    "seen": 1794841260.6718805,
+    "ast_hash": "898f6e2c989c418d8540a4fc43e0063f",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-10-ukishima-bottombar-expandable-dot-tooltips.md": {
+    "mtime": 1792857717.4941323,
+    "seen": 1794841260.6718814,
+    "ast_hash": "77332edb234fa511a6e24f6543b059e9",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-10-ukishima-bottombar-transformation.md": {
+    "mtime": 1792857717.4840086,
+    "seen": 1794841260.6718822,
+    "ast_hash": "847cad092924a9dc51386ebb90e653f6",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-11-android-phone-mirroring-architecture.md": {
+    "mtime": 1792857717.4872153,
+    "seen": 1794841260.6718833,
+    "ast_hash": "08bc2d01925a18a7b82e9e36604b0988",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-11-deep-cpu-profiling-and-architectural-integrity-plan.md": {
+    "mtime": 1792857717.4930258,
+    "seen": 1794841260.6718843,
+    "ast_hash": "345bdc82ab7ea1e7de75bdf872941165",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-11-dynamic-island-lyrics-adaptive-sizing.md": {
+    "mtime": 1792857717.49509,
+    "seen": 1794841260.671885,
+    "ast_hash": "aa032d549aad38a500d8098b673296a5",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-11-lyrics-resource-analysis-and-read-aloud-latency-findings.md": {
+    "mtime": 1792857717.482876,
+    "seen": 1794841260.671886,
+    "ast_hash": "58dfc653bea105d8e510489cc7c22644",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-11-memory-profiling-and-ram-optimization-plan.md": {
+    "mtime": 1792857717.4865816,
+    "seen": 1794841260.6718872,
+    "ast_hash": "c35be8c1fa6e5ba6b95d1bd2fc6eba19",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-11-music-lyrics-resource-monitoring.md": {
+    "mtime": 1792857717.484808,
+    "seen": 1794841260.671888,
+    "ast_hash": "79878e099254029f4f25eb3ad5c5a50b",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-11-op-shell-features-plan.md": {
+    "mtime": 1792857717.4949498,
+    "seen": 1794841260.6718888,
+    "ast_hash": "b03393537ca04d5a88305c7cba46d7e3",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-11-optimization-action-plan.md": {
+    "mtime": 1792857717.4814992,
+    "seen": 1794841260.67189,
+    "ast_hash": "1aebdd503c8a60127e109a7c95b0a466",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-11-optimization-part-1-and-part-2-architectural-integrity.md": {
+    "mtime": 1792857717.4886074,
+    "seen": 1794841260.671891,
+    "ast_hash": "977025a7de074da145663d0cc8359ba8",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-11-screen-lens-read-aloud-and-tts-integration.md": {
+    "mtime": 1792857717.4944737,
+    "seen": 1794841260.671892,
+    "ast_hash": "0ca4cc1f54272d25d723fb8ed46dcb38",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-11-screen-lens-zero-compilation-native-ocr.md": {
+    "mtime": 1792857717.4881043,
+    "seen": 1794841260.6718926,
+    "ast_hash": "2b796b331fce64941dbdab2fe67389a7",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-11-universal-screen-lens-implementation.md": {
+    "mtime": 1792857717.4911616,
+    "seen": 1794841260.6718938,
+    "ast_hash": "53268d2781cc7db33c524c034c381806",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-11-zero-regression-optimization-implementation-and-verification.md": {
+    "mtime": 1792857717.4838707,
+    "seen": 1794841260.6718948,
+    "ast_hash": "49855340c090dba804bf7bd75ab363f3",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-12-1080p-ai-image-engine-and-island-prompt.md": {
+    "mtime": 1792857717.4955568,
+    "seen": 1794841260.6718955,
+    "ast_hash": "ac79bbbc2914d57fba3162f39cf82804",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-12-512x512-ai-image-daemon-and-island-prompt.md": {
+    "mtime": 1792857717.4882746,
+    "seen": 1794841260.6718965,
+    "ast_hash": "43a54cad46ab28cf3ab59327ee4b51a3",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-12-ai-image-generator-beta-lifecycle-fixes.md": {
+    "mtime": 1792857717.4854608,
+    "seen": 1794841260.6718976,
+    "ast_hash": "45bdf6c94405de4af725ca27d333f76f",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-12-audio-cpu-profiling-and-subsystem-optimization.md": {
+    "mtime": 1792857717.4817514,
+    "seen": 1794841260.6718986,
+    "ast_hash": "37d8a0c6a6f0f3f1311d1031830eb580",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-12-battery-health-and-hardware-audit.md": {
+    "mtime": 1792857717.4887733,
+    "seen": 1794841260.6718996,
+    "ast_hash": "97dd0c7457f0fc813037f6b37893162d",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-12-feather-mode-resource-limits.md": {
+    "mtime": 1792857717.4884062,
+    "seen": 1794841260.6719007,
+    "ast_hash": "2b21cd6172bcc2c68fd489e2dc5439db",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-12-gods-eye-sidebar-mode-integration.md": {
+    "mtime": 1792857717.4818912,
+    "seen": 1794841260.6719015,
+    "ast_hash": "2850a54bf49ef07029253808aa946676",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-12-gods-eye-view-setup.md": {
+    "mtime": 1792857717.4918838,
+    "seen": 1794841260.6719027,
+    "ast_hash": "2fac50b996e8f938cad3118faad67a64",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-12-kokoro-realtime-clause-streaming-and-tts-options.md": {
+    "mtime": 1792857717.4915454,
+    "seen": 1794841260.6719034,
+    "ast_hash": "019a923308932767337b92d015ce6680",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-12-opsec-security-audit-and-stealth-hardening.md": {
+    "mtime": 1792857717.4827528,
+    "seen": 1794841260.6719046,
+    "ast_hash": "4c030ff4f4627a3262c617f155b80a3f",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-12-study-mode-lockout-and-reward-heatmap.md": {
+    "mtime": 1792857717.4844577,
+    "seen": 1794841260.6719055,
+    "ast_hash": "9cf9e7983f72b02ee8a3436cb96fdbf1",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-12-vibe-trading-setup-and-indian-market-workflow.md": {
+    "mtime": 1792857717.4918027,
+    "seen": 1794841260.6719065,
+    "ast_hash": "699257ee5e5069bb521d78bc2c7b7d08",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-13-acer-battery-health-mode.md": {
+    "mtime": 1792857717.4853208,
+    "seen": 1794841260.6719077,
+    "ast_hash": "524dca33d1020f16076459f12f07230e",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-13-android-phone-mirroring-implementation.md": {
+    "mtime": 1792857717.493849,
+    "seen": 1794841260.6719086,
+    "ast_hash": "210aa43a69cfdb0cb1e520b40b638202",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-13-battery-charge-limit-implementation.md": {
+    "mtime": 1792857717.484731,
+    "seen": 1794841260.6719096,
+    "ast_hash": "b6ac19f7083597e2cc2712af88938f02",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-13-fast-conformer-caption-system.md": {
+    "mtime": 1792857717.4821444,
+    "seen": 1794841260.6719108,
+    "ast_hash": "74b9d81d31da039f0550f57a703ef862",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-13-headphone-anatomy-and-variables.md": {
+    "mtime": 1792857717.492508,
+    "seen": 1794841260.6719117,
+    "ast_hash": "1b53378d086846eaad96ced078c96815",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-13-island-drag-drop-captioning.md": {
+    "mtime": 1792857717.483309,
+    "seen": 1794841260.6719124,
+    "ast_hash": "571b75cbf9bf54e74088ac3528795257",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-13-phone-subsystem-zero-load-shutdown.md": {
+    "mtime": 1792857717.4932644,
+    "seen": 1794841260.6719134,
+    "ast_hash": "06dec44bdfc0e2cce47d38da0db01e17",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-13-settings-modes-consolidation-and-fixes.md": {
+    "mtime": 1792857717.4893346,
+    "seen": 1794841260.6719146,
+    "ast_hash": "6886bcf08f9302ebf334ad0afadcf2f8",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-13-study-mode-file-explorers-and-pdf-download-fix.md": {
+    "mtime": 1792857717.491711,
+    "seen": 1794841260.6719155,
+    "ast_hash": "3a3c019dd3c3f797ea97de0fd85c174d",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-14-study-mode-self-healing-and-overtime-fix.md": {
+    "mtime": 1792857717.4946413,
+    "seen": 1794841260.6719165,
+    "ast_hash": "7a78bb680d9a946c34bc390980125b17",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-16-pc-lag-and-mouse-stutter-diagnosis.md": {
+    "mtime": 1792857717.4961975,
+    "seen": 1794841260.6719177,
+    "ast_hash": "328e0e007752222affb9b664cc9a7ae0",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-18-cool-shell-update-sync.md": {
+    "mtime": 1792857717.4859114,
+    "seen": 1794841260.6719186,
+    "ast_hash": "a80837042b782824cfb4d4836d92b15f",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-26-custom-study-mode-lockdown-and-exam-profile.md": {
+    "mtime": 1793039545.2655122,
+    "seen": 1794841260.6719196,
+    "ast_hash": "ec7a8ff008675401e807a85e0c213d58",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-27-dynamic-island-rendering-and-animation-overhaul.md": {
+    "mtime": 1793100683.5382693,
+    "seen": 1794841260.671922,
+    "ast_hash": "7caee1f34b089a75a07665743a4f1e85",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-27-dynamic-island-timer-sounds-and-hotstar-quota.md": {
+    "mtime": 1793078489.173552,
+    "seen": 1794841260.671923,
+    "ast_hash": "8791f90dac5a45fd8d0a84c00a4e004c",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-27-nectar-dynamic-island-architecture-and-migration-plan.md": {
+    "mtime": 1793093606.1120005,
+    "seen": 1794841260.6719239,
+    "ast_hash": "c6bfa7ae938587c3c89dc33a74117669",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-27-nectar-dynamic-island-completion-and-verification-report.md": {
+    "mtime": 1793094735.7468436,
+    "seen": 1794841260.671925,
+    "ast_hash": "a7516b996d89101685f6530d3db49481",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-27-system-resource-protection-anti-freeze-architecture.md": {
+    "mtime": 1793102366.0735776,
+    "seen": 1794841260.6719258,
+    "ast_hash": "f6e7ed275cd0882cac9a33241395d771",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-10-27-wifi-settings-fix.md": {
+    "mtime": 1793085200.267814,
+    "seen": 1794841260.6719267,
+    "ast_hash": "7288179f6e983d514fa8283a2ab01126",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-15-apple-liquid-glass-architecture.md": {
+    "mtime": 1794748037.3181798,
+    "seen": 1794841260.6719275,
+    "ast_hash": "cadd73589e9ee851b1eedb719a0e9be4",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-15-kitty-apple-liquid-glass-verification.md": {
+    "mtime": 1794748750.6746418,
+    "seen": 1794841260.6719286,
+    "ast_hash": "8fbb0ad83243f6a4b41c7b9b74bc37d2",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-15-kitty-liquid-glass-deployment.md": {
+    "mtime": 1794767239.1485786,
+    "seen": 1794841260.6719296,
+    "ast_hash": "faed124a54fcf1fdff901ee67f73aa23",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-15-liquid-glass-quickshell-implementation.md": {
+    "mtime": 1794765701.0683932,
+    "seen": 1794841260.6719303,
+    "ast_hash": "8fd96ac1517bdd6ca01edd62dd053f88",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-15-liquid-glass-rendering-audit.md": {
+    "mtime": 1794753624.316596,
+    "seen": 1794841260.6719315,
+    "ast_hash": "d0fc4fb5bc219a3dec49e0934cbb681d",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-15-minflair-topbar-reverse-engineering.md": {
+    "mtime": 1794747327.3579965,
+    "seen": 1794841260.6719325,
+    "ast_hash": "397fa91be95164ad393614ddcc728353",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-15-solution4-kitty-liquid-glass-implementation.md": {
+    "mtime": 1794750803.7028816,
+    "seen": 1794841260.6719332,
+    "ast_hash": "292afe91550a4592a8754d265fc25fdf",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-16-capsule-slider-starkcad-removal-and-sidebar-bounds.md": {
+    "mtime": 1794839810.0987651,
+    "seen": 1794841260.6719341,
+    "ast_hash": "4f658f64bcce8cf1168f3f5829a97356",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-16-dual-mode-light-dark-architecture.md": {
+    "mtime": 1794844874.6195629,
+    "seen": 1794844889.291246,
+    "ast_hash": "777b043144253ec13f1115788e0f6a7f",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-16-glass-widgets-roadmap-and-imagegen-diagnosis.md": {
+    "mtime": 1794835130.1136787,
+    "seen": 1794841260.671936,
+    "ast_hash": "99585b3d78d492d7e89f6c56a2429ce0",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-16-modular-control-center-and-imagegen-verification-report.md": {
+    "mtime": 1794838268.357038,
+    "seen": 1794841260.671937,
+    "ast_hash": "5b0fe14a989d159f7db5adb8750a2f3c",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-16-modular-control-center-visionos-implementation-plan.md": {
+    "mtime": 1794836528.6677055,
+    "seen": 1794841260.671938,
+    "ast_hash": "f0956c7feb4d9d14759c83a0a242d9b6",
+    "semantic_hash": ""
+  },
+  "Other-stuff/SETUP-AND-PATHS.md": {
+    "mtime": 1792857717.4976282,
+    "seen": 1794841260.671939,
+    "ast_hash": "33e08c04d2a80400e94476892151a5a4",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1792857717.1743937,
+    "seen": 1794841260.6719398,
+    "ast_hash": "48996616a680afbe1af9e0410346742d",
+    "semantic_hash": ""
+  },
+  "features.md": {
+    "mtime": 1792857717.1739233,
+    "seen": 1794841260.6719408,
+    "ast_hash": "31f80c3b99ef8b61e96a28b022eebda7",
+    "semantic_hash": ""
+  },
+  "function.md": {
+    "mtime": 1792857717.1745877,
+    "seen": 1794841260.6719415,
+    "ast_hash": "4c5acf9fbd13c422225284f1665e1bd2",
+    "semantic_hash": ""
+  },
+  "island/scratchpad.txt": {
+    "mtime": 1792857717.4678533,
+    "seen": 1794841260.6719427,
+    "ast_hash": "a2f4a09784ad37ec4a77ece36f04dc55",
+    "semantic_hash": ""
+  },
+  "requirements.txt": {
+    "mtime": 1792857717.174709,
+    "seen": 1794841260.6719437,
+    "ast_hash": "3f3dbc57a1df81091cc8f18e66d90313",
+    "semantic_hash": ""
+  },
+  "wallpaper/README.md": {
+    "mtime": 1792857717.4677498,
+    "seen": 1794841260.6719444,
+    "ast_hash": "706408a66b78fcf570f4fdf75b08e77e",
+    "semantic_hash": ""
+  },
+  "assets/minflair/3s.svg": {
+    "mtime": 1794743200.9596608,
+    "seen": 1794841260.6719456,
+    "ast_hash": "1fcb1851c3ebb3cbd6022169ef9ae557",
+    "semantic_hash": ""
+  },
+  "assets/minflair/alarm.svg": {
+    "mtime": 1794743200.95987,
+    "seen": 1794841260.6719465,
+    "ast_hash": "2b65db06c25ba8efa7af2289ef5688b1",
+    "semantic_hash": ""
+  },
+  "assets/minflair/apps-filled.svg": {
+    "mtime": 1794743200.9599233,
+    "seen": 1794841260.6719475,
+    "ast_hash": "3a1df42b05a504c33e3860803e66c9a3",
+    "semantic_hash": ""
+  },
+  "assets/minflair/apps.svg": {
+    "mtime": 1794743200.959983,
+    "seen": 1794841260.6719482,
+    "ast_hash": "30b5a72a4f121c6397ce1ec852e3084f",
+    "semantic_hash": ""
+  },
+  "assets/minflair/bar-filled.svg": {
+    "mtime": 1794743200.96003,
+    "seen": 1794841260.6719494,
+    "ast_hash": "b618a125fedb8794fcdcb946eca3ac1b",
+    "semantic_hash": ""
+  },
+  "assets/minflair/bar.svg": {
+    "mtime": 1794743200.9600742,
+    "seen": 1794841260.6719503,
+    "ast_hash": "b70222bed78ce9f3bfcb3fa6bfc8a916",
+    "semantic_hash": ""
+  },
+  "assets/minflair/bell-dot.svg": {
+    "mtime": 1794743200.9601333,
+    "seen": 1794841260.6719513,
+    "ast_hash": "283cf90d554c2c5e93e5a33af4b689f0",
+    "semantic_hash": ""
+  },
+  "assets/minflair/bell-off.svg": {
+    "mtime": 1794743200.9601805,
+    "seen": 1794841260.6719525,
+    "ast_hash": "0c9bc774dc8c6e51c1f350c828731470",
+    "semantic_hash": ""
+  },
+  "assets/minflair/bell.svg": {
+    "mtime": 1794743200.960226,
+    "seen": 1794841260.6719534,
+    "ast_hash": "41ef01a79c2431a642677fcda9d803e5",
+    "semantic_hash": ""
+  },
+  "assets/minflair/bluetooth-off.svg": {
+    "mtime": 1794743200.9602745,
+    "seen": 1794841260.6719542,
+    "ast_hash": "dc82ccb152b5d1c10d5cfdc538c801b4",
+    "semantic_hash": ""
+  },
+  "assets/minflair/bluetooth.svg": {
+    "mtime": 1794743200.9603353,
+    "seen": 1794841260.671955,
+    "ast_hash": "e8012b4a5f71c4d8f6f7671b0fe01383",
+    "semantic_hash": ""
+  },
+  "assets/minflair/box.svg": {
+    "mtime": 1794743200.9603732,
+    "seen": 1794841260.6719563,
+    "ast_hash": "922a08dcfe12993f8409e4cfddd79b13",
+    "semantic_hash": ""
+  },
+  "assets/minflair/calendar.svg": {
+    "mtime": 1794743200.9604626,
+    "seen": 1794841260.6719573,
+    "ast_hash": "6512c86ee370a7b2ff050a106c4b6d37",
+    "semantic_hash": ""
+  },
+  "assets/minflair/caps-lock-filled.svg": {
+    "mtime": 1794743200.9605138,
+    "seen": 1794841260.6719582,
+    "ast_hash": "870a6408e54c16b0ef20aed8c29e1e1b",
+    "semantic_hash": ""
+  },
+  "assets/minflair/caps-lock.svg": {
+    "mtime": 1794743200.9605708,
+    "seen": 1794841260.671959,
+    "ast_hash": "dab5b21ddc1d7d52f444c1688c979c8b",
+    "semantic_hash": ""
+  },
+  "assets/minflair/capture-filled.svg": {
+    "mtime": 1794743200.9606206,
+    "seen": 1794841260.67196,
+    "ast_hash": "3336c52abe998f6efb9576a20faf39ef",
+    "semantic_hash": ""
+  },
+  "assets/minflair/capture.svg": {
+    "mtime": 1794743200.9606705,
+    "seen": 1794841260.671961,
+    "ast_hash": "8d5d6f37b961db162fd145772c7e33d2",
+    "semantic_hash": ""
+  },
+  "assets/minflair/charger-filled.svg": {
+    "mtime": 1794743200.9607167,
+    "seen": 1794841260.6719618,
+    "ast_hash": "c768686a37c695069256f7d7a8107555",
+    "semantic_hash": ""
+  },
+  "assets/minflair/charger.svg": {
+    "mtime": 1794743200.9608011,
+    "seen": 1794841260.671963,
+    "ast_hash": "40ac94dcba894e2180da8c321b45c2e1",
+    "semantic_hash": ""
+  },
+  "assets/minflair/check.svg": {
+    "mtime": 1794743200.9608598,
+    "seen": 1794841260.671964,
+    "ast_hash": "e0c1b986aeb7a1c4672e185d6488d60d",
+    "semantic_hash": ""
+  },
+  "assets/minflair/chevron-down.svg": {
+    "mtime": 1794743200.960909,
+    "seen": 1794841260.6719646,
+    "ast_hash": "d22cf389668f9c3e460887470500f918",
+    "semantic_hash": ""
+  },
+  "assets/minflair/chevron-left.svg": {
+    "mtime": 1794743200.9609666,
+    "seen": 1794841260.6719656,
+    "ast_hash": "f48ebaea2bbcd375c22875d2b57451e1",
+    "semantic_hash": ""
+  },
+  "assets/minflair/chevron-right.svg": {
+    "mtime": 1794743200.9610138,
+    "seen": 1794841260.6719668,
+    "ast_hash": "e12967089fe62de92268f6409ab1ecf2",
+    "semantic_hash": ""
+  },
+  "assets/minflair/chevron-up.svg": {
+    "mtime": 1794743200.9610617,
+    "seen": 1794841260.6719675,
+    "ast_hash": "bb1ef84977c3f659b08bde7abb289405",
+    "semantic_hash": ""
+  },
+  "assets/minflair/circle-medium.svg": {
+    "mtime": 1794743200.961114,
+    "seen": 1794841260.6719687,
+    "ast_hash": "6ffebfb476ec0b6acebb14c14e0cdabf",
+    "semantic_hash": ""
+  },
+  "assets/minflair/clipboard.svg": {
+    "mtime": 1794743200.9611735,
+    "seen": 1794841260.6719697,
+    "ast_hash": "edf72800a97cc6fd61d4d20832914678",
+    "semantic_hash": ""
+  },
+  "assets/minflair/clock.svg": {
+    "mtime": 1794743200.9612415,
+    "seen": 1794841260.6719706,
+    "ast_hash": "cdd0674527a50c58887814f732d22d9e",
+    "semantic_hash": ""
+  },
+  "assets/minflair/code.svg": {
+    "mtime": 1794743200.96132,
+    "seen": 1794841260.6719713,
+    "ast_hash": "113af86dea99539a3e6c0b8679d34f36",
+    "semantic_hash": ""
+  },
+  "assets/minflair/coffee-filled.svg": {
+    "mtime": 1794743200.9613883,
+    "seen": 1794841260.6719723,
+    "ast_hash": "1443da2531ef63c1e0139463d207087d",
+    "semantic_hash": ""
+  },
+  "assets/minflair/coffee.svg": {
+    "mtime": 1794743200.9614575,
+    "seen": 1794841260.6719735,
+    "ast_hash": "ff8fc2bd29aed64d76e54789b0ae31b7",
+    "semantic_hash": ""
+  },
+  "assets/minflair/color-palette-filled.svg": {
+    "mtime": 1794743200.961519,
+    "seen": 1794841260.6719742,
+    "ast_hash": "418674432e7fc2fb25b88aff2e4546e4",
+    "semantic_hash": ""
+  },
+  "assets/minflair/color-palette.svg": {
+    "mtime": 1794743200.961605,
+    "seen": 1794841260.6719751,
+    "ast_hash": "49f1ce74e23532638dbabd7530bce4ab",
+    "semantic_hash": ""
+  },
+  "assets/minflair/commit.svg": {
+    "mtime": 1794743200.9616926,
+    "seen": 1794841260.6719759,
+    "ast_hash": "8642645194b81b7be72cbe20e6dabf65",
+    "semantic_hash": ""
+  },
+  "assets/minflair/cpu.svg": {
+    "mtime": 1794743200.9618359,
+    "seen": 1794841260.671977,
+    "ast_hash": "eb39e53ac9aabfd2829d88939a761bed",
+    "semantic_hash": ""
+  },
+  "assets/minflair/cursor-filled.svg": {
+    "mtime": 1794743200.961926,
+    "seen": 1794841260.671978,
+    "ast_hash": "b02f0f803b225c5f92d63a3e4c83f875",
+    "semantic_hash": ""
+  },
+  "assets/minflair/cursor.svg": {
+    "mtime": 1794743200.9620416,
+    "seen": 1794841260.671979,
+    "ast_hash": "2eb0df53502e9e1cee4a132714a6c29b",
+    "semantic_hash": ""
+  },
+  "assets/minflair/disk.svg": {
+    "mtime": 1794743200.96215,
+    "seen": 1794841260.6719797,
+    "ast_hash": "422f0867fef2f2ccdc3ba28965d5bf3d",
+    "semantic_hash": ""
+  },
+  "assets/minflair/download.svg": {
+    "mtime": 1794743200.9622273,
+    "seen": 1794841260.6719809,
+    "ast_hash": "1431c3b63380da76fa54948d3ca0caf2",
+    "semantic_hash": ""
+  },
+  "assets/minflair/eye-off.svg": {
+    "mtime": 1794743200.962301,
+    "seen": 1794841260.6719818,
+    "ast_hash": "903d7e8579e46f343c6993bba73cfbed",
+    "semantic_hash": ""
+  },
+  "assets/minflair/eye.svg": {
+    "mtime": 1794743200.9623733,
+    "seen": 1794841260.6719828,
+    "ast_hash": "0bbacf4cd49353de4f5715edc5e8257c",
+    "semantic_hash": ""
+  },
+  "assets/minflair/font.svg": {
+    "mtime": 1794743200.9624562,
+    "seen": 1794841260.671984,
+    "ast_hash": "799cb9ba58f5f52bf7881543f2b35d10",
+    "semantic_hash": ""
+  },
+  "assets/minflair/fork.svg": {
+    "mtime": 1794743200.9625645,
+    "seen": 1794841260.671985,
+    "ast_hash": "d6fda6288f5a38b4d15efc66ab62f150",
+    "semantic_hash": ""
+  },
+  "assets/minflair/gamepad-filled.svg": {
+    "mtime": 1794743200.9626675,
+    "seen": 1794841260.6719859,
+    "ast_hash": "c60cd8d5a92883ab090a1efd8d0343f6",
+    "semantic_hash": ""
+  },
+  "assets/minflair/gamepad.svg": {
+    "mtime": 1794743200.962817,
+    "seen": 1794841260.671987,
+    "ast_hash": "580d9f80a6bc5280e3aab9ecb45da43d",
+    "semantic_hash": ""
+  },
+  "assets/minflair/ghost.svg": {
+    "mtime": 1794743200.9629257,
+    "seen": 1794841260.6719878,
+    "ast_hash": "3aad542abcb1a635ec2ef44135eb2a02",
+    "semantic_hash": ""
+  },
+  "assets/minflair/github.svg": {
+    "mtime": 1794743200.9629955,
+    "seen": 1794841260.6719887,
+    "ast_hash": "6683a78eac343dcfdaa506864240d84b",
+    "semantic_hash": ""
+  },
+  "assets/minflair/gpu.svg": {
+    "mtime": 1794743200.9630654,
+    "seen": 1794841260.6719897,
+    "ast_hash": "8111525ef752e2f1e647f7165099fe44",
+    "semantic_hash": ""
+  },
+  "assets/minflair/hyprland.svg": {
+    "mtime": 1794743200.9631467,
+    "seen": 1794841260.6719906,
+    "ast_hash": "7ca40e88e93245259c129cadcb119cee",
+    "semantic_hash": ""
+  },
+  "assets/minflair/info-filled.svg": {
+    "mtime": 1794743200.96323,
+    "seen": 1794841260.6719916,
+    "ast_hash": "c0eae6ffde83d28b637a5377d6f6f38b",
+    "semantic_hash": ""
+  },
+  "assets/minflair/info.svg": {
+    "mtime": 1794743200.9633102,
+    "seen": 1794841260.6719925,
+    "ast_hash": "9b4d9cd1080d80c9c6c080d1158433ea",
+    "semantic_hash": ""
+  },
+  "assets/minflair/keyboard-filled.svg": {
+    "mtime": 1794743200.9633856,
+    "seen": 1794841260.6719933,
+    "ast_hash": "b68db691760d8dd5491d2365fe334339",
+    "semantic_hash": ""
+  },
+  "assets/minflair/keyboard.svg": {
+    "mtime": 1794743200.9635174,
+    "seen": 1794841260.6719944,
+    "ast_hash": "67ef4da6766e80d5f0467147dbb3b5bb",
+    "semantic_hash": ""
+  },
+  "assets/minflair/layout-filled.svg": {
+    "mtime": 1794743200.9635882,
+    "seen": 1794841260.6719954,
+    "ast_hash": "3554861d8d59240d47d0278d425548cc",
+    "semantic_hash": ""
+  },
+  "assets/minflair/lock.svg": {
+    "mtime": 1794743200.963661,
+    "seen": 1794841260.671996,
+    "ast_hash": "64828e31c05381730d8c2bd9a5e7388b",
+    "semantic_hash": ""
+  },
+  "assets/minflair/logout.svg": {
+    "mtime": 1794743200.9640234,
+    "seen": 1794841260.671997,
+    "ast_hash": "d67fd9267c128c6f1dbd19cdb519c555",
+    "semantic_hash": ""
+  },
+  "assets/minflair/memory.svg": {
+    "mtime": 1794743200.9641898,
+    "seen": 1794841260.6719983,
+    "ast_hash": "3998a8be5783f9a2cdc6c91629448fb3",
+    "semantic_hash": ""
+  },
+  "assets/minflair/microphone-off.svg": {
+    "mtime": 1794743200.9643214,
+    "seen": 1794841260.6719992,
+    "ast_hash": "f4407943df235fde8313803aa68c7420",
+    "semantic_hash": ""
+  },
+  "assets/minflair/microphone.svg": {
+    "mtime": 1794743200.9644084,
+    "seen": 1794841260.672,
+    "ast_hash": "ff92aa5dbbe4bb2dd3a8c64f06d0acc4",
+    "semantic_hash": ""
+  },
+  "assets/minflair/minus.svg": {
+    "mtime": 1794743200.9645467,
+    "seen": 1794841260.6720011,
+    "ast_hash": "c992cc5e5b89a7f5dee8a3cb6f563948",
+    "semantic_hash": ""
+  },
+  "assets/minflair/monitor-filled.svg": {
+    "mtime": 1794743200.9646833,
+    "seen": 1794841260.672002,
+    "ast_hash": "0752c6f322bccc7ea94abad33b156ebe",
+    "semantic_hash": ""
+  },
+  "assets/minflair/monitor.svg": {
+    "mtime": 1794743200.9648814,
+    "seen": 1794841260.672003,
+    "ast_hash": "41cd252d4dc898e7051e1a662b409a95",
+    "semantic_hash": ""
+  },
+  "assets/minflair/moon-filled.svg": {
+    "mtime": 1794743200.9650538,
+    "seen": 1794841260.6720037,
+    "ast_hash": "112d27c9d309232d219827671550f63a",
+    "semantic_hash": ""
+  },
+  "assets/minflair/moon.svg": {
+    "mtime": 1794743200.9651935,
+    "seen": 1794841260.672005,
+    "ast_hash": "a371932fc1e947d87fd92274e1df6ca5",
+    "semantic_hash": ""
+  },
+  "assets/minflair/music.svg": {
+    "mtime": 1794743200.9652917,
+    "seen": 1794841260.672006,
+    "ast_hash": "973ed6374bf424f1bf67dc480157a1de",
+    "semantic_hash": ""
+  },
+  "assets/minflair/neovim.svg": {
+    "mtime": 1794743200.9654684,
+    "seen": 1794841260.6720068,
+    "ast_hash": "bb25fffcaaa95827611dc47d993b2a97",
+    "semantic_hash": ""
+  },
+  "assets/minflair/ocr.svg": {
+    "mtime": 1794743200.9656608,
+    "seen": 1794841260.6720078,
+    "ast_hash": "a780041b20214a00c04716ae784a7611",
+    "semantic_hash": ""
+  },
+  "assets/minflair/picture-spark.svg": {
+    "mtime": 1794743200.9661393,
+    "seen": 1794841260.6720088,
+    "ast_hash": "c8ad61ecb1913df386f68cd4839f08ca",
+    "semantic_hash": ""
+  },
+  "assets/minflair/picture.svg": {
+    "mtime": 1794743200.9662738,
+    "seen": 1794841260.6720097,
+    "ast_hash": "5510d66c984d700072b6673f0cf031e9",
+    "semantic_hash": ""
+  },
+  "assets/minflair/player-loop-once.svg": {
+    "mtime": 1794743200.966374,
+    "seen": 1794841260.6720107,
+    "ast_hash": "7209b165a4cafd954bef20ed275bfadb",
+    "semantic_hash": ""
+  },
+  "assets/minflair/player-loop.svg": {
+    "mtime": 1794743200.9664433,
+    "seen": 1794841260.6720116,
+    "ast_hash": "d712688d1f8944a2b810ca1089481876",
+    "semantic_hash": ""
+  },
+  "assets/minflair/player-next.svg": {
+    "mtime": 1794743200.9665248,
+    "seen": 1794841260.6720126,
+    "ast_hash": "abfc23d4e57cba0933d5227b86d5c5a6",
+    "semantic_hash": ""
+  },
+  "assets/minflair/player-pause.svg": {
+    "mtime": 1794743200.966603,
+    "seen": 1794841260.6720135,
+    "ast_hash": "ceb5ed766f2e1809071d408596865725",
+    "semantic_hash": ""
+  },
+  "assets/minflair/player-play.svg": {
+    "mtime": 1794743200.9666717,
+    "seen": 1794841260.6720145,
+    "ast_hash": "a9fbef54825050bfa9e0ec6353e89d73",
+    "semantic_hash": ""
+  },
+  "assets/minflair/player-previous.svg": {
+    "mtime": 1794743200.9667575,
+    "seen": 1794841260.6720157,
+    "ast_hash": "f30e54a929136196a82c0edda37eabf8",
+    "semantic_hash": ""
+  },
+  "assets/minflair/player-shuffle.svg": {
+    "mtime": 1794743200.9668357,
+    "seen": 1794841260.6720166,
+    "ast_hash": "42d007ac0e04c441f5048bc0f8645e3c",
+    "semantic_hash": ""
+  },
+  "assets/minflair/player-stop.svg": {
+    "mtime": 1794743200.9668913,
+    "seen": 1794841260.6720176,
+    "ast_hash": "b5dd3c95dbe4a56f3e0afc9c8fee084c",
+    "semantic_hash": ""
+  },
+  "assets/minflair/plus.svg": {
+    "mtime": 1794743200.9669452,
+    "seen": 1794841260.6720188,
+    "ast_hash": "5e37b12a032a5d027f7c1697be460d47",
+    "semantic_hash": ""
+  },
+  "assets/minflair/power.svg": {
+    "mtime": 1794743200.967007,
+    "seen": 1794841260.6720195,
+    "ast_hash": "c65d2770e51335720473234f0f068c83",
+    "semantic_hash": ""
+  },
+  "assets/minflair/quote.svg": {
+    "mtime": 1794743200.9670706,
+    "seen": 1794841260.6720204,
+    "ast_hash": "1c9d7b13ce77760c749736ab1b61fc9d",
+    "semantic_hash": ""
+  },
+  "assets/minflair/record-area.svg": {
+    "mtime": 1794743200.9671342,
+    "seen": 1794841260.6720214,
+    "ast_hash": "941d0e1876d12665ecdaa4913026f025",
+    "semantic_hash": ""
+  },
+  "assets/minflair/record-icon.svg": {
+    "mtime": 1794743200.9671998,
+    "seen": 1794841260.6720223,
+    "ast_hash": "ea81dcffad14efb5874e51c0399ae187",
+    "semantic_hash": ""
+  },
+  "assets/minflair/refresh.svg": {
+    "mtime": 1794743200.9672658,
+    "seen": 1794841260.6720233,
+    "ast_hash": "5e171efb87aa210981b9d7aa84e43873",
+    "semantic_hash": ""
+  },
+  "assets/minflair/reload.svg": {
+    "mtime": 1794743200.9673336,
+    "seen": 1794841260.6720243,
+    "ast_hash": "1c6571263e5a945c310881c7f44d5b93",
+    "semantic_hash": ""
+  },
+  "assets/minflair/rocket.svg": {
+    "mtime": 1794743200.967412,
+    "seen": 1794841260.6720254,
+    "ast_hash": "6cee8b1f127861aa2a09dcf04145164f",
+    "semantic_hash": ""
+  },
+  "assets/minflair/screenshot-area.svg": {
+    "mtime": 1794743200.9674706,
+    "seen": 1794841260.6720266,
+    "ast_hash": "2b5c09af82ebcd73819a93dcdf102b4d",
+    "semantic_hash": ""
+  },
+  "assets/minflair/search.svg": {
+    "mtime": 1794743200.9675374,
+    "seen": 1794841260.6720276,
+    "ast_hash": "a40f04f67e8bf4731ce4ec6a08c601e3",
+    "semantic_hash": ""
+  },
+  "assets/minflair/slider.svg": {
+    "mtime": 1794743200.9676063,
+    "seen": 1794841260.6720288,
+    "ast_hash": "574a8bcb06cd8bc6389925fadcce5eb2",
+    "semantic_hash": ""
+  },
+  "assets/minflair/sparkles-filled.svg": {
+    "mtime": 1794743200.9676683,
+    "seen": 1794841260.6720297,
+    "ast_hash": "1ccf487606368d5246f9db8dc28ea388",
+    "semantic_hash": ""
+  },
+  "assets/minflair/sparkles.svg": {
+    "mtime": 1794743200.967765,
+    "seen": 1794841260.6720307,
+    "ast_hash": "8ad10eaab0e9606efd7d6e4c74adb022",
+    "semantic_hash": ""
+  },
+  "assets/minflair/square-rounded-check-filled.svg": {
+    "mtime": 1794743200.9678528,
+    "seen": 1794841260.6720316,
+    "ast_hash": "a46ae8530bf15a28e9a996362acfa2c0",
+    "semantic_hash": ""
+  },
+  "assets/minflair/square-rounded-check.svg": {
+    "mtime": 1794743200.9679108,
+    "seen": 1794841260.6720328,
+    "ast_hash": "b663fbb4257d4187ccdf7c696b76a92d",
+    "semantic_hash": ""
+  },
+  "assets/minflair/star-filled.svg": {
+    "mtime": 1794743200.9679766,
+    "seen": 1794841260.6720338,
+    "ast_hash": "7693921f4fa233c47fd9e36ae0eab349",
+    "semantic_hash": ""
+  },
+  "assets/minflair/star.svg": {
+    "mtime": 1794743200.968033,
+    "seen": 1794841260.672035,
+    "ast_hash": "6daace9e37acb18b0198f37d5b70ffb8",
+    "semantic_hash": ""
+  },
+  "assets/minflair/sun.svg": {
+    "mtime": 1794743200.9680893,
+    "seen": 1794841260.672036,
+    "ast_hash": "2f24807ddb62a3511535bd5d216278ac",
+    "semantic_hash": ""
+  },
+  "assets/minflair/touchpad.svg": {
+    "mtime": 1794743200.968146,
+    "seen": 1794841260.672037,
+    "ast_hash": "af20497a1fcfa25997aefde175d510a6",
+    "semantic_hash": ""
+  },
+  "assets/minflair/trash.svg": {
+    "mtime": 1794743200.9682035,
+    "seen": 1794841260.6720378,
+    "ast_hash": "7c42652200043ebdb4952776db6f1d0c",
+    "semantic_hash": ""
+  },
+  "assets/minflair/tune.svg": {
+    "mtime": 1794743200.9682586,
+    "seen": 1794841260.6720388,
+    "ast_hash": "7081b30fb0a3fc0221c99fd8980f355e",
+    "semantic_hash": ""
+  },
+  "assets/minflair/update-filled.svg": {
+    "mtime": 1794743200.9683194,
+    "seen": 1794841260.67204,
+    "ast_hash": "63de77214ec350a5c0bdde24be6f8dc2",
+    "semantic_hash": ""
+  },
+  "assets/minflair/update.svg": {
+    "mtime": 1794743200.9683726,
+    "seen": 1794841260.672041,
+    "ast_hash": "711b514fe769d626d11d2690bae6e975",
+    "semantic_hash": ""
+  },
+  "assets/minflair/volume-off.svg": {
+    "mtime": 1794743200.968435,
+    "seen": 1794841260.6720421,
+    "ast_hash": "16f6d66b641783479b7573980bcc54a9",
+    "semantic_hash": ""
+  },
+  "assets/minflair/volume.svg": {
+    "mtime": 1794743200.968487,
+    "seen": 1794841260.6720433,
+    "ast_hash": "699db229f5d2b47c83c4916d820c0ad7",
+    "semantic_hash": ""
+  },
+  "assets/minflair/warning.svg": {
+    "mtime": 1794743200.968557,
+    "seen": 1794841260.6720443,
+    "ast_hash": "8b015e673b02189e22dc1d100572199d",
+    "semantic_hash": ""
+  },
+  "assets/minflair/widgets.svg": {
+    "mtime": 1794743200.9686155,
+    "seen": 1794841260.6720452,
+    "ast_hash": "e623c7ec26911b363a4f21983acf00da",
+    "semantic_hash": ""
+  },
+  "assets/minflair/wifi-0.svg": {
+    "mtime": 1794743200.9686737,
+    "seen": 1794841260.6720464,
+    "ast_hash": "cc709c11394c6370ae8f9e6babaa6649",
+    "semantic_hash": ""
+  },
+  "assets/minflair/wifi-1.svg": {
+    "mtime": 1794743200.9687693,
+    "seen": 1794841260.6720474,
+    "ast_hash": "3424fb6b00b434937dd60d210b9703bc",
+    "semantic_hash": ""
+  },
+  "assets/minflair/wifi-2.svg": {
+    "mtime": 1794743200.9688473,
+    "seen": 1794841260.6720483,
+    "ast_hash": "d71d3e78c9b4219ec7121a2944ba78e8",
+    "semantic_hash": ""
+  },
+  "assets/minflair/wifi-off.svg": {
+    "mtime": 1794743200.968902,
+    "seen": 1794841260.6720495,
+    "ast_hash": "cfc2378fab4e99222ba7c2774db67b4b",
+    "semantic_hash": ""
+  },
+  "assets/minflair/wifi.svg": {
+    "mtime": 1794743200.9689524,
+    "seen": 1794841260.6720507,
+    "ast_hash": "7db9ab59c45fc5f1677c56f5ffda8c93",
+    "semantic_hash": ""
+  },
+  "assets/minflair/window-filled.svg": {
+    "mtime": 1794743200.9690022,
+    "seen": 1794841260.6720517,
+    "ast_hash": "559ad94a2748200667639979542aef7b",
+    "semantic_hash": ""
+  },
+  "assets/minflair/window.svg": {
+    "mtime": 1794743200.9690604,
+    "seen": 1794841260.6720526,
+    "ast_hash": "24eb9af24a9dd34fd8f7a4bd2d00d2c7",
+    "semantic_hash": ""
+  },
+  "assets/minflair/x.svg": {
+    "mtime": 1794743200.969115,
+    "seen": 1794841260.6720538,
+    "ast_hash": "38c2c39a5a02fba6a8aa13c27873bb4e",
+    "semantic_hash": ""
+  },
+  "island/assets/nectar/backward.fill.svg": {
+    "mtime": 1793093317.2536151,
+    "seen": 1794841260.6720548,
+    "ast_hash": "1d2cc04e210915f9b711549d38a55dff",
+    "semantic_hash": ""
+  },
+  "island/assets/nectar/forward.fill.svg": {
+    "mtime": 1793093317.2536702,
+    "seen": 1794841260.6720557,
+    "ast_hash": "9b5718a9a6c6741c28ef2a1428a06ee4",
+    "semantic_hash": ""
+  },
+  "island/assets/nectar/headphones.svg": {
+    "mtime": 1793093317.253708,
+    "seen": 1794841260.672057,
+    "ast_hash": "28ed6d3ef24988d91cd8daddd8bdc1c5",
+    "semantic_hash": ""
+  },
+  "island/assets/nectar/music.note.svg": {
+    "mtime": 1793093317.2537427,
+    "seen": 1794841260.6720579,
+    "ast_hash": "b18ae765f19023412657fdd05d7bb631",
+    "semantic_hash": ""
+  },
+  "island/assets/nectar/nectar.svg": {
+    "mtime": 1793093323.7670689,
+    "seen": 1794841260.6720588,
+    "ast_hash": "2590095b31dee1f07b9aaf5abfc46389",
+    "semantic_hash": ""
+  },
+  "island/assets/nectar/pause.fill.svg": {
+    "mtime": 1793093317.253777,
+    "seen": 1794841260.67206,
+    "ast_hash": "6e6687691282eaed32e06c10c53eee09",
+    "semantic_hash": ""
+  },
+  "island/assets/nectar/play.fill.svg": {
+    "mtime": 1793093317.2538116,
+    "seen": 1794841260.672061,
+    "ast_hash": "c8e81d3e0123e8f7350cb6dc31900f14",
+    "semantic_hash": ""
+  },
+  "island/assets/nectar/slider.horizontal.3.svg": {
+    "mtime": 1793093317.253848,
+    "seen": 1794841260.672062,
+    "ast_hash": "4f49753c71f1c64f6ed8c7133bda0805",
+    "semantic_hash": ""
+  },
+  "island/assets/nectar/speaker.slash.fill.svg": {
+    "mtime": 1793093317.2538834,
+    "seen": 1794841260.6720634,
+    "ast_hash": "a4a082201151d0bf425e1db1a93e8d6e",
+    "semantic_hash": ""
+  },
+  "island/assets/nectar/speaker.wave.1.fill.svg": {
+    "mtime": 1793093317.2539177,
+    "seen": 1794841260.6720643,
+    "ast_hash": "5f0887207f05b179b4a6c4f15c20c1b2",
+    "semantic_hash": ""
+  },
+  "island/assets/nectar/speaker.wave.2.fill.svg": {
+    "mtime": 1793093317.2539525,
+    "seen": 1794841260.6720655,
+    "ast_hash": "abced6382a57ed2dad56d4cde84c4a9f",
+    "semantic_hash": ""
+  },
+  "island/assets/nectar/speaker.wave.3.fill.svg": {
+    "mtime": 1793093317.2539895,
+    "seen": 1794841260.6720665,
+    "ast_hash": "cb1f9423eaab026ab22cc49282f8f535",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-16-floating-media-companion-implementation.md": {
+    "mtime": 1794849864.5004368,
+    "seen": 1794849870.932711,
+    "ast_hash": "c0c26ddf926756dcc84ba76b3fc3d033",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-16-apple-liquid-glass-physical-lens-media-player.md": {
+    "mtime": 1794851157.8154027,
+    "seen": 1794851168.535399,
+    "ast_hash": "9f0c4e0fb202a2755878861afcf2a658",
+    "semantic_hash": ""
+  },
+  "widgets/liquid-glass-media-player/build-shader.sh": {
+    "mtime": 1794852477.1674507,
+    "seen": 1794853057.6442564,
+    "ast_hash": "904aef71339d1b1e1248e0d699106967",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-16-quickshell-apple-liquid-glass-glsl-reconstruction.md": {
+    "mtime": 1794853047.590423,
+    "seen": 1794853057.644442,
+    "ast_hash": "0025b9de9d7da089cf27d58c6391948e",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-liquid-glass-live-capture-architecture.md": {
+    "mtime": 1794855366.287755,
+    "seen": 1794855377.025942,
+    "ast_hash": "c93bae9489fd70a89dd32932477f8f22",
+    "semantic_hash": ""
+  }
+}

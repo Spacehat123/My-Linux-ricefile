@@ -287,7 +287,9 @@ PanelWindow {
             width: dockRow.implicitWidth + 30
             height: 38
             radius: 19
-            color: Qt.tint("#07070a", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.08))
+            color: Island.Theme.isLightMode 
+                ? Island.Theme.surfaceOpaque 
+                : Qt.tint("#07070a", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.08))
             border.color: Island.Theme.glassBorder
             border.width: 1
             clip: false
@@ -1138,7 +1140,9 @@ PanelWindow {
             height: 24
             radius: 12
             width: tooltipText.implicitWidth + 20
-            color: Qt.tint("#0b0c10", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15))
+            color: Island.Theme.isLightMode
+                ? Island.Theme.surfaceElevated
+                : Qt.tint("#0b0c10", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15))
             border.color: Island.Theme.glassBorder
             border.width: 1
             z: 99
@@ -1210,7 +1214,9 @@ PanelWindow {
                 const pos = volPill.mapToItem(content, 0, 0);
                 return Math.max(10, Math.min(parent.width - width - 10, pos.x + (volPill.width - width) / 2));
             }
-            color: Qt.tint("#0b0c10", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.08))
+            color: Island.Theme.isLightMode
+                ? Island.Theme.surfaceElevated
+                : Qt.tint("#0b0c10", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.08))
             border.color: Island.Theme.glassBorder
             border.width: 1
             clip: true
@@ -1297,7 +1303,7 @@ PanelWindow {
                     width: parent.width
                     height: 8
                     radius: 4
-                    color: "#20ffffff"
+                    color: Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.08) : "#20ffffff"
 
                     Rectangle {
                         anchors.left: parent.left
@@ -1328,7 +1334,9 @@ PanelWindow {
                 const pos = netPill.mapToItem(content, 0, 0);
                 return Math.max(10, Math.min(parent.width - width - 10, pos.x + (netPill.width - width) / 2));
             }
-            color: Qt.tint("#0b0c10", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.08))
+            color: Island.Theme.isLightMode
+                ? Island.Theme.surfaceElevated
+                : Qt.tint("#0b0c10", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.08))
             border.color: Island.Theme.glassBorder
             border.width: 1
             clip: true
@@ -1450,7 +1458,9 @@ PanelWindow {
                 const pos = batPill.mapToItem(content, 0, 0);
                 return Math.max(10, Math.min(parent.width - width - 10, pos.x + (batPill.width - width) / 2));
             }
-            color: Qt.tint("#0b0c10", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.08))
+            color: Island.Theme.isLightMode
+                ? Island.Theme.surfaceElevated
+                : Qt.tint("#0b0c10", Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.08))
             border.color: Island.Theme.glassBorder
             border.width: 1
             clip: true
@@ -1549,7 +1559,7 @@ PanelWindow {
                     width: parent.width
                     height: 8
                     radius: 4
-                    color: "#20ffffff"
+                    color: Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.08) : "#20ffffff"
 
                     Rectangle {
                         anchors.left: parent.left

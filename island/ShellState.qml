@@ -69,6 +69,7 @@ Singleton {
     })
     signal openSettingsRequested(string category)
     signal toggleTodayRequested()
+    signal toggleMediaCompanionRequested()
     signal openOnboardingRequested()
 
     function openSettings(category) {
@@ -549,6 +550,11 @@ Singleton {
         if (name === "today") {
             close();
             toggleTodayRequested();
+            return;
+        }
+        if (name === "media") {
+            close();
+            toggleMediaCompanionRequested();
             return;
         }
         if (name === "onboarding") {

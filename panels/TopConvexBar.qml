@@ -224,7 +224,6 @@ PanelWindow {
             "wallpaper": wallpaperPanel,
             "capture": capturePanel,
             "power": powerPanel,
-            "media": mediaPanel,
             "notifications": notifCenterPanel,
             "timer": timerPanel,
             "shelf": shelfPanel,
@@ -920,11 +919,7 @@ PanelWindow {
                 visible: root.displayedPanel === "power"
             }
 
-            MediaPanel {
-                id: mediaPanel
-                width: parent.width
-                visible: root.displayedPanel === "media"
-            }
+
 
             NotifCenterPanel {
                 id: notifCenterPanel

@@ -92,7 +92,7 @@ PanelWindow {
         right: true
     }
     margins {
-        top: 14
+        top: 52
         bottom: 14
         right: 14
     }
@@ -248,20 +248,33 @@ PanelWindow {
         Rectangle {
             anchors.fill: parent
             radius: 14
-            color: "#08070b"
-            border.color: Qt.rgba(1, 1, 1, 0.09)
+            color: Island.Theme.glassBackground
+            border.color: Island.Theme.glassBorder
             border.width: 1
             clip: true
 
-            // Multi-stop Vertical Atmospheric Light Dispersion
+            // Multi-stop Vertical Atmospheric Light Dispersion (Dark mode only)
             Rectangle {
                 anchors.fill: parent
                 radius: parent.radius
+                visible: !Island.Theme.isLightMode
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.18) }
-                    GradientStop { position: 0.18; color: Qt.rgba(Island.Theme.primary.r * 0.4, Island.Theme.primary.g * 0.4, Island.Theme.primary.b * 0.4, 0.06) }
-                    GradientStop { position: 0.55; color: "#060509" }
-                    GradientStop { position: 1.0; color: "#040306" }
+                    GradientStop { 
+                        position: 0.0
+                        color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.18) 
+                    }
+                    GradientStop { 
+                        position: 0.18
+                        color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.06) 
+                    }
+                    GradientStop { 
+                        position: 0.55
+                        color: "#060509" 
+                    }
+                    GradientStop { 
+                        position: 1.0
+                        color: "#040306" 
+                    }
                 }
             }
 
@@ -273,7 +286,7 @@ PanelWindow {
                 anchors.leftMargin: 12
                 anchors.rightMargin: 12
                 height: 1
-                color: Qt.rgba(1, 1, 1, 0.16)
+                color: Island.Theme.isLightMode ? Qt.rgba(1, 1, 1, 0.6) : Qt.rgba(1, 1, 1, 0.16)
             }
 
             // Cybernetic Left Optical Laser Rail
@@ -456,7 +469,7 @@ PanelWindow {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         height: 1
-                        color: Qt.rgba(1, 1, 1, 0.08)
+                        color: Island.Theme.isLightMode ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.08)
                     }
 
                     // Sliding Precision Laser Runner (Underline Indicator)
@@ -503,7 +516,7 @@ PanelWindow {
                                 anchors.fill: parent
                                 anchors.margins: 2
                                 radius: 4
-                                color: tab0Mouse.containsMouse ? Qt.rgba(1, 1, 1, 0.04) : "transparent"
+                                color: tab0Mouse.containsMouse ? (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.04) : Qt.rgba(1, 1, 1, 0.04)) : "transparent"
                             }
 
                             Row {
@@ -545,7 +558,7 @@ PanelWindow {
                                 anchors.fill: parent
                                 anchors.margins: 2
                                 radius: 4
-                                color: tab1Mouse.containsMouse ? Qt.rgba(1, 1, 1, 0.04) : "transparent"
+                                color: tab1Mouse.containsMouse ? (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.04) : Qt.rgba(1, 1, 1, 0.04)) : "transparent"
                             }
 
                             Row {
@@ -587,7 +600,7 @@ PanelWindow {
                                 anchors.fill: parent
                                 anchors.margins: 2
                                 radius: 4
-                                color: tab2Mouse.containsMouse ? Qt.rgba(1, 1, 1, 0.04) : "transparent"
+                                color: tab2Mouse.containsMouse ? (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.04) : Qt.rgba(1, 1, 1, 0.04)) : "transparent"
                             }
 
                             Row {
@@ -682,8 +695,8 @@ PanelWindow {
                                 width: parent.width
                                 height: 46
                                 radius: 8
-                                color: Qt.rgba(0, 0, 0, 0.40)
-                                border.color: Qt.rgba(1, 1, 1, 0.08)
+                                color: Island.Theme.isLightMode ? Island.Theme.glassCard : Qt.rgba(0, 0, 0, 0.40)
+                                border.color: Island.Theme.isLightMode ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.08)
                                 border.width: 1
 
                                 // Top Specular Hairline
@@ -694,7 +707,7 @@ PanelWindow {
                                     anchors.leftMargin: 8
                                     anchors.rightMargin: 8
                                     height: 1
-                                    color: Qt.rgba(1, 1, 1, 0.12)
+                                    color: Island.Theme.isLightMode ? Qt.rgba(1, 1, 1, 0.8) : Qt.rgba(1, 1, 1, 0.12)
                                 }
 
                                 Item {
@@ -803,8 +816,12 @@ PanelWindow {
                                     width: spacesCol.width
                                     height: 50
                                     radius: 8
-                                    color: (modelData.activated || winCardMouse.containsMouse) ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(1, 1, 1, 0.03)
-                                    border.color: modelData.activated ? Island.Theme.primary : (winCardMouse.containsMouse ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.06))
+                                    color: (modelData.activated || winCardMouse.containsMouse) 
+                                        ? (Island.Theme.isLightMode ? Island.Theme.glassCardHover : Qt.rgba(1, 1, 1, 0.08)) 
+                                        : (Island.Theme.isLightMode ? Island.Theme.glassCard : Qt.rgba(1, 1, 1, 0.03))
+                                    border.color: modelData.activated 
+                                        ? Island.Theme.primary 
+                                        : (winCardMouse.containsMouse ? Island.Theme.glassBorder : (Island.Theme.isLightMode ? Island.Theme.glassBorderSubtle : Qt.rgba(1, 1, 1, 0.06)))
                                     border.width: 1
 
                                     // Left Status Indicator Strip
@@ -905,8 +922,8 @@ PanelWindow {
                                                 width: 22
                                                 height: 22
                                                 radius: 4
-                                                color: actFocusMouse.containsMouse ? Island.Theme.primary : Qt.rgba(1, 1, 1, 0.06)
-                                                border.color: actFocusMouse.containsMouse ? Island.Theme.primary : Qt.rgba(1, 1, 1, 0.1)
+                                                color: actFocusMouse.containsMouse ? Island.Theme.primary : (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.04) : Qt.rgba(1, 1, 1, 0.06))
+                                                border.color: actFocusMouse.containsMouse ? Island.Theme.primary : (Island.Theme.isLightMode ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.1))
                                                 border.width: 1
                                                 Text {
                                                     anchors.centerIn: parent
@@ -933,8 +950,8 @@ PanelWindow {
                                                 width: 22
                                                 height: 22
                                                 radius: 4
-                                                color: actStashMouse.containsMouse ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.3) : Qt.rgba(1, 1, 1, 0.06)
-                                                border.color: actStashMouse.containsMouse ? Island.Theme.primary : Qt.rgba(1, 1, 1, 0.1)
+                                                color: actStashMouse.containsMouse ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.3) : (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.04) : Qt.rgba(1, 1, 1, 0.06))
+                                                border.color: actStashMouse.containsMouse ? Island.Theme.primary : (Island.Theme.isLightMode ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.1))
                                                 border.width: 1
                                                 Text {
                                                     anchors.centerIn: parent
@@ -965,8 +982,8 @@ PanelWindow {
                                                 width: 22
                                                 height: 22
                                                 radius: 4
-                                                color: actCloseMouse.containsMouse ? Island.Theme.red : Qt.rgba(1, 1, 1, 0.06)
-                                                border.color: actCloseMouse.containsMouse ? Island.Theme.red : Qt.rgba(1, 1, 1, 0.1)
+                                                color: actCloseMouse.containsMouse ? Island.Theme.red : (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.04) : Qt.rgba(1, 1, 1, 0.06))
+                                                border.color: actCloseMouse.containsMouse ? Island.Theme.red : (Island.Theme.isLightMode ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.1))
                                                 border.width: 1
                                                 Text {
                                                     anchors.centerIn: parent
@@ -1170,8 +1187,8 @@ PanelWindow {
                                 width: parent.width
                                 implicitHeight: hwCol.implicitHeight + 28
                                 radius: 8
-                                color: Qt.rgba(0, 0, 0, 0.40)
-                                border.color: Qt.rgba(1, 1, 1, 0.08)
+                                color: Island.Theme.isLightMode ? Island.Theme.glassCard : Qt.rgba(0, 0, 0, 0.40)
+                                border.color: Island.Theme.isLightMode ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.08)
                                 border.width: 1
 
                                 // Top Specular Hairline
@@ -1182,7 +1199,7 @@ PanelWindow {
                                     anchors.leftMargin: 8
                                     anchors.rightMargin: 8
                                     height: 1
-                                    color: Qt.rgba(1, 1, 1, 0.12)
+                                    color: Island.Theme.isLightMode ? Qt.rgba(1, 1, 1, 0.8) : Qt.rgba(1, 1, 1, 0.12)
                                 }
 
                                 Column {
@@ -1265,8 +1282,8 @@ PanelWindow {
                                                     width: (parent.width - 15 * 3) / 16.0
                                                     height: parent.height
                                                     radius: 2
-                                                    color: lit ? (index >= 13 ? Island.Theme.red : (index >= 10 ? Island.Theme.yellow : Island.Theme.primary)) : Qt.rgba(1, 1, 1, 0.06)
-                                                    border.color: lit ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
+                                                    color: lit ? (index >= 13 ? Island.Theme.red : (index >= 10 ? Island.Theme.yellow : Island.Theme.primary)) : (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.06))
+                                                    border.color: lit ? (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.12) : Qt.rgba(1, 1, 1, 0.25)) : "transparent"
                                                     border.width: lit ? 1 : 0
                                                     Behavior on color { ColorAnimation { duration: 160 } }
                                                 }
@@ -1326,8 +1343,8 @@ PanelWindow {
                                                     width: (parent.width - 15 * 3) / 16.0
                                                     height: parent.height
                                                     radius: 2
-                                                    color: lit ? (index >= 13 ? Island.Theme.red : (index >= 10 ? Island.Theme.yellow : Island.Theme.primary)) : Qt.rgba(1, 1, 1, 0.06)
-                                                    border.color: lit ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
+                                                    color: lit ? (index >= 13 ? Island.Theme.red : (index >= 10 ? Island.Theme.yellow : Island.Theme.primary)) : (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.06))
+                                                    border.color: lit ? (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.12) : Qt.rgba(1, 1, 1, 0.25)) : "transparent"
                                                     border.width: lit ? 1 : 0
                                                     Behavior on color { ColorAnimation { duration: 160 } }
                                                 }
@@ -1387,8 +1404,8 @@ PanelWindow {
                                                     width: (parent.width - 15 * 3) / 16.0
                                                     height: parent.height
                                                     radius: 2
-                                                    color: lit ? (index >= 13 ? Island.Theme.red : (index >= 10 ? Island.Theme.yellow : Island.Theme.primary)) : Qt.rgba(1, 1, 1, 0.06)
-                                                    border.color: lit ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
+                                                    color: lit ? (index >= 13 ? Island.Theme.red : (index >= 10 ? Island.Theme.yellow : Island.Theme.primary)) : (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.06))
+                                                    border.color: lit ? (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.12) : Qt.rgba(1, 1, 1, 0.25)) : "transparent"
                                                     border.width: lit ? 1 : 0
                                                     Behavior on color { ColorAnimation { duration: 160 } }
                                                 }
@@ -1449,8 +1466,8 @@ PanelWindow {
                                                     width: (parent.width - 15 * 3) / 16.0
                                                     height: parent.height
                                                     radius: 2
-                                                    color: lit ? (root.batCharging ? Island.Theme.green : (pct < 20 ? Island.Theme.red : Island.Theme.primary)) : Qt.rgba(1, 1, 1, 0.06)
-                                                    border.color: lit ? Qt.rgba(1, 1, 1, 0.25) : "transparent"
+                                                    color: lit ? (root.batCharging ? Island.Theme.green : (pct < 20 ? Island.Theme.red : Island.Theme.primary)) : (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.06))
+                                                    border.color: lit ? (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.12) : Qt.rgba(1, 1, 1, 0.25)) : "transparent"
                                                     border.width: lit ? 1 : 0
                                                     Behavior on color { ColorAnimation { duration: 160 } }
                                                 }
@@ -1465,8 +1482,8 @@ PanelWindow {
                                 width: parent.width
                                 implicitHeight: audioCol.implicitHeight + 28
                                 radius: 8
-                                color: Qt.rgba(0, 0, 0, 0.40)
-                                border.color: Qt.rgba(1, 1, 1, 0.08)
+                                color: Island.Theme.isLightMode ? Island.Theme.glassCard : Qt.rgba(0, 0, 0, 0.40)
+                                border.color: Island.Theme.isLightMode ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.08)
                                 border.width: 1
 
                                 // Top Specular Hairline
@@ -1477,7 +1494,7 @@ PanelWindow {
                                     anchors.leftMargin: 8
                                     anchors.rightMargin: 8
                                     height: 1
-                                    color: Qt.rgba(1, 1, 1, 0.12)
+                                    color: Island.Theme.isLightMode ? Qt.rgba(1, 1, 1, 0.8) : Qt.rgba(1, 1, 1, 0.12)
                                 }
 
                                 Column {
@@ -1544,8 +1561,12 @@ PanelWindow {
                                             height: 24
                                             width: 66
                                             radius: 4
-                                            color: root.audioMuted ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.22) : (muteMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : Qt.rgba(1, 1, 1, 0.04))
-                                            border.color: root.audioMuted ? Island.Theme.red : Qt.rgba(1, 1, 1, 0.14)
+                                            color: root.audioMuted 
+                                                ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.22) 
+                                                : (muteMouse.containsMouse 
+                                                    ? (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.1)) 
+                                                    : (Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.03) : Qt.rgba(1, 1, 1, 0.04)))
+                                            border.color: root.audioMuted ? Island.Theme.red : (Island.Theme.isLightMode ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.14))
                                             border.width: 1
 
                                             Row {
@@ -1594,7 +1615,7 @@ PanelWindow {
                                             anchors.verticalCenter: parent.verticalCenter
                                             height: 6
                                             radius: 3
-                                            color: Qt.rgba(1, 1, 1, 0.08)
+                                            color: Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.08)
 
                                             Rectangle {
                                                 anchors.left: parent.left
@@ -1678,8 +1699,10 @@ PanelWindow {
                                     width: (systemCol.width - 8) / 2
                                     height: 50
                                     radius: 8
-                                    color: actLockMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(1, 1, 1, 0.04)
-                                    border.color: actLockMouse.containsMouse ? Island.Theme.primary : Qt.rgba(1, 1, 1, 0.08)
+                                    color: actLockMouse.containsMouse 
+                                        ? (Island.Theme.isLightMode ? Island.Theme.glassCardHover : Qt.rgba(1, 1, 1, 0.10)) 
+                                        : (Island.Theme.isLightMode ? Island.Theme.glassCard : Qt.rgba(1, 1, 1, 0.04))
+                                    border.color: actLockMouse.containsMouse ? Island.Theme.primary : (Island.Theme.isLightMode ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.08))
                                     border.width: 1
 
                                     Rectangle {
@@ -1689,7 +1712,7 @@ PanelWindow {
                                         anchors.leftMargin: 6
                                         anchors.rightMargin: 6
                                         height: 1
-                                        color: Qt.rgba(1, 1, 1, 0.1)
+                                        color: Island.Theme.isLightMode ? Qt.rgba(1, 1, 1, 0.8) : Qt.rgba(1, 1, 1, 0.1)
                                     }
 
                                     Row {
@@ -1747,8 +1770,10 @@ PanelWindow {
                                     width: (systemCol.width - 8) / 2
                                     height: 50
                                     radius: 8
-                                    color: actSuspMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(1, 1, 1, 0.04)
-                                    border.color: actSuspMouse.containsMouse ? Island.Theme.primary : Qt.rgba(1, 1, 1, 0.08)
+                                    color: actSuspMouse.containsMouse 
+                                        ? (Island.Theme.isLightMode ? Island.Theme.glassCardHover : Qt.rgba(1, 1, 1, 0.10)) 
+                                        : (Island.Theme.isLightMode ? Island.Theme.glassCard : Qt.rgba(1, 1, 1, 0.04))
+                                    border.color: actSuspMouse.containsMouse ? Island.Theme.primary : (Island.Theme.isLightMode ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.08))
                                     border.width: 1
 
                                     Rectangle {
@@ -1758,7 +1783,7 @@ PanelWindow {
                                         anchors.leftMargin: 6
                                         anchors.rightMargin: 6
                                         height: 1
-                                        color: Qt.rgba(1, 1, 1, 0.1)
+                                        color: Island.Theme.isLightMode ? Qt.rgba(1, 1, 1, 0.8) : Qt.rgba(1, 1, 1, 0.1)
                                     }
 
                                     Row {
@@ -1816,8 +1841,10 @@ PanelWindow {
                                     width: (systemCol.width - 8) / 2
                                     height: 50
                                     radius: 8
-                                    color: actRebootMouse.containsMouse ? Qt.rgba(1, 1, 1, 0.10) : Qt.rgba(1, 1, 1, 0.04)
-                                    border.color: actRebootMouse.containsMouse ? Island.Theme.yellow : Qt.rgba(1, 1, 1, 0.08)
+                                    color: actRebootMouse.containsMouse 
+                                        ? (Island.Theme.isLightMode ? Island.Theme.glassCardHover : Qt.rgba(1, 1, 1, 0.10)) 
+                                        : (Island.Theme.isLightMode ? Island.Theme.glassCard : Qt.rgba(1, 1, 1, 0.04))
+                                    border.color: actRebootMouse.containsMouse ? Island.Theme.yellow : (Island.Theme.isLightMode ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.08))
                                     border.width: 1
 
                                     Rectangle {
@@ -1827,7 +1854,7 @@ PanelWindow {
                                         anchors.leftMargin: 6
                                         anchors.rightMargin: 6
                                         height: 1
-                                        color: Qt.rgba(1, 1, 1, 0.1)
+                                        color: Island.Theme.isLightMode ? Qt.rgba(1, 1, 1, 0.8) : Qt.rgba(1, 1, 1, 0.1)
                                     }
 
                                     Row {
@@ -1885,8 +1912,10 @@ PanelWindow {
                                     width: (systemCol.width - 8) / 2
                                     height: 50
                                     radius: 8
-                                    color: actPowerMouse.containsMouse ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.22) : Qt.rgba(1, 1, 1, 0.04)
-                                    border.color: actPowerMouse.containsMouse ? Island.Theme.red : Qt.rgba(1, 1, 1, 0.08)
+                                    color: actPowerMouse.containsMouse 
+                                        ? Qt.rgba(Island.Theme.red.r, Island.Theme.red.g, Island.Theme.red.b, 0.22) 
+                                        : (Island.Theme.isLightMode ? Island.Theme.glassCard : Qt.rgba(1, 1, 1, 0.04))
+                                    border.color: actPowerMouse.containsMouse ? Island.Theme.red : (Island.Theme.isLightMode ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.08))
                                     border.width: 1
 
                                     Rectangle {
@@ -1896,7 +1925,7 @@ PanelWindow {
                                         anchors.leftMargin: 6
                                         anchors.rightMargin: 6
                                         height: 1
-                                        color: Qt.rgba(1, 1, 1, 0.1)
+                                        color: Island.Theme.isLightMode ? Qt.rgba(1, 1, 1, 0.8) : Qt.rgba(1, 1, 1, 0.1)
                                     }
 
                                     Row {

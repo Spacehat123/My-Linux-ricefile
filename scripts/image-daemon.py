@@ -44,21 +44,15 @@ LOCK_FILE = "/tmp/cool-shell-image.lock"
 def notify_island_ai(generating: bool, msg: str = ""):
     """Notify Dynamic Island via Quickshell IPC."""
     val = "true" if generating else "false"
-    try:
-        subprocess.run(
-            ["qs", "-c", "cool-shell", "ipc", "call", "island", "setAiGenerating", val, msg],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=4
-        )
-    except Exception:
+    for cmd in [
+        ["qs", "-c", "cool-shell", "ipc", "call", "island", "setAiGenerating", val, msg],
+        ["qs", "-p", "/home/pranc/.config/quickshell/cool-shell", "ipc", "call", "island", "setAiGenerating", val, msg],
+        ["quickshell", "-c", "cool-shell", "ipc", "call", "island", "setAiGenerating", val, msg]
+    ]:
         try:
-            subprocess.run(
-                ["quickshell", "-c", "cool-shell", "ipc", "call", "island", "setAiGenerating", val, msg],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                timeout=4
-            )
+            res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=2)
+            if res.returncode == 0:
+                break
         except Exception:
             pass
 

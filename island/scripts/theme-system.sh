@@ -69,6 +69,57 @@ current_theme() {
   printf '%s\n' "$slug"
 }
 
+current_mode() {
+  local mode=dark
+  if [[ -s $state_dir/current-mode ]]; then
+    IFS= read -r mode < "$state_dir/current-mode"
+  fi
+  case "$mode" in
+    light|dark) printf '%s\n' "$mode" ;;
+    *) printf 'dark\n' ;;
+  esac
+}
+
+set_mode() {
+  local mode=${1:-dark}
+  case "$mode" in
+    light|dark) ;;
+    *) die "invalid mode: $mode (must be 'dark' or 'light')" ;;
+  esac
+  mkdir -p "$state_dir"
+  printf '%s\n' "$mode" > "$state_dir/current-mode"
+  local file
+  file=$(theme_file "$(current_theme)")
+  write_generated_files "$file"
+  apply_alacritty_theme "$file"
+  apply_fish_theme
+  hyprctl reload >/dev/null 2>&1 || true
+  qs_ipc theme reload
+  command -v notify-send >/dev/null && notify-send "Appearance Mode" "$mode mode active" >/dev/null 2>&1 || true
+}
+
+toggle_mode() {
+  local cur
+  cur=$(current_mode)
+  if [[ "$cur" == "dark" ]]; then
+    set_mode "light"
+  else
+    set_mode "dark"
+  fi
+}
+
+current_json() {
+  local file
+  file=$(theme_file "$(current_theme)")
+  local mode
+  mode=$(current_mode)
+  if [[ "$mode" == "light" ]]; then
+    jq 'if .light_colors then .appearance = "light" | .colors = .light_colors else .appearance = "light" end' "$file"
+  else
+    jq '.appearance = "dark"' "$file"
+  fi
+}
+
 list_themes() {
   jq -s 'map({name, slug, appearance, colors}) | sort_by(.name)' "$theme_dir"/*.json
 }
@@ -392,46 +443,46 @@ EOF
 }
 
 write_generated_files() {
-  local file=$1 slug name appearance
+  local file=$1 slug name mode appearance
   slug=$(jq -er '.slug' "$file")
   name=$(jq -er '.name' "$file")
-  appearance=$(jq -er '.appearance' "$file")
+  mode=$(current_mode)
+  appearance=$mode
   mkdir -p "$cache_dir"
 
-  jq -e '
-    .colors as $c |
-    ["bg_dim","bg0","bg1","bg2","bg3","bg4","primary_container",
-     "secondary_container","foreground","muted","muted_dark","red","yellow",
-     "green","primary","blue","aqua","orange","purple"] |
-    all(. as $key | $c[$key] | strings | test("^#[0-9a-fA-F]{6}$"))
-  ' "$file" >/dev/null || die "$slug has missing or invalid colors"
+  local resolved_file_content
+  if [[ "$mode" == "light" ]]; then
+    resolved_file_content=$(jq 'if .light_colors then .appearance = "light" | .colors = .light_colors else .appearance = "light" end' "$file")
+  else
+    resolved_file_content=$(jq '.appearance = "dark"' "$file")
+  fi
 
   local tmp
   tmp=$(mktemp -d "$cache_dir/.generate.XXXXXX")
   trap 'rm -rf -- "$tmp"' RETURN
-  cp -- "$file" "$tmp/current.json"
+  printf '%s\n' "$resolved_file_content" > "$tmp/current.json"
 
   {
-    printf 'return {\n  name = %s,\n  slug = %s,\n' \
-      "$(jq -Rn --arg value "$name" '$value')" "$(jq -Rn --arg value "$slug" '$value')"
+    printf 'return {\n  name = %s,\n  slug = %s,\n  appearance = %s,\n' \
+      "$(jq -Rn --arg value "$name" '$value')" "$(jq -Rn --arg value "$slug" '$value')" "$(jq -Rn --arg value "$mode" '$value')"
     while IFS=$'\t' read -r key value; do
       value=${value#\#}
       printf '  %s = "rgba(%see)",\n' "$key" "$value"
-    done < <(jq -r '.colors | to_entries[] | [.key,.value] | @tsv' "$file")
+    done < <(echo "$resolved_file_content" | jq -r '.colors | to_entries[] | [.key,.value] | @tsv')
     printf '}\n'
   } > "$tmp/hyprland.lua"
 
   {
     while IFS=$'\t' read -r key value; do
       printf '$%s = rgb(%s)\n' "$key" "${value#\#}"
-    done < <(jq -r '.colors | to_entries[] | [.key,.value] | @tsv' "$file")
+    done < <(echo "$resolved_file_content" | jq -r '.colors | to_entries[] | [.key,.value] | @tsv')
   } > "$tmp/hyprlock.conf"
 
   {
-    printf '/* Generated from %s. */\n' "$slug"
+    printf '/* Generated from %s (%s mode). */\n' "$slug" "$mode"
     while IFS=$'\t' read -r key value; do
       printf '@define-color vyeos_%s %s;\n' "$key" "$value"
-    done < <(jq -r '.colors | to_entries[] | [.key,.value] | @tsv' "$file")
+    done < <(echo "$resolved_file_content" | jq -r '.colors | to_entries[] | [.key,.value] | @tsv')
     printf '\n@define-color accent_color @vyeos_primary;\n@define-color accent_bg_color @vyeos_primary;\n'
     printf '@define-color accent_fg_color @vyeos_bg_dim;\n@define-color destructive_color @vyeos_red;\n'
     printf '@define-color destructive_bg_color @vyeos_red;\n@define-color destructive_fg_color @vyeos_bg_dim;\n'
@@ -448,12 +499,12 @@ write_generated_files() {
   } > "$tmp/gtk.css"
 
   local primary foreground green aqua yellow red
-  primary=$(jq -r '.colors.primary[1:]' "$file")
-  foreground=$(jq -r '.colors.foreground[1:]' "$file")
-  green=$(jq -r '.colors.green[1:]' "$file")
-  aqua=$(jq -r '.colors.aqua[1:]' "$file")
-  yellow=$(jq -r '.colors.yellow[1:]' "$file")
-  red=$(jq -r '.colors.red[1:]' "$file")
+  primary=$(echo "$resolved_file_content" | jq -r '.colors.primary[1:]')
+  foreground=$(echo "$resolved_file_content" | jq -r '.colors.foreground[1:]')
+  green=$(echo "$resolved_file_content" | jq -r '.colors.green[1:]')
+  aqua=$(echo "$resolved_file_content" | jq -r '.colors.aqua[1:]')
+  yellow=$(echo "$resolved_file_content" | jq -r '.colors.yellow[1:]')
+  red=$(echo "$resolved_file_content" | jq -r '.colors.red[1:]')
   {
     printf 'set -Ux VYEOS_THEME %s\n' "$slug"
     printf 'set -Ux VYEOS_PRIMARY %s\n' "$primary"
@@ -464,15 +515,15 @@ write_generated_files() {
       "$(printf '%d;%d;%d' "0x${aqua:0:2}" "0x${aqua:2:2}" "0x${aqua:4:2}")" \
       "$(printf '%d;%d;%d' "0x${red:0:2}" "0x${red:2:2}" "0x${red:4:2}")"
     printf 'set -Ux VYEOS_PROMPT_PATH %s\nset -Ux VYEOS_PROMPT_MUTED %s\nset -Ux VYEOS_PROMPT_GIT %s\nset -Ux VYEOS_PROMPT_OK %s\nset -Ux VYEOS_PROMPT_ERROR %s\n' \
-      "$aqua" "$(jq -r '.colors.muted_dark[1:]' "$file")" "$yellow" "$green" "$red"
+      "$aqua" "$(echo "$resolved_file_content" | jq -r '.colors.muted_dark[1:]')" "$yellow" "$green" "$red"
   } > "$tmp/fish.fish"
 
   {
     printf 'vim.cmd("highlight clear")\nvim.o.termguicolors = true\nvim.g.colors_name = "vyeos-%s"\n' "$slug"
     while IFS=$'\t' read -r group fg bg extra; do
       printf 'vim.api.nvim_set_hl(0, "%s", {' "$group"
-      [[ $fg != - ]] && printf ' fg = "%s",' "$(jq -r ".colors.$fg" "$file")"
-      [[ $bg != - ]] && printf ' bg = "%s",' "$(jq -r ".colors.$bg" "$file")"
+      [[ $fg != - ]] && printf ' fg = "%s",' "$(echo "$resolved_file_content" | jq -r ".colors.$fg")"
+      [[ $bg != - ]] && printf ' bg = "%s",' "$(echo "$resolved_file_content" | jq -r ".colors.$bg")"
       [[ $extra != - ]] && printf ' %s = true,' "$extra"
       printf ' })\n'
     done <<'HIGHLIGHTS'
@@ -638,7 +689,10 @@ apply_theme() {
 case ${1:-} in
   apply) apply_theme "${2:?theme name required}" ;;
   current) current_theme ;;
-  current-json) cat "$(theme_file "$(current_theme)")" ;;
+  current-json) current_json ;;
+  mode) set_mode "${2:?mode required (dark|light)}" ;;
+  current-mode) current_mode ;;
+  toggle-mode) toggle_mode ;;
   list) list_themes ;;
   wallpapers) list_wallpapers "${2:-}" ;;
   open-wallpapers) open_wallpaper_folder "${2:-}" ;;
@@ -647,6 +701,6 @@ case ${1:-} in
   restore-wallpaper) restore_wallpaper ;;
   sync-sddm-latest) sync_sddm_latest ;;
   generate) write_generated_files "$(theme_file "${2:-$(current_theme)}")" ;;
-  *) die "usage: $0 {apply THEME|current|current-json|list|wallpapers [THEME]|open-wallpapers [THEME]|open-live-wallpapers|wallpaper PATH|restore-wallpaper|generate [THEME]}" ;;
+  *) die "usage: $0 {apply THEME|current|current-json|mode [dark|light]|toggle-mode|current-mode|list|wallpapers [THEME]|open-wallpapers [THEME]|open-live-wallpapers|wallpaper PATH|restore-wallpaper|generate [THEME]}" ;;
 esac
 

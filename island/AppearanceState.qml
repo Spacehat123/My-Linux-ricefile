@@ -9,13 +9,25 @@ Singleton {
     readonly property string helper: Quickshell.shellPath("island/scripts/theme-system.sh")
     readonly property string currentSlug: Theme.slug
     readonly property string currentTheme: Theme.slug
+    readonly property bool isLightMode: Theme.isLightMode
     property var themes: []
     property var wallpapers: []
     property string error: ""
-    property bool busy: applyProcess.running || wallpaperProcess.running
+    property bool busy: applyProcess.running || wallpaperProcess.running || modeProcess.running
     property bool wallpaperRefreshPending: false
 
     signal wallpaperApplied(string path, string mediaType)
+
+    function toggleMode() {
+        const target = Theme.isLightMode ? "dark" : "light";
+        setMode(target);
+    }
+
+    function setMode(mode) {
+        if (!modeProcess.running) {
+            modeProcess.exec([helper, "mode", mode]);
+        }
+    }
 
     function refreshThemes() {
         if (!themeListProcess.running)
@@ -131,6 +143,20 @@ Singleton {
 
     Process {
         id: folderProcess
+        stderr: StdioCollector {
+            onStreamFinished: if (text.trim()) root.error = text.trim()
+        }
+    }
+
+    Process {
+        id: modeProcess
+        onExited: (exitCode) => {
+            if (exitCode === 0) {
+                Theme.reload();
+            } else {
+                root.error = "Mode switch failed";
+            }
+        }
         stderr: StdioCollector {
             onStreamFinished: if (text.trim()) root.error = text.trim()
         }
