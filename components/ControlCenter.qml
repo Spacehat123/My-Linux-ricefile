@@ -68,6 +68,80 @@ Item {
         return false;
     }
 
+    // VPN Native & System Tunnel State
+    property bool vpnConnected: false
+    property string vpnName: ""
+
+    Process {
+        id: vpnCheckProc
+        command: ["bash", "-c", "ip -o link show | grep -E '(tun[0-9]|wg[0-9]|tailscale|proton|nord)' | awk -F': ' '{print $2}' | head -n 1"]
+        running: false
+        stdout: SplitParser {
+            onRead: data => {
+                const line = data.trim();
+                root.vpnConnected = line.length > 0;
+                root.vpnName = line;
+            }
+        }
+    }
+
+    Timer {
+        id: vpnPollTimer
+        interval: 4000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: {
+            if (!vpnCheckProc.running) vpnCheckProc.running = true;
+        }
+    }
+
+    Process {
+        id: vpnToggleProc
+        running: false
+    }
+
+    function toggleVpn() {
+        if (vpnConnected) {
+            vpnToggleProc.command = ["bash", "-c", "if [ -n '" + root.vpnName + "' ]; then ip link set '" + root.vpnName + "' down 2>/dev/null; nmcli con down id '" + root.vpnName + "' 2>/dev/null; wg-quick down '" + root.vpnName + "' 2>/dev/null; fi"];
+            vpnToggleProc.running = true;
+            vpnConnected = false;
+            vpnName = "";
+            if (Island.IslandHub) Island.IslandHub.showTransient("󰒘 VPN Disconnected", 2000);
+        } else {
+            vpnToggleProc.command = ["bash", "-c", "con=$(nmcli -t -f TYPE,NAME connection show | grep -E '^(vpn|wireguard):' | head -n 1 | cut -d: -f2); if [ -n \"$con\" ]; then nmcli connection up id \"$con\"; elif [ -f /etc/wireguard/wg0.conf ]; then wg-quick up wg0; else echo 'NO_VPN'; fi"];
+            vpnToggleProc.running = true;
+            if (Island.IslandHub) Island.IslandHub.showTransient("󰒘 Connecting VPN...", 2000);
+        }
+        vpnCheckProc.running = true;
+    }
+
+    // Airplane Mode State & Toggle
+    property bool airplaneMode: (!wifiOn && (!btAdapter || !btAdapter.enabled))
+
+    Process {
+        id: rfkillToggleProc
+        running: false
+    }
+
+    function toggleAirplaneMode() {
+        if (airplaneMode) {
+            Networking.wifiEnabled = true;
+            if (root.btAdapter) root.btAdapter.enabled = true;
+            rfkillToggleProc.command = ["rfkill", "unblock", "all"];
+            rfkillToggleProc.running = true;
+            airplaneMode = false;
+            if (Island.IslandHub) Island.IslandHub.showTransient("󰀝 Airplane Mode: Off", 2000);
+        } else {
+            Networking.wifiEnabled = false;
+            if (root.btAdapter) root.btAdapter.enabled = false;
+            rfkillToggleProc.command = ["rfkill", "block", "all"];
+            rfkillToggleProc.running = true;
+            airplaneMode = true;
+            if (Island.IslandHub) Island.IslandHub.showTransient("󰀝 Airplane Mode: On", 2000);
+        }
+    }
+
     // MPRIS Active Player Detection
     readonly property var activePlayer: {
         const players = Mpris.players.values;
@@ -235,35 +309,112 @@ Item {
                     }
                 }
 
-                // Settings Gear Icon Button
-                Rectangle {
+                // Header Action Buttons (Appearance Theme, Ambient HUD, Settings Gear)
+                Row {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 34
-                    height: 34
-                    radius: 17
-                    color: gearHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard
-                    border.color: gearHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle
-                    border.width: 1
-                    scale: gearTap.pressed ? 0.94 : 1.0
+                    spacing: 8
 
-                    Behavior on scale { NumberAnimation { duration: 90 } }
-                    Behavior on color { ColorAnimation { duration: 120 } }
+                    // Appearance Dark/Light Button
+                    Rectangle {
+                        width: 34
+                        height: 34
+                        radius: 17
+                        readonly property bool isLight: Island.Theme && Island.Theme.isLightMode
+                        color: themeHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard
+                        border.color: themeHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle
+                        border.width: 1
+                        scale: themeTap.pressed ? 0.94 : 1.0
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: "󰒓"
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 15
-                        color: gearHover.hovered ? Island.Theme.primary : Island.Theme.muted
+                        Behavior on scale { NumberAnimation { duration: 90 } }
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: parent.isLight ? "󰖨" : "󰖔"
+                            font.family: Island.Theme.iconFontFamily
+                            font.pixelSize: 15
+                            color: themeHover.hovered ? Island.Theme.primary : Island.Theme.muted
+                        }
+
+                        HoverHandler { id: themeHover }
+                        TapHandler {
+                            id: themeTap
+                            onTapped: {
+                                if (Island.AppearanceState)
+                                    Island.AppearanceState.toggleMode();
+                            }
+                        }
                     }
 
-                    HoverHandler { id: gearHover }
-                    TapHandler {
-                        id: gearTap
-                        onTapped: {
-                            if (root.desktopState) root.desktopState.setLeftSidebarOpen(false);
-                            Island.ShellState.openSettings("");
+                    // Ambient HUD Mode Button
+                    Rectangle {
+                        width: 34
+                        height: 34
+                        radius: 17
+                        readonly property color ambColor: root.ambientAlwaysOn ? Island.Theme.cyan : Island.Theme.blue
+                        color: root.ambientEnabled 
+                            ? Qt.rgba(ambColor.r, ambColor.g, ambColor.b, 0.22) 
+                            : (ambHeaderHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard)
+                        border.color: root.ambientEnabled ? ambColor : (ambHeaderHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+                        border.width: 1
+                        scale: ambHeaderTap.pressed ? 0.94 : 1.0
+
+                        Behavior on scale { NumberAnimation { duration: 90 } }
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: root.ambientAlwaysOn ? "󰈈" : "󰍹"
+                            font.family: Island.Theme.iconFontFamily
+                            font.pixelSize: 15
+                            color: root.ambientEnabled ? parent.ambColor : Island.Theme.muted
+                        }
+
+                        HoverHandler { id: ambHeaderHover }
+                        TapHandler {
+                            id: ambHeaderTap
+                            onTapped: {
+                                if (root.ambientEnabled && !root.ambientAlwaysOn) {
+                                    if (Island.IslandHub) Island.IslandHub.showTransient("󰈈 Ambient: Always On", 2200);
+                                } else if (root.ambientEnabled && root.ambientAlwaysOn) {
+                                    if (Island.IslandHub) Island.IslandHub.showTransient("󰍹 Ambient: Disabled", 2200);
+                                } else {
+                                    if (Island.IslandHub) Island.IslandHub.showTransient("󰍹 Ambient: Dynamic (Idle Only)", 2200);
+                                }
+                                root.cycleAmbient();
+                            }
+                        }
+                    }
+
+                    // Settings Gear Icon Button
+                    Rectangle {
+                        width: 34
+                        height: 34
+                        radius: 17
+                        color: gearHover.hovered ? Island.Theme.glassCardHover : Island.Theme.glassCard
+                        border.color: gearHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle
+                        border.width: 1
+                        scale: gearTap.pressed ? 0.94 : 1.0
+
+                        Behavior on scale { NumberAnimation { duration: 90 } }
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󰒓"
+                            font.family: Island.Theme.iconFontFamily
+                            font.pixelSize: 15
+                            color: gearHover.hovered ? Island.Theme.primary : Island.Theme.muted
+                        }
+
+                        HoverHandler { id: gearHover }
+                        TapHandler {
+                            id: gearTap
+                            onTapped: {
+                                if (root.desktopState) root.desktopState.setLeftSidebarOpen(false);
+                                Island.ShellState.openSettings("");
+                            }
                         }
                     }
                 }
@@ -286,6 +437,16 @@ Item {
                     color: Island.Theme.glassCard
                     border.color: Island.Theme.glassBorderSubtle
                     border.width: 1
+
+                    // Refractive glass inner rim
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: 1
+                        radius: 21
+                        color: "transparent"
+                        border.color: Qt.rgba(1, 1, 1, 0.07)
+                        border.width: 1
+                    }
 
                     Grid {
                         anchors.centerIn: parent
@@ -378,24 +539,24 @@ Item {
                             }
                         }
 
-                        // 3. Wallpaper Dynamic Toggle Button
+                        // 3. VPN Secure Tunnel Round Button
                         Rectangle {
                             width: 58
                             height: 58
                             radius: 29
-                            color: root.wallpaperEnabled 
-                                ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25)
-                                : (wpBtnHover.hovered ? Island.Theme.glassCardHover : "transparent")
-                            border.color: root.wallpaperEnabled ? Island.Theme.primary : (wpBtnHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+                            color: root.vpnConnected 
+                                ? "#0a84ff" 
+                                : (vpnBtnHover.hovered ? Island.Theme.glassCardHover : "transparent")
+                            border.color: root.vpnConnected ? "#0a84ff" : (vpnBtnHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
                             border.width: 1
-                            scale: wpBtnTap.pressed ? 0.94 : 1.0
+                            scale: vpnBtnTap.pressed ? 0.94 : 1.0
                             Behavior on scale { NumberAnimation { duration: 80 } }
                             Behavior on color { ColorAnimation { duration: 120 } }
 
-                            HoverHandler { id: wpBtnHover }
+                            HoverHandler { id: vpnBtnHover }
                             TapHandler {
-                                id: wpBtnTap
-                                onTapped: root.toggleWallpaper()
+                                id: vpnBtnTap
+                                onTapped: root.toggleVpn()
                             }
 
                             Column {
@@ -403,42 +564,40 @@ Item {
                                 spacing: 2
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "󰸉"
+                                    text: "󰒘"
                                     font.family: Island.Theme.iconFontFamily
                                     font.pixelSize: 18
-                                    color: root.wallpaperEnabled ? Island.Theme.primary : Island.Theme.muted
+                                    color: root.vpnConnected ? "#ffffff" : Island.Theme.muted
                                 }
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: root.wallpaperEnabled ? "Dynamic" : "Static"
+                                    text: root.vpnConnected ? "On" : "VPN"
                                     font.pixelSize: 8
                                     font.bold: true
                                     font.family: Island.Theme.fontFamily
-                                    color: root.wallpaperEnabled ? Island.Theme.primary : Island.Theme.muted
+                                    color: root.vpnConnected ? "#ffffff" : Island.Theme.muted
                                 }
                             }
                         }
 
-                        // 4. Ambient HUD Toggle Button
+                        // 4. Airplane Mode Round Button
                         Rectangle {
-                            id: ambBtn
                             width: 58
                             height: 58
                             radius: 29
-                            readonly property color ambColor: root.ambientAlwaysOn ? Island.Theme.cyan : Island.Theme.blue
-                            color: root.ambientEnabled 
-                                ? Qt.rgba(ambColor.r, ambColor.g, ambColor.b, 0.25)
-                                : (ambBtnHover.hovered ? Island.Theme.glassCardHover : "transparent")
-                            border.color: root.ambientEnabled ? ambColor : (ambBtnHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+                            color: root.airplaneMode 
+                                ? "#ff9f0a" 
+                                : (airBtnHover.hovered ? Island.Theme.glassCardHover : "transparent")
+                            border.color: root.airplaneMode ? "#ff9f0a" : (airBtnHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
                             border.width: 1
-                            scale: ambBtnTap.pressed ? 0.94 : 1.0
+                            scale: airBtnTap.pressed ? 0.94 : 1.0
                             Behavior on scale { NumberAnimation { duration: 80 } }
                             Behavior on color { ColorAnimation { duration: 120 } }
 
-                            HoverHandler { id: ambBtnHover }
+                            HoverHandler { id: airBtnHover }
                             TapHandler {
-                                id: ambBtnTap
-                                onTapped: root.cycleAmbient()
+                                id: airBtnTap
+                                onTapped: root.toggleAirplaneMode()
                             }
 
                             Column {
@@ -446,18 +605,18 @@ Item {
                                 spacing: 2
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: root.ambientAlwaysOn ? "󰈈" : "󰍹"
+                                    text: "󰀝"
                                     font.family: Island.Theme.iconFontFamily
                                     font.pixelSize: 18
-                                    color: root.ambientEnabled ? ambBtn.ambColor : Island.Theme.muted
+                                    color: root.airplaneMode ? "#ffffff" : Island.Theme.muted
                                 }
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: !root.ambientEnabled ? "Off" : (root.ambientAlwaysOn ? "Always" : "Dynamic")
+                                    text: root.airplaneMode ? "On" : "Airplane"
                                     font.pixelSize: 8
                                     font.bold: true
                                     font.family: Island.Theme.fontFamily
-                                    color: root.ambientEnabled ? ambBtn.ambColor : Island.Theme.muted
+                                    color: root.airplaneMode ? "#ffffff" : Island.Theme.muted
                                 }
                             }
                         }
@@ -475,6 +634,17 @@ Item {
                     border.color: Island.Theme.glassBorderSubtle
                     border.width: 1
                     clip: true
+
+                    // Refractive glass inner rim
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: 1
+                        radius: 21
+                        color: "transparent"
+                        border.color: Qt.rgba(1, 1, 1, 0.07)
+                        border.width: 1
+                        z: 10
+                    }
 
                     Column {
                         anchors.fill: parent
@@ -668,6 +838,16 @@ Item {
                     border.color: Island.Theme.glassBorderSubtle
                     border.width: 1
 
+                    // Refractive glass inner rim
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: 1
+                        radius: 21
+                        color: "transparent"
+                        border.color: Qt.rgba(1, 1, 1, 0.07)
+                        border.width: 1
+                    }
+
                     Grid {
                         anchors.centerIn: parent
                         columns: 2
@@ -801,29 +981,24 @@ Item {
                             }
                         }
 
-                        // 4. Appearance Mode Switch (Dark / Light Mode)
+                        // 4. Wallpaper Dynamic Toggle Button
                         Rectangle {
-                            id: modeBtn
                             width: 58
                             height: 58
                             radius: 29
-                            readonly property bool isLight: Island.Theme && Island.Theme.isLightMode
-                            color: isLight 
-                                ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.22)
-                                : (modeBtnHover.hovered ? Island.Theme.glassCardHover : "transparent")
-                            border.color: isLight ? Island.Theme.primary : (modeBtnHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
+                            color: root.wallpaperEnabled 
+                                ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.25)
+                                : (wpBtnHover.hovered ? Island.Theme.glassCardHover : "transparent")
+                            border.color: root.wallpaperEnabled ? Island.Theme.primary : (wpBtnHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle)
                             border.width: 1
-                            scale: modeBtnTap.pressed ? 0.94 : 1.0
+                            scale: wpBtnTap.pressed ? 0.94 : 1.0
                             Behavior on scale { NumberAnimation { duration: 80 } }
                             Behavior on color { ColorAnimation { duration: 120 } }
 
-                            HoverHandler { id: modeBtnHover }
+                            HoverHandler { id: wpBtnHover }
                             TapHandler {
-                                id: modeBtnTap
-                                onTapped: {
-                                    if (Island.AppearanceState)
-                                        Island.AppearanceState.toggleMode();
-                                }
+                                id: wpBtnTap
+                                onTapped: root.toggleWallpaper()
                             }
 
                             Column {
@@ -831,20 +1006,18 @@ Item {
                                 spacing: 2
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: modeBtn.isLight ? "󰖨" : "󰖔"
+                                    text: "󰸉"
                                     font.family: Island.Theme.iconFontFamily
                                     font.pixelSize: 18
-                                    color: modeBtn.isLight ? Island.Theme.primary : Island.Theme.muted
-                                    Behavior on color { ColorAnimation { duration: 120 } }
+                                    color: root.wallpaperEnabled ? Island.Theme.primary : Island.Theme.muted
                                 }
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    text: modeBtn.isLight ? "Light" : "Dark"
+                                    text: root.wallpaperEnabled ? "Dynamic" : "Static"
                                     font.pixelSize: 8
                                     font.bold: true
                                     font.family: Island.Theme.fontFamily
-                                    color: modeBtn.isLight ? Island.Theme.primary : Island.Theme.muted
-                                    Behavior on color { ColorAnimation { duration: 120 } }
+                                    color: root.wallpaperEnabled ? Island.Theme.primary : Island.Theme.muted
                                 }
                             }
                         }
@@ -852,7 +1025,7 @@ Item {
                 }
 
                 // -------------------------------------------------------------
-                // TILE 4: DUAL VERTICAL LIQUID CAPSULE SLIDERS (158x158px pod)
+                // TILE 4: DUAL VERTICAL CAPSULE SLIDERS (158x158px pod)
                 // -------------------------------------------------------------
                 Row {
                     width: (parent.width - 12) / 2
@@ -1079,7 +1252,7 @@ Item {
             }
 
             // =================================================================
-            // ROW 6: AI IMAGE STUDIO CARD
+            // ROW 6: AI IMAGE STUDIO CARD & LIFECYCLE TOGGLE
             // =================================================================
             Rectangle {
                 width: parent.width
@@ -1090,6 +1263,14 @@ Item {
                 border.width: 1
 
                 HoverHandler { id: aiCardHover }
+
+                TapHandler {
+                    id: aiCardTap
+                    onTapped: {
+                        if (root.desktopState) root.desktopState.setLeftSidebarOpen(false);
+                        if (Island.IslandHub) Island.IslandHub.triggerAiPromptRequested();
+                    }
+                }
 
                 Row {
                     anchors.fill: parent
@@ -1114,7 +1295,7 @@ Item {
 
                     Column {
                         anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width - 36 - 80 - 24
+                        width: parent.width - 36 - 120 - 24
                         spacing: 2
 
                         Text {
@@ -1126,39 +1307,140 @@ Item {
                         }
 
                         Text {
-                            text: "Realistic Vision v5.1 + LCM • Super + G"
+                            text: {
+                                const state = Island.ShellState;
+                                if (!state) return "Realistic Vision v5.1 + LCM • Super + G";
+                                if (state.aiDaemonLoading) {
+                                    const ram = state.aiDaemonRamMb;
+                                    if (ram > 50) {
+                                        const ramStr = ram >= 1024 ? (ram / 1024.0).toFixed(1) + " GB" : Math.round(ram) + " MB";
+                                        return "Loading weights into RAM (" + ramStr + ")...";
+                                    }
+                                    return "Loading weights into RAM...";
+                                }
+                                if (state.aiDaemonLoaded) {
+                                    const ram = state.aiDaemonRamMb;
+                                    const ramStr = ram >= 1024 ? (ram / 1024.0).toFixed(1) + " GB" : (ram > 0 ? Math.round(ram) + " MB" : "Active");
+                                    return "Model Warm (" + ramStr + " RAM) • Super + G";
+                                }
+                                return "Model Offloaded (0 MB RAM) • Super + G";
+                            }
                             font.pixelSize: 10
                             font.family: Island.Theme.fontFamily
-                            color: Island.Theme.muted
+                            color: (Island.ShellState && Island.ShellState.aiDaemonLoaded)
+                                ? Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.9)
+                                : Island.Theme.muted
                             elide: Text.ElideRight
                         }
                     }
 
-                    Rectangle {
+                    Row {
+                        anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
-                        width: 76
-                        height: 30
-                        radius: 15
-                        color: Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.22)
-                        border.color: Island.Theme.purple
-                        border.width: 1
-                        scale: aiBtnTap.pressed ? 0.94 : 1.0
-                        Behavior on scale { NumberAnimation { duration: 80 } }
+                        spacing: 6
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: "GENERATE"
-                            font.pixelSize: 9
-                            font.bold: true
-                            font.family: Island.Theme.fontFamily
-                            color: Island.Theme.purple
+                        // WebUI Studio Chat Launcher Button
+                        Rectangle {
+                            width: 30
+                            height: 30
+                            radius: 15
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: studioChatHover.hovered 
+                                ? Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.28) 
+                                : Qt.rgba(255, 255, 255, 0.05)
+                            border.color: studioChatHover.hovered ? Island.Theme.purple : Island.Theme.glassBorderSubtle
+                            border.width: 1
+
+                            Behavior on color { ColorAnimation { duration: 150 } }
+                            Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "󰭹"
+                                font.family: Island.Theme.iconFontFamily
+                                font.pixelSize: 13
+                                color: studioChatHover.hovered ? Island.Theme.purple : Island.Theme.foreground
+                            }
+
+                            HoverHandler { id: studioChatHover }
+                            TapHandler {
+                                onTapped: {
+                                    Quickshell.execDetached([Quickshell.shellPath("scripts/launch-chat.sh")]);
+                                }
+                            }
                         }
 
-                        TapHandler {
-                            id: aiBtnTap
-                            onTapped: {
-                                if (root.desktopState) root.desktopState.setLeftSidebarOpen(false);
-                                if (Island.IslandHub) Island.IslandHub.triggerAiPromptRequested();
+                        // Model Lifecycle Toggle Button (ON / OFF)
+                        Rectangle {
+                            id: aiToggleBtn
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 76
+                            height: 30
+                            radius: 15
+
+                            readonly property bool isLoaded: Island.ShellState ? Island.ShellState.aiDaemonLoaded : false
+                            readonly property bool isLoading: Island.ShellState ? Island.ShellState.aiDaemonLoading : false
+
+                            color: isLoaded
+                                ? Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.25)
+                                : (isLoading
+                                    ? Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.12)
+                                    : (aiToggleHover.hovered ? Island.Theme.glassCardHover : Qt.rgba(255, 255, 255, 0.04)))
+                            border.color: isLoaded
+                                ? Island.Theme.purple
+                                : (isLoading
+                                    ? Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.45)
+                                    : (aiToggleHover.hovered ? Island.Theme.glassBorder : Island.Theme.glassBorderSubtle))
+                            border.width: 1
+                            scale: aiToggleTap.pressed ? 0.94 : 1.0
+                            Behavior on scale { NumberAnimation { duration: 80 } }
+                            Behavior on color { ColorAnimation { duration: 150 } }
+                            Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                            HoverHandler { id: aiToggleHover }
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 5
+
+                                // Indicator dot
+                                Rectangle {
+                                    width: 6
+                                    height: 6
+                                    radius: 3
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    color: aiToggleBtn.isLoaded
+                                        ? Island.Theme.purple
+                                        : (aiToggleBtn.isLoading ? Island.Theme.yellow : Island.Theme.muted)
+                                    opacity: aiToggleBtn.isLoaded ? 1.0 : (aiToggleBtn.isLoading ? 0.8 : 0.4)
+
+                                    SequentialAnimation on opacity {
+                                        running: aiToggleBtn.isLoading
+                                        loops: Animation.Infinite
+                                        NumberAnimation { to: 0.2; duration: 400; easing.type: Easing.InOutQuad }
+                                        NumberAnimation { to: 1.0; duration: 400; easing.type: Easing.InOutQuad }
+                                    }
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: aiToggleBtn.isLoading
+                                        ? "LOAD..."
+                                        : (aiToggleBtn.isLoaded ? "ON" : "OFF")
+                                    font.pixelSize: 9
+                                    font.bold: true
+                                    font.family: Island.Theme.fontFamily
+                                    color: aiToggleBtn.isLoaded
+                                        ? Island.Theme.purple
+                                        : (aiToggleBtn.isLoading ? Island.Theme.yellow : Island.Theme.muted)
+                                }
+                            }
+
+                            TapHandler {
+                                id: aiToggleTap
+                                onTapped: {
+                                    if (Island.ShellState) Island.ShellState.toggleAiDaemon();
+                                }
                             }
                         }
                     }

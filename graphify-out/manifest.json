@@ -114,9 +114,9 @@
     "semantic_hash": ""
   },
   "island/scripts/level-meter.py": {
-    "mtime": 1793097254.5663052,
-    "seen": 1794841260.6717563,
-    "ast_hash": "c048325716e0dc2fe3087de7fb6fb11c",
+    "mtime": 1794858457.3089163,
+    "seen": 1794858638.9904761,
+    "ast_hash": "e8336747372984152f37104b9b7fcdd3",
     "semantic_hash": ""
   },
   "island/scripts/lyrics-daemon.sh": {
@@ -174,21 +174,21 @@
     "semantic_hash": ""
   },
   "scripts/image-daemon.py": {
-    "mtime": 1794836430.746104,
-    "seen": 1794841260.6717663,
-    "ast_hash": "5769573752d3028fb8ed3ac83c45795a",
+    "mtime": 1795112104.176878,
+    "seen": 1795112654.967978,
+    "ast_hash": "a2d93ff7efa8f2d32733343323a2ed6b",
     "semantic_hash": ""
   },
   "scripts/image-engine.py": {
-    "mtime": 1794836423.465214,
-    "seen": 1794841260.671767,
-    "ast_hash": "57f3dd65c4765039de8dfd53e1635305",
+    "mtime": 1795112121.3880181,
+    "seen": 1795112654.9679809,
+    "ast_hash": "4a9838f11d1941a91f2a14c5060d5075",
     "semantic_hash": ""
   },
   "scripts/image-engine.sh": {
-    "mtime": 1794836217.2967565,
-    "seen": 1794841260.671768,
-    "ast_hash": "cc73c7e3ecd9f9c5657bf49d37b61a88",
+    "mtime": 1795109397.8556979,
+    "seen": 1795109501.3396623,
+    "ast_hash": "949ab453d754ae611005128f4929b986",
     "semantic_hash": ""
   },
   "scripts/media-picker.py": {
@@ -1925,12 +1925,6 @@
     "ast_hash": "9f0c4e0fb202a2755878861afcf2a658",
     "semantic_hash": ""
   },
-  "widgets/liquid-glass-media-player/build-shader.sh": {
-    "mtime": 1794852477.1674507,
-    "seen": 1794853057.6442564,
-    "ast_hash": "904aef71339d1b1e1248e0d699106967",
-    "semantic_hash": ""
-  },
   ".asw/reports/2026-11-16-quickshell-apple-liquid-glass-glsl-reconstruction.md": {
     "mtime": 1794853047.590423,
     "seen": 1794853057.644442,
@@ -1941,6 +1935,252 @@
     "mtime": 1794855366.287755,
     "seen": 1794855377.025942,
     "ast_hash": "c93bae9489fd70a89dd32932477f8f22",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-liquid-glass-optical-investigation-and-feasibility.md": {
+    "mtime": 1794855970.741518,
+    "seen": 1794856525.4044943,
+    "ast_hash": "da7c4b3e8d8d457178e90a9cfcbd4fa5",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-liquid-glass-purge-and-solid-media-companion.md": {
+    "mtime": 1794856541.3787222,
+    "seen": 1794857284.1443546,
+    "ast_hash": "7685b9b267c245c6928ebccf005f0f74",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-cpu-drain-diagnosis-and-optimization.md": {
+    "mtime": 1794857301.3155656,
+    "seen": 1794858638.9912853,
+    "ast_hash": "27e4fa20038c69ce4b52e11577ea8bd9",
+    "semantic_hash": ""
+  },
+  "island/scripts/lyrics-fetcher.py": {
+    "mtime": 1794861377.5800385,
+    "seen": 1794861888.944863,
+    "ast_hash": "5a9ead2fc9115241a6f8ff50696c5ced",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-active-media-cpu-suppression-verification.md": {
+    "mtime": 1794858656.171313,
+    "seen": 1794860648.66547,
+    "ast_hash": "13d73be55c17a7ffcf1d29e7ccbd5daa",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-circular-disc-progress-and-3-line-lyrics-implementation.md": {
+    "mtime": 1794860661.595823,
+    "seen": 1794861888.945222,
+    "ast_hash": "cb4eb45fb44de2d815a9082d33c43a0c",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-floating-media-companion-circular-disc-and-typography-refinement.md": {
+    "mtime": 1794861909.516852,
+    "seen": 1794898612.1549184,
+    "ast_hash": "1fe942de267bcc315337a7b36e37234b",
+    "semantic_hash": ""
+  },
+  ".asw/reports/media_companion_bottom_cava.png": {
+    "mtime": 1794898604.8023255,
+    "seen": 1794898612.1549332,
+    "ast_hash": "ee4c32b18857b30f7d5a332e9416a72d",
+    "semantic_hash": ""
+  },
+  ".asw/reports/media_companion_circular_fredoka.png": {
+    "mtime": 1794861914.8424878,
+    "seen": 1794898612.1549346,
+    "ast_hash": "2096febf7e4ebf0cc160b742c1c96ebc",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-floating-media-companion-cava-bottom-equalizer.md": {
+    "mtime": 1794900925.9499261,
+    "seen": 1794902158.4109368,
+    "ast_hash": "bab842c79e704cd80f68feebb15a2130",
+    "semantic_hash": ""
+  },
+  ".asw/reports/media_companion_14bars_30fps.png": {
+    "mtime": 1794899970.9143806,
+    "seen": 1794900024.093194,
+    "ast_hash": "66c1bc6d6b0d1942d9e8670f6d9eecd9",
+    "semantic_hash": ""
+  },
+  ".asw/reports/media_companion_flat_no_transparency.png": {
+    "mtime": 1794900387.209023,
+    "seen": 1794900463.918738,
+    "ast_hash": "72d7043a6ba77a453f90e015d0d67d03",
+    "semantic_hash": ""
+  },
+  ".asw/reports/media_companion_flat_peak.png": {
+    "mtime": 1794900433.374463,
+    "seen": 1794900463.91874,
+    "ast_hash": "81c49d5e293563b2931b7457bdf047fe",
+    "semantic_hash": ""
+  },
+  ".asw/reports/media_companion_theme_20transparency.png": {
+    "mtime": 1794900893.9915392,
+    "seen": 1794900910.340885,
+    "ast_hash": "f3122b6cac28f46a396cad7c0425b33d",
+    "semantic_hash": ""
+  },
+  ".asw/reports/island_timer_open_verified.png": {
+    "mtime": 1794902139.7630286,
+    "seen": 1794902158.4109678,
+    "ast_hash": "1d2b2e59bb4eb440c85a5dd5b9000fed",
+    "semantic_hash": ""
+  },
+  "island/scripts/screen-lens.sh": {
+    "mtime": 1794916227.1004946,
+    "seen": 1794916320.6610572,
+    "ast_hash": "bb7c7c3ed03082a0799631f57e2efb4a",
+    "semantic_hash": ""
+  },
+  "island/scripts/sysinfo.sh": {
+    "mtime": 1794910538.594188,
+    "seen": 1794911185.0056071,
+    "ast_hash": "0e1cda6aea68814926902e96ac3014b9",
+    "semantic_hash": ""
+  },
+  "island/scripts/voice-note.sh": {
+    "mtime": 1794916165.0969532,
+    "seen": 1794916320.6610644,
+    "ast_hash": "bf3de952e8463874f314b8228aa34e93",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-island-timer-height-and-overflow-fix.md": {
+    "mtime": 1794902171.9143214,
+    "seen": 1794911185.0058277,
+    "ast_hash": "34ff520729e40e92035d6109ee8284d1",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-modular-control-center-pods-and-roadmap-plan.md": {
+    "mtime": 1794909228.6239655,
+    "seen": 1794911185.0058367,
+    "ast_hash": "eb603da6a3ce98454323c81816091aca",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-control_center_pods.png": {
+    "mtime": 1794909919.345874,
+    "seen": 1794911185.0058465,
+    "ast_hash": "465b2a993a778a611723248e88bc0b16",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-modular-control-center-osd-slate-hub-completion.md": {
+    "mtime": 1794911205.293062,
+    "seen": 1794911657.0802653,
+    "ast_hash": "209fe18643621052961ceacea53bb62b",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-ambient-slate-clean.png": {
+    "mtime": 1794911619.760984,
+    "seen": 1794911657.0802774,
+    "ast_hash": "84a8353cf25c4f0f4a672b8efe8064b4",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-ambient-slate-cleanup-and-dynamic-fix.md": {
+    "mtime": 1794911674.6953006,
+    "seen": 1794915620.9316998,
+    "ast_hash": "56e1d9b6331a8366065154307f753966",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-radial-hub-and-slate-bottom-left.md": {
+    "mtime": 1794915636.4135325,
+    "seen": 1794916320.6612928,
+    "ast_hash": "5639cc3054e1f813d314bf5f074b297c",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-radial-hub-release-gesture-and-pocket-fix.md": {
+    "mtime": 1794922856.9350297,
+    "seen": 1794924188.834592,
+    "ast_hash": "a15d44044d0148f9bcfe9711baef1bd2",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-floating-media-companion-transport-buttons-removal.md": {
+    "mtime": 1794924209.1584237,
+    "seen": 1794924775.5398254,
+    "ast_hash": "09d3ec97372171e0f9afa524873204f5",
+    "semantic_hash": ""
+  },
+  "island/ai-settings.json": {
+    "mtime": 1795110760.3187838,
+    "seen": 1795112654.9679384,
+    "ast_hash": "e94a8d9610e73d0c29ef72797542bb95",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-17-volume-indicators-and-companion-opacity-fix.md": {
+    "mtime": 1794924794.5146067,
+    "seen": 1795020901.682502,
+    "ast_hash": "f882f569eacce0cdb5bdadf12a1add0a",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-18-floating-media-companion-kitty-glass-theme.md": {
+    "mtime": 1795021555.6351504,
+    "seen": 1795021563.5005972,
+    "ast_hash": "11937882be37c24fd423b277bb8f7889",
+    "semantic_hash": ""
+  },
+  ".asw/reports/media_companion_kitty_glass.png": {
+    "mtime": 1795020862.489887,
+    "seen": 1795020901.6825242,
+    "ast_hash": "558782823a9f7bfe3ef4c10298dcd9cb",
+    "semantic_hash": ""
+  },
+  ".asw/reports/media_companion_wide_lyrics_waveform.png": {
+    "mtime": 1795021537.47246,
+    "seen": 1795021563.5006227,
+    "ast_hash": "c06665154cbe5dace7fe54df253392a3",
+    "semantic_hash": ""
+  },
+  "scripts/verify-ai-memory.py": {
+    "mtime": 1795096855.4102721,
+    "seen": 1795097015.2560532,
+    "ast_hash": "192159f710c0d3be57fcad825eddc9a8",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-19-ai-model-memory-lifecycle-verification.md": {
+    "mtime": 1795097039.6524324,
+    "seen": 1795098358.5727532,
+    "ast_hash": "527ecf6d9fa21ac5783f682d941c2431",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-19-ai-img2img-reference-photo-and-strength-slider.md": {
+    "mtime": 1795098374.9176419,
+    "seen": 1795098808.9796474,
+    "ast_hash": "19e964e5e7ae8b8c515dda1912957a9c",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-19-ai-privacy-and-single-output-policy.md": {
+    "mtime": 1795098821.0686002,
+    "seen": 1795099466.1864357,
+    "ast_hash": "6c5106848e0c64fc08bd9b20d84735a5",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-19-ai-img2img-vram-and-path-fix.md": {
+    "mtime": 1795109490.4044716,
+    "seen": 1795109501.339933,
+    "ast_hash": "a4c36082d621b35afe975574c8fa1601",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-19-offline-local-inference-enforcement.md": {
+    "mtime": 1795100757.4705317,
+    "seen": 1795109501.339939,
+    "ast_hash": "adb7038d1d1d20b77849cfc64dcaa067",
+    "semantic_hash": ""
+  },
+  "scripts/chat-ui.py": {
+    "mtime": 1795113244.767179,
+    "seen": 1795113299.7628498,
+    "ast_hash": "041e7b54fbf74844c82d731f1390c27f",
+    "semantic_hash": ""
+  },
+  "scripts/launch-chat.sh": {
+    "mtime": 1795112589.497525,
+    "seen": 1795112654.967985,
+    "ast_hash": "17b066619c4e221a67732ae2dcdd90f8",
+    "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-19-ai-studio-chat-interface-integration.md": {
+    "mtime": 1795112644.8233995,
+    "seen": 1795112654.9682293,
+    "ast_hash": "8b5e0c59e20a674ce63944349e1635c1",
     "semantic_hash": ""
   }
 }

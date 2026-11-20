@@ -39,7 +39,7 @@ Singleton {
         "power": 96,
         "media": 150,
         "notifications": 190,
-        "timer": 170,
+        "timer": 250,
         "shelf": 150,
         "weather": 145,
         "gamemode": 90,
@@ -59,7 +59,7 @@ Singleton {
         "power": 28,
         "media": 32,
         "notifications": 24,
-        "timer": 42,
+        "timer": 24,
         "shelf": 24,
         "weather": 22,
         "gamemode": 20,
@@ -70,6 +70,7 @@ Singleton {
     signal openSettingsRequested(string category)
     signal toggleTodayRequested()
     signal toggleMediaCompanionRequested()
+    property bool mediaCompanionHovered: false
     signal openOnboardingRequested()
 
     function openSettings(category) {
@@ -222,16 +223,20 @@ Singleton {
 
     // AI Image Studio Daemon state & lifecycle
     property bool aiDaemonLoaded: false
+    property bool aiDaemonLoading: false
+    property real aiDaemonRamMb: 0.0
 
     function toggleAiDaemon() {
-        if (panel === "ai") return;
         if (aiDaemonLoaded) {
-            Quickshell.execDetached([Quickshell.shellPath("scripts/image-engine.sh"), "--stop"]);
+            aiDaemonLoading = false;
             aiDaemonLoaded = false;
+            aiDaemonRamMb = 0.0;
+            Quickshell.execDetached([Quickshell.shellPath("scripts/image-engine.sh"), "--stop"]);
         } else {
+            aiDaemonLoading = true;
             Quickshell.execDetached([Quickshell.shellPath("scripts/image-engine.sh"), "--preload"]);
-            aiDaemonLoaded = true;
         }
+        checkAiDaemonStatus();
     }
 
     function checkAiDaemonStatus() {
@@ -249,8 +254,22 @@ Singleton {
             onRead: (text) => {
                 try {
                     const res = JSON.parse(text.trim());
-                    if (res && res.loaded !== undefined) {
-                        root.aiDaemonLoaded = (res.loaded === true);
+                    if (res) {
+                        const isLoaded = (res.loaded === true);
+                        const isLoading = (res.loading === true);
+                        root.aiDaemonLoaded = isLoaded;
+                        if (isLoaded) {
+                            root.aiDaemonLoading = false;
+                            root.aiDaemonRamMb = res.ram_mb !== undefined ? res.ram_mb : 0.0;
+                        } else if (isLoading) {
+                            root.aiDaemonLoading = true;
+                            if (res.ram_mb !== undefined && res.ram_mb > 0) {
+                                root.aiDaemonRamMb = res.ram_mb;
+                            }
+                        } else {
+                            root.aiDaemonLoading = false;
+                            root.aiDaemonRamMb = 0.0;
+                        }
                     }
                 } catch (e) {}
             }
@@ -500,8 +519,8 @@ Singleton {
 
     // Event-driven active mode ticker: ONLY runs when at least one dynamic subsystem is active or Island is expanded
     Timer {
-        interval: (root.studyActive || root.detectedChessOpen || root.detectedHotstarOpen) ? 1000 : 4000
-        running: root.studyActive || root.detectedChessOpen || root.detectedHotstarOpen || root.aiDaemonLoaded || root.godsEyeActive || root.phoneSystemEnabled || root.expanded
+        interval: root.aiDaemonLoading ? 1500 : ((root.studyActive || root.detectedChessOpen || root.detectedHotstarOpen) ? 1000 : 4000)
+        running: root.studyActive || root.detectedChessOpen || root.detectedHotstarOpen || root.aiDaemonLoaded || root.aiDaemonLoading || root.godsEyeActive || root.phoneSystemEnabled || root.expanded
         repeat: true
         onTriggered: {
             if (root.detectedChessOpen) {
@@ -511,7 +530,7 @@ Singleton {
                 root.studyHotstarQuotaRemaining = Math.max(0, root.studyHotstarQuotaRemaining - 1);
             }
             if (root.studyActive || root.detectedChessOpen || root.detectedHotstarOpen) root.checkStudyStatus();
-            if (root.aiDaemonLoaded || root.panel === "ai") root.checkAiDaemonStatus();
+            if (root.aiDaemonLoaded || root.aiDaemonLoading || root.panel === "ai") root.checkAiDaemonStatus();
             if (root.godsEyeActive) root.checkGodsEyeStatus();
             if (root.phoneSystemEnabled || root.panel === "phone") root.checkPhoneStatus();
         }

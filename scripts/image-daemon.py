@@ -23,6 +23,10 @@ from PIL import Image
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_DATASETS_OFFLINE"] = "1"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 SOCKET_PATH = "/tmp/cool-shell-image.sock"
 PID_FILE = "/tmp/cool-shell-image.pid"
@@ -37,6 +41,7 @@ IDLE_TIMEOUT_SECONDS = 180  # 3 minutes of inactivity before auto-shutdown
 
 # Global pipeline state and activity tracker
 pipe = None
+pipe_img2img = None
 last_activity_time = time.time()
 
 LOCK_FILE = "/tmp/cool-shell-image.lock"
@@ -55,6 +60,17 @@ def notify_island_ai(generating: bool, msg: str = ""):
                 break
         except Exception:
             pass
+
+def get_process_rss_mb() -> float:
+    """Get current resident set size (RAM) in megabytes."""
+    try:
+        with open(f"/proc/{os.getpid()}/status") as f:
+            for line in f:
+                if line.startswith("VmRSS:"):
+                    return round(int(line.split()[1]) / 1024.0, 1)
+    except Exception:
+        pass
+    return 0.0
 
 def distill_prompt(raw_text: str, tokenizer):
     """
@@ -129,7 +145,13 @@ def distill_prompt(raw_text: str, tokenizer):
         text = tokenizer.decode(body_tokens, clean_up_tokenization_spaces=True).rstrip(' ,.')
 
     positive = text + quality_suffix
-    negative = ', '.join(base_negative)
+    neg_str = ', '.join(base_negative)
+    neg_tokens = tokenizer.encode(neg_str, truncation=False)
+    if len(neg_tokens) > 77:
+        neg_tokens = neg_tokens[1:76]
+        negative = tokenizer.decode(neg_tokens, clean_up_tokenization_spaces=True).rstrip(' ,.')
+    else:
+        negative = neg_str
     return positive, negative
 
 def load_pipeline():
@@ -143,70 +165,186 @@ def load_pipeline():
     # Disable cuDNN to prevent Turing FP16 numerical overflow on GTX 1650 TU117
     torch.backends.cudnn.enabled = False
 
-    print("[*] Loading Realistic Vision v5.1 + LCM-LoRA into CPU memory...")
+    print("[*] Loading Realistic Vision v5.1 + LCM-LoRA into CPU memory (100% offline)...")
     t0 = time.time()
     pipe = AutoPipelineForText2Image.from_pretrained(
         MODEL_ID,
         torch_dtype=torch.float16,
         cache_dir=CACHE_DIR,
+        local_files_only=True,
         safety_checker=None
     )
     pipe.scheduler = LCMScheduler.from_config(pipe.scheduler.config)
-    pipe.load_lora_weights(LORA_ID, cache_dir=CACHE_DIR)
-    pipe.fuse_lora()
+    pipe.load_lora_weights(
+        LORA_ID,
+        weight_name="pytorch_lora_weights.safetensors",
+        cache_dir=CACHE_DIR,
+        local_files_only=True
+    )
+    pipe.fuse_lora(lora_scale=0.8)
+    pipe.enable_attention_slicing(1)
+    if hasattr(pipe, "enable_vae_slicing"):
+        pipe.enable_vae_slicing()
+    if hasattr(pipe, "enable_vae_tiling"):
+        pipe.enable_vae_tiling()
     pipe.to("cpu")
     torch.cuda.empty_cache()
-    print(f"[*] Pipeline loaded in {time.time()-t0:.2f}s (Resident in CPU RAM, 0 MB VRAM).")
+    print(f"[*] Pipeline loaded in {time.time()-t0:.2f}s (Resident in CPU RAM, 0 MB VRAM, LoRA scale: 0.8).")
     return pipe
 
-def run_generation(prompt: str, out_path: str = None, open_viewer: bool = False) -> dict:
-    global pipe, last_activity_time
+def get_img2img_pipeline():
+    global pipe, pipe_img2img
+    if pipe_img2img is not None:
+        return pipe_img2img
+    if pipe is None:
+        load_pipeline()
+    from diffusers import AutoPipelineForImage2Image
+    print("[*] Creating AutoPipelineForImage2Image sharing in-memory weights (0 MB extra download)...")
+    pipe_img2img = AutoPipelineForImage2Image.from_pipe(pipe)
+    pipe_img2img.enable_attention_slicing(1)
+    if hasattr(pipe_img2img, "enable_vae_slicing"):
+        pipe_img2img.enable_vae_slicing()
+    if hasattr(pipe_img2img, "enable_vae_tiling"):
+        pipe_img2img.enable_vae_tiling()
+    return pipe_img2img
+
+SINGLE_OUTPUT_PATH = os.path.join(OUTPUT_DIR, "ai_output.png")
+
+def run_generation(
+    prompt: str,
+    out_path: str = None,
+    open_viewer: bool = False,
+    width: int = 512,
+    height: int = 512,
+    steps: int = 8,
+    cfg: float = 1.8,
+    image_path: str = None,
+    strength: float = 0.65,
+    negative_prompt: str = None,
+    seed: int = -1,
+    purge_previous: bool = True
+) -> dict:
+    global pipe, pipe_img2img, last_activity_time
     last_activity_time = time.time()
     t_start = time.time()
-    notify_island_ai(True, "Generating Image...")
 
+    # Sanitize and resolve reference image path
+    clean_ref = None
+    if image_path:
+        clean_ref = str(image_path).strip().strip("'\"")
+        if clean_ref.startswith("file://"):
+            import urllib.parse
+            clean_ref = urllib.parse.unquote(clean_ref[7:])
+        clean_ref = os.path.abspath(os.path.expanduser(clean_ref))
+
+    is_img2img = bool(clean_ref and os.path.exists(clean_ref))
+    if clean_ref and not is_img2img:
+        err_msg = f"Reference image not found: {clean_ref}"
+        print(f"[-] {err_msg}", file=sys.stderr)
+        return {"status": "error", "error": err_msg}
+
+    if is_img2img:
+        notify_island_ai(True, f"Styling Photo ({width}×{height}, str={strength})...")
+    else:
+        notify_island_ai(True, f"Generating ({width}×{height}, {steps} steps)...")
+
+    active_pipe = None
     try:
         import torch
         if pipe is None:
             load_pipeline()
 
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        if not out_path:
-            out_path = os.path.join(OUTPUT_DIR, f"ai_{timestamp}.png")
+        if is_img2img:
+            active_pipe = get_img2img_pipeline()
+            with Image.open(clean_ref) as raw_img:
+                init_img = raw_img.convert("RGB").resize((width, height), Image.Resampling.LANCZOS)
+            # Privacy policy: If reference image was in /tmp or cache, clean it up immediately
+            if clean_ref.startswith("/tmp/") or "cache" in clean_ref.lower():
+                try:
+                    os.remove(clean_ref)
+                except Exception:
+                    pass
+        else:
+            active_pipe = pipe
 
-        pos_prompt, neg_prompt = distill_prompt(prompt, pipe.tokenizer)
-        print(f"[*] Distilled Positive: {pos_prompt}")
-        print(f"[*] Distilled Negative: {neg_prompt}")
+        # Enforce single output copy: overwrite deterministic path and purge any lingering outputs
+        if not out_path:
+            out_path = SINGLE_OUTPUT_PATH
+
+        if purge_previous:
+            try:
+                for f in os.listdir(OUTPUT_DIR):
+                    full_f = os.path.join(OUTPUT_DIR, f)
+                    if os.path.isfile(full_f) and f.startswith("ai_") and full_f != out_path:
+                        try:
+                            os.remove(full_f)
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
+        pos_prompt, default_neg = distill_prompt(prompt, active_pipe.tokenizer)
+        if negative_prompt and str(negative_prompt).strip():
+            neg_prompt = str(negative_prompt).strip()
+        else:
+            neg_prompt = default_neg
+        # Privacy policy: Prompts are never printed, logged, or saved to disk
+        print(f"[*] Prompt distilled into memory.")
+
+        # Configure memory optimizations before GPU transfer
+        active_pipe.enable_attention_slicing(1)
+        if hasattr(active_pipe, "enable_vae_slicing"):
+            active_pipe.enable_vae_slicing()
+        if hasattr(active_pipe, "enable_vae_tiling"):
+            active_pipe.enable_vae_tiling()
 
         # Move to CUDA for diffusion
         t_gpu = time.time()
-        pipe.to("cuda")
-        pipe.enable_attention_slicing()
+        active_pipe.to("cuda")
         print(f"[*] Transferred to CUDA in {time.time()-t_gpu:.2f}s")
 
-        # Native 512x512 resolution (4 steps LCM-LoRA)
+        generator = None
+        if seed is not None and int(seed) >= 0:
+            generator = torch.Generator(device="cuda").manual_seed(int(seed))
+
+        # Native diffusion (LCM-LoRA)
         t_diff = time.time()
-        latents = pipe(
-            prompt=pos_prompt,
-            negative_prompt=neg_prompt,
-            num_inference_steps=4,
-            guidance_scale=1.5,
-            width=512,
-            height=512,
-            output_type="latent"
-        ).images
-        diff_time = time.time() - t_diff
-        print(f"[*] Native 512x512 diffusion completed in {diff_time:.2f}s")
+        if is_img2img:
+            latents = active_pipe(
+                prompt=pos_prompt,
+                negative_prompt=neg_prompt,
+                image=init_img,
+                strength=strength,
+                num_inference_steps=steps,
+                guidance_scale=cfg,
+                generator=generator,
+                output_type="latent"
+            ).images
+            diff_time = time.time() - t_diff
+            print(f"[*] Img2Img Diffusion ({width}x{height}, {steps} steps, strength={strength}, cfg={cfg}) completed in {diff_time:.2f}s")
+        else:
+            latents = active_pipe(
+                prompt=pos_prompt,
+                negative_prompt=neg_prompt,
+                num_inference_steps=steps,
+                guidance_scale=cfg,
+                width=width,
+                height=height,
+                generator=generator,
+                output_type="latent"
+            ).images
+            diff_time = time.time() - t_diff
+            print(f"[*] Text2Img Diffusion ({width}x{height}, {steps} steps, cfg={cfg}) completed in {diff_time:.2f}s")
 
         # Offload UNet to CPU to preserve VRAM for VAE decode
-        pipe.unet.to("cpu")
+        active_pipe.unet.to("cpu")
         torch.cuda.empty_cache()
 
         # VAE decode on CUDA
         with torch.no_grad():
-            latents = (latents / pipe.vae.config.scaling_factor).to(pipe.vae.device)
-            img_tensor = pipe.vae.decode(latents).sample
-            img = pipe.image_processor.postprocess(img_tensor, output_type="pil")[0]
+            latents = (latents / active_pipe.vae.config.scaling_factor).to(active_pipe.vae.device)
+            img_tensor = active_pipe.vae.decode(latents).sample
+            img = active_pipe.image_processor.postprocess(img_tensor, output_type="pil")[0]
 
         # Smart exposure check to prevent underexposed/dark renders
         from PIL import ImageEnhance, ImageStat
@@ -217,11 +355,11 @@ def run_generation(prompt: str, out_path: str = None, open_viewer: bool = False)
             img = ImageEnhance.Brightness(img).enhance(factor)
             img = ImageEnhance.Contrast(img).enhance(1.1)
 
-        # Save native 512x512 image
+        # Save native image
         img.save(out_path, format="PNG", quality=95)
 
         # Offload all pipeline components back to CPU RAM (Zero idle VRAM)
-        pipe.to("cpu")
+        active_pipe.to("cpu")
         torch.cuda.empty_cache()
 
         elapsed = time.time() - t_start
@@ -243,9 +381,11 @@ def run_generation(prompt: str, out_path: str = None, open_viewer: bool = False)
     except Exception as e:
         print(f"[-] Error during generation: {e}", file=sys.stderr)
         try:
+            if active_pipe is not None:
+                active_pipe.to("cpu")
             if pipe is not None:
                 pipe.to("cpu")
-                torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
         except Exception:
             pass
         return {"status": "error", "error": str(e)}
@@ -264,6 +404,13 @@ def start_server():
         print("[!] Another image daemon instance is already starting or running. Exiting.", file=sys.stderr)
         sys.exit(0)
 
+    with open(PID_FILE, "w") as f:
+        f.write(str(os.getpid()))
+
+    # Load pipeline into CPU memory FIRST before opening socket
+    print(f"[*] Image Daemon PID {os.getpid()} loading weights into CPU RAM...")
+    load_pipeline()
+
     if os.path.exists(SOCKET_PATH):
         try:
             os.unlink(SOCKET_PATH)
@@ -275,14 +422,7 @@ def start_server():
     server.listen(5)
     server.settimeout(5.0)  # Check idle timeout every 5 seconds
 
-    with open(PID_FILE, "w") as f:
-        f.write(str(os.getpid()))
-
     print(f"[*] Image Daemon socket opened on {SOCKET_PATH} (PID {os.getpid()})")
-
-    # Load pipeline into CPU memory
-    load_pipeline()
-
     print(f"[*] Image Daemon fully initialized and ready to serve requests.")
     last_activity_time = time.time()
 
@@ -329,7 +469,15 @@ def start_server():
                 resp = {"status": "pong", "loaded": True}
             elif action == "status":
                 idle_sec = round(time.time() - last_activity_time, 1)
-                resp = {"status": "ok", "loaded": True, "idle_sec": idle_sec, "timeout": IDLE_TIMEOUT_SECONDS}
+                rss_mb = get_process_rss_mb()
+                resp = {
+                    "status": "ok",
+                    "loaded": True,
+                    "pid": os.getpid(),
+                    "ram_mb": rss_mb,
+                    "idle_sec": idle_sec,
+                    "timeout": IDLE_TIMEOUT_SECONDS
+                }
             elif action == "stop":
                 resp = {"status": "stopping"}
                 conn.sendall(json.dumps(resp).encode("utf-8"))
@@ -339,7 +487,28 @@ def start_server():
             elif action == "generate":
                 prompt = req.get("prompt", "")
                 out_path = req.get("out_path", None)
-                resp = run_generation(prompt, out_path)
+                width = int(req.get("width", 512))
+                height = int(req.get("height", 512))
+                steps = int(req.get("steps", 8))
+                cfg = float(req.get("cfg", 1.8))
+                image_path = req.get("image_path", None)
+                strength = float(req.get("strength", 0.65))
+                negative_prompt = req.get("negative_prompt", None)
+                seed = req.get("seed", -1)
+                purge_previous = req.get("purge_previous", True)
+                resp = run_generation(
+                    prompt,
+                    out_path=out_path,
+                    width=width,
+                    height=height,
+                    steps=steps,
+                    cfg=cfg,
+                    image_path=image_path,
+                    strength=strength,
+                    negative_prompt=negative_prompt,
+                    seed=seed,
+                    purge_previous=purge_previous
+                )
             else:
                 resp = {"status": "unknown_action"}
 
@@ -359,5 +528,26 @@ if __name__ == "__main__":
         if not prompt:
             print("Usage: image-daemon.py [--daemon | <prompt>]")
             sys.exit(1)
-        res = run_generation(prompt, open_viewer=True)
+        settings_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "island", "ai-settings.json")
+        auto_open = True
+        width = 512
+        height = 512
+        steps = 8
+        cfg = 1.8
+        if os.path.exists(settings_file):
+            try:
+                with open(settings_file, "r") as f:
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        if "autoOpen" in data:
+                            auto_open = bool(data["autoOpen"])
+                        if data.get("aspectRatio") == "16:9":
+                            width, height = 768, 432
+                        if "steps" in data:
+                            steps = int(data["steps"])
+                        if "cfg" in data:
+                            cfg = float(data["cfg"])
+            except Exception:
+                pass
+        res = run_generation(prompt, open_viewer=auto_open, width=width, height=height, steps=steps, cfg=cfg)
         print(json.dumps(res))

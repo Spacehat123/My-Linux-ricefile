@@ -222,6 +222,111 @@ Singleton {
     // -- AI Generation state --
     property bool aiGenerating: false
     property string aiStatusMsg: ""
+    property bool aiAutoOpen: true
+    property string aiAspectRatio: "1:1"
+    property int aiSteps: 8
+    property string aiReferenceImage: ""
+    readonly property bool aiHasReferenceImage: aiReferenceImage.length > 0
+    property real aiStrength: 0.65
+
+    function setAiReferenceImage(path) {
+        aiReferenceImage = path ? path.trim() : "";
+    }
+
+    function clearAiReferenceImage() {
+        aiReferenceImage = "";
+    }
+
+    function setAiStrength(val) {
+        const s = parseFloat(val);
+        aiStrength = isNaN(s) ? 0.65 : Math.max(0.1, Math.min(0.95, s));
+        saveAiSettings();
+    }
+
+    function toggleAiAutoOpen() {
+        setAiAutoOpen(!aiAutoOpen);
+    }
+
+    function setAiAutoOpen(val) {
+        aiAutoOpen = !!val;
+        saveAiSettings();
+    }
+
+    function toggleAiAspectRatio() {
+        setAiAspectRatio(aiAspectRatio === "16:9" ? "1:1" : "16:9");
+    }
+
+    function setAiAspectRatio(val) {
+        aiAspectRatio = (val === "16:9") ? "16:9" : "1:1";
+        saveAiSettings();
+    }
+
+    function cycleAiSteps() {
+        const stepOptions = [6, 8, 10, 12];
+        let idx = stepOptions.indexOf(aiSteps);
+        if (idx === -1 || idx >= stepOptions.length - 1) {
+            setAiSteps(stepOptions[0]);
+        } else {
+            setAiSteps(stepOptions[idx + 1]);
+        }
+    }
+
+    function setAiSteps(val) {
+        const n = parseInt(val);
+        aiSteps = isNaN(n) ? 8 : Math.max(4, Math.min(20, n));
+        saveAiSettings();
+    }
+
+    function loadAiSettings() {
+        if (!aiSettingsFile.text) return;
+        try {
+            const data = JSON.parse(aiSettingsFile.text);
+            if (data && typeof data.autoOpen === "boolean") {
+                aiAutoOpen = data.autoOpen;
+            }
+            if (data && (data.aspectRatio === "16:9" || data.aspectRatio === "1:1")) {
+                aiAspectRatio = data.aspectRatio;
+            }
+            if (data && typeof data.steps === "number") {
+                aiSteps = data.steps;
+            }
+            if (data && typeof data.strength === "number") {
+                aiStrength = Math.max(0.1, Math.min(0.95, data.strength));
+            }
+        } catch (e) {
+            console.warn("[IslandHub] Failed to parse ai-settings.json:", e);
+        }
+    }
+
+    function saveAiSettings() {
+        try {
+            const data = {
+                autoOpen: aiAutoOpen,
+                aspectRatio: aiAspectRatio,
+                steps: aiSteps,
+                strength: aiStrength,
+                cfg: 1.8,
+                updatedAt: new Date().toISOString()
+            };
+            aiSettingsFile.setText(JSON.stringify(data, null, 2) + "\n");
+        } catch (e) {
+            console.warn("[IslandHub] Failed to save ai-settings.json:", e);
+        }
+    }
+
+    FileView {
+        id: aiSettingsFile
+        path: Quickshell.shellPath("island/ai-settings.json")
+        preload: true
+        atomicWrites: true
+        watchChanges: true
+        onLoaded: root.loadAiSettings()
+        onLoadFailed: (error) => {
+            if (error === FileViewError.FileNotFound) {
+                root.saveAiSettings();
+            }
+        }
+    }
 
     // -- Aggregate active notice flag (used by Notch fullscreen idle suppression & dynamic pill sizing) --
     readonly property bool noticeActive: transientText.length > 0
@@ -238,7 +343,7 @@ Singleton {
         } else {
             aiSafetyTimer.stop();
             root.flashBorder("#10B981", 1200);
-            root.showTransient("Image Ready!", 3000);
+            root.showTransient(msg || (root.aiAutoOpen ? "Image Ready!" : "Image Saved!"), 3000);
         }
     }
 
@@ -255,10 +360,41 @@ Singleton {
         Quickshell.execDetached([Quickshell.shellPath("scripts/image-engine.sh"), "--preload"]);
     }
 
-    function triggerAiGeneration(prompt) {
+    function triggerAiGeneration(prompt, refOverride) {
         if (!prompt || !prompt.trim()) return;
-        root.setAiGenerating(true, "Generating Image...");
-        Quickshell.execDetached([Quickshell.shellPath("scripts/image-engine.sh"), prompt.trim()]);
+        const aspect = root.aiAspectRatio || "1:1";
+        const steps = root.aiSteps || 8;
+        const refPath = (typeof refOverride === "string" && refOverride.length > 0) ? refOverride : root.aiReferenceImage;
+        const hasRef = refPath && refPath.length > 0;
+        const strVal = root.aiStrength;
+
+        // Privacy: immediately purge reference image state from memory
+        root.clearAiReferenceImage();
+
+        if (hasRef) {
+            root.setAiGenerating(true, "Styling Photo (" + Math.round(strVal * 100) + "% str)...");
+        } else {
+            root.setAiGenerating(true, "Generating " + aspect + " (" + steps + " steps)...");
+        }
+
+        const args = [Quickshell.shellPath("scripts/image-engine.sh")];
+        if (!root.aiAutoOpen) {
+            args.push("--no-open");
+        }
+        args.push("--aspect");
+        args.push(aspect);
+        args.push("--steps");
+        args.push(String(steps));
+
+        if (hasRef && refPath.length > 0) {
+            args.push("--ref");
+            args.push(refPath);
+            args.push("--strength");
+            args.push(String(strVal));
+        }
+
+        args.push(prompt.trim());
+        Quickshell.execDetached(args);
     }
 
     // -- click routing: most prominent live activity wins --
@@ -441,12 +577,13 @@ Singleton {
                     const prev = root.levels || [0, 0, 0, 0];
                     for (let i = 0; i < 4; ++i) {
                         const v = Number(parts[i]);
-                        const val = Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0;
+                        const raw = Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0;
+                        const val = Math.round(raw * 20) / 20;
                         next.push(val);
                         diff = Math.max(diff, Math.abs(val - (prev[i] || 0)));
                     }
-                    // Only update if difference > 0.012 or both non-zero transitioning to silence
-                    if (diff > 0.012 || (next[0] === 0 && prev[0] !== 0)) {
+                    // Only update if difference > 0.04 or both transitioning to silence
+                    if (diff > 0.04 || (next[0] === 0 && prev[0] !== 0)) {
                         root.levels = next;
                         root.levelUpdatedAt = Date.now();
                     }

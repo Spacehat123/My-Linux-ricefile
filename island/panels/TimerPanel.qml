@@ -14,15 +14,22 @@ FocusScope {
     implicitWidth: 352
     implicitHeight: content.implicitHeight
 
-    Column {
-        id: content
-        width: parent.width
-        spacing: 10
+    Flickable {
+        anchors.fill: parent
+        contentWidth: width
+        contentHeight: content.implicitHeight
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
 
-        PanelHeader {
-            title: "Timer"
-            onCloseRequested: ShellState.close()
-        }
+        Column {
+            id: content
+            width: parent.width
+            spacing: 10
+
+            PanelHeader {
+                title: "Timer"
+                onCloseRequested: ShellState.close()
+            }
 
         // Stopwatch row.
         Row {
@@ -275,4 +282,5 @@ FocusScope {
             font.pixelSize: 11
         }
     }
+}
 }

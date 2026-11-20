@@ -1,17 +1,17 @@
-# Graph Report - cool-shell  (2026-11-17)
+# Graph Report - cool-shell  (2026-11-20)
 
 ## Corpus Check
-- 198 files · ~198,515 words
+- 227 files · ~215,342 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 110 file(s) not represented in the graph (top: .qml 101, .bak 3, (none) 3)
+- Unclassified: 110 file(s) not represented in the graph (top: .qml 101, (none) 4, .bak 3)
 
 ## Summary
-- 2324 nodes · 2678 edges · 185 communities (163 shown, 22 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 28 edges (avg confidence: 0.93)
+- 2542 nodes · 2929 edges · 217 communities (195 shown, 22 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 36 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `24cb09cd`
+- Built from commit: `cf3b5f66`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -22,9 +22,9 @@
 - UNSKILL.md
 - COOL-SHELL: COMPLETE RECONNAISSANCE & ARCHITECTURAL REVIEW
 - study-mode.py
-- AI Image Generator Lifecycle & Wiring Fixes (Beta Baseline)
+- notify_island_ai
 - Antigravity Swarm Refactor
-- phone-bridge-daemon.py
+- 2. Root Cause Analysis
 - level-meter.py
 - GPU-Accelerated Animated Wallpaper Exploration Report
 - IMPLEMENTATION PLAN: COMPLETE UI/UX ROADMAP FOR COOL-SHELL
@@ -95,7 +95,7 @@
 - 3. Modified Components & Implementation Details
 - Study Mode Lockout & GitHub Contribution Reward Heatmap Report
 - Engineering Report: Dynamic Island Drag-and-Drop Captioning Architecture
-- Verification & Architectural Report: Study Mode Self-Healing Daemon & Flow State Overtime Fix
+- phone-bridge-daemon.py
 - 1. Problem Identification
 - Pre-Flight Architectural Plan: visionOS Modular Control Center Tiles & Image Engine
 - 3. Implementation Tasks
@@ -158,7 +158,7 @@
 - Android Phone Mirroring & Filtered File Bridge Implementation Report
 - Battery Charge Limit (80% Health Mode & Custom Thresholds) Report
 - Liquid Glass Live Capture Architecture & Feasibility Report
-- Cool-Shell Custom Study Mode Lockdown & Exam Profile Plan
+- Floating Media Companion: Dynamic Theme Sync, 20% Transparency & Bottom Leak Elimination
 - Architecture & Implementation Report: Apple Liquid Glass for Quickshell (`cool-shell`)
 - voice-engine.sh
 - Live MP4 Video Wallpaper
@@ -169,7 +169,7 @@
 - Verification Report: Floating Capsule Bottom Bar (Ukishima Style)
 - Screen Lens Read Aloud & Dual TTS Integration Report
 - Dynamic Island Visual Rendering Glitches & Geometry Scale Overhaul Report
-- Cool-Shell Dynamic Island Polish, 10s Timer Alarm & Hotstar Quota
+- Verification Report: Liquid Glass Complete Purge & Elevated Media Companion Deployment
 - Verification Report: Apple Liquid Glass Shader for Kitty Terminal
 - Antigravity Swarm LSP
 - Antigravity Swarm Rules
@@ -192,12 +192,44 @@
 - play-timer-alarm.sh
 - screenshot-region.sh
 - study-mode.sh script
-- sys
+- re
 - Architectural Report: Apple Liquid Glass Physical Refractive Lens in Quickshell (Wayland)
 - Architectural Report: Floating Media Player Companion Pill & Top Bar Media Decoupling
-- image-daemon.py
+- Deep Investigation & Remediation Report: Quickshell 20% Continuous CPU Drain
 - Engineering Report: Apple Liquid Glass Physical Refraction Lens Media Player
-- build-shader.sh
+- 4. Production Alternatives for the Music Companion
+- 1. Issues Identified & Remediation
+- sys
+- Floating Media Companion: Circular Progress Disc & 3-Line Kinetic Lyrics
+- Implementation & Verification Report: Modular Control Center Pods, OSD Popups, Ambient Slate, and Contextual Action Hub
+- 2. Technical Modifications
+- Cool-Shell Custom Study Mode Lockdown & Exam Profile Plan
+- Verification & Architectural Report: Study Mode Self-Healing Daemon & Flow State Overtime Fix
+- Pre-Flight Execution Plan: Modular Control Center Pods & 4-Stage Roadmap
+- Dynamic Island: Timer Panel Height & Overflow Fix Verification
+- island/scripts/screen-lens.sh
+- sysinfo.sh
+- voice-note.sh
+- Remediation Report: Ambient Telemetry Cleanup & Dynamic Idle Mode Fix
+- Verification Report: Radial Marking Menu Hub, Bottom-Left Slate & Weather Typography Refinement
+- Cool-Shell Dynamic Island Polish, 10s Timer Alarm & Hotstar Quota
+- Verification Report: Removal of Transport Controls in Floating Media Companion
+- Verification Report: Solid Opaque Volume Indicators & Media Companion
+- Floating Media Companion: Wide Typography, Waveform Visualizer & Borderless Glass
+- Engineering Report: Study Mode File Explorer Whitelist & PDF Download Support
+- AI Image Studio: Model Loading & Offloading Memory Verification Report
+- image-daemon.py
+- AI Studio: Image-to-Image (img2img) Reference Photo & Strength Slider Implementation
+- AI Image Generator Lifecycle & Wiring Fixes (Beta Baseline)
+- 1080p AI Image Generation Engine & Dynamic Island Studio Integration Report
+- 2. Policy Implementation Details
+- 2. Architecture & Implementation
+- Completion & Verification Report: visionOS Modular Control Center & AI Image Engine
+- 2. Implemented Fixes
+- AI Studio: Offline Local Inference Enforcement & Zero-Network Guarantee
+- 2. Key Architecture & Features
+- launch-chat.sh
+- chat-ui.py
 
 ## God Nodes (most connected - your core abstractions)
 1. `Antigravity Swarm Refactor` - 29 edges
@@ -212,21 +244,21 @@
 10. `run_daemon()` - 13 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `3. Modified & Created Files` --references--> `notify_island_ai()`  [INFERRED]
+  .asw/reports/2026-11-16-modular-control-center-and-imagegen-verification-report.md → scripts/image-daemon.py
+- `2.3 Daemon Startup Race Conditions` --references--> `load_pipeline()`  [INFERRED]
+  .asw/reports/2026-10-12-ai-image-generator-beta-lifecycle-fixes.md → scripts/image-daemon.py
 - `3.1 Single-Instance File Locking & Immediate Socket Binding` --references--> `start_server()`  [INFERRED]
   .asw/reports/2026-10-12-ai-image-generator-beta-lifecycle-fixes.md → scripts/image-daemon.py
+- `2. Root Cause Analysis` --references--> `enforce_distractions()`  [INFERRED]
+  .asw/reports/2026-10-13-study-mode-file-explorers-and-pdf-download-fix.md → scripts/study-mode.py
 - `4. Verification & Testing Matrix` --references--> `ensure_daemon()`  [INFERRED]
   .asw/reports/2026-10-26-custom-study-mode-lockdown-and-exam-profile.md → scripts/study-mode.py
-- `2.2 Lack of Wall-Clock Determinism` --references--> `cmd_status()`  [INFERRED]
-  .asw/reports/2026-10-14-study-mode-self-healing-and-overtime-fix.md → scripts/study-mode.py
-- `3.2 Deterministic Wall-Clock Computation` --references--> `cmd_status()`  [INFERRED]
-  .asw/reports/2026-10-14-study-mode-self-healing-and-overtime-fix.md → scripts/study-mode.py
-- `3.3 Immortal Daemon & Self-Healing Watcher` --references--> `cmd_status()`  [INFERRED]
-  .asw/reports/2026-10-14-study-mode-self-healing-and-overtime-fix.md → scripts/study-mode.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (185 total, 22 thin omitted)
+## Communities (217 total, 22 thin omitted)
 
 ### Community 0 - "3. Hardened Technical Specifications"
 Cohesion: 0.05
@@ -249,20 +281,20 @@ Cohesion: 0.05
 Nodes (41): 10. DESIGN-SYSTEM REVIEW, 11. HIGH-VALUE IMPROVEMENTS, 12. MEDIUM-VALUE IMPROVEMENTS, 13. OPTIONAL EXPERIMENTS, 14. FUTURE ARCHITECTURE, 15. PRACTICAL VERIFICATION MATRIX, 16. RECOMMENDED NEXT STEPS, 1. EXECUTIVE SUMMARY (+33 more)
 
 ### Community 5 - "study-mode.py"
-Cohesion: 0.11
-Nodes (40): 1. Problem Description, 2. Root Cause Analysis, 3. Implementation Details, 4. Verification, Engineering Report: Study Mode File Explorer Whitelist & PDF Download Support, 1. Executive Summary, 2.1 Non-Atomic `save_state()` Truncation Race, 3.1 Atomic File Operations & Safe Reads (+32 more)
+Cohesion: 0.15
+Nodes (35): 1. Executive Summary, 2.1 Non-Atomic `save_state()` Truncation Race, 3.1 Atomic File Operations & Safe Reads, 10. Study Mode & Focus Lock Subsystem, check_brave_cdp_whitelisted(), cmd_prompt_and_start(), cmd_start(), cmd_status() (+27 more)
 
-### Community 6 - "AI Image Generator Lifecycle & Wiring Fixes (Beta Baseline)"
-Cohesion: 0.07
-Nodes (25): 1080p AI Image Generation Engine & Dynamic Island Studio Integration Report, 1. Architectural Overview & User Request, 2.1 Why Direct 1080p Raw Diffusion Fails on SD 1.5 vs. 2-Stage Pipeline, 2.2 Turing GTX 1650 FP16 GroupNorm NaN Bug & Resolution, 2.3 4GB VRAM Management with Model CPU Offload, 2. Technical Findings & Root-Cause Engineering Solutions, 3. Modified & Created Components, 4. Verification & Validation Matrix (+17 more)
+### Community 6 - "notify_island_ai"
+Cohesion: 0.29
+Nodes (6): 3. Modified & Created Components, 2.1 Island Stuck on "Generating Image...", 2.2 Swappy Viewer Not Opening, 2.3 Daemon Startup Race Conditions, 2. Root Cause Analysis, notify_island_ai()
 
 ### Community 7 - "Antigravity Swarm Refactor"
 Cohesion: 0.06
 Nodes (34): Abort Conditions, Antigravity Swarm Refactor, Characterization, Codemap, Commit Checkpoints, Deprecated Code And Migration, Diagnostics, Direct Search Checklist (+26 more)
 
-### Community 8 - "phone-bridge-daemon.py"
-Cohesion: 0.21
-Nodes (9): check_and_pull_inbox(), connect_wireless(), get_adb_devices(), get_battery_info(), handle_exit(), notify_island(), register_in_shelf(), run_loop() (+1 more)
+### Community 8 - "2. Root Cause Analysis"
+Cohesion: 0.18
+Nodes (10): 1. Executive Summary, 2. Root Cause Analysis, 3. Engineering Remediation, 4. Verification & Live Telemetry, Culprit A: Audio Daemon Redundant Disk I/O & Jitter, Culprit B: Sub-Pixel Amplitude Noise Invalidation Loop, Culprit C: Recurring 8-Second SVG Shape Animation Cycle, Culprit D: Dynamic Visualizer Geometry Churn in TopConvexBar (+2 more)
 
 ### Community 9 - "level-meter.py"
 Cohesion: 0.09
@@ -481,12 +513,12 @@ Cohesion: 0.15
 Nodes (12): 1.1 Inspection of Pipeline & Shader Files, 1.2 Runtime Execution Verification (The Magenta Probe), 1.3 Implementation vs. Placeholder Verification, 1.4 Hyprland Screen Shader Audit, 1.5 Selective Window Filtering in Hyprland Screen Shader, 1.6 The Critical Wayland Framebuffer Boundary (Background vs. Forefront), 1. Technical Audit Findings (Questions 1–6), 2.1 Exaggerated Calibration Parameters (+4 more)
 
 ### Community 63 - "notes-helper.py"
-Cohesion: 0.38
+Cohesion: 0.44
 Nodes (11): checked_note_path(), create_note(), delete_note(), ensure_directory(), list_notes(), load_pins(), main(), note_record() (+3 more)
 
 ### Community 64 - "json"
-Cohesion: 0.38
-Nodes (9): ensure_daemon_running(), get_status(), is_daemon_process_alive(), is_socket_alive(), main(), notify_island_done(), open_viewer(), send_prompt() (+1 more)
+Cohesion: 0.33
+Nodes (12): ensure_daemon_running(), get_process_rss_mb_by_pid(), get_saved_setting(), get_status(), is_daemon_process_alive(), is_socket_alive(), main(), notify_island_done() (+4 more)
 
 ### Community 65 - "2. File Modifications and Additions"
 Cohesion: 0.17
@@ -544,9 +576,9 @@ Nodes (10): 1. Executive Summary, 2. Architecture & File Matrix, 3. Security & A
 Cohesion: 0.18
 Nodes (10): 1. Executive Summary, 2. Architecture & Component Blueprint, 3.1 Background Caption Runner (`island/CaptionState.qml`), 3.2 Dynamic Island Modal (`island/panels/CaptionActionPanel.qml`), 3.3 Notch Interception (`island/Notch.qml`), 3.4 IPC Extensibility (`shell.qml`), 3. Implementation Details, 4. Verification Matrix (+2 more)
 
-### Community 79 - "Verification & Architectural Report: Study Mode Self-Healing Daemon & Flow State Overtime Fix"
-Cohesion: 0.18
-Nodes (10): 2.2 Lack of Wall-Clock Determinism, 2.3 UI Lockout at Boundary Condition, 2. Root Cause Analysis, 3.2 Deterministic Wall-Clock Computation, 3.3 Immortal Daemon & Self-Healing Watcher, 3.4 UI Fallback in Control Center & Notch, 3. Architecture & Implementation Fixes, 4. Verification & Testing Matrix (+2 more)
+### Community 79 - "phone-bridge-daemon.py"
+Cohesion: 0.19
+Nodes (9): check_and_pull_inbox(), connect_wireless(), get_adb_devices(), get_battery_info(), handle_exit(), notify_island(), register_in_shelf(), run_loop() (+1 more)
 
 ### Community 80 - "1. Problem Identification"
 Cohesion: 0.18
@@ -796,9 +828,9 @@ Nodes (5): 1. Executive Summary, 2. Hardware Architecture & Actuator Backend, 3.
 Cohesion: 0.18
 Nodes (10): 1. Executive Summary, 2. Environment & Protocol Audit, 3. The Feedback Loop Phenomenon, 4. Tested Architectures to Achieve Live Glass, 5. Verification Matrix, Architecture 1: Ephemeral Pulse / Zero-Overhead Hide-and-Capture (Empirically Verified), Architecture 2: Full-Screen Cached Buffer with Real-Time Coordinate Tracking (60fps Dragging), Architecture 3: Dual-Mode Dynamic Wallpaper & Window Hybrid (+2 more)
 
-### Community 142 - "Cool-Shell Custom Study Mode Lockdown & Exam Profile Plan"
-Cohesion: 0.33
-Nodes (5): 1. Objective & Scope, 2. Architecture & File Breakdown, 3. Daily 1-Hour Chess.com Quota Engine, 4. Verification & Testing Matrix, Cool-Shell Custom Study Mode Lockdown & Exam Profile Plan
+### Community 142 - "Floating Media Companion: Dynamic Theme Sync, 20% Transparency & Bottom Leak Elimination"
+Cohesion: 0.50
+Nodes (3): 1. Issues Identified & Resolved, 2. Verification Matrix, Floating Media Companion: Dynamic Theme Sync, 20% Transparency & Bottom Leak Elimination
 
 ### Community 143 - "Architecture & Implementation Report: Apple Liquid Glass for Quickshell (`cool-shell`)"
 Cohesion: 0.33
@@ -840,9 +872,9 @@ Nodes (4): 1. Architectural Summary, 2. Component Reference, 3. Verification Mat
 Cohesion: 0.40
 Nodes (4): 1. Executive Summary, 2. Geometry Scale Transformation Table, 3. Verification Summary, Dynamic Island Visual Rendering Glitches & Geometry Scale Overhaul Report
 
-### Community 153 - "Cool-Shell Dynamic Island Polish, 10s Timer Alarm & Hotstar Quota"
+### Community 153 - "Verification Report: Liquid Glass Complete Purge & Elevated Media Companion Deployment"
 Cohesion: 0.40
-Nodes (4): 1. Summary of Changes, 2. Dual Live Activity & Quota Tracking Architecture, 3. Full Verification & Lockdown Integrity, Cool-Shell Dynamic Island Polish, 10s Timer Alarm & Hotstar Quota
+Nodes (4): 1. Executive Summary, 2. Component Design & Optical Specifications, 3. Empirical Verification Matrix, Verification Report: Liquid Glass Complete Purge & Elevated Media Companion Deployment
 
 ### Community 154 - "Verification Report: Apple Liquid Glass Shader for Kitty Terminal"
 Cohesion: 0.40
@@ -860,9 +892,13 @@ Nodes (3): Antigravity Swarm Rules, Reporting, Rule Search
 Cohesion: 0.67
 Nodes (3): emergency_recover(), PATH, display-safety-watchdog.sh script
 
-### Community 179 - "sys"
-Cohesion: 0.18
-Nodes (9): copy_to_clipboard(), main(), notify_island(), alert_kitten(), main(), notify_island_voice(), read_aloud_kokoro(), split_clauses() (+1 more)
+### Community 164 - "image-engine.sh"
+Cohesion: 0.29
+Nodes (6): HF_DATASETS_OFFLINE, HF_HUB_OFFLINE, PATH, PYTORCH_CUDA_ALLOC_CONF, image-engine.sh script, TRANSFORMERS_OFFLINE
+
+### Community 179 - "re"
+Cohesion: 0.19
+Nodes (10): clean_title(), is_allowed_language(), main(), parse_lrc(), alert_kitten(), main(), notify_island_voice(), read_aloud_kokoro() (+2 more)
 
 ### Community 180 - "Architectural Report: Apple Liquid Glass Physical Refractive Lens in Quickshell (Wayland)"
 Cohesion: 0.15
@@ -872,33 +908,157 @@ Nodes (12): 1. Executive Summary, 2. Backdrop Capture Investigation & Findings, 
 Cohesion: 0.22
 Nodes (8): 1. Executive Summary, 2. Technical Implementation Details, 3. Verification & Evidence Matrix, 4. Visual Evidence Artifacts, A. Middle Top Bar Notch Decoupling, Architectural Report: Floating Media Player Companion Pill & Top Bar Media Decoupling, B. Floating Media Companion (`panels/FloatingMediaCompanion.qml`), Key Architectural Pillars:
 
-### Community 182 - "image-daemon.py"
-Cohesion: 0.25
-Nodes (4): distill_prompt(), load_pipeline(), run_generation(), start_server()
+### Community 182 - "Deep Investigation & Remediation Report: Quickshell 20% Continuous CPU Drain"
+Cohesion: 0.20
+Nodes (9): 1. Executive Summary, 2. Root Cause Analysis & Empirical Evidence, 3. Engineering Fixes Implemented, 4. Verification & Results Matrix, Deep Investigation & Remediation Report: Quickshell 20% Continuous CPU Drain, Diagnostic Profile (Before Fix), Fix 1: High-Performance C-Array Buffer Decoding (`island/scripts/level-meter.py`), Fix 2: Purge Redundant Interpolation Behaviors Across Surfaces (+1 more)
 
 ### Community 183 - "Engineering Report: Apple Liquid Glass Physical Refraction Lens Media Player"
 Cohesion: 0.33
 Nodes (5): 1. Executive Summary, 2. Optical Architecture & Layer Pipeline, 3. Tunable Variables Guide, 4. Verification Artifacts, Engineering Report: Apple Liquid Glass Physical Refraction Lens Media Player
 
+### Community 184 - "4. Production Alternatives for the Music Companion"
+Cohesion: 0.15
+Nodes (12): 1. Executive Summary & Verdict, 2.1 The Closed Recursive Feedback Loop ($X_{t+1} = f(X_t)$), 2.2 Why the Framerate Drops to 1 FPS, 2. Root Cause Analysis: The Physics of "1 FPS" and "Random Crap", 3. How Apple Liquid Glass Works vs. Linux Wayland, 4. Production Alternatives for the Music Companion, Deep Investigation & Feasibility Report: Apple Liquid Glass & Quickshell Media Companion, Option 1: Dynamic Liquid Mesh Gradient / Liquid Canvas (Apple Music Style) (+4 more)
+
+### Community 185 - "1. Issues Identified & Remediation"
+Cohesion: 0.25
+Nodes (7): 1. Issues Identified & Remediation, 1. Release / Un-holding Gesture Not Firing, 2. Quick Stash Target (Top Bar Drop Pocket), 2. Verification Matrix, 3. Dedicated Keybinding Refinement, 3. Non-Working Radial Hub Options, Verification Report: Radial Marking Menu Release Gesture & Drop Pocket Fix
+
+### Community 186 - "sys"
+Cohesion: 0.21
+Nodes (7): copy_to_clipboard(), main(), notify_island(), get_daemon_status(), get_system_mem(), main(), run_cmd()
+
+### Community 187 - "Floating Media Companion: Circular Progress Disc & 3-Line Kinetic Lyrics"
+Cohesion: 0.40
+Nodes (4): 1. Executive Summary, 2. Technical Architecture & File Changes, 3. Verification & Live Evidence, Floating Media Companion: Circular Progress Disc & 3-Line Kinetic Lyrics
+
+### Community 188 - "Implementation & Verification Report: Modular Control Center Pods, OSD Popups, Ambient Slate, and Contextual Action Hub"
+Cohesion: 0.50
+Nodes (3): 1. Executive Summary, 2. Verification Test Matrix, Implementation & Verification Report: Modular Control Center Pods, OSD Popups, Ambient Slate, and Contextual Action Hub
+
+### Community 189 - "2. Technical Modifications"
+Cohesion: 0.20
+Nodes (9): 1. Executive Summary, 2. Technical Modifications, 3. Verification & Evidence Matrix, A. Circular Album Cover Clipping (`FloatingMediaCompanion.qml`), B. Controls Alignment & Centering, C. Top Bar Trigger & Hover/Click State Machine, D. Typography Overhaul (`Fredoka Bold`), E. Language Filter for Lyrics (`island/scripts/lyrics-fetcher.py`) (+1 more)
+
+### Community 190 - "Cool-Shell Custom Study Mode Lockdown & Exam Profile Plan"
+Cohesion: 0.33
+Nodes (5): 1. Objective & Scope, 2. Architecture & File Breakdown, 3. Daily 1-Hour Chess.com Quota Engine, 4. Verification & Testing Matrix, Cool-Shell Custom Study Mode Lockdown & Exam Profile Plan
+
+### Community 191 - "Verification & Architectural Report: Study Mode Self-Healing Daemon & Flow State Overtime Fix"
+Cohesion: 0.18
+Nodes (10): 2.2 Lack of Wall-Clock Determinism, 2.3 UI Lockout at Boundary Condition, 2. Root Cause Analysis, 3.2 Deterministic Wall-Clock Computation, 3.3 Immortal Daemon & Self-Healing Watcher, 3.4 UI Fallback in Control Center & Notch, 3. Architecture & Implementation Fixes, 4. Verification & Testing Matrix (+2 more)
+
+### Community 192 - "Pre-Flight Execution Plan: Modular Control Center Pods & 4-Stage Roadmap"
+Cohesion: 0.29
+Nodes (6): 1. Phase 1 Objective: Modular Control Center Pods, 2. Phase 2 Preview: Glass Volume & Brightness OSD Popups, 3. Phase 3 Preview: Desktop Ambient Weather & Clock Slate, 4. Phase 4 Preview: Floating Contextual Action Hub ("The Big One"), 5. Phase 1 Verification Criteria, Pre-Flight Execution Plan: Modular Control Center Pods & 4-Stage Roadmap
+
+### Community 193 - "Dynamic Island: Timer Panel Height & Overflow Fix Verification"
+Cohesion: 0.33
+Nodes (5): 1. Problem Description, 2. Solutions Implemented, 3. Verification Matrix, Dynamic Island: Timer Panel Height & Overflow Fix Verification, Root Cause
+
+### Community 194 - "island/scripts/screen-lens.sh"
+Cohesion: 0.50
+Nodes (3): LD_LIBRARY_PATH, screen-lens.sh script, TESSDATA_PREFIX
+
+### Community 197 - "Remediation Report: Ambient Telemetry Cleanup & Dynamic Idle Mode Fix"
+Cohesion: 0.40
+Nodes (4): 1. Root Cause Analysis, 2. Changes Made, 3. Verification Matrix, Remediation Report: Ambient Telemetry Cleanup & Dynamic Idle Mode Fix
+
+### Community 198 - "Verification Report: Radial Marking Menu Hub, Bottom-Left Slate & Weather Typography Refinement"
+Cohesion: 0.40
+Nodes (4): 1. Executive Summary, 2. Verification Matrix, 3. Files Modified, Verification Report: Radial Marking Menu Hub, Bottom-Left Slate & Weather Typography Refinement
+
+### Community 199 - "Cool-Shell Dynamic Island Polish, 10s Timer Alarm & Hotstar Quota"
+Cohesion: 0.40
+Nodes (4): 1. Summary of Changes, 2. Dual Live Activity & Quota Tracking Architecture, 3. Full Verification & Lockdown Integrity, Cool-Shell Dynamic Island Polish, 10s Timer Alarm & Hotstar Quota
+
+### Community 200 - "Verification Report: Removal of Transport Controls in Floating Media Companion"
+Cohesion: 0.40
+Nodes (4): 1. Executive Summary, 2. Verification Matrix, 3. Files Modified, Verification Report: Removal of Transport Controls in Floating Media Companion
+
+### Community 201 - "Verification Report: Solid Opaque Volume Indicators & Media Companion"
+Cohesion: 0.40
+Nodes (4): 1. Executive Summary, 2. Verification Matrix, 3. Files Modified, Verification Report: Solid Opaque Volume Indicators & Media Companion
+
+### Community 202 - "Floating Media Companion: Wide Typography, Waveform Visualizer & Borderless Glass"
+Cohesion: 0.50
+Nodes (3): 1. Modifications Implemented, 2. Verification Matrix, Floating Media Companion: Wide Typography, Waveform Visualizer & Borderless Glass
+
+### Community 203 - "Engineering Report: Study Mode File Explorer Whitelist & PDF Download Support"
+Cohesion: 0.33
+Nodes (5): 1. Problem Description, 2. Root Cause Analysis, 3. Implementation Details, 4. Verification, Engineering Report: Study Mode File Explorer Whitelist & PDF Download Support
+
+### Community 204 - "AI Image Studio: Model Loading & Offloading Memory Verification Report"
+Cohesion: 0.33
+Nodes (5): 1. Executive Summary, 3.1 Empirical Measurement Matrix, 3. Empirical Verification Results, 4. Key Findings & Verification Conclusion, AI Image Studio: Model Loading & Offloading Memory Verification Report
+
+### Community 205 - "image-daemon.py"
+Cohesion: 0.39
+Nodes (5): distill_prompt(), get_img2img_pipeline(), load_pipeline(), run_generation(), start_server()
+
+### Community 206 - "AI Studio: Image-to-Image (img2img) Reference Photo & Strength Slider Implementation"
+Cohesion: 0.18
+Nodes (10): 1. Executive Summary, 2.1 Zero-Download In-Memory Pipeline Sharing, 2.2 Inference Execution Workflow, 2. Technical Architecture & Memory Sharing, 3.1 Drop Zone & Native File Picker, 3.2 Dynamic Island Height Expansion, 3.3 Interactive Strength Slider, 3. UI/UX Interaction Design (+2 more)
+
+### Community 207 - "AI Image Generator Lifecycle & Wiring Fixes (Beta Baseline)"
+Cohesion: 0.22
+Nodes (8): 1. Executive Summary, 3.1 Single-Instance File Locking & Immediate Socket Binding, 3.2 Client-Side Viewer Launch & Guaranteed Island Reset, 3.3 Dynamic Island State & Safety Watchdog, 3. Implemented Fixes, 4. Verification Matrix, 5. Status & Next Steps, AI Image Generator Lifecycle & Wiring Fixes (Beta Baseline)
+
+### Community 208 - "1080p AI Image Generation Engine & Dynamic Island Studio Integration Report"
+Cohesion: 0.25
+Nodes (7): 1080p AI Image Generation Engine & Dynamic Island Studio Integration Report, 1. Architectural Overview & User Request, 2.1 Why Direct 1080p Raw Diffusion Fails on SD 1.5 vs. 2-Stage Pipeline, 2.2 Turing GTX 1650 FP16 GroupNorm NaN Bug & Resolution, 2.3 4GB VRAM Management with Model CPU Offload, 2. Technical Findings & Root-Cause Engineering Solutions, 4. Verification & Validation Matrix
+
+### Community 209 - "2. Policy Implementation Details"
+Cohesion: 0.29
+Nodes (6): 1. Executive Summary, 2.1 Single Output Copy Guarantee, 2.2 Complete Prompt Anonymity & Zero Logging, 2.3 Ephemeral Reference Image Handling, 2. Policy Implementation Details, AI Studio: Zero-Persistence Input Policy & Single-Output Lifecycle
+
+### Community 210 - "2. Architecture & Implementation"
+Cohesion: 0.33
+Nodes (5): 2.1 Daemon Process & Telemetry, 2.2 Shell State Engine Integration, 2.3 Left Sidebar Control Center UI, 2. Architecture & Implementation, get_process_rss_mb()
+
+### Community 211 - "Completion & Verification Report: visionOS Modular Control Center & AI Image Engine"
+Cohesion: 0.40
+Nodes (4): 1. Executive Summary, 2. Verification Artifacts & Evidence, 3. Modified & Created Files, Completion & Verification Report: visionOS Modular Control Center & AI Image Engine
+
+### Community 212 - "2. Implemented Fixes"
+Cohesion: 0.17
+Nodes (11): 1. Problem Statement & Root Cause Analysis, 1. PyTorch CUDA Memory Allocation Optimization, 2. Fine-Grained Attention Slicing & VAE Slicing/Tiling, 2. Implemented Fixes, 3. Reference Image Path Sanitization & Validation, 3. Verification & Memory Benchmark, 4. Negative Prompt CLIP Token Clamping, 5. Transparent Error Feedback to Dynamic Island (+3 more)
+
+### Community 213 - "AI Studio: Offline Local Inference Enforcement & Zero-Network Guarantee"
+Cohesion: 0.40
+Nodes (4): 1. Problem Identification, 2. Remediation, AI Studio: Offline Local Inference Enforcement & Zero-Network Guarantee, Root Cause
+
+### Community 214 - "2. Key Architecture & Features"
+Cohesion: 0.22
+Nodes (8): 1. Executive Summary, 2.1 Independent Shared-Daemon Architecture, 2.2 Multimodal Conversational UI, 2.3 Extended Parameter Studio (Sidebar Drawer), 2.4 Session Gallery Tab, 2.5 Quick Shell Launchers, 2. Key Architecture & Features, AI Image Studio: Conversational Chat Interface & Parameter Studio Integration
+
+### Community 215 - "launch-chat.sh"
+Cohesion: 0.29
+Nodes (6): HF_DATASETS_OFFLINE, HF_HUB_OFFLINE, PATH, PYTORCH_CUDA_ALLOC_CONF, launch-chat.sh script, TRANSFORMERS_OFFLINE
+
+### Community 216 - "chat-ui.py"
+Cohesion: 0.12
+Nodes (9): clear_chat(), create_ui(), bot_generates(), extract_prompt_and_files(), get_telemetry_status(), offload_model(), process_chat(), refresh_gallery() (+1 more)
+
 ## Knowledge Gaps
-- **16 isolated node(s):** `PATH`, `PATH`, `PATH`, `PATH`, `PATH` (+11 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1595 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **27 isolated node(s):** `PATH`, `PATH`, `PATH`, `PATH`, `PATH` (+22 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1741 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **22 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Cool-Shell (Pranc Rice) — System & Functional Architecture Reference` connect `Cool-Shell (Pranc Rice) — System & Functional Architecture Reference` to `study-mode.py`?**
-  _High betweenness centrality (0.002) - this node is a cross-community bridge._
 - **What connects `PATH`, `PATH`, `PATH` to the rest of the system?**
-  _16 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _27 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `3. Hardened Technical Specifications` be split into smaller, more focused modules?**
   _Cohesion score 0.046511627906976744 - nodes in this community are weakly interconnected._
-- **Why does `10. Study Mode & Focus Lock Subsystem` connect `study-mode.py` to `Cool-Shell (Pranc Rice) — System & Functional Architecture Reference`?**
-  _High betweenness centrality (0.002) - this node is a cross-community bridge._
 - **Should `3. Hardened Technical Specifications` be split into smaller, more focused modules?**
   _Cohesion score 0.046511627906976744 - nodes in this community are weakly interconnected._
-- **Why does `notify_island_ai()` connect `AI Image Generator Lifecycle & Wiring Fixes (Beta Baseline)` to `image-daemon.py`?**
-  _High betweenness centrality (0.002) - this node is a cross-community bridge._
 - **Should `prp-implement/agent.md` be split into smaller, more focused modules?**
   _Cohesion score 0.047619047619047616 - nodes in this community are weakly interconnected._
+- **Should `UNSKILL.md` be split into smaller, more focused modules?**
+  _Cohesion score 0.047619047619047616 - nodes in this community are weakly interconnected._
+- **Should `COOL-SHELL: COMPLETE RECONNAISSANCE & ARCHITECTURAL REVIEW` be split into smaller, more focused modules?**
+  _Cohesion score 0.047619047619047616 - nodes in this community are weakly interconnected._
+- **Should `study-mode.py` be split into smaller, more focused modules?**
+  _Cohesion score 0.14615384615384616 - nodes in this community are weakly interconnected._

@@ -240,9 +240,6 @@ PanelWindow {
         }
 
         // =====================================================================
-        // FLOATING SMOKED LIQUID GLASS DRAWER
-        // =====================================================================
-        // =====================================================================
         // ATMOSPHERIC OBSIDIAN COMMAND DECK (ZERO-PILL ARCHITECTURAL SURFACE)
         // =====================================================================
         Rectangle {
@@ -1615,7 +1612,7 @@ PanelWindow {
                                             anchors.verticalCenter: parent.verticalCenter
                                             height: 6
                                             radius: 3
-                                            color: Island.Theme.isLightMode ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.08)
+                                            color: Island.Theme.isLightMode ? "#e0e0e6" : "#282936"
 
                                             Rectangle {
                                                 anchors.left: parent.left

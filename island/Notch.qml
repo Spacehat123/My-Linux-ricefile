@@ -52,7 +52,11 @@ PanelWindow {
     readonly property real panelContentHeight: isExpanded ? (
         ShellState.panel === "media"
             ? (window.hasLiveLyrics ? 185 : 150)
-            : (ShellState.panelHeights[ShellState.panel] || (requestedPanel ? Math.min(380, requestedPanel.implicitHeight) : 200))
+            : (ShellState.panel === "timer"
+                ? (requestedPanel ? Math.min(380, Math.max(250, requestedPanel.implicitHeight)) : (ShellState.panelHeights["timer"] || 250))
+                : (ShellState.panel === "ai"
+                    ? (requestedPanel ? Math.min(380, Math.max(120, requestedPanel.implicitHeight)) : (ShellState.panelHeights["ai"] || 135))
+                    : (ShellState.panelHeights[ShellState.panel] || (requestedPanel ? Math.min(380, requestedPanel.implicitHeight) : 200))))
     ) : 0
     property bool clockRevealed: true
     property bool recBlinkOn: false

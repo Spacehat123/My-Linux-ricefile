@@ -15,6 +15,15 @@ import "wallpaper"
 ShellRoot {
     id: shellRoot
 
+    // Compositor-wide OSD Signal
+    signal requestOsd(string type, real val, bool muted)
+
+    // Compositor-wide Action Hub Signals
+    signal toggleActionHub()
+    signal openActionHub()
+    signal releaseActionHub()
+    signal closeActionHub()
+
     // Idle & Power Intelligence Layer (compositor-wide lifetime)
     IdleManager {
         id: idleManager
@@ -1277,6 +1286,11 @@ ShellRoot {
             return JSON.stringify({ success: true, leftSidebarOpen: desktopState.leftSidebarOpen });
         }
 
+        function showOsd(type: string, val: real, muted: bool): string {
+            shellRoot.requestOsd(type, val, muted);
+            return JSON.stringify({ success: true, type: type, val: val, muted: muted });
+        }
+
         function setRightSidebarOpen(val: bool): string {
             desktopState.setRightSidebarOpen(val);
             return JSON.stringify({ success: true, rightSidebarOpen: desktopState.rightSidebarOpen });
@@ -1358,6 +1372,11 @@ ShellRoot {
             return JSON.stringify({ success: true, leftSidebarOpen: desktopState.leftSidebarOpen });
         }
 
+        function showOsd(type: string, val: real, muted: bool): string {
+            shellRoot.requestOsd(type, val, muted);
+            return JSON.stringify({ success: true, type: type, val: val, muted: muted });
+        }
+
         function openMediaPicker(): string {
             return shellRoot.openMediaPicker();
         }
@@ -1387,6 +1406,38 @@ ShellRoot {
                 workspaceCount: desktopModel.workspaceCount,
                 totalSurfaceCount: desktopModel.surfaceCount
             });
+        }
+    }
+
+    // =========================================================================
+    // Contextual Action Hub IPC Endpoint
+    // =========================================================================
+    IpcHandler {
+        target: "hub"
+
+        function toggle(): string {
+            shellRoot.toggleActionHub();
+            return JSON.stringify({ success: true });
+        }
+
+        function open(): string {
+            shellRoot.openActionHub();
+            return JSON.stringify({ success: true });
+        }
+
+        function openWheel(): string {
+            shellRoot.openActionHub();
+            return JSON.stringify({ success: true });
+        }
+
+        function release(): string {
+            shellRoot.releaseActionHub();
+            return JSON.stringify({ success: true });
+        }
+
+        function close(): string {
+            shellRoot.closeActionHub();
+            return JSON.stringify({ success: true });
         }
     }
 
@@ -1665,8 +1716,15 @@ ShellRoot {
     IpcHandler {
         target: "notch"
 
+        property string currentPanel: ShellState.panel
+        property bool isExpanded: ShellState.expanded
+
+        function showPanel(panel: string, screen: string) {
+            ShellState.show(panel, screen || "HDMI-A-1");
+        }
+
         function toggle(panel: string) {
-            ShellState.show(panel);
+            ShellState.show(panel, "HDMI-A-1");
         }
 
         function close() {
@@ -1708,7 +1766,30 @@ ShellRoot {
                 trackedCount: notificationServer.trackedNotifications && notificationServer.trackedNotifications.values ? notificationServer.trackedNotifications.values.length : 0,
                 volumePercent: IslandHub.volumePercent,
                 volumeActive: IslandHub.volumeActive,
-                volumeMuted: IslandHub.volumeMuted
+                volumeMuted: IslandHub.volumeMuted,
+                aiAutoOpen: IslandHub.aiAutoOpen,
+                aiGenerating: IslandHub.aiGenerating
+            });
+        }
+
+        function toggleAiAutoOpen(): string {
+            IslandHub.toggleAiAutoOpen();
+            return JSON.stringify({ success: true, autoOpen: IslandHub.aiAutoOpen });
+        }
+
+        function setAiAutoOpen(val: bool): string {
+            IslandHub.setAiAutoOpen(val);
+            return JSON.stringify({ success: true, autoOpen: IslandHub.aiAutoOpen });
+        }
+
+        function getAiAutoOpen(): string {
+            return JSON.stringify({
+                success: true,
+                autoOpen: IslandHub.aiAutoOpen,
+                screens: Quickshell.screens.map(s => s ? s.name : ""),
+                activeScreen: ShellState.activeScreenName,
+                panel: ShellState.panel,
+                expanded: ShellState.expanded
             });
         }
 
@@ -2047,6 +2128,7 @@ ShellRoot {
                 id: ambientLayer
                 screen: monitorScope.modelData
                 idle: shellRoot.idle
+                workspaceEmpty: shellRoot.desktopState ? shellRoot.desktopState.currentSurfaceCount === 0 : false
                 alwaysOn: shellRoot.ambientAlwaysOn || ShellState.studyActive
                 enabled: (shellRoot.ambientEnabled || ShellState.studyActive) && !ShellState.gameMode && !ShellState.featherMode
             }
@@ -2152,15 +2234,12 @@ ShellRoot {
                     onActivated: {
                         console.log("[pranc-shell] Middle-right media trigger ACTIVATED")
                         mediaCloseDebounce.stop()
-                        mediaWidget.open = true
                         monitorScope.mediaWidgetOpen = true
                         if (shellRoot.desktopState) shellRoot.desktopState.setMediaWidgetOpen(true)
                     }
                     onDeactivated: {
                         console.log("[pranc-shell] Middle-right media trigger DEACTIVATED")
-                        if (!mediaWidget.hovered && !mediaWidget.isAnimating) {
-                            mediaCloseDebounce.restart()
-                        }
+                        mediaCloseDebounce.restart()
                     }
                 }
 
@@ -2279,6 +2358,19 @@ ShellRoot {
             FloatingMediaCompanion {
                 id: mediaCompanion
                 screen: monitorScope.modelData
+            }
+
+            // Transient Glass Volume & Brightness OSD Popup
+            OsdOverlay {
+                id: osdOverlay
+                screen: monitorScope.modelData
+            }
+
+            // Floating Contextual Action Hub (Super + Space summoned near cursor)
+            ContextualActionHub {
+                id: actionHub
+                screen: monitorScope.modelData
+                desktopState: shellRoot.desktopState
             }
 
             // Stash Pocket & Drop Zone on the right edge (special:stash)

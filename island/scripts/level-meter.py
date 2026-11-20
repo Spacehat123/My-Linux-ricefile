@@ -8,19 +8,20 @@ links (stays "connecting"), so we spawn pw-record unlinked (--target=0),
 discover ports via pw-dump, and pw-link sink monitor_FL/FR to our inputs.
 stdlib only."""
 
+import array
 import atexit
 import fcntl
 import json
 import math
 import os
 import signal
-import struct
 import subprocess
 import sys
 import time
 
 RATE = 48000
-CHUNK = 8192  # bytes per read (1024 stereo f32 frames)
+# 80ms chunk at 48000Hz stereo float32: 3840 frames * 2 channels * 4 bytes = 30720 bytes
+CHUNK = 30720
 
 
 def sh(args, timeout=8):
@@ -97,8 +98,9 @@ def stream_levels(proc, out_path, current_sink):
         buf += data
         while len(buf) >= CHUNK:
             chunk, buf = buf[:CHUNK], buf[CHUNK:]
-            n = len(chunk) // 4
-            vals = struct.unpack("<%df" % n, chunk)
+            vals = array.array('f')
+            vals.frombytes(chunk)
+            n = len(vals)
             q = n // 4
             bars = []
             for s in range(4):
@@ -115,9 +117,8 @@ def stream_levels(proc, out_path, current_sink):
                     smooth[i] = bars[i]
                 else:
                     smooth[i] += (bars[i] - smooth[i]) * 0.35
-            if now - last_write >= 0.08:
-                last_write = now
-                write_levels(out_path, smooth)
+            last_write = now
+            write_levels(out_path, smooth)
             if now - last_sink_check >= 8.0:
                 last_sink_check = now
                 new_sink = default_sink_name()
@@ -130,13 +131,6 @@ def write_levels(out_path, vals):
     try:
         sys.stdout.write(line)
         sys.stdout.flush()
-    except Exception:
-        pass
-    try:
-        tmp = out_path + ".tmp"
-        with open(tmp, "w") as f:
-            f.write(line)
-        os.replace(tmp, out_path)
     except Exception:
         pass
 

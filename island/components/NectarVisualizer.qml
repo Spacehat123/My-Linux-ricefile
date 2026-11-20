@@ -50,14 +50,6 @@ Item {
                     ? Math.max(3, Math.round(root.rawData[index] * root.barHeight))
                     : 3
 
-                Behavior on height {
-                    NumberAnimation {
-                        duration: 140
-                        easing.type: Easing.OutBack
-                        easing.overshoot: 1.15
-                    }
-                }
-
                 Behavior on opacity {
                     NumberAnimation {
                         duration: 180

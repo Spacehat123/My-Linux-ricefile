@@ -359,6 +359,7 @@ PanelWindow {
                 id: minflairIcon
                 iconSize: 18
                 iconColor: Island.Theme ? Island.Theme.primary : "#ff2a5f"
+                enableIntervalAnim: false
                 anchors.centerIn: parent
             }
 
@@ -495,23 +496,35 @@ PanelWindow {
                 Row {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 2
+                    width: 16
+                    height: 12
+                    clip: true
 
-                    Repeater {
-                        model: 4
+                    readonly property var levels: Island.IslandHub ? Island.IslandHub.levels : [0, 0, 0, 0]
 
-                        Rectangle {
-                            required property int index
-                            width: 2.5
-                            radius: 1.25
-                            color: Island.Theme ? Island.Theme.primary : "#ff2a5f"
-
-                            readonly property var levels: Island.IslandHub ? Island.IslandHub.levels : [0, 0, 0, 0]
-                            height: Math.max(3, Math.min(12, Math.round(2 + ((levels && levels[index]) || 0.25) * 10)))
-
-                            Behavior on height {
-                                NumberAnimation { duration: 90; easing.type: Easing.OutQuad }
-                            }
-                        }
+                    Rectangle {
+                        width: 2.5; radius: 1.25
+                        anchors.bottom: parent.bottom
+                        color: Island.Theme ? Island.Theme.primary : "#ff2a5f"
+                        height: Math.max(3, Math.min(12, Math.round(2 + ((parent.levels && parent.levels[0]) || 0.25) * 10)))
+                    }
+                    Rectangle {
+                        width: 2.5; radius: 1.25
+                        anchors.bottom: parent.bottom
+                        color: Island.Theme ? Island.Theme.primary : "#ff2a5f"
+                        height: Math.max(3, Math.min(12, Math.round(2 + ((parent.levels && parent.levels[1]) || 0.25) * 10)))
+                    }
+                    Rectangle {
+                        width: 2.5; radius: 1.25
+                        anchors.bottom: parent.bottom
+                        color: Island.Theme ? Island.Theme.primary : "#ff2a5f"
+                        height: Math.max(3, Math.min(12, Math.round(2 + ((parent.levels && parent.levels[2]) || 0.25) * 10)))
+                    }
+                    Rectangle {
+                        width: 2.5; radius: 1.25
+                        anchors.bottom: parent.bottom
+                        color: Island.Theme ? Island.Theme.primary : "#ff2a5f"
+                        height: Math.max(3, Math.min(12, Math.round(2 + ((parent.levels && parent.levels[3]) || 0.25) * 10)))
                     }
                 }
 
@@ -534,10 +547,19 @@ PanelWindow {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
+                hoverEnabled: true
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+
+                onEntered: {
+                    if (Island.ShellState) Island.ShellState.mediaCompanionHovered = true;
+                }
+                onExited: {
+                    if (Island.ShellState) Island.ShellState.mediaCompanionHovered = false;
+                }
+
                 onClicked: (mouse) => {
                     if (mouse.button === Qt.LeftButton) {
-                        if (Island.ShellState) Island.ShellState.show("media", root.screen ? root.screen.name : "");
+                        if (Island.ShellState) Island.ShellState.toggleMediaCompanionRequested();
                         return;
                     }
                     if (mouse.button === Qt.RightButton) {
@@ -619,15 +641,13 @@ PanelWindow {
                     running: true
                     repeat: true
                     onTriggered: {
-                        clockLabel.text = Qt.binding(() => {
-                            let d = new Date();
-                            let h = d.getHours();
-                            let m = String(d.getMinutes()).padStart(2, '0');
-                            let ap = h >= 12 ? "PM" : "AM";
-                            let h12 = h % 12 || 12;
-                            return h12 + ":" + m + " " + ap;
-                        });
-                        dateLabel.text = Qt.formatDateTime(new Date(), "ddd, d MMM");
+                        let d = new Date();
+                        let h = d.getHours();
+                        let m = String(d.getMinutes()).padStart(2, '0');
+                        let ap = h >= 12 ? "PM" : "AM";
+                        let h12 = h % 12 || 12;
+                        clockLabel.text = h12 + ":" + m + " " + ap;
+                        dateLabel.text = Qt.formatDateTime(d, "ddd, d MMM");
                     }
                 }
             }
@@ -655,7 +675,7 @@ PanelWindow {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: (Island.WeatherState && Island.WeatherState.tempC && Island.WeatherState.tempC !== "")
-                        ? (Island.WeatherState.tempC + "°C")
+                        ? (String(Island.WeatherState.tempC).replace(/°/g, "") + "°C")
                         : "24°C"
                     font.family: Island.Theme ? Island.Theme.fontFamily : "Geist"
                     font.pixelSize: 11
@@ -689,7 +709,7 @@ PanelWindow {
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: Island.TimerState ? Island.TimerState.activeRemainingText : ""
+                        text: (Island.TimerState && Island.TimerState.activeRemainingText) ? Island.TimerState.activeRemainingText : ""
                         font.family: Island.Theme ? Island.Theme.fontFamily : "Geist"
                         font.pixelSize: 11
                         font.weight: Font.DemiBold

@@ -120,7 +120,6 @@ PanelWindow {
         || (bottomHitHover && bottomHitHover.hovered)
         || hoverLatching
         || (activePopover !== "")
-        || (wsHover && wsHover.containsMouse)
         || (netMouse && netMouse.containsMouse)
         || (volMouse && volMouse.containsMouse)
         || (batMouse && batMouse.containsMouse)
@@ -277,7 +276,7 @@ PanelWindow {
         }
 
         // =====================================================================
-        // FLOATING LIQUID GLASS DOCK CAPSULE
+        // FLOATING DOCK CAPSULE
         // =====================================================================
         Rectangle {
             id: dockBody
@@ -315,15 +314,7 @@ PanelWindow {
                 onExited: releaseHover()
             }
 
-            // Covers the workspace dots for hover tracking continuity
-            MouseArea {
-                id: wsHover
-                anchors.fill: wsRow
-                hoverEnabled: true
-                acceptedButtons: Qt.NoButton
-                onEntered: pingHover()
-                onExited: releaseHover()
-            }
+
 
             Row {
                 id: dockRow

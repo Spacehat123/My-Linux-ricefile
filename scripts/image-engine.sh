@@ -15,6 +15,10 @@ else
 fi
 
 export PATH="$HOME/.local/bin:$PATH:/usr/local/bin:/usr/bin"
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+export HF_DATASETS_OFFLINE=1
+export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 if [ -d "$COOL_CUDA" ] && [ -d "$COOL_CUDNN" ]; then
     export LD_LIBRARY_PATH="$COOL_CUDA:$COOL_CUDNN:$HOME/.local/lib:${LD_LIBRARY_PATH:-}"
 elif [ -d "$UNSLOTH_CUDA" ] && [ -d "$UNSLOTH_CUDNN" ]; then

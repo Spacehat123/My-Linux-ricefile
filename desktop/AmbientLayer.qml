@@ -9,10 +9,12 @@ PanelWindow {
     // =========================================================================
     // Injected State & Configuration
     // =========================================================================
+    property var screen: null
     property bool idle: false
+    property bool workspaceEmpty: false
     property bool enabled: true
     property bool alwaysOn: false
-    readonly property bool active: (alwaysOn || idle) && enabled
+    readonly property bool active: (alwaysOn || idle || workspaceEmpty) && enabled
 
     // Lifecycle visibility: stays visible while active or while fade-out is running
     visible: active || fadeOutAnim.running
@@ -25,18 +27,20 @@ PanelWindow {
         right: true
     }
 
-    // Layer-shell configuration
+    // Layer-shell configuration matching FloatingMediaCompanion 1:1
     exclusionMode: ExclusionMode.Ignore
     aboveWindows: false
     focusable: false
     color: "transparent"
 
-    WlrLayershell.namespace: "pranc-shell-ambient"
-    WlrLayershell.layer: WlrLayer.Bottom
+    WlrLayershell.namespace: "pranc-shell-ambient-slate"
+    WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
-    // Absolute pointer passthrough: zero mouse/touch event interception
-    mask: Region {}
+    // Explicit Wayland region mask targeting the slate geometry
+    mask: Region {
+        item: (root.active || fadeOutAnim.running) ? slateWrapper : null
+    }
 
     Theme {
         id: theme
@@ -82,34 +86,21 @@ PanelWindow {
         opacity: 0.0
         visible: opacity > 0.0
 
-        // 1. Four screen corner tactical brackets
-        AmbientCornerBrackets {
-            anchors.fill: parent
-            screenName: root.screen ? (root.screen.name ?? "") : ""
-            active: root.active && (hudContainer.opacity > 0.0)
-        }
-
-        // 2. Central focal tactical reticle
-        AmbientReticle {
-            anchors.centerIn: parent
-            active: root.active && (hudContainer.opacity > 0.0)
-        }
-
-        // 3. Floating telemetry HUD node
-        AmbientTelemetry {
-            anchors.bottom: parent.bottom
+        Item {
+            id: slateWrapper
             anchors.left: parent.left
-            anchors.margins: theme.ambientCornerOffset + 16
-            screenName: root.screen ? (root.screen.name ?? "") : ""
-            active: root.active && (hudContainer.opacity > 0.0)
-        }
-
-        // 4. Study Contribution Heatmap (GitHub-style calendar, bottom center)
-        StudyContributionHeatmap {
             anchors.bottom: parent.bottom
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottomMargin: theme.ambientCornerOffset + 16
-            active: root.active && (hudContainer.opacity > 0.0)
+            anchors.leftMargin: 48
+            anchors.bottomMargin: 48
+            width: slateInstance.implicitWidth
+            height: slateInstance.implicitHeight
+
+            // Desktop Ambient Weather & Clock Slate (Frosted Glass Plate on Bottom Left)
+            DesktopAmbientSlate {
+                id: slateInstance
+                anchors.fill: parent
+                active: root.active && (hudContainer.opacity > 0.0)
+            }
         }
     }
 }
