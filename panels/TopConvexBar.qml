@@ -77,8 +77,25 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
 
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: root.isExpanded ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: root.isExpanded ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     WlrLayershell.namespace: "cool-shell-topbar"
+
+    HyprlandFocusGrab {
+        windows: [root]
+        active: root.isExpanded
+        onCleared: {
+            if (root.isExpanded && Island.ShellState)
+                Island.ShellState.close();
+        }
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.isExpanded
+        onActivated: {
+            if (Island.ShellState) Island.ShellState.close();
+        }
+    }
 
     // Wayland input mask: clicks below 40px pass straight to windows when collapsed
     mask: Region {
@@ -271,6 +288,7 @@ PanelWindow {
                 root.displayedPanel = Island.ShellState.panel;
                 if (Island.ShellState.panel === "notifications" && Island.IslandHub)
                     Island.IslandHub.markSeen();
+                root.focusInitialControl();
                 focusTimer.restart();
             } else {
                 stageTimer.stop();
@@ -287,7 +305,7 @@ PanelWindow {
 
     Timer {
         id: focusTimer
-        interval: 150
+        interval: 35
         onTriggered: root.focusInitialControl()
     }
 
