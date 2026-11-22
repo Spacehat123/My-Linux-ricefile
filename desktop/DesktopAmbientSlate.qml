@@ -11,8 +11,8 @@ Item {
     id: root
 
     property bool active: true
-    implicitWidth: 320
-    implicitHeight: 320
+    implicitWidth: 480
+    implicitHeight: 560
 
     // Architectural Clock Reference
     SystemClock {
@@ -138,16 +138,16 @@ Item {
             // 1. Stacked Vertical Clock (Hours + Colon on top, Minutes below)
             Column {
                 id: clockStack
-                spacing: -14
+                spacing: -38
 
                 // Top Line: Hours + Colon (14:)
                 Row {
-                    spacing: 2
+                    spacing: 4
                     Text {
                         text: Qt.formatDateTime(sysClock.date, "hh")
-                        font.pixelSize: 84
+                        font.pixelSize: 220
                         font.bold: true
-                        font.letterSpacing: -1.0
+                        font.letterSpacing: -4.0
                         font.family: Island.Theme.fontFamily
                         color: Island.Theme.foreground
                     }
@@ -155,14 +155,14 @@ Item {
                     Text {
                         id: colonText
                         text: ":"
-                        font.pixelSize: 80
+                        font.pixelSize: 200
                         font.bold: true
                         font.family: Island.Theme.fontFamily
-                        color: Island.Theme.foreground
+                        color: Island.Theme.primary
                         SequentialAnimation on opacity {
                             loops: Animation.Infinite
                             running: root.active && root.visible
-                            NumberAnimation { to: 0.25; duration: 1000; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: 0.45; duration: 1000; easing.type: Easing.InOutSine }
                             NumberAnimation { to: 1.00; duration: 1000; easing.type: Easing.InOutSine }
                         }
                     }
@@ -171,9 +171,9 @@ Item {
                 // Bottom Line: Minutes (43)
                 Text {
                     text: Qt.formatDateTime(sysClock.date, "mm")
-                    font.pixelSize: 84
+                    font.pixelSize: 220
                     font.bold: true
-                    font.letterSpacing: -1.0
+                    font.letterSpacing: -4.0
                     font.family: Island.Theme.fontFamily
                     color: Island.Theme.foreground
                 }
