@@ -7,7 +7,6 @@ import Quickshell.Bluetooth
 import Quickshell.Networking
 import "../island" as Island
 import "../island/components"
-import "../desktop" as Desktop
 
 Item {
     id: root
@@ -1276,70 +1275,65 @@ Item {
                     }
                 }
 
-                Item {
+                Row {
                     anchors.fill: parent
                     anchors.margins: 12
+                    spacing: 12
 
-                    Row {
-                        anchors.left: parent.left
+                    Rectangle {
+                        width: 36
+                        height: 36
+                        radius: 18
+                        color: Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.18)
                         anchors.verticalCenter: parent.verticalCenter
-                        spacing: 12
 
-                        Rectangle {
-                            width: 36
-                            height: 36
-                            radius: 18
-                            color: Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.18)
-                            anchors.verticalCenter: parent.verticalCenter
+                        Text {
+                            anchors.centerIn: parent
+                            text: "󱨊"
+                            font.family: Island.Theme.iconFontFamily
+                            font.pixelSize: 18
+                            color: Island.Theme.purple
+                        }
+                    }
 
-                            Text {
-                                anchors.centerIn: parent
-                                text: "󱨊"
-                                font.family: Island.Theme.iconFontFamily
-                                font.pixelSize: 18
-                                color: Island.Theme.purple
-                            }
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 36 - 120 - 24
+                        spacing: 2
+
+                        Text {
+                            text: "AI Image Studio"
+                            font.pixelSize: 12
+                            font.bold: true
+                            font.family: Island.Theme.fontFamily
+                            color: Island.Theme.foreground
                         }
 
-                        Column {
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: parent.width - 36 - 120 - 24
-                            spacing: 2
-
-                            Text {
-                                text: "AI Image Studio"
-                                font.pixelSize: 12
-                                font.bold: true
-                                font.family: Island.Theme.fontFamily
-                                color: Island.Theme.foreground
-                            }
-
-                            Text {
-                                text: {
-                                    const state = Island.ShellState;
-                                    if (!state) return "Realistic Vision v5.1 + LCM • Super + G";
-                                    if (state.aiDaemonLoading) {
-                                        const ram = state.aiDaemonRamMb;
-                                        if (ram > 50) {
-                                            const ramStr = ram >= 1024 ? (ram / 1024.0).toFixed(1) + " GB" : Math.round(ram) + " MB";
-                                            return "Loading weights into RAM (" + ramStr + ")...";
-                                        }
-                                        return "Loading weights into RAM...";
+                        Text {
+                            text: {
+                                const state = Island.ShellState;
+                                if (!state) return "Realistic Vision v5.1 + LCM • Super + G";
+                                if (state.aiDaemonLoading) {
+                                    const ram = state.aiDaemonRamMb;
+                                    if (ram > 50) {
+                                        const ramStr = ram >= 1024 ? (ram / 1024.0).toFixed(1) + " GB" : Math.round(ram) + " MB";
+                                        return "Loading weights into RAM (" + ramStr + ")...";
                                     }
-                                    if (state.aiDaemonLoaded) {
-                                        const ram = state.aiDaemonRamMb;
-                                        const ramStr = ram >= 1024 ? (ram / 1024.0).toFixed(1) + " GB" : (ram > 0 ? Math.round(ram) + " MB" : "Active");
-                                        return "Model Warm (" + ramStr + " RAM) • Super + G";
-                                    }
-                                    return "Model Offloaded (0 MB RAM) • Super + G";
+                                    return "Loading weights into RAM...";
                                 }
-                                font.pixelSize: 10
-                                font.family: Island.Theme.fontFamily
-                                color: (Island.ShellState && Island.ShellState.aiDaemonLoaded)
-                                    ? Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.9)
-                                    : Island.Theme.muted
-                                elide: Text.ElideRight
+                                if (state.aiDaemonLoaded) {
+                                    const ram = state.aiDaemonRamMb;
+                                    const ramStr = ram >= 1024 ? (ram / 1024.0).toFixed(1) + " GB" : (ram > 0 ? Math.round(ram) + " MB" : "Active");
+                                    return "Model Warm (" + ramStr + " RAM) • Super + G";
+                                }
+                                return "Model Offloaded (0 MB RAM) • Super + G";
                             }
+                            font.pixelSize: 10
+                            font.family: Island.Theme.fontFamily
+                            color: (Island.ShellState && Island.ShellState.aiDaemonLoaded)
+                                ? Qt.rgba(Island.Theme.purple.r, Island.Theme.purple.g, Island.Theme.purple.b, 0.9)
+                                : Island.Theme.muted
+                            elide: Text.ElideRight
                         }
                     }
 
@@ -1449,225 +1443,6 @@ Item {
                                 id: aiToggleTap
                                 onTapped: {
                                     if (Island.ShellState) Island.ShellState.toggleAiDaemon();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // =================================================================
-            // ROW 6.5: DESKTOP AMBIENT & CELESTIAL CONTROLS
-            // =================================================================
-            Rectangle {
-                width: parent.width
-                height: 98
-                radius: 18
-                color: Island.Theme.glassCard
-                border.color: Island.Theme.glassBorderSubtle
-                border.width: 1
-
-                // Inner specular highlight
-                Rectangle {
-                    anchors.fill: parent
-                    anchors.margins: 1
-                    radius: 17
-                    color: "transparent"
-                    border.color: Qt.rgba(1, 1, 1, 0.05)
-                    border.width: 1
-                }
-
-                Column {
-                    anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 8
-
-                    // Header
-                    Row {
-                        width: parent.width
-                        spacing: 8
-                        Text {
-                            text: "󰥔"
-                            font.family: Island.Theme.iconFontFamily
-                            font.pixelSize: 13
-                            color: Island.Theme.primary
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: "Ambient HUD & Celestial Orbit"
-                            font.pixelSize: 11
-                            font.bold: true
-                            font.family: Island.Theme.fontFamily
-                            color: Island.Theme.foreground
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-
-                    // Toggles & Customization Row
-                    Row {
-                        width: parent.width
-                        spacing: 8
-
-                        // 1. Sun & Moon Celestial Orbit Toggle
-                        Rectangle {
-                            width: (parent.width - 24) / 4
-                            height: 48
-                            radius: 12
-                            color: Desktop.AmbientConfig.showSunMoon
-                                ? Qt.rgba(Island.Theme.yellow.r, Island.Theme.yellow.g, Island.Theme.yellow.b, 0.22)
-                                : (sunMoonHover.hovered ? Island.Theme.glassCardHover : "transparent")
-                            border.color: Desktop.AmbientConfig.showSunMoon ? Island.Theme.yellow : Island.Theme.glassBorderSubtle
-                            border.width: 1
-                            scale: sunMoonTap.pressed ? 0.94 : 1.0
-                            Behavior on scale { NumberAnimation { duration: 80 } }
-
-                            HoverHandler { id: sunMoonHover }
-                            TapHandler {
-                                id: sunMoonTap
-                                onTapped: Desktop.AmbientConfig.toggleSunMoon()
-                            }
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 2
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: Desktop.AmbientConfig.showSunMoon ? "󰖙" : "󰖔"
-                                    font.family: Island.Theme.iconFontFamily
-                                    font.pixelSize: 15
-                                    color: Desktop.AmbientConfig.showSunMoon ? Island.Theme.yellow : Island.Theme.muted
-                                }
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "Sun/Moon"
-                                    font.pixelSize: 8
-                                    font.bold: true
-                                    font.family: Island.Theme.fontFamily
-                                    color: Desktop.AmbientConfig.showSunMoon ? Island.Theme.yellow : Island.Theme.muted
-                                }
-                            }
-                        }
-
-                        // 2. Atmospheric Living Air Stars Toggle
-                        Rectangle {
-                            width: (parent.width - 24) / 4
-                            height: 48
-                            radius: 12
-                            color: Desktop.AmbientConfig.showParticles
-                                ? Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.22)
-                                : (starsHover.hovered ? Island.Theme.glassCardHover : "transparent")
-                            border.color: Desktop.AmbientConfig.showParticles ? Island.Theme.primary : Island.Theme.glassBorderSubtle
-                            border.width: 1
-                            scale: starsTap.pressed ? 0.94 : 1.0
-                            Behavior on scale { NumberAnimation { duration: 80 } }
-
-                            HoverHandler { id: starsHover }
-                            TapHandler {
-                                id: starsTap
-                                onTapped: Desktop.AmbientConfig.toggleParticles()
-                            }
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 2
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "󰩳"
-                                    font.family: Island.Theme.iconFontFamily
-                                    font.pixelSize: 15
-                                    color: Desktop.AmbientConfig.showParticles ? Island.Theme.primary : Island.Theme.muted
-                                }
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "Stars"
-                                    font.pixelSize: 8
-                                    font.bold: true
-                                    font.family: Island.Theme.fontFamily
-                                    color: Desktop.AmbientConfig.showParticles ? Island.Theme.primary : Island.Theme.muted
-                                }
-                            }
-                        }
-
-                        // 3. Clock Template Selector
-                        Rectangle {
-                            width: (parent.width - 24) / 4
-                            height: 48
-                            radius: 12
-                            color: tplHover.hovered ? Island.Theme.glassCardHover : "transparent"
-                            border.color: Island.Theme.glassBorderActive
-                            border.width: 1
-                            scale: tplTap.pressed ? 0.94 : 1.0
-                            Behavior on scale { NumberAnimation { duration: 80 } }
-
-                            HoverHandler { id: tplHover }
-                            TapHandler {
-                                id: tplTap
-                                onTapped: Desktop.AmbientConfig.cycleTemplate()
-                            }
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 2
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "󱑊"
-                                    font.family: Island.Theme.iconFontFamily
-                                    font.pixelSize: 15
-                                    color: Island.Theme.cyan
-                                }
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: Desktop.AmbientConfig.template.toUpperCase()
-                                    font.pixelSize: 8
-                                    font.bold: true
-                                    font.family: Island.Theme.fontFamily
-                                    color: Island.Theme.foreground
-                                }
-                            }
-                        }
-
-                        // 4. Clock Position Selector
-                        Rectangle {
-                            width: (parent.width - 24) / 4
-                            height: 48
-                            radius: 12
-                            color: posHover.hovered ? Island.Theme.glassCardHover : "transparent"
-                            border.color: Island.Theme.glassBorderActive
-                            border.width: 1
-                            scale: posTap.pressed ? 0.94 : 1.0
-                            Behavior on scale { NumberAnimation { duration: 80 } }
-
-                            HoverHandler { id: posHover }
-                            TapHandler {
-                                id: posTap
-                                onTapped: Desktop.AmbientConfig.cycleClockPosition()
-                            }
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 2
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: "󰆤"
-                                    font.family: Island.Theme.iconFontFamily
-                                    font.pixelSize: 15
-                                    color: Island.Theme.purple
-                                }
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    text: {
-                                        switch (Desktop.AmbientConfig.clockPosition) {
-                                            case "top-left": return "TL";
-                                            case "center": return "MID";
-                                            case "bottom-left": return "BL";
-                                            case "top-right": return "TR";
-                                            default: return "POS";
-                                        }
-                                    }
-                                    font.pixelSize: 8
-                                    font.bold: true
-                                    font.family: Island.Theme.fontFamily
-                                    color: Island.Theme.foreground
                                 }
                             }
                         }
