@@ -25,7 +25,8 @@ Item {
         }
     }
 
-    opacity: active ? profile.opacity : 0.0
+    // Weather mist disabled for razor-sharp, ultra-crisp desktop clarity
+    opacity: 0.0
     Behavior on opacity {
         NumberAnimation {
             duration: 2000

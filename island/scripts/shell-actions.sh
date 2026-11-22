@@ -373,7 +373,9 @@ case "$action" in
   power)
     case "${2:-}" in
       lock)
-        if command -v hyprlock >/dev/null; then
+        if command -v veila >/dev/null; then
+          veila lock
+        elif command -v hyprlock >/dev/null; then
           hyprlock --config "$HOME/.config/hypr/hyprlock.conf"
         else
           loginctl lock-session

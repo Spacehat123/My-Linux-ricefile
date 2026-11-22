@@ -1795,7 +1795,7 @@ PanelWindow {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: Quickshell.execDetached(["hyprlock"])
+                                        onClicked: Quickshell.execDetached(["veila", "lock"])
                                     }
                                 }
 

@@ -11,8 +11,8 @@ Item {
     id: root
 
     property bool active: true
-    implicitWidth: 480
-    implicitHeight: 560
+    implicitWidth: 540
+    implicitHeight: 700
 
     // Architectural Clock Reference
     SystemClock {
@@ -135,67 +135,52 @@ Item {
             id: leftCol
             spacing: 12
 
-            // 1. Stacked Vertical Clock (Hours + Colon on top, Minutes below)
+            // 1. Stacked Vertical Clock (Hours on top, Minutes below - Zero Dots)
             Column {
                 id: clockStack
                 spacing: -38
 
-                // Top Line: Hours + Colon (14:)
-                Row {
-                    spacing: 4
-                    Text {
-                        text: Qt.formatDateTime(sysClock.date, "hh")
-                        font.pixelSize: 220
-                        font.bold: true
-                        font.letterSpacing: -4.0
-                        font.family: Island.Theme.fontFamily
-                        color: Island.Theme.foreground
-                    }
-
-                    Text {
-                        id: colonText
-                        text: ":"
-                        font.pixelSize: 200
-                        font.bold: true
-                        font.family: Island.Theme.fontFamily
-                        color: Island.Theme.primary
-                        SequentialAnimation on opacity {
-                            loops: Animation.Infinite
-                            running: root.active && root.visible
-                            NumberAnimation { to: 0.45; duration: 1000; easing.type: Easing.InOutSine }
-                            NumberAnimation { to: 1.00; duration: 1000; easing.type: Easing.InOutSine }
-                        }
-                    }
+                // Top Line: Hours (No dots/colon)
+                Text {
+                    text: Qt.formatDateTime(sysClock.date, "hh")
+                    font.pixelSize: 220
+                    font.bold: true
+                    font.letterSpacing: -4.0
+                    font.family: "Geom"
+                    color: Island.Theme.foreground
+                    renderType: Text.QtRendering
                 }
 
-                // Bottom Line: Minutes (43)
+                // Bottom Line: Minutes (No dots/colon)
                 Text {
                     text: Qt.formatDateTime(sysClock.date, "mm")
                     font.pixelSize: 220
                     font.bold: true
                     font.letterSpacing: -4.0
-                    font.family: Island.Theme.fontFamily
+                    font.family: "Geom"
                     color: Island.Theme.foreground
+                    renderType: Text.QtRendering
                 }
             }
 
             // Date Subtitle
             Text {
                 text: Qt.formatDateTime(sysClock.date, "ddd, dd MMM yyyy").toUpperCase()
-                font.pixelSize: 10
+                font.pixelSize: 11
                 font.bold: true
                 font.letterSpacing: 2.0
                 font.family: Island.Theme.fontFamily
                 color: Island.Theme.muted
                 anchors.left: parent.left
                 anchors.leftMargin: 2
+                renderType: Text.QtRendering
             }
 
-            // 2. Bottom-Left Radial Telemetry Ring (Hand-Drawn Sketch Implementation)
+            // 2. Bottom-Left Radial Telemetry Ring (Hand-Drawn Sketch: 4 Distinct Separated Pills)
             Item {
                 id: radialVitalsDial
-                width: 72
-                height: 72
+                width: 96
+                height: 96
                 anchors.left: parent.left
                 anchors.leftMargin: 2
 
@@ -203,159 +188,162 @@ Item {
                     id: dialHover
                 }
 
-                // Background soft halo
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: 64
-                    height: 64
-                    radius: 32
-                    color: Qt.rgba(14/255, 15/255, 24/255, 0.45)
-                    border.color: Qt.rgba(1, 1, 1, 0.08)
-                    border.width: 1
-                }
-
-                // 4 Quadrant Segmented Circular Gauges
-                // Circle Center: (36, 36), Radius: 28px, Stroke: 4px
+                // 4 Quadrant Segmented Pill Capsules with distinct physical separation
+                // Center: (48, 48), Radius: 34px, Pill Capsule Thickness: 12px
+                // 60-degree span per pill with 30-degree clear open gap between pills
                 Shape {
                     id: radialGauges
                     anchors.fill: parent
                     layer.enabled: true
+                    layer.samples: 4
                     layer.smooth: true
 
-                    // ── TOP ARC: GPU ─────────────────────────────────────────
-                    // Track (80 degree span centered at top: 230 to 310)
+                    // ── TOP PILL: GPU (Emerald Green) ────────────────────────
+                    // Track capsule (start: 240, sweep: 60)
                     ShapePath {
-                        strokeWidth: 4
-                        strokeColor: Qt.rgba(1, 1, 1, 0.14)
+                        strokeWidth: 12
+                        strokeColor: Qt.rgba(255, 255, 255, 0.16)
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 36; centerY: 36
-                            radiusX: 28; radiusY: 28
-                            startAngle: 230
-                            sweepAngle: 80
+                            centerX: 48; centerY: 48
+                            radiusX: 34; radiusY: 34
+                            startAngle: 240
+                            sweepAngle: 60
                         }
                     }
-                    // Fill
+                    // Active Fill Pill
                     ShapePath {
-                        strokeWidth: 4
-                        strokeColor: Island.Theme.green
+                        strokeWidth: 12
+                        strokeColor: "#10b981"
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 36; centerY: 36
-                            radiusX: 28; radiusY: 28
-                            startAngle: 230
-                            sweepAngle: Math.max(3, (root.gpuPercent / 100.0) * 80)
-                        }
-                    }
-
-                    // ── RIGHT ARC: CPU ───────────────────────────────────────
-                    // Track (80 degree span centered at right: -40 to 40)
-                    ShapePath {
-                        strokeWidth: 4
-                        strokeColor: Qt.rgba(1, 1, 1, 0.14)
-                        fillColor: "transparent"
-                        capStyle: ShapePath.RoundCap
-                        PathAngleArc {
-                            centerX: 36; centerY: 36
-                            radiusX: 28; radiusY: 28
-                            startAngle: -40
-                            sweepAngle: 80
-                        }
-                    }
-                    // Fill
-                    ShapePath {
-                        strokeWidth: 4
-                        strokeColor: Island.Theme.cyan
-                        fillColor: "transparent"
-                        capStyle: ShapePath.RoundCap
-                        PathAngleArc {
-                            centerX: 36; centerY: 36
-                            radiusX: 28; radiusY: 28
-                            startAngle: -40
-                            sweepAngle: Math.max(3, (root.cpuPercent / 100.0) * 80)
+                            centerX: 48; centerY: 48
+                            radiusX: 34; radiusY: 34
+                            startAngle: 240
+                            sweepAngle: Math.max(6, (root.gpuPercent / 100.0) * 60)
                         }
                     }
 
-                    // ── BOTTOM ARC: BATTERY ──────────────────────────────────
-                    // Track (80 degree span centered at bottom: 50 to 130)
+                    // ── RIGHT PILL: CPU (Cyan) ───────────────────────────────
+                    // Track capsule (start: 330, sweep: 60)
                     ShapePath {
-                        strokeWidth: 4
-                        strokeColor: Qt.rgba(1, 1, 1, 0.14)
+                        strokeWidth: 12
+                        strokeColor: Qt.rgba(255, 255, 255, 0.16)
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 36; centerY: 36
-                            radiusX: 28; radiusY: 28
-                            startAngle: 50
-                            sweepAngle: 80
+                            centerX: 48; centerY: 48
+                            radiusX: 34; radiusY: 34
+                            startAngle: 330
+                            sweepAngle: 60
                         }
                     }
-                    // Fill
+                    // Active Fill Pill
                     ShapePath {
-                        strokeWidth: 4
-                        strokeColor: root.isCharging ? Island.Theme.green : (root.batteryPercent <= 20 ? Island.Theme.red : Island.Theme.primary)
+                        strokeWidth: 12
+                        strokeColor: "#06b6d4"
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 36; centerY: 36
-                            radiusX: 28; radiusY: 28
-                            startAngle: 50
-                            sweepAngle: Math.max(3, (root.batteryPercent / 100.0) * 80)
+                            centerX: 48; centerY: 48
+                            radiusX: 34; radiusY: 34
+                            startAngle: 330
+                            sweepAngle: Math.max(6, (root.cpuPercent / 100.0) * 60)
                         }
                     }
 
-                    // ── LEFT ARC: RAM ────────────────────────────────────────
-                    // Track (80 degree span centered at left: 140 to 220)
+                    // ── BOTTOM PILL: BATTERY (Emerald / Blue / Red) ───────────
+                    // Track capsule (start: 60, sweep: 60)
                     ShapePath {
-                        strokeWidth: 4
-                        strokeColor: Qt.rgba(1, 1, 1, 0.14)
+                        strokeWidth: 12
+                        strokeColor: Qt.rgba(255, 255, 255, 0.16)
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 36; centerY: 36
-                            radiusX: 28; radiusY: 28
-                            startAngle: 140
-                            sweepAngle: 80
+                            centerX: 48; centerY: 48
+                            radiusX: 34; radiusY: 34
+                            startAngle: 60
+                            sweepAngle: 60
                         }
                     }
-                    // Fill
+                    // Active Fill Pill
                     ShapePath {
-                        strokeWidth: 4
-                        strokeColor: Island.Theme.purple
+                        strokeWidth: 12
+                        strokeColor: root.isCharging ? "#10b981" : (root.batteryPercent <= 20 ? "#ef4444" : "#3b82f6")
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 36; centerY: 36
-                            radiusX: 28; radiusY: 28
-                            startAngle: 140
-                            sweepAngle: Math.max(3, (root.ramPercent / 100.0) * 80)
+                            centerX: 48; centerY: 48
+                            radiusX: 34; radiusY: 34
+                            startAngle: 60
+                            sweepAngle: Math.max(6, (root.batteryPercent / 100.0) * 60)
+                        }
+                    }
+
+                    // ── LEFT PILL: RAM (Purple) ──────────────────────────────
+                    // Track capsule (start: 150, sweep: 60)
+                    ShapePath {
+                        strokeWidth: 12
+                        strokeColor: Qt.rgba(255, 255, 255, 0.16)
+                        fillColor: "transparent"
+                        capStyle: ShapePath.RoundCap
+                        PathAngleArc {
+                            centerX: 48; centerY: 48
+                            radiusX: 34; radiusY: 34
+                            startAngle: 150
+                            sweepAngle: 60
+                        }
+                    }
+                    // Active Fill Pill
+                    ShapePath {
+                        strokeWidth: 12
+                        strokeColor: "#a855f7"
+                        fillColor: "transparent"
+                        capStyle: ShapePath.RoundCap
+                        PathAngleArc {
+                            centerX: 48; centerY: 48
+                            radiusX: 34; radiusY: 34
+                            startAngle: 150
+                            sweepAngle: Math.max(6, (root.ramPercent / 100.0) * 60)
                         }
                     }
                 }
 
-                // ── CENTER OF RING: BLUETOOTH (TOP) & WIFI (BOTTOM) ─────────
-                Column {
+                // ── CENTER CORE HUB: BLUETOOTH (TOP) & WIFI (BOTTOM) ─────────
+                Rectangle {
                     anchors.centerIn: parent
-                    spacing: 2
+                    width: 44
+                    height: 44
+                    radius: 22
+                    color: Qt.rgba(14/255, 15/255, 24/255, 0.75)
+                    border.color: Qt.rgba(255, 255, 255, 0.14)
+                    border.width: 1
 
-                    // Bluetooth Symbol
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: root.btConnected ? "󰂱" : (root.btOn ? "󰂯" : "󰂲")
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 13
-                        color: root.btConnected ? Island.Theme.primary : (root.btOn ? Island.Theme.foreground : Island.Theme.muted)
-                    }
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
 
-                    // Wi-Fi Symbol
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: root.wifiConnected ? "󰤨" : (root.wifiOn ? "󰤩" : "󰤭")
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 12
-                        color: root.wifiConnected ? Island.Theme.primary : (root.wifiOn ? Island.Theme.foreground : Island.Theme.muted)
+                        // Bluetooth Symbol
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.btConnected ? "󰂱" : (root.btOn ? "󰂯" : "󰂲")
+                            font.family: Island.Theme.iconFontFamily
+                            font.pixelSize: 13
+                            color: root.btConnected ? Island.Theme.primary : (root.btOn ? Island.Theme.foreground : Island.Theme.muted)
+                            renderType: Text.QtRendering
+                        }
+
+                        // Wi-Fi Symbol
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: root.wifiConnected ? "󰤨" : (root.wifiOn ? "󰤩" : "󰤭")
+                            font.family: Island.Theme.iconFontFamily
+                            font.pixelSize: 12
+                            color: root.wifiConnected ? Island.Theme.primary : (root.wifiOn ? Island.Theme.foreground : Island.Theme.muted)
+                            renderType: Text.QtRendering
+                        }
                     }
                 }
 
@@ -363,13 +351,13 @@ Item {
                 Rectangle {
                     id: hoverTooltip
                     anchors.left: parent.right
-                    anchors.leftMargin: 12
+                    anchors.leftMargin: 14
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 140
-                    height: 94
+                    width: 152
+                    height: 100
                     radius: 12
-                    color: Qt.rgba(14/255, 15/255, 24/255, 0.88)
-                    border.color: Qt.rgba(1, 1, 1, 0.15)
+                    color: Qt.rgba(16/255, 14/255, 22/255, 0.94)
+                    border.color: Qt.rgba(255, 255, 255, 0.16)
                     border.width: 1
                     opacity: dialHover.hovered ? 1.0 : 0.0
                     visible: opacity > 0.0
@@ -381,36 +369,56 @@ Item {
 
                     Column {
                         anchors.fill: parent
-                        anchors.margins: 8
-                        spacing: 3
+                        anchors.margins: 9
+                        spacing: 4
 
-                        Text {
-                            text: "GPU: " + root.gpuPercent + "% " + (root.tempC > 0 ? ("(" + root.tempC + "°C)") : "")
-                            font.family: Island.Theme.fontFamily
-                            font.pixelSize: 10
-                            font.bold: true
-                            color: Island.Theme.green
+                        Row {
+                            spacing: 6
+                            Rectangle { width: 6; height: 6; radius: 3; color: "#10b981"; anchors.verticalCenter: parent.verticalCenter }
+                            Text {
+                                text: "GPU: " + root.gpuPercent + "% " + (root.tempC > 0 ? ("(" + root.tempC + "°C)") : "")
+                                font.family: Island.Theme.fontFamily
+                                font.pixelSize: 10
+                                font.bold: true
+                                color: Island.Theme.foreground
+                                renderType: Text.QtRendering
+                            }
                         }
-                        Text {
-                            text: "CPU: " + root.cpuPercent + "%"
-                            font.family: Island.Theme.fontFamily
-                            font.pixelSize: 10
-                            font.bold: true
-                            color: Island.Theme.cyan
+                        Row {
+                            spacing: 6
+                            Rectangle { width: 6; height: 6; radius: 3; color: "#06b6d4"; anchors.verticalCenter: parent.verticalCenter }
+                            Text {
+                                text: "CPU: " + root.cpuPercent + "%"
+                                font.family: Island.Theme.fontFamily
+                                font.pixelSize: 10
+                                font.bold: true
+                                color: Island.Theme.foreground
+                                renderType: Text.QtRendering
+                            }
                         }
-                        Text {
-                            text: "RAM: " + root.ramPercent + "%"
-                            font.family: Island.Theme.fontFamily
-                            font.pixelSize: 10
-                            font.bold: true
-                            color: Island.Theme.purple
+                        Row {
+                            spacing: 6
+                            Rectangle { width: 6; height: 6; radius: 3; color: "#a855f7"; anchors.verticalCenter: parent.verticalCenter }
+                            Text {
+                                text: "RAM: " + root.ramPercent + "%"
+                                font.family: Island.Theme.fontFamily
+                                font.pixelSize: 10
+                                font.bold: true
+                                color: Island.Theme.foreground
+                                renderType: Text.QtRendering
+                            }
                         }
-                        Text {
-                            text: "BAT: " + root.batteryPercent + "% " + (root.isCharging ? "⚡" : "")
-                            font.family: Island.Theme.fontFamily
-                            font.pixelSize: 10
-                            font.bold: true
-                            color: root.isCharging ? Island.Theme.green : Island.Theme.primary
+                        Row {
+                            spacing: 6
+                            Rectangle { width: 6; height: 6; radius: 3; color: root.isCharging ? "#10b981" : Island.Theme.primary; anchors.verticalCenter: parent.verticalCenter }
+                            Text {
+                                text: "BAT: " + root.batteryPercent + "% " + (root.isCharging ? "⚡" : "")
+                                font.family: Island.Theme.fontFamily
+                                font.pixelSize: 10
+                                font.bold: true
+                                color: Island.Theme.foreground
+                                renderType: Text.QtRendering
+                            }
                         }
                         Text {
                             text: "NET: " + (root.wifiConnected ? root.wifiSsid : (root.wifiOn ? "Disconnected" : "Off"))
@@ -419,6 +427,7 @@ Item {
                             color: Island.Theme.muted
                             elide: Text.ElideRight
                             width: parent.width
+                            renderType: Text.QtRendering
                         }
                     }
                 }
@@ -441,6 +450,7 @@ Item {
                     font.pixelSize: 22
                     color: Island.Theme.primary
                     anchors.verticalCenter: parent.verticalCenter
+                    renderType: Text.QtRendering
                 }
 
                 Text {
@@ -452,6 +462,7 @@ Item {
                     font.family: Island.Theme.fontFamily
                     color: Island.Theme.foreground
                     anchors.verticalCenter: parent.verticalCenter
+                    renderType: Text.QtRendering
                 }
             }
 
@@ -464,6 +475,7 @@ Item {
                 font.family: Island.Theme.fontFamily
                 color: Island.Theme.foreground
                 opacity: 0.85
+                renderType: Text.QtRendering
             }
 
             // Location
@@ -474,6 +486,7 @@ Item {
                 font.pixelSize: 11
                 font.family: Island.Theme.fontFamily
                 color: Island.Theme.muted
+                renderType: Text.QtRendering
             }
         }
     }
