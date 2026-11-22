@@ -12,6 +12,57 @@ Item {
     property real cursorY: height / 2
     property bool cursorPresent: false
 
+    // Card collision bounds passed from AmbientLayer (with automatic fallbacks)
+    property rect cardLeftRect: Qt.rect(0, 0, 0, 0)
+    property rect cardRightRect: Qt.rect(0, 0, 0, 0)
+
+    // Dynamic Solid Obstacles List (Cards & Top Bars)
+    function getObstacleList() {
+        const w = root.width > 100 ? root.width : 1920;
+        const h = root.height > 100 ? root.height : 1080;
+
+        // Card bounding boxes
+        const leftX = (cardLeftRect.width > 0) ? cardLeftRect.x : 48;
+        const leftY = (cardLeftRect.height > 0) ? cardLeftRect.y : (h - 48 - 260);
+        const leftW = (cardLeftRect.width > 0) ? cardLeftRect.width : 500;
+        const leftH = (cardLeftRect.height > 0) ? cardLeftRect.height : 260;
+
+        const rightX = (cardRightRect.width > 0) ? cardRightRect.x : (w - 48 - 500);
+        const rightY = (cardRightRect.height > 0) ? cardRightRect.y : (h - 48 - 260);
+        const rightW = (cardRightRect.width > 0) ? cardRightRect.width : 500;
+        const rightH = (cardRightRect.height > 0) ? cardRightRect.height : 260;
+
+        // Top Bar Convex Metrics
+        const wingW = Math.min(360, w * 0.22);
+        const wingH = 46;
+
+        const isNotchExpanded = Boolean(Island.ShellState && Island.ShellState.expanded);
+        const notchW = isNotchExpanded
+            ? (Island.ShellState.panelWidths[Island.ShellState.panel] || 480) 
+            : 380;
+        const notchH = isNotchExpanded
+            ? ((Island.ShellState.panelHeights[Island.ShellState.panel] || 300) + 40)
+            : 48;
+        const notchX = (w - notchW) / 2;
+
+        return [
+            // 1. Bottom-Left Card (Clock / Weather Slate)
+            { x: leftX, y: leftY, width: leftW, height: leftH },
+
+            // 2. Bottom-Right Card (Constellation / Git Card)
+            { x: rightX, y: rightY, width: rightW, height: rightH },
+
+            // 3. Top-Left Bar (Workspaces & Sparkle Pill)
+            { x: 0, y: 0, width: wingW, height: wingH },
+
+            // 4. Top-Center Bar (Dynamic Island Notch)
+            { x: notchX, y: 0, width: notchW, height: notchH },
+
+            // 5. Top-Right Bar (System Tray / Battery / Status)
+            { x: w - wingW, y: 0, width: wingW, height: wingH }
+        ];
+    }
+
     // 14 Autonomous Celestial Living Air Stars
     readonly property int moteCount: 14
 
@@ -184,12 +235,43 @@ Item {
                 twinkleTimer.restart();
             }
 
-            // Initialization: Spawn at truly random 2D screen positions with random 360° drift velocity
+            // Helper: Test if coordinate falls within any solid obstacle (plus safety padding)
+            function isInsideAnyObstacle(px, py, obstacles) {
+                const pad = 12.0;
+                for (let i = 0; i < obstacles.length; i++) {
+                    const obs = obstacles[i];
+                    if (!obs || obs.width <= 0 || obs.height <= 0) continue;
+                    if (px >= obs.x - pad && px <= obs.x + obs.width + pad &&
+                        py >= obs.y - pad && py <= obs.y + obs.height + pad) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // Initialization: Spawn at truly random 2D screen positions outside cards & top bars
             function initPosition() {
                 const w = root.width > 100 ? root.width : 1920;
                 const h = root.height > 100 ? root.height : 1080;
-                xPos = 40 + Math.random() * (w - 80);
-                yPos = 40 + Math.random() * (h - 80);
+                const obstacles = root.getObstacleList();
+
+                let attempts = 0;
+                let chosenX = w * 0.5;
+                let chosenY = h * 0.44;
+
+                while (attempts < 40) {
+                    const candidateX = 30 + Math.random() * (w - 60);
+                    const candidateY = 30 + Math.random() * (h - 60);
+                    if (!isInsideAnyObstacle(candidateX, candidateY, obstacles)) {
+                        chosenX = candidateX;
+                        chosenY = candidateY;
+                        break;
+                    }
+                    attempts++;
+                }
+
+                xPos = chosenX;
+                yPos = chosenY;
 
                 const angle = Math.random() * 2 * Math.PI;
                 const speed = 0.35 + Math.random() * 0.45; // Gentle majestic drift
@@ -202,11 +284,11 @@ Item {
 
             Component.onCompleted: initPosition()
 
-            // Continuous 2D Physics Update: Drift, Screen Edge Bouncing, and Cursor Repulsion
+            // Continuous 2D Physics Update: Drift, Screen Edge Bouncing, Card & Top Bar Obstacle Bouncing
             function updatePhysics() {
                 const w = root.width > 100 ? root.width : 1920;
                 const h = root.height > 100 ? root.height : 1080;
-                const margin = 20.0;
+                const margin = 12.0;
                 const minX = margin;
                 const maxX = w - margin;
                 const minY = margin;
@@ -255,7 +337,7 @@ Item {
                 xPos += vx;
                 yPos += vy;
 
-                // 5. Edge Collision & Elastic Screen Bounce with subtle angular deflection
+                // 5. Outer Screen Perimeter Elastic Bounces
                 if (xPos <= minX) {
                     xPos = minX;
                     vx = Math.abs(vx) * (0.88 + Math.random() * 0.24); // Bounce right
@@ -276,7 +358,56 @@ Item {
                     vx += (Math.random() - 0.5) * 0.25;
                 }
 
-                // 6. Set Item Coordinates
+                // 6. Solid Obstacle Collision Bounces (Cards & Top Bars)
+                const obstacles = root.getObstacleList();
+                const pad = 6.0; // Buffer so the star glint doesn't clip into the frosted glass border
+
+                for (let i = 0; i < obstacles.length; i++) {
+                    const obs = obstacles[i];
+                    if (!obs || obs.width <= 0 || obs.height <= 0) continue;
+
+                    const x1 = obs.x - pad;
+                    const x2 = obs.x + obs.width + pad;
+                    const y1 = obs.y - pad;
+                    const y2 = obs.y + obs.height + pad;
+
+                    if (xPos >= x1 && xPos <= x2 && yPos >= y1 && yPos <= y2) {
+                        // Penetration depths to all 4 edges of this obstacle
+                        const dLeft = xPos - x1;
+                        const dRight = x2 - xPos;
+                        const dTop = yPos - y1;
+                        const dBottom = y2 - yPos;
+
+                        const minD = Math.min(dLeft, dRight, dTop, dBottom);
+
+                        if (minD === dTop) {
+                            // Hit top edge of card/bar -> bounce up
+                            yPos = y1;
+                            vy = -Math.abs(vy) * (0.88 + Math.random() * 0.24);
+                            vx += (Math.random() - 0.5) * 0.25;
+                        } else if (minD === dBottom) {
+                            // Hit bottom edge of top bar -> bounce down
+                            yPos = y2;
+                            vy = Math.abs(vy) * (0.88 + Math.random() * 0.24);
+                            vx += (Math.random() - 0.5) * 0.25;
+                        } else if (minD === dLeft) {
+                            // Hit left edge of obstacle -> bounce left
+                            xPos = x1;
+                            vx = -Math.abs(vx) * (0.88 + Math.random() * 0.24);
+                            vy += (Math.random() - 0.5) * 0.25;
+                        } else {
+                            // Hit right edge of obstacle -> bounce right
+                            xPos = x2;
+                            vx = Math.abs(vx) * (0.88 + Math.random() * 0.24);
+                            vy += (Math.random() - 0.5) * 0.25;
+                        }
+
+                        // Physical glass bounce glint excitation: star sparkles when hitting a card/bar
+                        excitation = Math.min(1.0, excitation + 0.28);
+                    }
+                }
+
+                // 7. Set Item Coordinates
                 x = Math.round(xPos - width / 2);
                 y = Math.round(yPos - height / 2);
             }

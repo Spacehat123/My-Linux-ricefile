@@ -117,6 +117,8 @@ PanelWindow {
             cursorX: globalHover.point.position.x
             cursorY: globalHover.point.position.y
             cursorPresent: globalHover.hovered
+            cardLeftRect: Qt.rect(slateWrapper.x, slateWrapper.y, slateWrapper.width, slateWrapper.height)
+            cardRightRect: Qt.rect(constellationWrapper.x, constellationWrapper.y, constellationWrapper.width, constellationWrapper.height)
         }
 
         // 4. Cyberpunk Ephemeral Ghost Trails (Atmospheric / Non-blocking)
