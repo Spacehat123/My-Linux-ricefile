@@ -135,10 +135,10 @@ Item {
             id: leftCol
             spacing: 12
 
-            // 1. Horizontal Clock (Hours : Minutes with primary accent dots)
+            // 1. Horizontal Clock (Hours | Minutes with 0.5 alpha line)
             Row {
                 id: clockRow
-                spacing: 14
+                spacing: 20
 
                 // Hours
                 Text {
@@ -151,24 +151,16 @@ Item {
                     renderType: Text.QtRendering
                 }
 
-                // Colon Dots
-                Text {
-                    id: colonText
-                    text: ":"
-                    font.pixelSize: 200
-                    font.bold: true
-                    font.family: "Geom"
-                    color: Island.Theme.primary
-                    renderType: Text.QtRendering
+                // Separator Line (0.5 Alpha)
+                Rectangle {
+                    id: separatorLine
+                    width: 2
+                    height: 140
+                    radius: 1
+                    color: Island.Theme.foreground
+                    opacity: 0.5
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.verticalCenterOffset: -4
-
-                    SequentialAnimation on opacity {
-                        loops: Animation.Infinite
-                        running: root.active && root.visible
-                        NumberAnimation { to: 0.45; duration: 1000; easing.type: Easing.InOutSine }
-                        NumberAnimation { to: 1.00; duration: 1000; easing.type: Easing.InOutSine }
-                    }
+                    anchors.verticalCenterOffset: 8
                 }
 
                 // Minutes
