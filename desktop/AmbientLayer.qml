@@ -88,13 +88,6 @@ PanelWindow {
             id: globalHover
         }
 
-        // Full-screen desktop tap handler (spawns cyberpunk ghost trails & ripples on clicks)
-        TapHandler {
-            onTapped: point => {
-                ghostTrails.spawnBurst(point.position.x, point.position.y);
-            }
-        }
-
         // 1. Bangalore Weather Mist Layer
         AmbientWeatherMist {
             id: weatherMist
@@ -124,15 +117,7 @@ PanelWindow {
             cardRightRect: Qt.rect(constellationWrapper.x, constellationWrapper.y, constellationWrapper.width, constellationWrapper.height)
         }
 
-        // 4. Cyberpunk Ephemeral Ghost Trails (Atmospheric / Non-blocking)
-        DesktopGhostTrails {
-            id: ghostTrails
-            anchors.fill: parent
-            visible: AmbientConfig.showGhostTrails
-            active: root.active && (hudContainer.opacity > 0.0) && visible
-        }
-
-        // 5. Left Architectural Clock, Weather & Radial Telemetry Slate
+        // 4. Left Architectural Clock, Weather & Radial Telemetry Slate
         Item {
             id: slateWrapper
             width: slateInstance.implicitWidth
@@ -169,16 +154,9 @@ PanelWindow {
                 anchors.fill: parent
                 active: root.active && (hudContainer.opacity > 0.0)
             }
-
-            TapHandler {
-                onTapped: point => {
-                    const pt = slateWrapper.mapToItem(hudContainer, point.position.x, point.position.y);
-                    ghostTrails.spawnBurst(pt.x, pt.y);
-                }
-            }
         }
 
-        // 6. Bottom-Right Constellation Coding & Momentum Card (Frosted Glass Plate)
+        // 5. Bottom-Right Constellation Coding & Momentum Card (Frosted Glass Plate)
         Item {
             id: constellationWrapper
             anchors.right: parent.right
@@ -193,13 +171,6 @@ PanelWindow {
                 id: constellationInstance
                 anchors.fill: parent
                 active: root.active && (hudContainer.opacity > 0.0)
-            }
-
-            TapHandler {
-                onTapped: point => {
-                    const pt = constellationWrapper.mapToItem(hudContainer, point.position.x, point.position.y);
-                    ghostTrails.spawnBurst(pt.x, pt.y);
-                }
             }
         }
     }

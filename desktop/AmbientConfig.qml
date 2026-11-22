@@ -22,7 +22,6 @@ Singleton {
     property bool showSunMoon: true
     property bool showParticles: true
     property bool showWeatherMist: true
-    property bool showGhostTrails: true
     property bool showConstellationCard: true
 
     signal configChanged()
@@ -97,7 +96,6 @@ Singleton {
                 showSunMoon: root.showSunMoon,
                 showParticles: root.showParticles,
                 showWeatherMist: root.showWeatherMist,
-                showGhostTrails: root.showGhostTrails,
                 showConstellationCard: root.showConstellationCard
             };
             configFile.setText(JSON.stringify(data, null, 2) + "\n");
@@ -116,7 +114,6 @@ Singleton {
             if (obj.showSunMoon !== undefined) root.showSunMoon = Boolean(obj.showSunMoon);
             if (obj.showParticles !== undefined) root.showParticles = Boolean(obj.showParticles);
             if (obj.showWeatherMist !== undefined) root.showWeatherMist = Boolean(obj.showWeatherMist);
-            if (obj.showGhostTrails !== undefined) root.showGhostTrails = Boolean(obj.showGhostTrails);
             if (obj.showConstellationCard !== undefined) root.showConstellationCard = Boolean(obj.showConstellationCard);
         } catch(e) {
             console.warn("[AmbientConfig] Failed to parse config JSON:", e);
