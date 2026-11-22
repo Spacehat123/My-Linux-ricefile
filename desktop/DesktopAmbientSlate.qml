@@ -251,7 +251,7 @@ Item {
                     Row {
                         anchors.centerIn: parent
                         spacing: 5
-                        Rectangle { width: 6; height: 6; radius: 3; color: "#10b981"; anchors.verticalCenter: parent.verticalCenter }
+                        Rectangle { width: 6; height: 6; radius: 3; color: "#ef4444"; anchors.verticalCenter: parent.verticalCenter }
                         Text { id: gpuText; text: "GPU " + root.gpuPercent + "%"; font.pixelSize: 10; font.bold: true; font.family: Island.Theme.fontFamily; color: Island.Theme.foreground }
                     }
                 }
@@ -343,7 +343,7 @@ Item {
                     layer.samples: 4
                     layer.smooth: true
 
-                    // ── TOP LINE: GPU (Emerald Green) ────────────────────────
+                    // ── TOP LINE: GPU (Red) ──────────────────────────────────
                     // Track line (start: 235, sweep: 70)
                     ShapePath {
                         strokeWidth: 3
@@ -360,7 +360,7 @@ Item {
                     // Active Fill Line
                     ShapePath {
                         strokeWidth: 3
-                        strokeColor: "#10b981"
+                        strokeColor: "#ef4444"
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
@@ -519,7 +519,7 @@ Item {
 
                         Row {
                             spacing: 6
-                            Rectangle { width: 6; height: 6; radius: 3; color: "#10b981"; anchors.verticalCenter: parent.verticalCenter }
+                            Rectangle { width: 6; height: 6; radius: 3; color: "#ef4444"; anchors.verticalCenter: parent.verticalCenter }
                             Text {
                                 text: "GPU: " + root.gpuPercent + "% " + (root.tempC > 0 ? ("(" + root.tempC + "°C)") : "")
                                 font.family: Island.Theme.fontFamily
