@@ -27,16 +27,15 @@ PanelWindow {
 
     anchors {
         top: true
-        bottom: true
         left: true
     }
     margins {
         top: 52
-        bottom: 12
         left: 12
     }
 
     implicitWidth: 360
+    implicitHeight: Math.min(840, controlCenter.implicitHeight + 32)
     exclusionMode: ExclusionMode.Ignore
     aboveWindows: true
     focusable: false

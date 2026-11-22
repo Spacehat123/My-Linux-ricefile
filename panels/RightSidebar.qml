@@ -147,8 +147,9 @@ PanelWindow {
             "awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{printf \"MEM %.2f %.2f %d\\n\", (t-a)/1048576, t/1048576, int((t-a)*100/t)}' /proc/meminfo; " +
             "cpu_temp=0; for h in /sys/class/hwmon/hwmon*; do if [ -f \"$h/name\" ] && grep -qE \"k10temp|coretemp|cpu\" \"$h/name\" 2>/dev/null; then cpu_temp=$(awk '{printf \"%d\", $1/1000}' \"$h/temp1_input\" 2>/dev/null); break; fi; done; " +
             "awk -v temp=\"$cpu_temp\" '/^cpu /{print \"CPU\", $2+$3+$4+$5+$6+$7+$8, $5, temp}' /proc/stat; " +
-            "nv_out=$(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total --format=csv,noheader,nounits 2>/dev/null | awk -F', ' '{print $1, $2, $3, $4}'); " +
-            "if [ -n \"$nv_out\" ]; then echo \"GPU $nv_out\"; elif [ -f /sys/class/drm/card1/device/gpu_busy_percent ]; then echo \"GPU $(cat /sys/class/drm/card1/device/gpu_busy_percent 2>/dev/null || echo 0) 0 0 0\"; else echo \"GPU 0 0 0 0\"; fi"
+            "gpu_busy=$(cat /sys/class/drm/card1/device/gpu_busy_percent 2>/dev/null || echo 0); " +
+            "gpu_temp=$(cat /sys/class/drm/card1/device/hwmon/hwmon*/temp1_input 2>/dev/null | head -n 1 | awk '{printf \"%d\", $1/1000}'); " +
+            "echo \"GPU $gpu_busy ${gpu_temp:-0} 0 0\""
         ]
         stdout: SplitParser {
             splitMarker: "\n"
@@ -240,14 +241,14 @@ PanelWindow {
         }
 
         // =====================================================================
-        // ATMOSPHERIC OBSIDIAN COMMAND DECK (ZERO-PILL ARCHITECTURAL SURFACE)
+        // FROSTED GLASS COMMAND DECK (MATCHING LEFT SIDEBAR & DYNAMIC ISLAND)
         // =====================================================================
         Rectangle {
             anchors.fill: parent
-            radius: 14
+            radius: Island.Theme.radiusWindow
             color: Island.Theme.glassBackground
             border.color: Island.Theme.glassBorder
-            border.width: 1
+            border.width: Island.Theme.glassBorderWidth
             clip: true
 
             // Inner refractive rim
@@ -273,60 +274,6 @@ PanelWindow {
                 radius: 0.5
                 color: Qt.rgba(1, 1, 1, 0.12)
                 z: 2
-            }
-
-            // Multi-stop Vertical Atmospheric Light Dispersion (Dark mode only)
-            Rectangle {
-                anchors.fill: parent
-                radius: parent.radius
-                visible: !Island.Theme.isLightMode
-                gradient: Gradient {
-                    GradientStop { 
-                        position: 0.0
-                        color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.18) 
-                    }
-                    GradientStop { 
-                        position: 0.18
-                        color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.06) 
-                    }
-                    GradientStop { 
-                        position: 0.55
-                        color: "#060509" 
-                    }
-                    GradientStop { 
-                        position: 1.0
-                        color: "#040306" 
-                    }
-                }
-            }
-
-            // Top Specular Refraction Hairline
-            Rectangle {
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
-                height: 1
-                color: Island.Theme.isLightMode ? Qt.rgba(1, 1, 1, 0.6) : Qt.rgba(1, 1, 1, 0.16)
-            }
-
-            // Cybernetic Left Optical Laser Rail
-            Rectangle {
-                anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                anchors.topMargin: 18
-                anchors.bottomMargin: 18
-                width: 2
-                radius: 1
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.3) }
-                    GradientStop { position: 0.12; color: Island.Theme.primary }
-                    GradientStop { position: 0.50; color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.5) }
-                    GradientStop { position: 0.85; color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.15) }
-                    GradientStop { position: 1.0; color: "transparent" }
-                }
             }
 
             Column {
@@ -1726,11 +1673,15 @@ PanelWindow {
                                                 anchors.fill: parent
                                                 hoverEnabled: true
                                                 cursorShape: Qt.PointingHandCursor
-                                                onClicked: (mouse) => {
-                                                    if (root.sinkAudio) {
-                                                        const vol = Math.max(0.0, Math.min(1.0, mouse.x / width));
+                                                function updateVol(mouseX) {
+                                                    if (root.sinkAudio && width > 0) {
+                                                        const vol = Math.max(0.0, Math.min(1.0, mouseX / width));
                                                         root.sinkAudio.volume = vol;
                                                     }
+                                                }
+                                                onPressed: (mouse) => updateVol(mouse.x)
+                                                onPositionChanged: (mouse) => {
+                                                    if (pressed) updateVol(mouse.x);
                                                 }
                                             }
                                         }

@@ -300,10 +300,18 @@ PanelWindow {
 
         ShapePath {
             strokeWidth: 1
-            strokeColor: Island.Theme ? Island.Theme.glassBorderSubtle : Qt.rgba(1, 1, 1, 0.08)
-            fillColor: Island.Theme ? Island.Theme.surfaceOpaque : "#08090d"
+            strokeColor: root.isExpanded
+                ? (Island.Theme ? Island.Theme.glassBorder : Qt.rgba(1, 1, 1, 0.16))
+                : (Island.Theme ? Island.Theme.glassBorderSubtle : Qt.rgba(1, 1, 1, 0.08))
+            fillColor: root.isExpanded
+                ? (Island.Theme ? Qt.rgba(Island.Theme.bg0.r, Island.Theme.bg0.g, Island.Theme.bg0.b, 0.40) : Qt.rgba(0.08, 0.06, 0.09, 0.40))
+                : (Island.Theme ? Island.Theme.surfaceOpaque : "#08090d")
 
             Behavior on fillColor {
+                ColorAnimation { duration: 250 }
+            }
+
+            Behavior on strokeColor {
                 ColorAnimation { duration: 250 }
             }
 

@@ -46,19 +46,13 @@ Item {
         const notchX = (w - notchW) / 2;
 
         return [
-            // 1. Bottom-Left Card (Clock / Weather Slate)
-            { x: leftX, y: leftY, width: leftW, height: leftH },
-
-            // 2. Bottom-Right Card (Constellation / Git Card)
-            { x: rightX, y: rightY, width: rightW, height: rightH },
-
-            // 3. Top-Left Bar (Workspaces & Sparkle Pill)
+            // 1. Top-Left Bar (Workspaces & Sparkle Pill)
             { x: 0, y: 0, width: wingW, height: wingH },
 
-            // 4. Top-Center Bar (Dynamic Island Notch)
+            // 2. Top-Center Bar (Dynamic Island Notch)
             { x: notchX, y: 0, width: notchW, height: notchH },
 
-            // 5. Top-Right Bar (System Tray / Battery / Status)
+            // 3. Top-Right Bar (System Tray / Battery / Status)
             { x: w - wingW, y: 0, width: wingW, height: wingH }
         ];
     }

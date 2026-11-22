@@ -11,6 +11,9 @@ import "../island/components"
 Item {
     id: root
 
+    implicitWidth: 328
+    implicitHeight: (mainColumn && mainColumn.childrenRect.height > 0) ? (mainColumn.childrenRect.height + 24) : 740
+
     // =========================================================================
     // Upstream Authoritative Models & State Injections
     // =========================================================================

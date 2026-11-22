@@ -1,323 +1,180 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.Mpris
 import "../island" as Island
 
 Item {
     id: root
 
     property bool active: true
-    implicitWidth: 500
-    implicitHeight: 260
+    implicitWidth: 520
+    implicitHeight: 180
 
-    // Git telemetry state
-    property string gitRepo: "cool-shell"
-    property string gitBranch: "main"
-    property string gitLastCommit: "Syncing..."
-    property int gitTotalCommits: 0
-    property var gitDays: []
+    // Authoritative Media State from IslandHub and MPRIS
+    readonly property var activePlayer: Mpris.players ? Mpris.players.values.find(p => p && p.playbackState === MprisPlaybackState.Playing) || (Mpris.players.values.length > 0 ? Mpris.players.values[0] : null) : null
+    readonly property bool isPlaying: Island.IslandHub ? Island.IslandHub.mediaPlaying : (activePlayer ? activePlayer.playbackState === MprisPlaybackState.Playing : false)
+    readonly property string trackTitle: Island.IslandHub && Island.IslandHub.mediaTitle ? Island.IslandHub.mediaTitle : (activePlayer ? (activePlayer.trackTitle || "") : "")
+    readonly property string trackArtist: Island.IslandHub && Island.IslandHub.mediaArtist ? Island.IslandHub.mediaArtist : (activePlayer ? (activePlayer.trackArtist || "") : "")
+    readonly property string liveLyric: Island.IslandHub ? Island.IslandHub.liveLyric : ""
 
-    // Pomodoro focus telemetry
-    readonly property int completedFocus: Island.TimerState ? Island.TimerState.completedFocusSessions : 0
-    readonly property int targetFocus: Island.TimerState ? Island.TimerState.targetFocusSessions : 4
+    property string currentLyricDisplay: ""
+    property string previousLyricDisplay: ""
 
-    Process {
-        id: gitStatsProc
-        command: ["python3", Quickshell.shellPath("island/scripts/git-stats.py")]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const data = JSON.parse(text.trim());
-                    root.gitRepo = data.repo || "cool-shell";
-                    root.gitBranch = data.branch || "main";
-                    root.gitLastCommit = data.lastCommit || "";
-                    root.gitTotalCommits = data.totalCommits || 0;
-                    root.gitDays = data.days || [];
-                    starCanvas.requestPaint();
-                } catch(e) {}
-            }
+    onLiveLyricChanged: {
+        if (liveLyric && liveLyric.trim() !== "" && liveLyric !== currentLyricDisplay) {
+            previousLyricDisplay = currentLyricDisplay;
+            currentLyricDisplay = liveLyric.trim();
+            slideAnim.restart();
         }
     }
 
-    Timer {
-        interval: 60000
-        running: root.active && root.visible
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: {
-            if (!gitStatsProc.running) gitStatsProc.running = true;
-        }
-    }
+    // =========================================================================
+    // BORDERLESS LIVE MUSIC LYRICS & AMBIENT HUD
+    // (ZERO CARDS, FLOATING ETHEREAL TYPOGRAPHY)
+    // =========================================================================
+    Column {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        width: parent.width
+        spacing: 10
 
-    onCompletedFocusChanged: starCanvas.requestPaint()
-
-    // Card Body (matching DesktopAmbientSlate 1:1 - 30% more transparent)
-    Rectangle {
-        id: cardPlate
-        anchors.fill: parent
-        radius: 38
-        color: Qt.rgba(Island.Theme.bg0.r, Island.Theme.bg0.g, Island.Theme.bg0.b, 0.38)
-        border.color: Island.Theme.glassBorder
-        border.width: 0
-        clip: true
-
-        // Inner 1px Refractive Rim
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: 1
-            radius: 37
-            color: "transparent"
-            border.color: Qt.rgba(1, 1, 1, 0.08)
-            border.width: 1
-            z: 1
-        }
-
-        // Top Specular Highlight Strip
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
+        // TOP ROW: Track metadata & Equalizer / Wave indicator
+        Row {
             anchors.right: parent.right
-            anchors.leftMargin: 24
-            anchors.rightMargin: 24
-            anchors.topMargin: 1
-            height: 1
-            color: Qt.rgba(1, 1, 1, 0.12)
-            z: 2
+            spacing: 10
+
+            // Equalizer Wave bars when playing
+            Row {
+                spacing: 3
+                anchors.verticalCenter: parent.verticalCenter
+                visible: root.isPlaying
+
+                Repeater {
+                    model: 4
+                    Rectangle {
+                        id: eqBar
+                        width: 3
+                        height: 12
+                        radius: 1.5
+                        color: Island.Theme.primary
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        SequentialAnimation on height {
+                            loops: Animation.Infinite
+                            running: root.isPlaying && root.active
+                            NumberAnimation { to: 4 + (index * 3); duration: 250 + (index * 70); easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 16 - (index * 2); duration: 280 + (index * 50); easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 8; duration: 200 + (index * 60); easing.type: Easing.InOutQuad }
+                        }
+                    }
+                }
+            }
+
+            // Track & Artist Tag (Borderless, floating)
+            Row {
+                spacing: 8
+                anchors.verticalCenter: parent.verticalCenter
+
+                Text {
+                    text: root.isPlaying ? "󰎆" : "󰓇"
+                    font.family: Island.Theme.iconFontFamily
+                    font.pixelSize: 13
+                    color: root.isPlaying ? Island.Theme.primary : Island.Theme.muted
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Text {
+                    text: root.trackTitle !== "" ? (root.trackTitle + (root.trackArtist !== "" ? ("  •  " + root.trackArtist) : "")) : "Ambient Audio"
+                    font.family: Island.Theme.fontFamily
+                    font.pixelSize: 12
+                    font.bold: true
+                    color: Island.Theme.foreground
+                    elide: Text.ElideLeft
+                    maximumLineCount: 1
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
         }
 
-        Column {
-            anchors.fill: parent
-            anchors.margins: 24
-            spacing: 12
+        // MIDDLE / PRIMARY: Live Kinetic Synchronized Lyric
+        Item {
+            anchors.right: parent.right
+            width: parent.width
+            height: 64
+            clip: true
 
-            // TOP ROW: Momentum & Focus Badge
-            Row {
-                width: parent.width
-                height: 38
-
-                Column {
-                    width: parent.width - 190
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 2
-
-                    Row {
-                        spacing: 8
-                        Text {
-                            text: "󰊤"
-                            font.family: Island.Theme.iconFontFamily
-                            font.pixelSize: 15
-                            color: Island.Theme.primary
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: root.gitRepo + "  •  " + root.gitBranch
-                            font.family: Island.Theme.fontFamily
-                            font.pixelSize: 13
-                            font.bold: true
-                            color: Island.Theme.foreground
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-
-                    Text {
-                        text: root.gitTotalCommits + " COMMITS THIS WEEK"
-                        font.family: Island.Theme.fontFamily
-                        font.pixelSize: 9
-                        font.bold: true
-                        font.letterSpacing: 1.5
-                        color: Island.Theme.muted
-                    }
-                }
-
-                // Focus Streak Pill Badge
-                Rectangle {
-                    width: 180
-                    height: 32
-                    radius: 16
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.12)
-                    border.color: Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.28)
-                    border.width: 1
-
-                    Row {
-                        anchors.centerIn: parent
-                        spacing: 6
-
-                        Text {
-                            text: "󰔟"
-                            font.family: Island.Theme.iconFontFamily
-                            font.pixelSize: 13
-                            color: root.completedFocus >= root.targetFocus ? Island.Theme.green : Island.Theme.primary
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: root.completedFocus + " / " + root.targetFocus + " Focus Beads"
-                            font.family: Island.Theme.fontFamily
-                            font.pixelSize: 10
-                            font.bold: true
-                            color: root.completedFocus >= root.targetFocus ? Island.Theme.green : Island.Theme.foreground
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-                }
-            }
-
-            // CENTER CANVAS: Celestial Constellation Star Map
             Item {
-                width: parent.width
-                height: 116
+                id: lyricContainer
+                anchors.fill: parent
 
-                Canvas {
-                    id: starCanvas
-                    anchors.fill: parent
-
-                    onPaint: {
-                        const ctx = getContext("2d");
-                        ctx.clearRect(0, 0, width, height);
-
-                        const count = root.gitDays.length || 7;
-                        const marginX = 28;
-                        const baselineY = 74;
-                        const maxAmplitude = 44;
-
-                        // Find max commit count for scaling
-                        let maxC = 1;
-                        for (let i = 0; i < count; i++) {
-                            const c = root.gitDays[i] ? root.gitDays[i].commits : 0;
-                            if (c > maxC) maxC = c;
-                        }
-
-                        // Calculate points
-                        const pts = [];
-                        for (let i = 0; i < count; i++) {
-                            const x = marginX + i * ((width - 2 * marginX) / Math.max(1, count - 1));
-                            const c = root.gitDays[i] ? root.gitDays[i].commits : 0;
-                            const y = baselineY - (c / maxC) * maxAmplitude;
-                            pts.push({ x: x, y: y, commits: c, index: i });
-                        }
-
-                        // Draw constellation connecting lines
-                        if (pts.length > 1) {
-                            ctx.beginPath();
-                            ctx.strokeStyle = Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.35);
-                            ctx.lineWidth = 1.5;
-                            ctx.moveTo(pts[0].x, pts[0].y);
-                            for (let i = 1; i < pts.length; i++) {
-                                ctx.lineTo(pts[i].x, pts[i].y);
-                            }
-                            ctx.stroke();
-                        }
-
-                        // Draw star nodes
-                        for (let i = 0; i < pts.length; i++) {
-                            const p = pts[i];
-                            const isToday = (i === pts.length - 1);
-                            const hasCommits = p.commits > 0;
-
-                            // Outer halo for active stars
-                            if (hasCommits || isToday) {
-                                ctx.beginPath();
-                                ctx.arc(p.x, p.y, hasCommits ? 8 : 5, 0, Math.PI * 2);
-                                ctx.fillStyle = Qt.rgba(Island.Theme.primary.r, Island.Theme.primary.g, Island.Theme.primary.b, 0.20);
-                                ctx.fill();
-                            }
-
-                            // Focus session orbit for today
-                            if (isToday && root.completedFocus > 0) {
-                                ctx.beginPath();
-                                ctx.arc(p.x, p.y, 12, 0, Math.PI * 2);
-                                ctx.strokeStyle = Qt.rgba(Island.Theme.green.r, Island.Theme.green.g, Island.Theme.green.b, 0.65);
-                                ctx.lineWidth = 1.0;
-                                ctx.stroke();
-                            }
-
-                            // Core star bead
-                            ctx.beginPath();
-                            ctx.arc(p.x, p.y, hasCommits ? 3.5 : 2.5, 0, Math.PI * 2);
-                            ctx.fillStyle = hasCommits ? Island.Theme.primary : Island.Theme.mutedDark;
-                            ctx.fill();
-                        }
-                    }
-                }
-
-                // Day Labels below Canvas
-                Row {
-                    anchors.bottom: parent.bottom
-                    anchors.left: parent.left
+                // Primary glowing live lyric line
+                Text {
+                    id: currLyricText
                     anchors.right: parent.right
-                    anchors.leftMargin: 14
-                    anchors.rightMargin: 14
-
-                    Repeater {
-                        model: root.gitDays.length || 7
-
-                        Item {
-                            required property int index
-                            width: (starCanvas.width - 28) / 7
-                            height: 20
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: (root.gitDays[index] && root.gitDays[index].dayName) ? root.gitDays[index].dayName : ["S","M","T","W","T","F","S"][index]
-                                font.family: Island.Theme.fontFamily
-                                font.pixelSize: 9
-                                font.bold: true
-                                color: (index === 6) ? Island.Theme.primary : Island.Theme.muted
-                            }
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: {
+                        if (root.isPlaying) {
+                            if (root.currentLyricDisplay !== "") return root.currentLyricDisplay;
+                            if (root.liveLyric !== "") return root.liveLyric;
+                            return "♪ Instrumental or syncing lyrics...";
                         }
+                        return "Silence is the space between notes";
+                    }
+                    font.family: Island.Theme.fontFamily
+                    font.pixelSize: 22
+                    font.bold: true
+                    color: root.isPlaying ? Island.Theme.foreground : Island.Theme.muted
+                    horizontalAlignment: Text.AlignRight
+                    elide: Text.ElideLeft
+                    maximumLineCount: 2
+                    wrapMode: Text.Wrap
+
+                    transform: Translate {
+                        id: lyricTranslate
+                        y: 0
                     }
                 }
             }
 
-            // BOTTOM ROW: Telemetry & Mini Focus Streak Beads
-            Row {
-                width: parent.width
-                height: 34
-
-                Row {
-                    width: parent.width - 120
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 8
-
-                    Text {
-                        text: "󰜘"
-                        font.family: Island.Theme.iconFontFamily
-                        font.pixelSize: 13
-                        color: Island.Theme.muted
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                    Text {
-                        text: root.gitLastCommit
-                        font.family: Island.Theme.fontFamily
-                        font.pixelSize: 10
-                        color: Island.Theme.muted
-                        elide: Text.ElideRight
-                        width: parent.width - 30
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
+            ParallelAnimation {
+                id: slideAnim
+                NumberAnimation {
+                    target: lyricTranslate
+                    property: "y"
+                    from: 14
+                    to: 0
+                    duration: 240
+                    easing.type: Easing.OutCubic
                 }
-
-                // 4 Focus Session Mini Beads
-                Row {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 6
-
-                    Repeater {
-                        model: root.targetFocus
-
-                        Rectangle {
-                            required property int index
-                            width: 8
-                            height: 8
-                            radius: 4
-                            color: (index < root.completedFocus) ? Island.Theme.green : Qt.rgba(1, 1, 1, 0.12)
-                            border.color: (index < root.completedFocus) ? Island.Theme.green : "transparent"
-                            border.width: 1
-                        }
-                    }
+                NumberAnimation {
+                    target: currLyricText
+                    property: "opacity"
+                    from: 0.3
+                    to: 1.0
+                    duration: 200
+                    easing.type: Easing.OutQuad
                 }
             }
+        }
+
+        // SUBTITLE / FOOTER: Ethereal hint or previous lyric
+        Text {
+            anchors.right: parent.right
+            text: {
+                if (root.isPlaying && root.previousLyricDisplay !== "") {
+                    return root.previousLyricDisplay;
+                }
+                return root.isPlaying ? "STREAMING LIVE LYRICS" : "PLAY MEDIA TO STREAM SYNCED LYRICS";
+            }
+            font.family: Island.Theme.fontFamily
+            font.pixelSize: 9
+            font.bold: true
+            font.letterSpacing: 1.8
+            color: Island.Theme.muted
+            opacity: 0.65
+            horizontalAlignment: Text.AlignRight
+            elide: Text.ElideLeft
         }
     }
 }
