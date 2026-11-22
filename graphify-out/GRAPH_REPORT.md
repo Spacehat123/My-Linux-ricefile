@@ -1,17 +1,17 @@
 # Graph Report - cool-shell  (2026-11-22)
 
 ## Corpus Check
-- 231 files · ~219,934 words
+- 231 files · ~219,539 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 99 file(s) not represented in the graph (top: .qml 93, (none) 4, .conf 1)
 
 ## Summary
-- 2578 nodes · 2977 edges · 218 communities (198 shown, 20 thin omitted)
+- 2564 nodes · 2963 edges · 217 communities (197 shown, 20 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 39 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `37c80618`
+- Built from commit: `76bd4f8b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -192,7 +192,6 @@
 - play-timer-alarm.sh
 - chat-ui.py
 - study-mode.sh script
-- Gradio 6 Chatbot Schema Remediation Report
 - re
 - Architectural Report: Apple Liquid Glass Physical Refractive Lens in Quickshell (Wayland)
 - Architectural Report: Floating Media Player Companion Pill & Top Bar Media Decoupling
@@ -260,7 +259,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (218 total, 20 thin omitted)
+## Communities (217 total, 20 thin omitted)
 
 ### Community 0 - "3. Hardened Technical Specifications"
 Cohesion: 0.05
@@ -283,8 +282,8 @@ Cohesion: 0.05
 Nodes (41): 10. DESIGN-SYSTEM REVIEW, 11. HIGH-VALUE IMPROVEMENTS, 12. MEDIUM-VALUE IMPROVEMENTS, 13. OPTIONAL EXPERIMENTS, 14. FUTURE ARCHITECTURE, 15. PRACTICAL VERIFICATION MATRIX, 16. RECOMMENDED NEXT STEPS, 1. EXECUTIVE SUMMARY (+33 more)
 
 ### Community 5 - "study-mode.py"
-Cohesion: 0.16
-Nodes (33): 1. Executive Summary, 2.1 Non-Atomic `save_state()` Truncation Race, 3.1 Atomic File Operations & Safe Reads, 10. Study Mode & Focus Lock Subsystem, check_brave_cdp_whitelisted(), cmd_prompt_and_start(), cmd_start(), cmd_status() (+25 more)
+Cohesion: 0.15
+Nodes (34): 1. Executive Summary, 2.1 Non-Atomic `save_state()` Truncation Race, 10. Study Mode & Focus Lock Subsystem, check_brave_cdp_whitelisted(), cmd_prompt_and_start(), cmd_start(), cmd_status(), cmd_stop() (+26 more)
 
 ### Community 6 - "notify_island_ai"
 Cohesion: 0.29
@@ -327,8 +326,8 @@ Cohesion: 0.07
 Nodes (28): 1. Current State Analysis, 1. Modularity & Separation of Concerns, 2. Requirements Gathering, 2. Scalability, 3. Design Proposal, 3. Maintainability, 4. Security, 4. Trade-Off Analysis (+20 more)
 
 ### Community 16 - "cool-shell"
-Cohesion: 0.07
-Nodes (28): 1. Slide-Out Sidebars, 2. Workspace Navigator & Directional HUD, 3. Idle-Triggered Ambient Layer, 4. GPU Procedural Shader Wallpaper, 🎨 AI Image Studio (Local LCM Generation), 🏝️ Apple-Style Dynamic Island (The Notch), Architecture & Throttling Limits, Automated Modular Installers (+20 more)
+Cohesion: 0.13
+Nodes (14): 1. Customizable Templates & Placements, 2. Celestial Orbit (Sun & Moon), 3. Atmospheric Living Air (Motes & Fireflies), 🌌 Ambient Desktop HUD & Celestial Engine, Arch Linux / Pacman & AUR Setup, 🎛️ Bottom-Anchored Control Center (Left Sidebar), cool-shell, 🚀 Installation & Requirements (+6 more)
 
 ### Community 17 - "feather-mode.py"
 Cohesion: 0.17
@@ -415,7 +414,7 @@ Cohesion: 0.11
 Nodes (17): 1. Executive Summary & Root Cause Analysis, 2. Proposed Two-Pronged Optimization & Integrity Plan, 3. Projected Metric Targets Post-Implementation, Action 1: Transform `mediaRing` from Continuous Canvas to Quantized Throttle, Action 2: Eliminate Double-Smoothing on Equalizer Bars, Action 3: Eliminate Audio Decoding from Video Wallpaper, Action 4: Hardware NVDEC Video Decoding & Framerate Pacing, Action 5: Comprehensive Compositor Action Layer Expansion (+9 more)
 
 ### Community 38 - "os"
-Cohesion: 0.24
+Cohesion: 0.22
 Nodes (11): build_protected_pids(), disable_game_mode(), enable_game_mode(), ensure_state_dir(), get_all_processes(), main(), read_exceptions(), read_state() (+3 more)
 
 ### Community 39 - "Verification & Completion Report: Performance Fixes (Part 1) & Architectural Integrity (Part 2)"
@@ -899,16 +898,12 @@ Cohesion: 0.29
 Nodes (6): HF_DATASETS_OFFLINE, HF_HUB_OFFLINE, PATH, PYTORCH_CUDA_ALLOC_CONF, image-engine.sh script, TRANSFORMERS_OFFLINE
 
 ### Community 176 - "chat-ui.py"
-Cohesion: 0.12
-Nodes (11): 2. Root Cause Analysis, clear_chat(), create_ui(), bot_generates(), user_submits(), extract_prompt_and_files(), get_telemetry_status(), offload_model() (+3 more)
-
-### Community 178 - "Gradio 6 Chatbot Schema Remediation Report"
-Cohesion: 0.29
-Nodes (6): 1. Executive Summary, 3. Implemented Changes, 4. Verification & State Inspection, A. Message Normalization & Safe Extraction, B. Gradio 6 Conforming Handlers, Gradio 6 Chatbot Schema Remediation Report
+Cohesion: 0.09
+Nodes (17): 1. Executive Summary, 2. Root Cause Analysis, 3. Implemented Changes, 4. Verification & State Inspection, A. Message Normalization & Safe Extraction, B. Gradio 6 Conforming Handlers, Gradio 6 Chatbot Schema Remediation Report, clear_chat() (+9 more)
 
 ### Community 179 - "re"
-Cohesion: 0.15
-Nodes (12): clean_title(), is_allowed_language(), main(), parse_lrc(), ensure_auth_file(), verify_password(), alert_kitten(), main() (+4 more)
+Cohesion: 0.19
+Nodes (10): clean_title(), is_allowed_language(), main(), parse_lrc(), alert_kitten(), main(), notify_island_voice(), read_aloud_kokoro() (+2 more)
 
 ### Community 180 - "Architectural Report: Apple Liquid Glass Physical Refractive Lens in Quickshell (Wayland)"
 Cohesion: 0.15
@@ -1047,8 +1042,8 @@ Cohesion: 0.29
 Nodes (6): HF_DATASETS_OFFLINE, HF_HUB_OFFLINE, PATH, PYTORCH_CUDA_ALLOC_CONF, launch-chat.sh script, TRANSFORMERS_OFFLINE
 
 ### Community 216 - "Verification & Architectural Report: Study Mode Self-Healing Daemon & Flow State Overtime Fix"
-Cohesion: 0.18
-Nodes (10): 2.2 Lack of Wall-Clock Determinism, 2.3 UI Lockout at Boundary Condition, 2. Root Cause Analysis, 3.2 Deterministic Wall-Clock Computation, 3.3 Immortal Daemon & Self-Healing Watcher, 3.4 UI Fallback in Control Center & Notch, 3. Architecture & Implementation Fixes, 4. Verification & Testing Matrix (+2 more)
+Cohesion: 0.17
+Nodes (11): 2.2 Lack of Wall-Clock Determinism, 2.3 UI Lockout at Boundary Condition, 2. Root Cause Analysis, 3.1 Atomic File Operations & Safe Reads, 3.2 Deterministic Wall-Clock Computation, 3.3 Immortal Daemon & Self-Healing Watcher, 3.4 UI Fallback in Control Center & Notch, 3. Architecture & Implementation Fixes (+3 more)
 
 ### Community 217 - "2. Technical Modifications"
 Cohesion: 0.20
@@ -1056,7 +1051,7 @@ Nodes (9): 1. Executive Summary, 2. Technical Modifications, 3. Verification & E
 
 ## Knowledge Gaps
 - **28 isolated node(s):** `PATH`, `PATH`, `PATH`, `PATH`, `PATH` (+23 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1759 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1752 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **20 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
