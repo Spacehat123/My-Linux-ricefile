@@ -128,13 +128,13 @@ PanelWindow {
             active: root.active && (hudContainer.opacity > 0.0)
         }
 
-        // 5. Bottom-Left Clock & Weather Slate (Frosted Glass Plate)
+        // 5. Left Architectural Clock, Weather & Radial Telemetry Slate
         Item {
             id: slateWrapper
             anchors.left: parent.left
-            anchors.bottom: parent.bottom
-            anchors.leftMargin: 48
-            anchors.bottomMargin: 48
+            anchors.top: parent.top
+            anchors.leftMargin: 72
+            anchors.topMargin: 120
             width: slateInstance.implicitWidth
             height: slateInstance.implicitHeight
 
