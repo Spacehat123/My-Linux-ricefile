@@ -176,11 +176,11 @@ Item {
                 renderType: Text.QtRendering
             }
 
-            // 2. Bottom-Left Radial Telemetry Ring (Hand-Drawn Sketch: 4 Distinct Separated Pills)
+            // 2. Bottom-Left Radial Telemetry Ring (4 Separated Small Lines)
             Item {
                 id: radialVitalsDial
-                width: 96
-                height: 96
+                width: 80
+                height: 80
                 anchors.left: parent.left
                 anchors.leftMargin: 2
 
@@ -188,9 +188,9 @@ Item {
                     id: dialHover
                 }
 
-                // 4 Quadrant Segmented Pill Capsules with distinct physical separation
-                // Center: (48, 48), Radius: 34px, Pill Capsule Thickness: 12px
-                // 60-degree span per pill with 30-degree clear open gap between pills
+                // 4 Quadrant Segmented Thin Arc Lines with distinct physical separation
+                // Center: (40, 40), Radius: 30px, Small Line Stroke: 3px
+                // 70-degree span per line with 20-degree clear open gap between lines
                 Shape {
                     id: radialGauges
                     anchors.fill: parent
@@ -198,115 +198,115 @@ Item {
                     layer.samples: 4
                     layer.smooth: true
 
-                    // ── TOP PILL: GPU (Emerald Green) ────────────────────────
-                    // Track capsule (start: 240, sweep: 60)
+                    // ── TOP LINE: GPU (Emerald Green) ────────────────────────
+                    // Track line (start: 235, sweep: 70)
                     ShapePath {
-                        strokeWidth: 12
+                        strokeWidth: 3
                         strokeColor: Qt.rgba(255, 255, 255, 0.16)
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 48; centerY: 48
-                            radiusX: 34; radiusY: 34
-                            startAngle: 240
-                            sweepAngle: 60
+                            centerX: 40; centerY: 40
+                            radiusX: 30; radiusY: 30
+                            startAngle: 235
+                            sweepAngle: 70
                         }
                     }
-                    // Active Fill Pill
+                    // Active Fill Line
                     ShapePath {
-                        strokeWidth: 12
+                        strokeWidth: 3
                         strokeColor: "#10b981"
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 48; centerY: 48
-                            radiusX: 34; radiusY: 34
-                            startAngle: 240
-                            sweepAngle: Math.max(6, (root.gpuPercent / 100.0) * 60)
+                            centerX: 40; centerY: 40
+                            radiusX: 30; radiusY: 30
+                            startAngle: 235
+                            sweepAngle: Math.max(3, (root.gpuPercent / 100.0) * 70)
                         }
                     }
 
-                    // ── RIGHT PILL: CPU (Cyan) ───────────────────────────────
-                    // Track capsule (start: 330, sweep: 60)
+                    // ── RIGHT LINE: CPU (Cyan) ───────────────────────────────
+                    // Track line (start: 325, sweep: 70)
                     ShapePath {
-                        strokeWidth: 12
+                        strokeWidth: 3
                         strokeColor: Qt.rgba(255, 255, 255, 0.16)
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 48; centerY: 48
-                            radiusX: 34; radiusY: 34
-                            startAngle: 330
-                            sweepAngle: 60
+                            centerX: 40; centerY: 40
+                            radiusX: 30; radiusY: 30
+                            startAngle: 325
+                            sweepAngle: 70
                         }
                     }
-                    // Active Fill Pill
+                    // Active Fill Line
                     ShapePath {
-                        strokeWidth: 12
+                        strokeWidth: 3
                         strokeColor: "#06b6d4"
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 48; centerY: 48
-                            radiusX: 34; radiusY: 34
-                            startAngle: 330
-                            sweepAngle: Math.max(6, (root.cpuPercent / 100.0) * 60)
+                            centerX: 40; centerY: 40
+                            radiusX: 30; radiusY: 30
+                            startAngle: 325
+                            sweepAngle: Math.max(3, (root.cpuPercent / 100.0) * 70)
                         }
                     }
 
-                    // ── BOTTOM PILL: BATTERY (Emerald / Blue / Red) ───────────
-                    // Track capsule (start: 60, sweep: 60)
+                    // ── BOTTOM LINE: BATTERY (Emerald / Blue / Red) ───────────
+                    // Track line (start: 55, sweep: 70)
                     ShapePath {
-                        strokeWidth: 12
+                        strokeWidth: 3
                         strokeColor: Qt.rgba(255, 255, 255, 0.16)
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 48; centerY: 48
-                            radiusX: 34; radiusY: 34
-                            startAngle: 60
-                            sweepAngle: 60
+                            centerX: 40; centerY: 40
+                            radiusX: 30; radiusY: 30
+                            startAngle: 55
+                            sweepAngle: 70
                         }
                     }
-                    // Active Fill Pill
+                    // Active Fill Line
                     ShapePath {
-                        strokeWidth: 12
+                        strokeWidth: 3
                         strokeColor: root.isCharging ? "#10b981" : (root.batteryPercent <= 20 ? "#ef4444" : "#3b82f6")
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 48; centerY: 48
-                            radiusX: 34; radiusY: 34
-                            startAngle: 60
-                            sweepAngle: Math.max(6, (root.batteryPercent / 100.0) * 60)
+                            centerX: 40; centerY: 40
+                            radiusX: 30; radiusY: 30
+                            startAngle: 55
+                            sweepAngle: Math.max(3, (root.batteryPercent / 100.0) * 70)
                         }
                     }
 
-                    // ── LEFT PILL: RAM (Purple) ──────────────────────────────
-                    // Track capsule (start: 150, sweep: 60)
+                    // ── LEFT LINE: RAM (Purple) ──────────────────────────────
+                    // Track line (start: 145, sweep: 70)
                     ShapePath {
-                        strokeWidth: 12
+                        strokeWidth: 3
                         strokeColor: Qt.rgba(255, 255, 255, 0.16)
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 48; centerY: 48
-                            radiusX: 34; radiusY: 34
-                            startAngle: 150
-                            sweepAngle: 60
+                            centerX: 40; centerY: 40
+                            radiusX: 30; radiusY: 30
+                            startAngle: 145
+                            sweepAngle: 70
                         }
                     }
-                    // Active Fill Pill
+                    // Active Fill Line
                     ShapePath {
-                        strokeWidth: 12
+                        strokeWidth: 3
                         strokeColor: "#a855f7"
                         fillColor: "transparent"
                         capStyle: ShapePath.RoundCap
                         PathAngleArc {
-                            centerX: 48; centerY: 48
-                            radiusX: 34; radiusY: 34
-                            startAngle: 150
-                            sweepAngle: Math.max(6, (root.ramPercent / 100.0) * 60)
+                            centerX: 40; centerY: 40
+                            radiusX: 30; radiusY: 30
+                            startAngle: 145
+                            sweepAngle: Math.max(3, (root.ramPercent / 100.0) * 70)
                         }
                     }
                 }
@@ -314,23 +314,23 @@ Item {
                 // ── CENTER CORE HUB: BLUETOOTH (TOP) & WIFI (BOTTOM) ─────────
                 Rectangle {
                     anchors.centerIn: parent
-                    width: 44
-                    height: 44
-                    radius: 22
-                    color: Qt.rgba(14/255, 15/255, 24/255, 0.75)
-                    border.color: Qt.rgba(255, 255, 255, 0.14)
+                    width: 38
+                    height: 38
+                    radius: 19
+                    color: Qt.rgba(14/255, 15/255, 24/255, 0.65)
+                    border.color: Qt.rgba(255, 255, 255, 0.12)
                     border.width: 1
 
                     Column {
                         anchors.centerIn: parent
-                        spacing: 2
+                        spacing: 1
 
                         // Bluetooth Symbol
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.btConnected ? "󰂱" : (root.btOn ? "󰂯" : "󰂲")
                             font.family: Island.Theme.iconFontFamily
-                            font.pixelSize: 13
+                            font.pixelSize: 12
                             color: root.btConnected ? Island.Theme.primary : (root.btOn ? Island.Theme.foreground : Island.Theme.muted)
                             renderType: Text.QtRendering
                         }
@@ -340,7 +340,7 @@ Item {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: root.wifiConnected ? "󰤨" : (root.wifiOn ? "󰤩" : "󰤭")
                             font.family: Island.Theme.iconFontFamily
-                            font.pixelSize: 12
+                            font.pixelSize: 11
                             color: root.wifiConnected ? Island.Theme.primary : (root.wifiOn ? Island.Theme.foreground : Island.Theme.muted)
                             renderType: Text.QtRendering
                         }

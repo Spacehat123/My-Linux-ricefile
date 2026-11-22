@@ -132,9 +132,9 @@
     "semantic_hash": ""
   },
   "island/scripts/shell-actions.sh": {
-    "mtime": 1792857717.4719706,
-    "seen": 1794841260.6717594,
-    "ast_hash": "0ca724431cbdca6183ff9d04652fc965",
+    "mtime": 1795346827.072163,
+    "seen": 1795347258.7240894,
+    "ast_hash": "cfee622f49996ac15823bbcd910cdae0",
     "semantic_hash": ""
   },
   "island/scripts/theme-system.sh": {
@@ -2196,9 +2196,9 @@
     "semantic_hash": ""
   },
   "wallpaper/wallpaper-metadata.json": {
-    "mtime": 1795247972.5184515,
-    "seen": 1795248299.3718414,
-    "ast_hash": "a7fdb4eed33c8d12590b16bd8c516de3",
+    "mtime": 1795251521.0507975,
+    "seen": 1795347258.72414,
+    "ast_hash": "20f1912576169c29892fe069d585744b",
     "semantic_hash": ""
   },
   "tests/test_living_workspace.sh": {
