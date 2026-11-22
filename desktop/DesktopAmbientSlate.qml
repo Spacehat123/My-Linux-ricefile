@@ -135,12 +135,12 @@ Item {
             id: leftCol
             spacing: 12
 
-            // 1. Horizontal Clock (Hours and Minutes side-by-side - Zero Dots)
+            // 1. Horizontal Clock (Hours : Minutes with primary accent dots)
             Row {
                 id: clockRow
-                spacing: 28
+                spacing: 14
 
-                // Hours (No dots/colon)
+                // Hours
                 Text {
                     text: Qt.formatDateTime(sysClock.date, "hh")
                     font.pixelSize: 220
@@ -151,7 +151,27 @@ Item {
                     renderType: Text.QtRendering
                 }
 
-                // Minutes (No dots/colon)
+                // Colon Dots
+                Text {
+                    id: colonText
+                    text: ":"
+                    font.pixelSize: 200
+                    font.bold: true
+                    font.family: "Geom"
+                    color: Island.Theme.primary
+                    renderType: Text.QtRendering
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.verticalCenterOffset: -4
+
+                    SequentialAnimation on opacity {
+                        loops: Animation.Infinite
+                        running: root.active && root.visible
+                        NumberAnimation { to: 0.45; duration: 1000; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 1.00; duration: 1000; easing.type: Easing.InOutSine }
+                    }
+                }
+
+                // Minutes
                 Text {
                     text: Qt.formatDateTime(sysClock.date, "mm")
                     font.pixelSize: 220
