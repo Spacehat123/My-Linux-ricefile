@@ -1,17 +1,17 @@
-# Graph Report - cool-shell  (2026-11-20)
+# Graph Report - cool-shell  (2026-11-21)
 
 ## Corpus Check
-- 227 files · ~215,342 words
+- 231 files · ~219,190 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 110 file(s) not represented in the graph (top: .qml 101, (none) 4, .bak 3)
+- Unclassified: 116 file(s) not represented in the graph (top: .qml 107, (none) 4, .bak 3)
 
 ## Summary
-- 2542 nodes · 2929 edges · 217 communities (195 shown, 22 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 36 edges (avg confidence: 0.92)
+- 2560 nodes · 2958 edges · 216 communities (193 shown, 23 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 39 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cf3b5f66`
+- Built from commit: `77e8e10b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -79,7 +79,7 @@
 - Hyprscroller Architectural Evaluation: Xiaomi Canvas Multitasking & Bird's-Eye View
 - Real-Time TTS Streaming Architecture & Voice Engine Options
 - 1. Technical Audit Findings (Questions 1–6)
-- notes-helper.py
+- caption.py
 - json
 - 2. File Modifications and Additions
 - Acer Aspire A715-42G Battery Charge Limit & Health Mode Report
@@ -192,7 +192,7 @@
 - play-timer-alarm.sh
 - screenshot-region.sh
 - study-mode.sh script
-- re
+- notes-helper.py
 - Architectural Report: Apple Liquid Glass Physical Refractive Lens in Quickshell (Wayland)
 - Architectural Report: Floating Media Player Companion Pill & Top Bar Media Decoupling
 - Deep Investigation & Remediation Report: Quickshell 20% Continuous CPU Drain
@@ -202,9 +202,9 @@
 - sys
 - Floating Media Companion: Circular Progress Disc & 3-Line Kinetic Lyrics
 - Implementation & Verification Report: Modular Control Center Pods, OSD Popups, Ambient Slate, and Contextual Action Hub
-- 2. Technical Modifications
+- chat-ui.py
 - Cool-Shell Custom Study Mode Lockdown & Exam Profile Plan
-- Verification & Architectural Report: Study Mode Self-Healing Daemon & Flow State Overtime Fix
+- test_living_workspace.sh
 - Pre-Flight Execution Plan: Modular Control Center Pods & 4-Stage Roadmap
 - Dynamic Island: Timer Panel Height & Overflow Fix Verification
 - island/scripts/screen-lens.sh
@@ -229,7 +229,6 @@
 - AI Studio: Offline Local Inference Enforcement & Zero-Network Guarantee
 - 2. Key Architecture & Features
 - launch-chat.sh
-- chat-ui.py
 
 ## God Nodes (most connected - your core abstractions)
 1. `Antigravity Swarm Refactor` - 29 edges
@@ -258,7 +257,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (217 total, 22 thin omitted)
+## Communities (216 total, 23 thin omitted)
 
 ### Community 0 - "3. Hardened Technical Specifications"
 Cohesion: 0.05
@@ -281,8 +280,8 @@ Cohesion: 0.05
 Nodes (41): 10. DESIGN-SYSTEM REVIEW, 11. HIGH-VALUE IMPROVEMENTS, 12. MEDIUM-VALUE IMPROVEMENTS, 13. OPTIONAL EXPERIMENTS, 14. FUTURE ARCHITECTURE, 15. PRACTICAL VERIFICATION MATRIX, 16. RECOMMENDED NEXT STEPS, 1. EXECUTIVE SUMMARY (+33 more)
 
 ### Community 5 - "study-mode.py"
-Cohesion: 0.15
-Nodes (35): 1. Executive Summary, 2.1 Non-Atomic `save_state()` Truncation Race, 3.1 Atomic File Operations & Safe Reads, 10. Study Mode & Focus Lock Subsystem, check_brave_cdp_whitelisted(), cmd_prompt_and_start(), cmd_start(), cmd_status() (+27 more)
+Cohesion: 0.10
+Nodes (46): 3. Implementation Details, 1. Executive Summary, 2.1 Non-Atomic `save_state()` Truncation Race, 2.2 Lack of Wall-Clock Determinism, 2.3 UI Lockout at Boundary Condition, 2. Root Cause Analysis, 3.1 Atomic File Operations & Safe Reads, 3.2 Deterministic Wall-Clock Computation (+38 more)
 
 ### Community 6 - "notify_island_ai"
 Cohesion: 0.29
@@ -337,8 +336,8 @@ Cohesion: 0.07
 Nodes (26): 10. Oversized Modules, 1. Obvious Comments, 2. Over-Defensive Code, 3. Excessive Complexity, 4. Needless Abstraction, 5. Boundary Violations, 6. Dead Code, 7. Duplication (+18 more)
 
 ### Community 19 - "caption.py"
-Cohesion: 0.13
-Nodes (12): build_srt_blocks(), embed_soft_subtitles(), ensure_dirs(), extract_audio_wav(), extract_existing_subtitles(), format_timestamp(), get_or_download_model(), main() (+4 more)
+Cohesion: 0.10
+Nodes (16): 1. Executive Summary, 2. Root Cause Analysis, 3. Implemented Changes, 4. Verification & State Inspection, A. Message Normalization & Safe Extraction, B. Gradio 6 Conforming Handlers, Gradio 6 Chatbot Schema Remediation Report, clear_chat() (+8 more)
 
 ### Community 20 - "Antigravity Swarm Review"
 Cohesion: 0.08
@@ -413,8 +412,8 @@ Cohesion: 0.11
 Nodes (17): 1. Executive Summary & Root Cause Analysis, 2. Proposed Two-Pronged Optimization & Integrity Plan, 3. Projected Metric Targets Post-Implementation, Action 1: Transform `mediaRing` from Continuous Canvas to Quantized Throttle, Action 2: Eliminate Double-Smoothing on Equalizer Bars, Action 3: Eliminate Audio Decoding from Video Wallpaper, Action 4: Hardware NVDEC Video Decoding & Framerate Pacing, Action 5: Comprehensive Compositor Action Layer Expansion (+9 more)
 
 ### Community 38 - "os"
-Cohesion: 0.24
-Nodes (11): capture_all(), build_protected_pids(), disable_game_mode(), enable_game_mode(), ensure_state_dir(), get_all_processes(), main(), read_exceptions() (+3 more)
+Cohesion: 0.34
+Nodes (10): build_protected_pids(), disable_game_mode(), enable_game_mode(), ensure_state_dir(), get_all_processes(), main(), read_exceptions(), read_state() (+2 more)
 
 ### Community 39 - "Verification & Completion Report: Performance Fixes (Part 1) & Architectural Integrity (Part 2)"
 Cohesion: 0.12
@@ -512,13 +511,13 @@ Nodes (12): 1. The Root Cause: Why it Stopped After Every Sentence, 2. Solution 
 Cohesion: 0.15
 Nodes (12): 1.1 Inspection of Pipeline & Shader Files, 1.2 Runtime Execution Verification (The Magenta Probe), 1.3 Implementation vs. Placeholder Verification, 1.4 Hyprland Screen Shader Audit, 1.5 Selective Window Filtering in Hyprland Screen Shader, 1.6 The Critical Wayland Framebuffer Boundary (Background vs. Forefront), 1. Technical Audit Findings (Questions 1–6), 2.1 Exaggerated Calibration Parameters (+4 more)
 
-### Community 63 - "notes-helper.py"
-Cohesion: 0.44
-Nodes (11): checked_note_path(), create_note(), delete_note(), ensure_directory(), list_notes(), load_pins(), main(), note_record() (+3 more)
+### Community 63 - "caption.py"
+Cohesion: 0.13
+Nodes (12): build_srt_blocks(), embed_soft_subtitles(), ensure_dirs(), extract_audio_wav(), extract_existing_subtitles(), format_timestamp(), get_or_download_model(), main() (+4 more)
 
 ### Community 64 - "json"
-Cohesion: 0.33
-Nodes (12): ensure_daemon_running(), get_process_rss_mb_by_pid(), get_saved_setting(), get_status(), is_daemon_process_alive(), is_socket_alive(), main(), notify_island_done() (+4 more)
+Cohesion: 0.23
+Nodes (13): capture_all(), ensure_daemon_running(), get_process_rss_mb_by_pid(), get_saved_setting(), get_status(), is_daemon_process_alive(), is_socket_alive(), main() (+5 more)
 
 ### Community 65 - "2. File Modifications and Additions"
 Cohesion: 0.17
@@ -577,7 +576,7 @@ Cohesion: 0.18
 Nodes (10): 1. Executive Summary, 2. Architecture & Component Blueprint, 3.1 Background Caption Runner (`island/CaptionState.qml`), 3.2 Dynamic Island Modal (`island/panels/CaptionActionPanel.qml`), 3.3 Notch Interception (`island/Notch.qml`), 3.4 IPC Extensibility (`shell.qml`), 3. Implementation Details, 4. Verification Matrix (+2 more)
 
 ### Community 79 - "phone-bridge-daemon.py"
-Cohesion: 0.19
+Cohesion: 0.21
 Nodes (9): check_and_pull_inbox(), connect_wireless(), get_adb_devices(), get_battery_info(), handle_exit(), notify_island(), register_in_shelf(), run_loop() (+1 more)
 
 ### Community 80 - "1. Problem Identification"
@@ -896,9 +895,9 @@ Nodes (3): emergency_recover(), PATH, display-safety-watchdog.sh script
 Cohesion: 0.29
 Nodes (6): HF_DATASETS_OFFLINE, HF_HUB_OFFLINE, PATH, PYTORCH_CUDA_ALLOC_CONF, image-engine.sh script, TRANSFORMERS_OFFLINE
 
-### Community 179 - "re"
-Cohesion: 0.19
-Nodes (10): clean_title(), is_allowed_language(), main(), parse_lrc(), alert_kitten(), main(), notify_island_voice(), read_aloud_kokoro() (+2 more)
+### Community 179 - "notes-helper.py"
+Cohesion: 0.09
+Nodes (30): 1. Executive Summary, 2. Technical Modifications, 3. Verification & Evidence Matrix, A. Circular Album Cover Clipping (`FloatingMediaCompanion.qml`), B. Controls Alignment & Centering, C. Top Bar Trigger & Hover/Click State Machine, D. Typography Overhaul (`Fredoka Bold`), E. Language Filter for Lyrics (`island/scripts/lyrics-fetcher.py`) (+22 more)
 
 ### Community 180 - "Architectural Report: Apple Liquid Glass Physical Refractive Lens in Quickshell (Wayland)"
 Cohesion: 0.15
@@ -936,17 +935,13 @@ Nodes (4): 1. Executive Summary, 2. Technical Architecture & File Changes, 3. Ve
 Cohesion: 0.50
 Nodes (3): 1. Executive Summary, 2. Verification Test Matrix, Implementation & Verification Report: Modular Control Center Pods, OSD Popups, Ambient Slate, and Contextual Action Hub
 
-### Community 189 - "2. Technical Modifications"
-Cohesion: 0.20
-Nodes (9): 1. Executive Summary, 2. Technical Modifications, 3. Verification & Evidence Matrix, A. Circular Album Cover Clipping (`FloatingMediaCompanion.qml`), B. Controls Alignment & Centering, C. Top Bar Trigger & Hover/Click State Machine, D. Typography Overhaul (`Fredoka Bold`), E. Language Filter for Lyrics (`island/scripts/lyrics-fetcher.py`) (+1 more)
-
 ### Community 190 - "Cool-Shell Custom Study Mode Lockdown & Exam Profile Plan"
 Cohesion: 0.33
 Nodes (5): 1. Objective & Scope, 2. Architecture & File Breakdown, 3. Daily 1-Hour Chess.com Quota Engine, 4. Verification & Testing Matrix, Cool-Shell Custom Study Mode Lockdown & Exam Profile Plan
 
-### Community 191 - "Verification & Architectural Report: Study Mode Self-Healing Daemon & Flow State Overtime Fix"
-Cohesion: 0.18
-Nodes (10): 2.2 Lack of Wall-Clock Determinism, 2.3 UI Lockout at Boundary Condition, 2. Root Cause Analysis, 3.2 Deterministic Wall-Clock Computation, 3.3 Immortal Daemon & Self-Healing Watcher, 3.4 UI Fallback in Control Center & Notch, 3. Architecture & Implementation Fixes, 4. Verification & Testing Matrix (+2 more)
+### Community 191 - "test_living_workspace.sh"
+Cohesion: 0.57
+Nodes (6): assert_python(), assert_true(), FAILURES, record_fail(), record_pass(), test_living_workspace.sh script
 
 ### Community 192 - "Pre-Flight Execution Plan: Modular Control Center Pods & 4-Stage Roadmap"
 Cohesion: 0.29
@@ -985,15 +980,15 @@ Cohesion: 0.50
 Nodes (3): 1. Modifications Implemented, 2. Verification Matrix, Floating Media Companion: Wide Typography, Waveform Visualizer & Borderless Glass
 
 ### Community 203 - "Engineering Report: Study Mode File Explorer Whitelist & PDF Download Support"
-Cohesion: 0.33
-Nodes (5): 1. Problem Description, 2. Root Cause Analysis, 3. Implementation Details, 4. Verification, Engineering Report: Study Mode File Explorer Whitelist & PDF Download Support
+Cohesion: 0.40
+Nodes (4): 1. Problem Description, 2. Root Cause Analysis, 4. Verification, Engineering Report: Study Mode File Explorer Whitelist & PDF Download Support
 
 ### Community 204 - "AI Image Studio: Model Loading & Offloading Memory Verification Report"
 Cohesion: 0.33
 Nodes (5): 1. Executive Summary, 3.1 Empirical Measurement Matrix, 3. Empirical Verification Results, 4. Key Findings & Verification Conclusion, AI Image Studio: Model Loading & Offloading Memory Verification Report
 
 ### Community 205 - "image-daemon.py"
-Cohesion: 0.39
+Cohesion: 0.33
 Nodes (5): distill_prompt(), get_img2img_pipeline(), load_pipeline(), run_generation(), start_server()
 
 ### Community 206 - "AI Studio: Image-to-Image (img2img) Reference Photo & Strength Slider Implementation"
@@ -1036,20 +1031,16 @@ Nodes (8): 1. Executive Summary, 2.1 Independent Shared-Daemon Architecture, 2.2
 Cohesion: 0.29
 Nodes (6): HF_DATASETS_OFFLINE, HF_HUB_OFFLINE, PATH, PYTORCH_CUDA_ALLOC_CONF, launch-chat.sh script, TRANSFORMERS_OFFLINE
 
-### Community 216 - "chat-ui.py"
-Cohesion: 0.12
-Nodes (9): clear_chat(), create_ui(), bot_generates(), extract_prompt_and_files(), get_telemetry_status(), offload_model(), process_chat(), refresh_gallery() (+1 more)
-
 ## Knowledge Gaps
-- **27 isolated node(s):** `PATH`, `PATH`, `PATH`, `PATH`, `PATH` (+22 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1741 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **22 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **28 isolated node(s):** `PATH`, `PATH`, `PATH`, `PATH`, `PATH` (+23 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1746 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **23 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **What connects `PATH`, `PATH`, `PATH` to the rest of the system?**
-  _27 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _28 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `3. Hardened Technical Specifications` be split into smaller, more focused modules?**
   _Cohesion score 0.046511627906976744 - nodes in this community are weakly interconnected._
 - **Should `3. Hardened Technical Specifications` be split into smaller, more focused modules?**
@@ -1061,4 +1052,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `COOL-SHELL: COMPLETE RECONNAISSANCE & ARCHITECTURAL REVIEW` be split into smaller, more focused modules?**
   _Cohesion score 0.047619047619047616 - nodes in this community are weakly interconnected._
 - **Should `study-mode.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.14615384615384616 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09879336349924585 - nodes in this community are weakly interconnected._

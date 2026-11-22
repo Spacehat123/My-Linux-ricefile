@@ -141,7 +141,7 @@ Item {
             Row {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 4
-                visible: !root.mediaPlaying && !root.recActive && root.weatherMini !== ""
+                visible: !root.mediaPlaying && !root.recActive && root.weatherMini !== "" && centerClock.carouselMode !== 1
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
@@ -265,7 +265,7 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
                 level: root.batteryPercent
                 charging: root.isCharging
-                visible: !artThumb.visible || root.isCharging
+                visible: (!artThumb.visible || root.isCharging) && (centerClock.carouselMode !== 2 || root.isCharging)
             }
         }
     }

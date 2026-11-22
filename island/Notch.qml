@@ -39,7 +39,7 @@ PanelWindow {
         return window.screen === Quickshell.screens[0];
     }
     readonly property bool isExpanded: ShellState.expanded && isCurrentScreen
-    readonly property real targetRadius: isExpanded ? (ShellState.panelRadii[ShellState.panel] || Theme.radius) : (collapsedHeight / 2)
+    readonly property real targetRadius: isExpanded ? (ShellState.panelRadii[ShellState.panel] || Theme.radius) : (window.isDeskClockMode ? 22 : (collapsedHeight / 2))
     readonly property real collapsedLensWidth: Math.min(380, Math.max(220, Math.round((IslandHub.lensActionSnippet.length + 16) * 7.2 + 35)))
     readonly property bool hasEntertainmentActivity: (ShellState.detectedChessOpen || ShellState.detectedHotstarOpen || ShellState.studyPauseActive)
     readonly property bool studyHasDualActivity: (TimerState.hasActive || TimerState.completionHold || hasEntertainmentActivity)
@@ -47,8 +47,24 @@ PanelWindow {
         ? Math.min(430, Math.max(300, Math.round((ShellState.studySubject.length + 8) * 6.6 + 160)))
         : Math.min(300, Math.max(190, Math.round((ShellState.studySubject.length + 8) * 6.8 + 44)))
     readonly property real collapsedTransientWidth: Math.min(340, Math.max(165, Math.round(IslandHub.transientText.length * 6.6 + 36)))
-    readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : (ShellState.studyActive ? collapsedStudyWidth : (hasEntertainmentActivity ? 290 : (CaptionState.isProcessing ? 250 : (IslandHub.aiGenerating ? 240 : (window.hasLiveLyrics ? window.collapsedLyricWidth : (IslandHub.voicePlaying ? 260 : (IslandHub.lensActionActive ? collapsedLensWidth : (IslandHub.transientText.length > 0 ? collapsedTransientWidth : (mediaActive ? 210 : 154)))))))))) + cornerWing * 2
-    readonly property real targetVisualHeight: isExpanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : collapsedHeight
+    IdleMonitor {
+        id: deskClockIdleMonitor
+        enabled: !window.isExpanded
+        timeout: 120
+        respectInhibitors: true
+    }
+
+    readonly property bool isDeskClockMode: Boolean(deskClockIdleMonitor.isIdle)
+        && !window.isExpanded
+        && !hasEntertainmentActivity
+        && !IslandHub.recordingActive
+        && !CaptionState.isProcessing
+        && !ShellState.studyActive
+        && !ShellState.gameMode
+        && !(collapsedMouseArea && collapsedMouseArea.containsMouse)
+
+    readonly property real targetVisualWidth: (isExpanded ? ShellState.targetWidth : (window.isDeskClockMode ? 280 : (ShellState.studyActive ? collapsedStudyWidth : (hasEntertainmentActivity ? 290 : (CaptionState.isProcessing ? 250 : (IslandHub.aiGenerating ? 240 : (window.hasLiveLyrics ? window.collapsedLyricWidth : (IslandHub.voicePlaying ? 260 : (IslandHub.lensActionActive ? collapsedLensWidth : (IslandHub.transientText.length > 0 ? collapsedTransientWidth : (mediaActive ? 210 : 154))))))))))) + cornerWing * 2
+    readonly property real targetVisualHeight: isExpanded ? panelContentHeight + requestedTopPadding + requestedBottomPadding : (window.isDeskClockMode ? 64 : collapsedHeight)
     readonly property real panelContentHeight: isExpanded ? (
         ShellState.panel === "media"
             ? (window.hasLiveLyrics ? 185 : 150)
@@ -75,7 +91,6 @@ PanelWindow {
         }
         return players.length > 0 ? players[0] : null;
     })()
-    readonly property real mediaFraction: islandPlayer && islandPlayer.length > 0 ? Math.min(1, islandPlayer.position / islandPlayer.length) : 0
     readonly property bool mediaActive: islandPlayer !== null && islandPlayer.length > 0
     readonly property Item activePanel: {
         const panels = {
@@ -269,7 +284,7 @@ PanelWindow {
         height: window.targetVisualHeight
         scale: 1.0
         opacity: window.islandSurfaceOpacity
-        visible: window.isExpanded && opacity > 0.001
+        visible: opacity > 0.001
         focus: true
         Keys.onPressed: (event) => {
             if (event.key === Qt.Key_Escape) {
@@ -327,15 +342,32 @@ PanelWindow {
                 wingSize: window.cornerWing
             }
 
-            // Top specular inner glass highlight disabled to maintain seamless flush bezel bridge
+            // Inner refractive rim (visible when expanded)
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 1
+                topLeftRadius: 0
+                topRightRadius: 0
+                bottomLeftRadius: Math.max(0, parent.bottomLeftRadius - 1)
+                bottomRightRadius: Math.max(0, parent.bottomRightRadius - 1)
+                color: "transparent"
+                border.color: Qt.rgba(1, 1, 1, 0.06)
+                border.width: 1
+                visible: window.isExpanded
+                z: 1
+            }
+
+            // Upper specular glass highlight strip (visible when expanded)
             Rectangle {
                 anchors.top: parent.top
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: Math.max(0, parent.width - 24)
+                anchors.topMargin: 1
                 height: 1
                 radius: 0.5
-                color: Qt.rgba(1, 1, 1, 0.18)
-                visible: false
+                color: Qt.rgba(1, 1, 1, 0.12)
+                visible: window.isExpanded
+                z: 2
             }
 
             // Timer countdown: thin progress line along the pill bottom.
@@ -679,162 +711,94 @@ PanelWindow {
             }
         }
 
-        Canvas {
-            id: mediaRing
+        // =====================================================================
+        // IDLE DESK CLOCK TAKEOVER (Attached Notch Geometry)
+        // =====================================================================
+        Item {
+            id: deskClockView
+            anchors.left: notchBody.left
+            anchors.right: notchBody.right
+            anchors.top: parent.top
+            height: 64
+            visible: opacity > 0.001
+            opacity: (window.isDeskClockMode && !window.isExpanded) ? 1.0 : 0.0
 
-            x: notchBody.x
-            y: notchBody.y
-            width: notchBody.width
-            height: notchBody.height
-            visible: false
-            opacity: 1
-
-            property real currentFraction: window.mediaFraction
-            property real lastPaintedFraction: -1
-            property color strokeColor: Theme.primary
-
-            onCurrentFractionChanged: {
-                if (!visible) return;
-                if (Math.abs(currentFraction - lastPaintedFraction) >= 0.005 || currentFraction <= 0.001 || currentFraction >= 0.999) {
-                    lastPaintedFraction = currentFraction;
-                    requestPaint();
-                }
-            }
-            onStrokeColorChanged: requestPaint()
-            onWidthChanged: requestPaint()
-            onHeightChanged: requestPaint()
-            onVisibleChanged: {
-                if (visible)
-                    requestPaint();
-            }
-            Component.onCompleted: requestPaint()
-
-            SequentialAnimation {
-                id: ringDip
-
-                NumberAnimation {
-                    target: mediaRing
-                    property: "opacity"
-                    to: 0
-                    duration: 150
-                    easing.type: Easing.OutCubic
-                }
-
-                NumberAnimation {
-                    target: mediaRing
-                    property: "opacity"
-                    to: 1
-                    duration: 200
-                    easing.type: Easing.OutCubic
-                }
+            Behavior on opacity {
+                NumberAnimation { duration: 280; easing.type: Easing.OutCubic }
             }
 
-            // Track-end ring morph: when a track finishes (isPlaying drops
-            // near 100%), dip the ring; it restarts for the next track.
-            Connections {
-                target: window.islandPlayer
-                enabled: target !== null && target !== undefined
-                ignoreUnknownSignals: true
-                function onIsPlayingChanged() {
-                    if (window.islandPlayer && !window.islandPlayer.isPlaying && window.mediaFraction > 0.95)
-                        ringDip.restart();
-                }
-            }
+            Column {
+                anchors.centerIn: parent
+                spacing: 2
 
-            onPaint: {
-                const ctx = getContext("2d");
-                ctx.clearRect(0, 0, width, height);
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 8
 
-                const fraction = Math.max(0, Math.min(1, currentFraction));
-                if (fraction <= 0.0001 || width <= 0 || height <= 0)
-                    return;
+                    Text {
+                        id: deskClockText
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: {
+                            const d = new Date();
+                            const h = d.getHours();
+                            const m = String(d.getMinutes()).padStart(2, '0');
+                            return (h < 10 ? "0" + h : h) + ":" + m;
+                        }
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 22
+                        font.weight: Font.DemiBold
+                        font.letterSpacing: 1.2
+                        color: Theme.foreground
 
-                const lw = 2;
-                const offset = lw / 2;
-                const w = width - lw;
-                const h = height - lw;
-                const r = Math.min(h / 2, Math.max(0.1, w / 2));
-                const x0 = offset;
-                const y0 = offset;
-
-                const L1 = Math.max(0, (w / 2) - r);
-                const L2 = Math.PI * r;
-                const L3 = Math.max(0, w - 2 * r);
-                const L4 = Math.PI * r;
-                const L5 = Math.max(0, (w / 2) - r);
-                const P = L1 + L2 + L3 + L4 + L5;
-                if (P <= 0)
-                    return;
-
-                let rem = P * fraction;
-
-                ctx.save();
-                ctx.lineWidth = lw;
-                ctx.strokeStyle = "" + strokeColor;
-                ctx.lineCap = "round";
-                ctx.lineJoin = "round";
-                ctx.beginPath();
-
-                const startX = x0 + w / 2;
-                const startY = y0 + h;
-                ctx.moveTo(startX, startY);
-
-                // Segment 1: Bottom center to right corner
-                if (rem <= L1) {
-                    ctx.lineTo(startX + rem, startY);
-                    rem = 0;
-                } else {
-                    ctx.lineTo(x0 + w - r, startY);
-                    rem -= L1;
-
-                    // Segment 2: Right semicircle (clockwise: bottom -> right tip -> top)
-                    const cx_r = x0 + w - r;
-                    const cy_r = y0 + r;
-                    if (rem <= L2) {
-                        const angle = Math.PI / 2 - (rem / L2) * Math.PI;
-                        ctx.arc(cx_r, cy_r, r, Math.PI / 2, angle, true);
-                        rem = 0;
-                    } else {
-                        ctx.arc(cx_r, cy_r, r, Math.PI / 2, -Math.PI / 2, true);
-                        rem -= L2;
-
-                        // Segment 3: Top straight line (moving right to left)
-                        if (rem <= L3) {
-                            ctx.lineTo(x0 + w - r - rem, y0);
-                            rem = 0;
-                        } else {
-                            ctx.lineTo(x0 + r, y0);
-                            rem -= L3;
-
-                            // Segment 4: Left semicircle (clockwise: top -> left tip -> bottom)
-                            const cx_l = x0 + r;
-                            const cy_l = y0 + r;
-                            if (rem <= L4) {
-                                const angle = -Math.PI / 2 - (rem / L4) * Math.PI;
-                                ctx.arc(cx_l, cy_l, r, -Math.PI / 2, angle, true);
-                                rem = 0;
-                            } else {
-                                ctx.arc(cx_l, cy_l, r, -Math.PI / 2, -3 * Math.PI / 2, true);
-                                rem -= L4;
-
-                                // Segment 5: Bottom straight line from left back to center
-                                if (rem <= L5) {
-                                    ctx.lineTo(x0 + r + rem, startY);
-                                    rem = 0;
-                                } else {
-                                    ctx.lineTo(startX, startY);
-                                    rem = 0;
-                                }
+                        Timer {
+                            interval: 1000
+                            running: deskClockView.visible
+                            repeat: true
+                            onTriggered: {
+                                const d = new Date();
+                                const h = d.getHours();
+                                const m = String(d.getMinutes()).padStart(2, '0');
+                                deskClockText.text = (h < 10 ? "0" + h : h) + ":" + m;
+                                deskDateText.text = Qt.formatDateTime(d, "dddd, d MMMM");
                             }
+                        }
+                    }
+
+                    // Weather mini badge
+                    Row {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 4
+                        visible: WeatherState.tempC !== ""
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "󰖐"
+                            font.family: Theme.iconFontFamily
+                            font.pixelSize: 13
+                            color: Theme.primary
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: String(WeatherState.tempC).replace(/°/g, "") + "°"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 13
+                            font.weight: Font.Medium
+                            color: Theme.muted
                         }
                     }
                 }
 
-                if (fraction >= 0.999)
-                    ctx.closePath();
-
-                ctx.stroke();
-                ctx.restore();
+                Text {
+                    id: deskDateText
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: Qt.formatDateTime(new Date(), "dddd, d MMMM")
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 10
+                    font.weight: Font.Medium
+                    font.letterSpacing: 0.8
+                    color: Theme.muted
+                }
             }
         }
 
@@ -844,8 +808,8 @@ PanelWindow {
             anchors.right: notchBody.right
             anchors.top: parent.top
             height: window.collapsedHeight
-            visible: opacity > 0 && !ShellState.gameMode && !ShellState.studyActive
-            opacity: window.clockRevealed ? 1 : 0
+            visible: opacity > 0.001 && !ShellState.gameMode && !ShellState.studyActive
+            opacity: window.isDeskClockMode ? 0 : (window.clockRevealed ? 1 : 0)
             unread: IslandHub.unreadCount
             label: IslandHub.primaryLabel(window.islandPlayer ? (window.islandPlayer.trackTitle || "") : "", window.islandPlayer ? (window.islandPlayer.trackArtist || "") : "")
             mediaPlaying: window.islandPlayer ? window.islandPlayer.isPlaying : false

@@ -62,7 +62,7 @@
   "60": "Hyprscroller Architectural Evaluation: Xiaomi Canvas Multitasking & Bird's-Eye View",
   "61": "Real-Time TTS Streaming Architecture & Voice Engine Options",
   "62": "1. Technical Audit Findings (Questions 1–6)",
-  "63": "notes-helper.py",
+  "63": "caption.py",
   "64": "json",
   "65": "2. File Modifications and Additions",
   "66": "Acer Aspire A715-42G Battery Charge Limit & Health Mode Report",
@@ -178,7 +178,7 @@
   "176": "screenshot-region.sh",
   "177": "study-mode.sh script",
   "178": "media-picker.py",
-  "179": "re",
+  "179": "notes-helper.py",
   "180": "Architectural Report: Apple Liquid Glass Physical Refractive Lens in Quickshell (Wayland)",
   "181": "Architectural Report: Floating Media Player Companion Pill & Top Bar Media Decoupling",
   "182": "Deep Investigation & Remediation Report: Quickshell 20% Continuous CPU Drain",
@@ -188,9 +188,9 @@
   "186": "sys",
   "187": "Floating Media Companion: Circular Progress Disc & 3-Line Kinetic Lyrics",
   "188": "Implementation & Verification Report: Modular Control Center Pods, OSD Popups, Ambient Slate, and Contextual Action Hub",
-  "189": "2. Technical Modifications",
+  "189": "chat-ui.py",
   "190": "Cool-Shell Custom Study Mode Lockdown & Exam Profile Plan",
-  "191": "Verification & Architectural Report: Study Mode Self-Healing Daemon & Flow State Overtime Fix",
+  "191": "test_living_workspace.sh",
   "192": "Pre-Flight Execution Plan: Modular Control Center Pods & 4-Stage Roadmap",
   "193": "Dynamic Island: Timer Panel Height & Overflow Fix Verification",
   "194": "island/scripts/screen-lens.sh",
@@ -214,6 +214,5 @@
   "212": "2. Implemented Fixes",
   "213": "AI Studio: Offline Local Inference Enforcement & Zero-Network Guarantee",
   "214": "2. Key Architecture & Features",
-  "215": "launch-chat.sh",
-  "216": "chat-ui.py"
+  "215": "launch-chat.sh"
 }

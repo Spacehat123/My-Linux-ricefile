@@ -2182,5 +2182,29 @@
     "seen": 1795112654.9682293,
     "ast_hash": "8b5e0c59e20a674ce63944349e1635c1",
     "semantic_hash": ""
+  },
+  ".asw/reports/2026-11-20-gradio6-chat-format-fix.md": {
+    "mtime": 1795113315.7599702,
+    "seen": 1795189827.6856754,
+    "ast_hash": "17388c367a5e89497d3c94fde1ab0f0f",
+    "semantic_hash": ""
+  },
+  "island/scripts/git-stats.py": {
+    "mtime": 1795246377.2770655,
+    "seen": 1795246508.4329545,
+    "ast_hash": "002b6f2f6c65ae7e07b20937429def0d",
+    "semantic_hash": ""
+  },
+  "wallpaper/wallpaper-metadata.json": {
+    "mtime": 1795247972.5184515,
+    "seen": 1795248299.3718414,
+    "ast_hash": "a7fdb4eed33c8d12590b16bd8c516de3",
+    "semantic_hash": ""
+  },
+  "tests/test_living_workspace.sh": {
+    "mtime": 1795249766.2809763,
+    "seen": 1795249774.722567,
+    "ast_hash": "e6c47eb17d33b9d4f5016f1bf71379ee",
+    "semantic_hash": ""
   }
 }

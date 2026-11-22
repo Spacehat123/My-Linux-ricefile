@@ -293,6 +293,29 @@ PanelWindow {
             border.width: 1
             clip: false
 
+            // Inner refractive rim
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 1
+                radius: parent.radius - 1
+                color: "transparent"
+                border.color: Qt.rgba(1, 1, 1, 0.06)
+                border.width: 1
+            }
+
+            // Upper specular highlight strip
+            Rectangle {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: 16
+                anchors.rightMargin: 16
+                anchors.topMargin: 1
+                height: 1
+                radius: 0.5
+                color: Qt.rgba(1, 1, 1, 0.12)
+            }
+
             Behavior on color {
                 ColorAnimation { duration: 300 }
             }
@@ -344,6 +367,18 @@ PanelWindow {
                                 return false;
                             }
 
+                            // Active workspace breathing pulse factor (ultra-slow, subtle sinusoidal opacity breathing)
+                            property real breathFactor: 1.0
+                            SequentialAnimation on breathFactor {
+                                running: wsSlot.isActive
+                                loops: Animation.Infinite
+                                NumberAnimation { from: 1.0; to: 0.65; duration: 2200; easing.type: Easing.InOutSine }
+                                NumberAnimation { from: 0.65; to: 1.0; duration: 2200; easing.type: Easing.InOutSine }
+                            }
+                            onIsActiveChanged: {
+                                if (!isActive) breathFactor = 1.0;
+                            }
+
                             width: isActive ? 18 : 6
                             height: 22
                             anchors.verticalCenter: parent.verticalCenter
@@ -353,22 +388,61 @@ PanelWindow {
                             }
 
                             Rectangle {
+                                id: wsPill
                                 anchors.centerIn: parent
                                 width: wsSlot.isActive ? 18 : 6
                                 height: 6
                                 radius: 3
                                 color: wsSlot.isActive ? Island.Theme.primary : (wsMouse.containsMouse ? Island.Theme.foreground : Island.Theme.muted)
-                                opacity: wsSlot.isActive ? 1.0 : (wsMouse.containsMouse ? 0.8 : (wsSlot.isOccupied ? 0.55 : 0.3))
+                                opacity: wsSlot.isActive ? wsSlot.breathFactor : (wsMouse.containsMouse ? 0.8 : (wsSlot.isOccupied ? 0.55 : 0.3))
 
                                 Behavior on width {
                                     NumberAnimation { duration: 240; easing.type: Easing.OutCubic }
                                 }
                                 Behavior on opacity {
+                                    enabled: !wsSlot.isActive
                                     NumberAnimation { duration: 180 }
                                 }
                                 Behavior on color {
                                     ColorAnimation { duration: 180 }
                                 }
+                            }
+
+                            function getContextualTooltip(): string {
+                                let base = "Workspace " + wsSlot.wsId;
+                                if (wsSlot.isActive) base += " (Active)";
+                                if (!root.desktopModel || !root.desktopModel.workspaces) return base;
+
+                                for (let i = 0; i < root.desktopModel.workspaces.length; ++i) {
+                                    const w = root.desktopModel.workspaces[i];
+                                    if (w && w.id === wsSlot.wsId) {
+                                        if (w.applications && w.applications.length > 0) {
+                                            const names = [];
+                                            for (let j = 0; j < Math.min(3, w.applications.length); ++j) {
+                                                const app = w.applications[j];
+                                                if (app && (app.appName || app.appId)) {
+                                                    names.push(app.appName || app.appId);
+                                                }
+                                            }
+                                            if (names.length > 0) {
+                                                return wsSlot.wsId + ": " + names.join(", ") + (wsSlot.isActive ? " (Active)" : "");
+                                            }
+                                        } else if (w.surfaces && w.surfaces.length > 0) {
+                                            const titles = [];
+                                            for (let j = 0; j < Math.min(2, w.surfaces.length); ++j) {
+                                                const s = w.surfaces[j];
+                                                if (s && (s.appName || s.title)) {
+                                                    titles.push(s.appName || s.title);
+                                                }
+                                            }
+                                            if (titles.length > 0) {
+                                                return wsSlot.wsId + ": " + titles.join(", ") + (wsSlot.isActive ? " (Active)" : "");
+                                            }
+                                        }
+                                        break;
+                                    }
+                                }
+                                return base;
                             }
 
                             MouseArea {
@@ -380,7 +454,7 @@ PanelWindow {
                                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                                 onEntered: {
                                     pingHover();
-                                    root.showTooltip(wsSlot, wsSlot.isActive ? ("Workspace " + wsSlot.wsId + " (Active)") : ("Workspace " + wsSlot.wsId));
+                                    root.showTooltip(wsSlot, wsSlot.getContextualTooltip());
                                 }
                                 onExited: {
                                     releaseHover();
@@ -477,6 +551,11 @@ PanelWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 14
                     height: 22
+                    scale: expandDotMouse.containsMouse ? 1.08 : 1.0
+                    transformOrigin: Item.Center
+                    Behavior on scale {
+                        NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                    }
 
                     Rectangle {
                         id: dotVisual
@@ -608,6 +687,11 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 18
                             height: 18
+                            scale: (volMouse.containsMouse || root.activePopover === "vol") ? 1.08 : 1.0
+                            transformOrigin: Item.Center
+                            Behavior on scale {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -652,6 +736,11 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 18
                             height: 18
+                            scale: (netMouse.containsMouse || root.activePopover === "net") ? 1.08 : 1.0
+                            transformOrigin: Item.Center
+                            Behavior on scale {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -688,6 +777,11 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 18
                             height: 18
+                            scale: btMouse.containsMouse ? 1.08 : 1.0
+                            transformOrigin: Item.Center
+                            Behavior on scale {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -722,6 +816,11 @@ PanelWindow {
                             width: Math.max(18, batLabel.implicitWidth)
                             height: 18
                             visible: root.batReady && root.batPct >= 0
+                            scale: (batMouse.containsMouse || root.activePopover === "bat") ? 1.08 : 1.0
+                            transformOrigin: Item.Center
+                            Behavior on scale {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                            }
 
                             Text {
                                 id: batLabel
@@ -762,6 +861,11 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 18
                             height: 18
+                            scale: notifMouse.containsMouse ? 1.08 : 1.0
+                            transformOrigin: Item.Center
+                            Behavior on scale {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -807,6 +911,11 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 18
                             height: 18
+                            scale: controlMouse.containsMouse ? 1.08 : 1.0
+                            transformOrigin: Item.Center
+                            Behavior on scale {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -840,6 +949,11 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 18
                             height: 18
+                            scale: displayMouse.containsMouse ? 1.08 : 1.0
+                            transformOrigin: Item.Center
+                            Behavior on scale {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -873,6 +987,11 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 18
                             height: 18
+                            scale: recMouse.containsMouse ? 1.08 : 1.0
+                            transformOrigin: Item.Center
+                            Behavior on scale {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -906,6 +1025,11 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 18
                             height: 18
+                            scale: wallMouse.containsMouse ? 1.08 : 1.0
+                            transformOrigin: Item.Center
+                            Behavior on scale {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -939,6 +1063,11 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 18
                             height: 18
+                            scale: clipMouse.containsMouse ? 1.08 : 1.0
+                            transformOrigin: Item.Center
+                            Behavior on scale {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -972,6 +1101,11 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 18
                             height: 18
+                            scale: launcherMouse.containsMouse ? 1.08 : 1.0
+                            transformOrigin: Item.Center
+                            Behavior on scale {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -1005,6 +1139,11 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 18
                             height: 18
+                            scale: settingsMouse.containsMouse ? 1.08 : 1.0
+                            transformOrigin: Item.Center
+                            Behavior on scale {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                            }
 
                             Text {
                                 anchors.centerIn: parent
@@ -1038,6 +1177,11 @@ PanelWindow {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 18
                             height: 18
+                            scale: powerMouse.containsMouse ? 1.08 : 1.0
+                            transformOrigin: Item.Center
+                            Behavior on scale {
+                                NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+                            }
 
                             Text {
                                 anchors.centerIn: parent

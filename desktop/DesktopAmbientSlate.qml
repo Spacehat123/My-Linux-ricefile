@@ -75,11 +75,35 @@ Item {
         id: slatePlate
         anchors.fill: parent
         radius: 38
-        // Translucent midnight glass matching FloatingMediaCompanion
-        color: Qt.rgba(Island.Theme.bg0.r, Island.Theme.bg0.g, Island.Theme.bg0.b, 0.56)
+        // Translucent midnight glass (30% more transparent, preserving frosted glass blur)
+        color: Qt.rgba(Island.Theme.bg0.r, Island.Theme.bg0.g, Island.Theme.bg0.b, 0.38)
         border.color: Island.Theme.glassBorder
         border.width: 0
         clip: true
+
+        // Inner 1px Refractive Rim
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 1
+            radius: 37
+            color: "transparent"
+            border.color: Qt.rgba(1, 1, 1, 0.08)
+            border.width: 1
+            z: 1
+        }
+
+        // Top Specular Highlight Strip
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: 24
+            anchors.rightMargin: 24
+            anchors.topMargin: 1
+            height: 1
+            color: Qt.rgba(1, 1, 1, 0.12)
+            z: 2
+        }
 
         Column {
             anchors.fill: parent
@@ -98,13 +122,44 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 4
 
-                    Text {
-                        text: Qt.formatDateTime(sysClock.date, "hh:mm")
-                        font.pixelSize: 62
-                        font.bold: true
-                        font.letterSpacing: 2
-                        font.family: Island.Theme.fontFamily
-                        color: Island.Theme.foreground
+                    Row {
+                        spacing: 2
+                        Text {
+                            text: Qt.formatDateTime(sysClock.date, "hh")
+                            font.pixelSize: 62
+                            font.bold: true
+                            font.letterSpacing: 1.5
+                            font.family: Island.Theme.fontFamily
+                            width: 80
+                            horizontalAlignment: Text.AlignHCenter
+                            color: Island.Theme.foreground
+                        }
+
+                        Text {
+                            id: colonText
+                            text: ":"
+                            font.pixelSize: 58
+                            font.bold: true
+                            font.family: Island.Theme.fontFamily
+                            color: Island.Theme.foreground
+                            SequentialAnimation on opacity {
+                                loops: Animation.Infinite
+                                running: root.active && root.visible
+                                NumberAnimation { to: 0.28; duration: 1000; easing.type: Easing.InOutSine }
+                                NumberAnimation { to: 1.00; duration: 1000; easing.type: Easing.InOutSine }
+                            }
+                        }
+
+                        Text {
+                            text: Qt.formatDateTime(sysClock.date, "mm")
+                            font.pixelSize: 62
+                            font.bold: true
+                            font.letterSpacing: 1.5
+                            font.family: Island.Theme.fontFamily
+                            width: 80
+                            horizontalAlignment: Text.AlignHCenter
+                            color: Island.Theme.foreground
+                        }
                     }
 
                     Text {

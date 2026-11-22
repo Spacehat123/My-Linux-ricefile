@@ -96,4 +96,16 @@ PanelWindow {
         fillMode: VideoOutput.PreserveAspectCrop
         visible: root.visible
     }
+
+    // Subtle top and bottom edge vignette overlay so UI elements emerge seamlessly from subtle shadow
+    Rectangle {
+        anchors.fill: parent
+        visible: root.visible
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.35) }
+            GradientStop { position: 0.08; color: "transparent" }
+            GradientStop { position: 0.92; color: "transparent" }
+            GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.25) }
+        }
+    }
 }

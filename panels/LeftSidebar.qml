@@ -67,6 +67,31 @@ PanelWindow {
             border.width: Island.Theme.glassBorderWidth
             clip: true
 
+            // Inner refractive rim
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 1
+                radius: parent.radius - 1
+                color: "transparent"
+                border.color: Qt.rgba(1, 1, 1, 0.06)
+                border.width: 1
+                z: 1
+            }
+
+            // Upper specular highlight strip
+            Rectangle {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: 20
+                anchors.rightMargin: 20
+                anchors.topMargin: 1
+                height: 1
+                radius: 0.5
+                color: Qt.rgba(1, 1, 1, 0.12)
+                z: 2
+            }
+
             // Integrated Modern Control Center
             ControlCenter {
                 id: controlCenter

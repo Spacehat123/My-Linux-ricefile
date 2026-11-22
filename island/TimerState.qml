@@ -21,6 +21,12 @@ Singleton {
     property bool focusActive: false
     property int focusRemainingSec: 0
     property int focusTotalSec: 25 * 60
+    property int completedFocusSessions: 0
+    property int targetFocusSessions: 4
+
+    function resetFocusStreak() {
+        completedFocusSessions = 0;
+    }
 
     readonly property bool hasActive: swRunning || focusActive || activeCountdown !== null
     readonly property var activeCountdown: {
@@ -181,6 +187,7 @@ Singleton {
                 root.focusRemainingSec = Math.max(0, root.focusRemainingSec - 1);
                 if (root.focusRemainingSec <= 0) {
                     root.endFocus();
+                    root.completedFocusSessions += 1;
                     root.raiseCompletion("Focus");
                 }
             }

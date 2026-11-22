@@ -1,0 +1,138 @@
+{
+  "5.png": {
+    "name": "Mountain Sunset Silhouette",
+    "originX": 0.50,
+    "originY": 0.44,
+    "spreadX": 0.58,
+    "spreadY": 0.26,
+    "intensity": 0.85
+  },
+  "3.png": {
+    "name": "Misty Alpine Ridge",
+    "originX": 0.48,
+    "originY": 0.35,
+    "spreadX": 0.62,
+    "spreadY": 0.30,
+    "intensity": 0.80
+  },
+  "4.png": {
+    "name": "Evening Horizon Valley",
+    "originX": 0.50,
+    "originY": 0.55,
+    "spreadX": 0.70,
+    "spreadY": 0.32,
+    "intensity": 0.75
+  },
+  "1.jpeg": {
+    "name": "Panoramic Dusk",
+    "originX": 0.50,
+    "originY": 0.50,
+    "spreadX": 0.75,
+    "spreadY": 0.30,
+    "intensity": 0.70
+  },
+  "5816714-3840x2160-desktop-hd-cool-anime-wallpaper-photo.jpg": {
+    "name": "Anime Cyber Vista",
+    "originX": 0.50,
+    "originY": 0.52,
+    "spreadX": 0.65,
+    "spreadY": 0.32,
+    "intensity": 0.80
+  },
+  "wallhaven-2163q6_1920x1080.png": {
+    "name": "Celestial Skyline",
+    "originX": 0.65,
+    "originY": 0.38,
+    "spreadX": 0.55,
+    "spreadY": 0.30,
+    "intensity": 0.85
+  },
+  "Engraved Pegasus with Angelic Rider.png": {
+    "name": "Mythic Constellation Horizon",
+    "originX": 0.50,
+    "originY": 0.45,
+    "spreadX": 0.60,
+    "spreadY": 0.30,
+    "intensity": 0.80
+  },
+  "sakura-sanctuary.mp4": {
+    "name": "Sakura Sanctuary Pavilion",
+    "originX": 0.50,
+    "originY": 0.46,
+    "spreadX": 0.65,
+    "spreadY": 0.35,
+    "intensity": 0.85
+  },
+  "7ea7aacfb5_black-hole-event-horizon-live-wallpaper-wallsflow-com.mp4": {
+    "name": "Black Hole Event Horizon",
+    "originX": 0.50,
+    "originY": 0.50,
+    "spreadX": 0.50,
+    "spreadY": 0.50,
+    "intensity": 0.90
+  },
+  "9b5b6f501e_silent-shrine-tree-night-forest-live-wallpaper.mp4": {
+    "name": "Silent Shrine Forest",
+    "originX": 0.50,
+    "originY": 0.48,
+    "spreadX": 0.60,
+    "spreadY": 0.35,
+    "intensity": 0.80
+  },
+  "blue-earth.mp4": {
+    "name": "Earth Orbital Limb",
+    "originX": 0.50,
+    "originY": 0.50,
+    "spreadX": 0.65,
+    "spreadY": 0.40,
+    "intensity": 0.85
+  },
+  "peaceful-tree.mp4": {
+    "name": "Peaceful Twilight Tree",
+    "originX": 0.50,
+    "originY": 0.45,
+    "spreadX": 0.55,
+    "spreadY": 0.32,
+    "intensity": 0.80
+  },
+  "seaside-train.mp4": {
+    "name": "Seaside Coastline",
+    "originX": 0.50,
+    "originY": 0.60,
+    "spreadX": 0.80,
+    "spreadY": 0.30,
+    "intensity": 0.75
+  },
+  "shadow-and-red.mp4": {
+    "name": "Shadow & Crimson Bloom",
+    "originX": 0.50,
+    "originY": 0.48,
+    "spreadX": 0.58,
+    "spreadY": 0.32,
+    "intensity": 0.85
+  },
+  "oled].mp4": {
+    "name": "OLED Ambient Singularity",
+    "originX": 0.50,
+    "originY": 0.50,
+    "spreadX": 0.55,
+    "spreadY": 0.45,
+    "intensity": 0.80
+  },
+  "i-made-mw2-4k-wallpaper-enjoy-v0-1e7wmn8bd1291.webp": {
+    "name": "MW2 Mountain Pass",
+    "originX": 0.50,
+    "originY": 0.56,
+    "spreadX": 0.65,
+    "spreadY": 0.30,
+    "intensity": 0.75
+  },
+  "default": {
+    "name": "Universal Horizon Fallback",
+    "originX": 0.50,
+    "originY": 0.72,
+    "spreadX": 0.85,
+    "spreadY": 0.35,
+    "intensity": 0.50
+  }
+}

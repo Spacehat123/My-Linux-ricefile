@@ -281,6 +281,103 @@ FocusScope {
             color: Theme.muted
             font.pixelSize: 11
         }
+
+        // Pomodoro Focus Streak Matrix
+        Column {
+            width: parent.width
+            spacing: 6
+
+            Row {
+                width: parent.width
+                spacing: 8
+
+                ShellText {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Focus Streak"
+                    font.pixelSize: 11
+                    font.weight: Font.DemiBold
+                    color: Theme.muted
+                }
+
+                ShellText {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: TimerState.completedFocusSessions + " / " + TimerState.targetFocusSessions + " sessions"
+                    font.pixelSize: 11
+                    color: Theme.primary
+                }
+
+                ShellText {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: TimerState.completedFocusSessions >= TimerState.targetFocusSessions ? "Goal reached!" : ""
+                    font.pixelSize: 10
+                    font.weight: Font.Bold
+                    color: Theme.yellow
+                    visible: text !== ""
+                }
+
+                Rectangle {
+                    visible: TimerState.completedFocusSessions > 0
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 44
+                    height: 18
+                    radius: 9
+                    color: resetStreakMouse.containsMouse ? Theme.primaryContainer : Theme.bg1
+
+                    ShellText {
+                        anchors.centerIn: parent
+                        text: "Reset"
+                        font.pixelSize: 9
+                        color: Theme.muted
+                    }
+
+                    MouseArea {
+                        id: resetStreakMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: TimerState.resetFocusStreak()
+                    }
+                }
+            }
+
+            // Streak Beads / Matrix
+            Row {
+                spacing: 8
+
+                Repeater {
+                    model: TimerState.targetFocusSessions
+
+                    delegate: Item {
+                        id: beadItem
+                        required property int index
+                        width: 16
+                        height: 16
+
+                        readonly property bool isCompleted: beadItem.index < TimerState.completedFocusSessions
+                        readonly property bool isCurrent: TimerState.focusActive && (beadItem.index === (TimerState.completedFocusSessions % TimerState.targetFocusSessions))
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: beadItem.isCurrent ? 14 : 10
+                            height: width
+                            radius: width / 2
+                            color: beadItem.isCompleted
+                                ? Theme.primary
+                                : (beadItem.isCurrent ? Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.45) : "transparent")
+                            border.color: (beadItem.isCompleted || beadItem.isCurrent) ? Theme.primary : Theme.mutedDark
+                            border.width: 1.5
+
+                            SequentialAnimation on scale {
+                                running: beadItem.isCurrent
+                                loops: Animation.Infinite
+                                NumberAnimation { from: 1.0; to: 1.25; duration: 1200; easing.type: Easing.InOutSine }
+                                NumberAnimation { from: 1.25; to: 1.0; duration: 1200; easing.type: Easing.InOutSine }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 }

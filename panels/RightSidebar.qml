@@ -250,6 +250,31 @@ PanelWindow {
             border.width: 1
             clip: true
 
+            // Inner refractive rim
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 1
+                radius: parent.radius - 1
+                color: "transparent"
+                border.color: Qt.rgba(1, 1, 1, 0.06)
+                border.width: 1
+                z: 1
+            }
+
+            // Upper specular highlight strip
+            Rectangle {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: 20
+                anchors.rightMargin: 20
+                anchors.topMargin: 1
+                height: 1
+                radius: 0.5
+                color: Qt.rgba(1, 1, 1, 0.12)
+                z: 2
+            }
+
             // Multi-stop Vertical Atmospheric Light Dispersion (Dark mode only)
             Rectangle {
                 anchors.fill: parent
@@ -810,9 +835,39 @@ PanelWindow {
 
                                 delegate: Rectangle {
                                     id: winCard
+                                    required property var modelData
+                                    required property int index
                                     width: spacesCol.width
                                     height: 50
                                     radius: 8
+
+                                    transform: Translate {
+                                        id: winTrans
+                                        y: 8
+                                    }
+                                    opacity: 0
+
+                                    SequentialAnimation {
+                                        id: winEntryAnim
+                                        running: root.open
+                                        PauseAnimation { duration: Math.min(300, index * 35) }
+                                        ParallelAnimation {
+                                            NumberAnimation { target: winCard; property: "opacity"; to: 1.0; duration: 220; easing.type: Easing.OutCubic }
+                                            NumberAnimation { target: winTrans; property: "y"; to: 0; duration: 220; easing.type: Easing.OutCubic }
+                                        }
+                                    }
+
+                                    Connections {
+                                        target: root
+                                        function onOpenChanged() {
+                                            if (root.open) {
+                                                winCard.opacity = 0;
+                                                winTrans.y = 8;
+                                                winEntryAnim.restart();
+                                            }
+                                        }
+                                    }
+
                                     color: (modelData.activated || winCardMouse.containsMouse) 
                                         ? (Island.Theme.isLightMode ? Island.Theme.glassCardHover : Qt.rgba(1, 1, 1, 0.08)) 
                                         : (Island.Theme.isLightMode ? Island.Theme.glassCard : Qt.rgba(1, 1, 1, 0.03))
@@ -1057,9 +1112,40 @@ PanelWindow {
                                 model: root.stashedSurfaces
 
                                 delegate: Rectangle {
+                                    id: stashCard
+                                    required property var modelData
+                                    required property int index
                                     width: spacesCol.width
                                     height: 42
                                     radius: 8
+
+                                    transform: Translate {
+                                        id: stashTrans
+                                        y: 8
+                                    }
+                                    opacity: 0
+
+                                    SequentialAnimation {
+                                        id: stashEntryAnim
+                                        running: root.open
+                                        PauseAnimation { duration: Math.min(300, index * 35) }
+                                        ParallelAnimation {
+                                            NumberAnimation { target: stashCard; property: "opacity"; to: 1.0; duration: 220; easing.type: Easing.OutCubic }
+                                            NumberAnimation { target: stashTrans; property: "y"; to: 0; duration: 220; easing.type: Easing.OutCubic }
+                                        }
+                                    }
+
+                                    Connections {
+                                        target: root
+                                        function onOpenChanged() {
+                                            if (root.open) {
+                                                stashCard.opacity = 0;
+                                                stashTrans.y = 8;
+                                                stashEntryAnim.restart();
+                                            }
+                                        }
+                                    }
+
                                     color: Qt.rgba(Island.Theme.yellow.r, Island.Theme.yellow.g, Island.Theme.yellow.b, 0.08)
                                     border.color: Qt.rgba(Island.Theme.yellow.r, Island.Theme.yellow.g, Island.Theme.yellow.b, 0.25)
                                     border.width: 1
