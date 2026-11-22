@@ -1,96 +1,59 @@
 # ==============================================================================
-# Cool-Shell / Pranc Rice - Complete Dependencies & Requirements Specification
+# Cool-Shell / Pranc Rice — Authoritative Python Requirements Specification
 # ==============================================================================
 #
-# Install Python packages:
-#   uv pip install -r requirements.txt
-#   or: pip install -r requirements.txt
+# Production environment specification for cool-shell Python engines:
+#   - Realtime Speech Synthesis Engine (Kokoro ONNX)
+#   - Universal Screen Lens (RapidOCR, QR, Barcode & Pixel Sampling)
+#   - Fast-Caption & Subtitle Generation (NVIDIA FastConformer-CTC)
+#   - Local AI Image Studio Daemon (Realistic Vision v5.1 + LCM-LoRA 512x512)
+#   - Conversational AI Studio Web Interface (Gradio)
 #
-# Install Arch Linux system packages:
-#   sudo pacman -S - < <(grep -E '^# pacman:' requirements.txt | cut -d: -f2-)
-#   paru -S - < <(grep -E '^# aur:' requirements.txt | cut -d: -f2-)
+# Recommended installation via uv (ultra-fast virtual environment):
+#   uv venv ~/.local/share/cool-shell/venv --python 3.12
+#   uv pip install -r requirements.txt
+#
+# Standard pip installation:
+#   python3 -m venv ~/.local/share/cool-shell/venv
+#   ~/.local/share/cool-shell/venv/bin/pip install -r requirements.txt
+#
+# CUDA acceleration for PyTorch (NVIDIA GPUs):
+#   uv pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/cu124
 #
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 1. Python Dependencies (AI Engines, TTS, Vision, OCR, Image Generation)
+# 1. Realtime Speech Synthesis Engine (scripts/voice-engine.py)
 # ------------------------------------------------------------------------------
-# Kokoro Realtime TTS Engine
 kokoro-onnx>=0.6.0
 onnxruntime>=1.19.0
 soundfile>=0.12.1
 numpy>=1.26.0
 
-# Universal Screen Lens (OCR & Vision)
+# ------------------------------------------------------------------------------
+# 2. Universal Screen Lens - OCR, Barcode & Vision (scripts/screen-lens.py)
+# ------------------------------------------------------------------------------
 rapidocr-onnxruntime>=1.3.0
 pyzbar>=0.1.9
 opencv-python-headless>=4.10.0
 Pillow>=10.4.0
 
-# Local AI Image Studio Daemon (Realistic Vision v5.1 + LCM-LoRA 512x512)
+# ------------------------------------------------------------------------------
+# 3. Fast-Caption & Subtitle Generator (scripts/caption.py)
+# ------------------------------------------------------------------------------
+sherpa-onnx>=1.10.0
+huggingface-hub>=0.24.0
+
+# ------------------------------------------------------------------------------
+# 4. Local AI Image Studio Daemon (scripts/image-daemon.py, scripts/image-engine.py)
+# ------------------------------------------------------------------------------
 torch>=2.4.0
+torchvision>=0.19.0
 diffusers>=0.30.0
 transformers>=4.44.0
 accelerate>=0.33.0
 
 # ------------------------------------------------------------------------------
-# 2. System Packages (Arch Linux Core & Desktop Infrastructure)
+# 5. Conversational AI Studio Web Interface (scripts/chat-ui.py)
 # ------------------------------------------------------------------------------
-# Core Wayland & Compositor
-# pacman: hyprland
-# pacman: hyprlock
-# aur: quickshell-git
-# aur: hyprsunset
-
-# Audio & Media Subsystem
-# pacman: pipewire
-# pacman: wireplumber
-# pacman: pipewire-pulse
-# pacman: pipewire-alsa
-# pacman: playerctl
-# aur: sptlrx-bin
-
-# Screen Capture, OCR & Lens Tools
-# pacman: grim
-# pacman: slurp
-# pacman: wf-recorder
-# pacman: tesseract
-# pacman: tesseract-data-eng
-# pacman: leptonica
-# pacman: zbar
-# pacman: imagemagick
-# pacman: swappy
-
-# Clipboard, Input & Hardware Controls
-# pacman: wl-clipboard
-# pacman: cliphist
-# pacman: brightnessctl
-
-# Dynamic Theming & Wallpaper Daemons
-# aur: matugen-bin
-# aur: awww-git
-# pacman: swww
-
-# Voice & TTS Runtime Libraries
-# pacman: espeak-ng
-
-# Runtimes & Interpreters
-# pacman: python
-# pacman: uv
-# pacman: nodejs
-# pacman: npm
-
-# Security, Firewall & Credential Management
-# pacman: bitwarden
-# pacman: bitwarden-cli
-# pacman: ufw
-
-# Unix Utilities & IPC Tooling
-# pacman: jq
-# pacman: curl
-# pacman: socat
-# pacman: psmisc
-# pacman: procps-ng
-# pacman: coreutils
-# pacman: findutils
-# pacman: fd
+gradio>=4.40.0

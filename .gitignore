@@ -10,3 +10,14 @@ __pycache__/
 .cache/
 thumbs/
 scratch/
+graphify-out/cache/
+
+# Editor & Language Server artifacts
+.qmlls.ini
+
+# User scratchpad
+island/scratchpad.txt
+
+# Backup files
+*.bak
+*.orig

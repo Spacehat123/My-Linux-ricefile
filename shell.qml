@@ -1201,13 +1201,21 @@ ShellRoot {
         property bool enabled: shellRoot.ambientEnabled
         property bool alwaysOn: shellRoot.ambientAlwaysOn
         property bool active: shellRoot.ambientEnabled && (shellRoot.ambientAlwaysOn || shellRoot.idle)
+        property string template: AmbientConfig.template
+        property string clockPosition: AmbientConfig.clockPosition
+        property bool showSunMoon: AmbientConfig.showSunMoon
+        property bool showParticles: AmbientConfig.showParticles
 
         function getSummary(): string {
             return JSON.stringify({
                 enabled: shellRoot.ambientEnabled,
                 alwaysOn: shellRoot.ambientAlwaysOn,
                 active: shellRoot.ambientEnabled && (shellRoot.ambientAlwaysOn || shellRoot.idle),
-                idle: shellRoot.idle
+                idle: shellRoot.idle,
+                template: AmbientConfig.template,
+                clockPosition: AmbientConfig.clockPosition,
+                showSunMoon: AmbientConfig.showSunMoon,
+                showParticles: AmbientConfig.showParticles
             });
         }
 
@@ -1229,6 +1237,46 @@ ShellRoot {
         function setEnabled(val: bool): string {
             shellRoot.ambientEnabled = val;
             return JSON.stringify({ success: true, enabled: shellRoot.ambientEnabled });
+        }
+
+        function setTemplate(tpl: string): string {
+            AmbientConfig.setTemplate(tpl);
+            return JSON.stringify({ success: true, template: AmbientConfig.template });
+        }
+
+        function cycleTemplate(): string {
+            AmbientConfig.cycleTemplate();
+            return JSON.stringify({ success: true, template: AmbientConfig.template });
+        }
+
+        function setClockPosition(pos: string): string {
+            AmbientConfig.setClockPosition(pos);
+            return JSON.stringify({ success: true, clockPosition: AmbientConfig.clockPosition });
+        }
+
+        function cycleClockPosition(): string {
+            AmbientConfig.cycleClockPosition();
+            return JSON.stringify({ success: true, clockPosition: AmbientConfig.clockPosition });
+        }
+
+        function setSunMoon(val: bool): string {
+            AmbientConfig.setShowSunMoon(val);
+            return JSON.stringify({ success: true, showSunMoon: AmbientConfig.showSunMoon });
+        }
+
+        function toggleSunMoon(): string {
+            AmbientConfig.toggleSunMoon();
+            return JSON.stringify({ success: true, showSunMoon: AmbientConfig.showSunMoon });
+        }
+
+        function setParticles(val: bool): string {
+            AmbientConfig.setShowParticles(val);
+            return JSON.stringify({ success: true, showParticles: AmbientConfig.showParticles });
+        }
+
+        function toggleParticles(): string {
+            AmbientConfig.toggleParticles();
+            return JSON.stringify({ success: true, showParticles: AmbientConfig.showParticles });
         }
     }
 

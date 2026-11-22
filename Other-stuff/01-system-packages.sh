@@ -9,13 +9,31 @@ echo "  📦 [1/5] Installing Cool-Shell System Packages"
 echo "=========================================================="
 
 PACMAN_PKGS=(
+    # Compositor & Wayland infrastructure
     hyprland
     hyprlock
+    hyprsunset
+
+    # Qt6 Runtime & QML Modules
+    qt6-base
+    qt6-declarative
+    qt6-5compat
+    qt6-multimedia
+    qt6-multimedia-ffmpeg
+    qt6-wayland
+    qt6-shadertools
+    qt6-svg
+
+    # Audio & MPRIS Subsystem
     pipewire
     wireplumber
     pipewire-pulse
     pipewire-alsa
     playerctl
+    cava
+    mpv
+
+    # Screen Capture, OCR & Multimodal Vision
     grim
     slurp
     wf-recorder
@@ -25,34 +43,60 @@ PACMAN_PKGS=(
     zbar
     imagemagick
     swappy
+    ffmpeg
+
+    # Input, Clipboard & Hardware
     wl-clipboard
     cliphist
     brightnessctl
-    swww
+    awww
+    upower
+    networkmanager
+    bluez
+    bluez-utils
+    lm_sensors
+
+    # Voice Synthesis Runtime
     espeak-ng
-    python
-    uv
-    nodejs
-    npm
+
+    # Mobile Bridging & Mirroring
+    android-tools
+    scrcpy
+
+    # System Utilities, IPC & Dialogue
+    zenity
     jq
     curl
     socat
+    fd
     psmisc
     procps-ng
     coreutils
     findutils
-    fd
+    git
+
+    # Security & Networking
     ufw
     bitwarden
-    scrcpy
-    android-tools
+
+    # Runtimes & Interpreters
+    python
+    uv
+    nodejs
+    npm
+
+    # Typography & Fonts
+    ttf-jetbrains-mono-nerd
+    inter-font
+    noto-fonts
+    noto-fonts-emoji
 )
 
 AUR_PKGS=(
     quickshell-git
-    hyprsunset
     sptlrx-bin
     matugen-bin
+    ttf-geist
 )
 
 echo "[*] Checking and installing official Pacman packages..."

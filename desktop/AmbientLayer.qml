@@ -99,21 +99,24 @@ PanelWindow {
         AmbientWeatherMist {
             id: weatherMist
             anchors.fill: parent
-            active: root.active && (hudContainer.opacity > 0.0)
+            visible: AmbientConfig.showWeatherMist
+            active: root.active && (hudContainer.opacity > 0.0) && visible
         }
 
         // 2. Solar & Lunar Astronomical Full Circle Orbit (Only Sun and Moon, Zero lines/text)
         SolarLunarArc {
             id: solarLunarArc
             anchors.fill: parent
-            active: root.active && (hudContainer.opacity > 0.0)
+            visible: AmbientConfig.showSunMoon
+            active: root.active && (hudContainer.opacity > 0.0) && visible
         }
 
         // 3. Atmospheric Living Air (Twilight Fireflies & Interactive Horizon Light Catch)
         AtmosphericMotes {
             id: livingAir
             anchors.fill: parent
-            active: root.active && (hudContainer.opacity > 0.0)
+            visible: AmbientConfig.showParticles
+            active: root.active && (hudContainer.opacity > 0.0) && visible
             cursorX: globalHover.point.position.x
             cursorY: globalHover.point.position.y
             cursorPresent: globalHover.hovered
@@ -125,18 +128,41 @@ PanelWindow {
         DesktopGhostTrails {
             id: ghostTrails
             anchors.fill: parent
-            active: root.active && (hudContainer.opacity > 0.0)
+            visible: AmbientConfig.showGhostTrails
+            active: root.active && (hudContainer.opacity > 0.0) && visible
         }
 
         // 5. Left Architectural Clock, Weather & Radial Telemetry Slate
         Item {
             id: slateWrapper
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.leftMargin: 72
-            anchors.topMargin: 120
             width: slateInstance.implicitWidth
             height: slateInstance.implicitHeight
+
+            Behavior on x { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
+            Behavior on y { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
+
+            x: {
+                switch (AmbientConfig.clockPosition) {
+                    case "center": return Math.round((parent.width - width) / 2);
+                    case "top-right": return Math.max(72, parent.width - width - 72);
+                    case "bottom-right": return Math.max(72, parent.width - width - 72);
+                    case "bottom-left": return 72;
+                    case "center-left": return 72;
+                    case "top-left":
+                    default: return 72;
+                }
+            }
+            y: {
+                switch (AmbientConfig.clockPosition) {
+                    case "center": return Math.round((parent.height - height) / 2);
+                    case "top-right": return 120;
+                    case "bottom-right": return Math.max(48, parent.height - height - 80);
+                    case "bottom-left": return Math.max(48, parent.height - height - 80);
+                    case "center-left": return Math.round((parent.height - height) / 2);
+                    case "top-left":
+                    default: return 120;
+                }
+            }
 
             DesktopAmbientSlate {
                 id: slateInstance
@@ -161,6 +187,7 @@ PanelWindow {
             anchors.bottomMargin: 48
             width: constellationInstance.implicitWidth
             height: constellationInstance.implicitHeight
+            visible: AmbientConfig.showConstellationCard
 
             DesktopConstellationCard {
                 id: constellationInstance

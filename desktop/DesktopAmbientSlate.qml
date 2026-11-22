@@ -11,6 +11,7 @@ Item {
     id: root
 
     property bool active: true
+    property string template: AmbientConfig.template
     implicitWidth: mainRow.implicitWidth
     implicitHeight: mainRow.implicitHeight
 
@@ -130,14 +131,15 @@ Item {
         anchors.top: parent.top
         spacing: 20
 
-        // LEFT COLUMN: Stacked Clock + Date + Bottom-Left Radial Telemetry Dial
+        // LEFT COLUMN: Clock + Date + Telemetry Elements
         Column {
             id: leftCol
             spacing: 12
 
-            // 1. Horizontal Clock (Hours | Minutes with 0.5 alpha line)
+            // 1A. Template "pranc": Horizontal Clock (Hours | Minutes with 0.5 alpha line)
             Row {
                 id: clockRow
+                visible: root.template === "pranc"
                 spacing: 20
 
                 // Hours
@@ -175,6 +177,50 @@ Item {
                 }
             }
 
+            // 1B. Template "default": Classic Clean Vertical Stacked Clock (18 over 33)
+            Column {
+                id: stackedClockCol
+                visible: root.template === "default"
+                spacing: -22
+
+                Text {
+                    text: Qt.formatDateTime(sysClock.date, "hh")
+                    font.pixelSize: 180
+                    font.bold: true
+                    font.letterSpacing: -4.0
+                    font.family: "Geom"
+                    color: Island.Theme.foreground
+                    renderType: Text.QtRendering
+                }
+
+                Text {
+                    text: Qt.formatDateTime(sysClock.date, "mm")
+                    font.pixelSize: 180
+                    font.bold: true
+                    font.letterSpacing: -4.0
+                    font.family: "Geom"
+                    color: Island.Theme.foreground
+                    renderType: Text.QtRendering
+                }
+            }
+
+            // 1C. Template "minimal": Sleek Horizontal Single-Line Clock (HH:MM)
+            Row {
+                id: minimalClockRow
+                visible: root.template === "minimal"
+                spacing: 14
+
+                Text {
+                    text: Qt.formatDateTime(sysClock.date, "hh:mm")
+                    font.pixelSize: 110
+                    font.bold: true
+                    font.letterSpacing: -3.0
+                    font.family: "Geom"
+                    color: Island.Theme.foreground
+                    renderType: Text.QtRendering
+                }
+            }
+
             // Date Subtitle
             Text {
                 text: Qt.formatDateTime(sysClock.date, "ddd, dd MMM yyyy").toUpperCase()
@@ -188,9 +234,96 @@ Item {
                 renderType: Text.QtRendering
             }
 
-            // 2. Bottom-Left Radial Telemetry Ring (4 Separated Small Lines)
+            // 2A. Template "default": Modern Horizontal Telemetry Chips Row
+            Row {
+                id: telemetryChipsRow
+                visible: root.template === "default"
+                spacing: 8
+
+                // GPU Chip
+                Rectangle {
+                    height: 26
+                    width: gpuText.implicitWidth + 24
+                    radius: 13
+                    color: Island.Theme.glassCard
+                    border.color: Island.Theme.glassBorderSubtle
+                    border.width: 1
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Rectangle { width: 6; height: 6; radius: 3; color: "#10b981"; anchors.verticalCenter: parent.verticalCenter }
+                        Text { id: gpuText; text: "GPU " + root.gpuPercent + "%"; font.pixelSize: 10; font.bold: true; font.family: Island.Theme.fontFamily; color: Island.Theme.foreground }
+                    }
+                }
+
+                // CPU Chip
+                Rectangle {
+                    height: 26
+                    width: cpuText.implicitWidth + 24
+                    radius: 13
+                    color: Island.Theme.glassCard
+                    border.color: Island.Theme.glassBorderSubtle
+                    border.width: 1
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Rectangle { width: 6; height: 6; radius: 3; color: "#06b6d4"; anchors.verticalCenter: parent.verticalCenter }
+                        Text { id: cpuText; text: "CPU " + root.cpuPercent + "%"; font.pixelSize: 10; font.bold: true; font.family: Island.Theme.fontFamily; color: Island.Theme.foreground }
+                    }
+                }
+
+                // RAM Chip
+                Rectangle {
+                    height: 26
+                    width: ramText.implicitWidth + 24
+                    radius: 13
+                    color: Island.Theme.glassCard
+                    border.color: Island.Theme.glassBorderSubtle
+                    border.width: 1
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Rectangle { width: 6; height: 6; radius: 3; color: "#a855f7"; anchors.verticalCenter: parent.verticalCenter }
+                        Text { id: ramText; text: "RAM " + root.ramPercent + "%"; font.pixelSize: 10; font.bold: true; font.family: Island.Theme.fontFamily; color: Island.Theme.foreground }
+                    }
+                }
+
+                // BAT Chip
+                Rectangle {
+                    height: 26
+                    width: batText.implicitWidth + 24
+                    radius: 13
+                    color: Island.Theme.glassCard
+                    border.color: Island.Theme.glassBorderSubtle
+                    border.width: 1
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 5
+                        Rectangle { width: 6; height: 6; radius: 3; color: root.isCharging ? "#10b981" : (root.batteryPercent <= 20 ? "#ef4444" : "#3b82f6"); anchors.verticalCenter: parent.verticalCenter }
+                        Text { id: batText; text: "BAT " + root.batteryPercent + "%"; font.pixelSize: 10; font.bold: true; font.family: Island.Theme.fontFamily; color: Island.Theme.foreground }
+                    }
+                }
+            }
+
+            // 2B. Template "minimal": Compact Inline Telemetry Pill
+            Row {
+                id: minimalTelemetryRow
+                visible: root.template === "minimal"
+                spacing: 10
+                Text {
+                    text: ((Island.WeatherState && Island.WeatherState.area) ? Island.WeatherState.area : "Bangalore") + " • " +
+                          ((Island.WeatherState && Island.WeatherState.tempC) ? (String(Island.WeatherState.tempC).replace(/°/g, "") + "°C") : "28°C") + " • " +
+                          "BAT " + root.batteryPercent + "%" + (root.isCharging ? " ⚡" : "")
+                    font.pixelSize: 11
+                    font.family: Island.Theme.fontFamily
+                    color: Island.Theme.muted
+                }
+            }
+
+            // 2C. Template "pranc": Bottom-Left Radial Telemetry Ring (4 Separated Small Lines)
             Item {
                 id: radialVitalsDial
+                visible: root.template === "pranc"
                 width: 80
                 height: 80
                 anchors.left: parent.left
@@ -449,6 +582,7 @@ Item {
         // RIGHT COLUMN: Weather on the Top-Right of the Clock
         Column {
             id: rightCol
+            visible: root.template !== "minimal"
             anchors.top: parent.top
             anchors.topMargin: 16
             spacing: 4

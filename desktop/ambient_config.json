@@ -1,0 +1,9 @@
+{
+  "template": "pranc",
+  "clockPosition": "top-left",
+  "showSunMoon": true,
+  "showParticles": true,
+  "showWeatherMist": true,
+  "showGhostTrails": true,
+  "showConstellationCard": true
+}

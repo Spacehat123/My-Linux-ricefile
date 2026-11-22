@@ -26,11 +26,11 @@ PanelWindow {
     readonly property bool hovered: mouseArea.containsMouse || (controlCenter && controlCenter.hovered)
 
     anchors {
-        top: true
+        bottom: true
         left: true
     }
     margins {
-        top: 140
+        bottom: 16
         left: 14
     }
 
