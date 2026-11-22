@@ -11,8 +11,8 @@ Item {
     id: root
 
     property bool active: true
-    implicitWidth: 540
-    implicitHeight: 700
+    implicitWidth: mainRow.implicitWidth
+    implicitHeight: mainRow.implicitHeight
 
     // Architectural Clock Reference
     SystemClock {
@@ -135,12 +135,12 @@ Item {
             id: leftCol
             spacing: 12
 
-            // 1. Stacked Vertical Clock (Hours on top, Minutes below - Zero Dots)
-            Column {
-                id: clockStack
-                spacing: -38
+            // 1. Horizontal Clock (Hours and Minutes side-by-side - Zero Dots)
+            Row {
+                id: clockRow
+                spacing: 28
 
-                // Top Line: Hours (No dots/colon)
+                // Hours (No dots/colon)
                 Text {
                     text: Qt.formatDateTime(sysClock.date, "hh")
                     font.pixelSize: 220
@@ -151,7 +151,7 @@ Item {
                     renderType: Text.QtRendering
                 }
 
-                // Bottom Line: Minutes (No dots/colon)
+                // Minutes (No dots/colon)
                 Text {
                     text: Qt.formatDateTime(sysClock.date, "mm")
                     font.pixelSize: 220
@@ -437,8 +437,8 @@ Item {
         // RIGHT COLUMN: Weather on the Top-Right of the Clock
         Column {
             id: rightCol
-            anchors.top: leftCol.top
-            anchors.topMargin: 4
+            anchors.top: parent.top
+            anchors.topMargin: 16
             spacing: 4
 
             // Temperature Row
