@@ -1,8 +1,8 @@
 # cool-shell
 
-> **A high-performance, cyber-tactical desktop environment and unified operating cockpit built natively for Hyprland on Wayland using Quickshell 0.3.1 and Qt 6.**
+> **A high-performance, cyber-tactical desktop environment and unified operating cockpit built natively for Hyprland on Wayland using Quickshell 0.3.x and Qt 6.**
 
-`cool-shell` unifies tactile hardware control, intelligent system modes, local machine intelligence, and mobile device bridging into a single, cohesive Wayland desktop surface with zero latency, spring physics, and hardware telemetry.
+`cool-shell` unifies tactile hardware control, intelligent system modes, local machine intelligence, ambient astronomical rendering, and mobile device bridging into a single, cohesive Wayland desktop surface with zero latency, spring physics, and real-time hardware telemetry.
 
 ---
 
@@ -10,7 +10,7 @@
 
 `cool-shell` enforces a strict **unidirectional reactive architecture** that separates compositor observation from compositor mutation, preventing race conditions and stale UI states:
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────────┐
 │                      Observation Pipeline (Read-Only)                  │
 │                                                                        │
@@ -24,7 +24,7 @@
 │          ↓                                                             │
 │   DesktopState (Presentation State & Transition Driver)                │
 │          ↓                                                             │
-│   Shell Surfaces: Notch, Sidebars, BottomBar, Ambient, Transitions     │
+│   Shell Surfaces: TopConvexBar, Sidebars, BottomBar, Ambient Slate     │
 └──────────────────────────────────┬─────────────────────────────────────┘
                                    │
                                    ▼
@@ -53,251 +53,171 @@
 ├── theme/
 │   └── Theme.qml                 # Single semantic token authority (metrics, colors, durations)
 ├── core/                         # Authoritative compositor wrappers and data models
-├── island/                       # Dynamic Island notch, state machines, and modal panels
-│   ├── Notch.qml                 # Floating tactile notch with spring physics
-│   ├── IslandHub.qml             # Central priority arbitration and transient notifications
+├── island/                       # Drop-down feature panels and subsystem state machines
 │   ├── ShellState.qml            # Panel geometry, dimensions, and active monitor routing
-│   └── panels/                   # Interactive drop-down island panels
+│   ├── WeatherState.qml          # Localized weather caching and telemetry state
+│   ├── AppearanceState.qml       # Wallpapers and dynamic color palettes
+│   └── panels/                   # 16 Interactive drop-down island panels
 ├── components/                   # Left and Right sidebar tactical HUD components
-├── panels/                       # Slide-out sidebar containers and Settings window
-├── desktop/                      # Ambient idle layer, telemetry reticles, and contribution heatmap
-├── wallpaper/                    # Procedural GLSL harmonic interference GPU wallpaper
+│   ├── ControlCenter.qml         # visionOS-style modular control center
+│   └── TodayCenter.qml           # Right sidebar scratchpad, calendar, and system overview
+├── panels/                       # Surface containers (TopConvexBar, LeftSidebar, RightSidebar, ShortcutsWindow)
+├── desktop/                      # Ambient astronomical layer, customizable clock slate, and motes
+│   ├── AmbientConfig.qml         # Persistent layout, template, and celestial toggle authority
+│   ├── AmbientLayer.qml          # Wayland fullscreen ambient surface
+│   ├── DesktopAmbientSlate.qml   # Customizable clock (Pranc / Default / Minimal) & radial telemetry dial
+│   ├── SolarLunarArc.qml         # Bangalore astronomical solar/lunar orbit engine
+│   └── AtmosphericMotes.qml      # Autonomous interactive fireflies & living air particles
+├── wallpaper/                    # Video wallpaper playback and GPU shaders
+├── requirements.txt              # Authoritative Python dependencies (uv / pip compatible)
+├── DEPENDENCIES.md               # Complete dependencies matrix, package origins, and setup guide
 └── scripts/                      # Autonomous daemons, hardware controls, and intelligence tools
 ```
 
 ---
 
-## 🏝️ Apple-Style Dynamic Island (The Notch)
+## ⌨️ System Keybindings & Hotkeys (`SUPER + .`)
 
-At the apex of the screen sits the **Dynamic Island** ([`island/Notch.qml`](file://$HOME/.config/quickshell/cool-shell/island/Notch.qml)), a tactile, hardware-accelerated floating pill powered by spring physics (`SpringAnimation`, damping=0.3) and elastic morphing.
+Press **`SUPER + .`** anytime to summon the built-in, searchable **Shortcuts Cheatsheet Window**:
 
-### Collapsed Ambient Pill
-When idle, the notch remains a compact, unobtrusive capsule displaying real-time situational awareness:
-- **🎵 Synced Live Lyrics**: Integrates with `sptlrx` daemon to stream synchronized karaoke lyrics directly across the pill surface.
-- **📊 4-Bar Audio Visualizer**: Real-time FFT audio levels (`level-meter.py`) pulse to music playback.
-- **⚡ Battery & Charging**: Glows primary accent with charging wattage and percentage when plugged in.
-- **🔴 Screen Recording**: Displays active recording duration with pulsing red safety beacon.
-- **📬 Unread Counter**: Discreet notification badge indicating unseen system events.
-
-### Modal Panel Ecosystem
-Clicking or triggering shortcuts on the notch smoothly morphs it into 16 full-featured tactile tools:
-
-| Panel | Identifier | Description |
+| Shortcut | Action | Details / Scope |
 | :--- | :--- | :--- |
-| **Control Center** | `control` | Quick toggles (Night Light, DND, Bluetooth, Mic, Cam), brightness/volume sliders, power profiles. |
-| **App Launcher** | `launcher` | Fast keyboard-driven fuzzy desktop application launcher. |
-| **Clipboard** | `clipboard` | Persistent history of copied text and media with 1-tap copy/delete. |
-| **Drop Pocket** | `shelf` | Drag-and-drop workspace shelf storing file references for later retrieval. |
-| **Quick Notes** | `notes` | Persistent scratchpad with instant autosave and markdown formatting. |
-| **Todo List** | `todo` | Interactive checklist with priority markers and completion tracking. |
-| **Theme & Accents**| `theme` | Real-time accent palette switcher and semantic color tuning. |
-| **Wallpaper** | `wallpaper` | Live procedural GPU shader and desktop wallpaper selector. |
-| **Media Player** | `media` | Extended MPRIS player with track scrubber, volume wheel, and full lyrics display. |
-| **Notifications** | `notifications` | Notification history center with dismiss-all and actionable cards. |
-| **Timer / Stopwatch**| `timer` | Pomodoro focus intervals, multi-duration countdowns, and precision stopwatch. |
-| **Weather HUD** | `weather` | Real-time localized weather reports, temperature, and forecasts via `wttr.in`. |
-| **Game Mode** | `gamemode` | High-priority compositor mode disabling animations and background noise. |
-| **AI Studio** | `ai` | Text-to-image prompt interface powered by local Realistic Vision / LCM. |
-| **Phone Hub** | `phone` | Android device mirroring, wireless ADB status, and mobile controls. |
-| **Media Caption** | `caption` | Frictionless drag-and-drop subtitle generator prompt. |
+| **`SUPER + .`** | **Shortcuts Cheatsheet** | Toggle interactive shortcuts cheatsheet window |
+| **`SUPER + L`** | **Lock Screen** | Secure Wayland session lock via Veila |
+| **`SUPER + SHIFT + L`** | **Lockscreen Theme Switcher** | Switch Veila themes (`.local/share/veila/wallpapers`) |
+| **`SUPER`** *(release)* | **App Launcher & Calc** | Instant app search, calculator, unit & currency conversion |
+| **`SUPER + Space`** | **Contextual Action Hub** | Floating radial hub for recent files, tools, and actions |
+| **`SUPER + A`** | **Wallpapers & Live Video** | Browse static categories and dynamic animated `.mp4` video loops |
+| **`SUPER + C`** | **Color & Material Themes** | Real-time Material You palette generator |
+| **`SUPER + M`** | **Now Playing & Lyrics** | Synced karaoke lyrics, playback controls, and volume wheel |
+| **`SUPER + N`** | **Notification Center** | View notification stream, priority alerts, and history |
+| **`SUPER + G`** | **AI Image Studio Bar** | Fast prompt bar with Latent Consistency Model (LCM) |
+| **`SUPER + X`** | **Power & Session Menu** | Lock, sleep, restart, or shutdown |
+| **`SUPER + I`** | **System Settings** | Quickshell hardware and desktop settings center |
+| **`SUPER + TAB`** | **Window Overview Matrix** | Visual birds-eye overview across active workspaces |
+| **`SUPER + R`** | **Bird's-Eye Overview** | Bird's-eye overview and window stash pocket |
+| **`SUPER + P`** | **Cycle Display Layout** | Cycle multi-monitor layout presets |
+| **`SUPER + SHIFT + P`** | **Confirm Display Layout** | Confirm and save active multi-monitor configuration |
+| **`SUPER + T`** | **Terminal Emulator** | Launch Kitty GPU-accelerated terminal |
+| **`SUPER + E`** | **File Manager** | Launch Dolphin graphical file manager |
+| **`SUPER + W`** | **Web Browser** | Launch Brave web browser |
+| **`SUPER + Q`** | **Close Window** | Gracefully terminate focused window |
+| **`SUPER + V`** | **Clipboard Manager** | Cliphist fuzzy history picker with preview |
+| **`SUPER + D`** / **`SUPER + V`** | **Toggle Window Floating** | Switch active window between tiling and floating |
+| **`SUPER + J`** | **Toggle Split Direction** | Swap horizontal / vertical tiling split |
+| **`SUPER + Y`** | **Pin Window** | Pin floating window across all workspaces |
+| **`SUPER + H`** / **`SUPER + K`** | **Focus Window Left / Right** | Shift keyboard focus between tiling columns |
+| **`SUPER + Arrows`** | **Directional Window Focus** | Move focus Left, Right, Up, or Down |
+| **`SUPER + 1 .. 9, 0`** | **Jump to Workspace 1 - 10** | Instant switch to numbered workspace |
+| **`SUPER + SHIFT + 1 .. 0`** | **Move Window to Workspace** | Send focused window to workspace 1 through 10 |
+| **`SUPER + S`** | **Toggle Stash Pocket** | Slide down special scratchpad workspace |
+| **`SUPER + ALT + S`** | **Send Window to Stash** | Move active window into stash pocket |
+| **`SUPER + Scroll Wheel`** | **Scroll Workspaces** | Cycle workspaces smoothly via mouse wheel |
+| **`SUPER + Left Drag`** | **Move Window** | Interactive floating window movement |
+| **`SUPER + Right Drag`** | **Resize Window** | Interactive window boundary scaling |
+| **`Print`** | **Quick Area Snip** | Interactive rectangular crop directly copied to clipboard |
+| **`SUPER + Print`** | **Annotate Screenshot** | Capture screen region and open in Swappy editor |
+| **`SUPER + SHIFT + S`** | **Universal Screen Lens** | Optical OCR text extract, QR code decoder & color sampler |
+| **`SUPER + F1`** | **Extreme Game Mode** | Suspend desktop shell; switch to ~50MB RAM gaming profile |
+| **`SUPER + SHIFT + N`** | **Night Light Toggle** | Toggle Hyprsunset warm blue light filter |
+| **`SUPER + ALT + A`** | **Switch Audio Sink** | Quick-toggle audio output (Headphones / Speakers / HDMI) |
+| **`SUPER + ALT + P`** | **CoolPhone Mirroring** | Toggle Android screen mirror via Scrcpy |
+| **`SUPER + SHIFT + ESC`** | **Force Kill Application** | Interactive cursor crosshair to terminate frozen apps |
+| **`Fn + Media Keys`** | **Audio & Brightness** | Hardware volume, mic mute, brightness, and playback transport |
 
 ---
 
-## ⚡ Zero-Terminal Drag-and-Drop Captioning Engine
+## 🌌 Ambient Desktop HUD & Celestial Engine
 
-A frictionless subtitle generator and extractor powered by **NVIDIA FastConformer-CTC (NeMo 244M)** via `sherpa-onnx` and `ffmpeg`.
+When on an empty workspace or during idle periods, `cool-shell` transitions into an architectural ambient slate ([`desktop/AmbientLayer.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/AmbientLayer.qml)):
 
-```
-Drag Video/Audio onto Island ──► Intercepted by Notch ──► Tactile Island Choices:
-                                                             ├─► 🎬 Embed in Video (Lossless soft-subs + archive)
-                                                             ├─► 📝 Caption File Only (.srt + archive)
-                                                             └─► 󰏫 Stash in Pocket (Regular shelf)
-```
+### 1. Customizable Templates & Placements
+Configured via [`desktop/AmbientConfig.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/AmbientConfig.qml) and persistent `desktop/ambient_config.json`:
+- **`"pranc"` (Custom Setup)**: Horizontal clock `HH | MM` with 0.5-alpha vertical divider, 4-line segmented radial vitals ring (GPU in crimson red, CPU in cyan, Battery in emerald, RAM in purple) with center BT/Wi-Fi hub and hover tooltip, plus top-right localized weather.
+- **`"default"`**: Classic vertical stacked clock (`HH` on top of `MM` in Geom font), date, modern frosted glass telemetry chips row, and weather.
+- **`"minimal"`**: Ultra-clean single-line `HH:MM` clock, date, and compact inline weather/battery telemetry.
+- **Dynamic Placements**: Move the clock slate to `"top-left"`, `"center"`, `"bottom-left"`, or `"top-right"` with smooth animated transitions.
 
-### Features & Capabilities
-- **Direct Notch Drop**: Drag any media file (`.mp4`, `.mkv`, `.webm`, `.mov`, `.avi`, `.mp3`, `.wav`, `.m4a`, `.flac`) directly onto the collapsed Dynamic Island notch.
-- **Zero Terminal Overhead**: Everything executes asynchronously in the background via Quickshell native `Process`. No terminal window ever opens.
-- **Ultra-Fast Local GPU Inference**: Transcribes speech at **~40× real-time** on GPU (transcribes a 1-hour recording in under 90 seconds).
-- **Instant Extraction Bypass**: If a dropped video file already possesses an embedded subtitle track, it rips the stream to `.srt` instantly in **~0.06 seconds**, bypassing GPU transcription.
-- **Dual-Destination Output Architecture**:
-  1. `<media_dir>/<name>.srt` (Editable caption file alongside the original media).
-  2. `~/Music/caption_extracts/<name>.srt` (Centralized knowledge archive).
-  3. `<media_dir>/<name>_subtitled.mp4` (Lossless copy-stream container with toggleable soft subtitle track).
-- **Tactile Island Telemetry**: Collapsed pill displays `⚡ Embedding captions...` or `⚡ Transcribing...`, popping a green border flash (`#22c55e`) and confetti burst upon completion.
+### 2. Celestial Orbit (Sun & Moon)
+- Renders an astronomical 24-hour circular orbit ([`desktop/SolarLunarArc.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/SolarLunarArc.qml)) mapping Bangalore astronomical solar noon, dusk, dawn, and nadir with continuous optical diffraction rays.
+- Can be toggled on/off instantly via IPC or Control Center.
+
+### 3. Atmospheric Living Air (Motes & Fireflies)
+- 14 autonomous celestial stars and twilight fireflies ([`desktop/AtmosphericMotes.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/AtmosphericMotes.qml)) with cursor repulsion and obstacle collision physics.
+- **Performance Optimization**: When toggled off, the 50 FPS physics loop completely halts, reducing background CPU/GPU load to zero.
 
 ---
 
-## 📱 macOS Sequoia-Style Android Mirroring & Bridge (`cool-phone`)
+## 🏝️ Liquid Glass Top Convex Bar & Dynamic Panels
 
-Seamless mobile continuity bringing native Android control to the Wayland desktop, inspired by macOS Sequoia's iPhone Mirroring.
-
-### Key Capabilities
-- **Wireless ADB Auto-Discovery**: Discovers wireless debugging endpoints over local Wi-Fi using mDNS service browsing (`_adb-tls-pairing._tcp`).
-- **1-Click Auto-Pairing Modal**: Interactive GUI dialog automatically triggers when pairing is required, allowing 6-digit pairing code entry without opening a terminal.
-- **High-Framerate Low-Latency Stream**: Powered by hardware-accelerated `scrcpy` wrapped in a custom floating Wayland frame (`title: CoolPhone`) conforming to Hyprland layout rules.
-- **Dedicated Dynamic Island Phone Hub**:
-  - 📱 **Screen Toggle**: Power on/off remote phone screen without waking physical display.
-  - 🔊 **Volume Control**: Hardware volume steps sent via ADB keyevents.
-  - 🧭 **Navigation Bar**: Quick Home (`KEYCODE_HOME`), Back (`KEYCODE_BACK`), and App Switcher actions.
-  - 📸 **Instant Phone Screenshot**: Grabs direct frame buffer capture (`adb exec-out screencap -p`), saves to `~/Pictures/Screenshots/`, and automatically absorbs it into the Dynamic Island Drop Pocket.
-- **Zero-Load Architecture**: When the Phone switch is toggled off in the Sidebar or Control Center, all daemons and ADB pollers terminate immediately, guaranteeing 0.0% background CPU consumption.
+At the apex of the screen sits the **Top Convex Bar** ([`panels/TopConvexBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/TopConvexBar.qml)), an Apple Liquid Glass and Minflair-inspired tactile bar with spring physics:
+- **Instant Keyboard Focus**: Opens search and calculator instantaneously with exclusive Wayland layer-shell focus and zero mouse motion lag.
+- **Continuous Enter-to-Calculate**: Pressing Enter on mathematical calculations (e.g. `25 * 4`) copies the answer to the clipboard and populates the search bar for further chained arithmetic.
+- **16 Drop-Down Modals**: Wallpaper picker, theme engine, power menu, clipboard history, quick notes, todo checklist, timer/stopwatch, weather HUD, and AI studio.
 
 ---
 
-## 🎓 Study Mode Lockdown & Daily Contribution Heatmap
+## 🎛️ Bottom-Anchored Control Center (Left Sidebar)
 
-An uncompromising deep-work and discipline enforcement system designed for exam prep (CA / ICAI) and intensive study blocks ([`scripts/study-mode.py`](file://$HOME/.config/quickshell/cool-shell/scripts/study-mode.py)).
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        Study Mode Hard Lockdown                        │
-│                                                                        │
-│   🔒 Cryptographic Salted Password Verification (Prevents Quit)        │
-│   🚫 Hyprland Window & Tab Guardian (Kills YouTube, Reddit, Discord)  │
-│   📄 Full Educational Whitelist (ICAI, BOS, NotebookLM, All PDFs)     │
-│   📂 All File Explorers & Choosers Permitted (Dolphin, Portals, etc.)  │
-│   🎧 Autonomous Background Lo-Fi Music (~/Music/study/)                │
-│   📈 Overtime Flow State (Counts UP After Milestone with Zero Penalty) │
-└──────────────────────────────────┬─────────────────────────────────────┘
-                                   │
-                                   ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│             Desktop GitHub-Style Contribution Heatmap                  │
-│                                                                        │
-│   🟩 52-Week Deep Work Matrix  │  🔥 Streak Counters  │  🎯 Milestones │
-└────────────────────────────────────────────────────────────────────────┘
-```
-
-### Key Capabilities
-- **Hard Lockdown Architecture**: Once initiated (e.g. 30-minute block), early termination is impossible without cryptographic password verification (`Studyudsob` hashed with unique 16-byte random salt). Survives compositor reloads and system reboots.
-- **Autonomous Window Guardian**: Daemon queries Hyprland clients every 300ms. Instantly terminates distracting windows (Steam, Discord, Spotify) and dispatches Lua-based tab closure (`Ctrl+W`) for distracting web domains (YouTube, Reddit, Twitter/X, Instagram, Twitch, Netflix).
-- **Educational Whitelist**: Fully permits ICAI Board of Studies resources (`resource.cdn.icai.org`, `bos`), Google NotebookLM, WhatsApp Web, and **all standalone or browser-viewed PDF study materials**.
-- **Complete File Manager & Portal Protection**: All Linux file explorers (`dolphin`, `nautilus`, `nemo`, `thunar`, `pcmanfm`, `caja`, `ranger`, `yazi`) and desktop portals (`xdg-desktop-portal-gtk`, `kdialog`, `zenity`) are whitelisted, allowing seamless document downloading and organization.
-- **Autonomous Lo-Fi Accompaniment**: Silently mounts and shuffles study tracks from `~/Music/study/` in background `mpv` loop without UI clutter.
-- **Desktop Contribution Heatmap**: Renders an interactive 52-week activity grid on the desktop wallpaper layer ([`desktop/StudyContributionHeatmap.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/StudyContributionHeatmap.qml)), tracking sessions, consistency streaks, and deep-work volume.
+Positioned cleanly at the bottom-left of the display ([`panels/LeftSidebar.qml`](file:///home/pranc/.config/quickshell/cool-shell/panels/LeftSidebar.qml)):
+- **Hardware Toggles**: Wi-Fi, Bluetooth, VPN, Airplane mode, Night Light, Performance/Eco mode, and Dynamic Island toggles.
+- **Dual Capsule Sliders**: Low-latency Pipewire audio volume and backlight brightness controls.
+- **Study Mode**: Cryptographically locked focus ceremony preventing app distractions.
+- **CoolPhone Bridge**: macOS Sequoia-style wireless Android mirroring with hardware screen-off and clipboard sync.
+- **Screen Tools**: 1-click Area Snip, Fullscreen Screenshot, and Region Screen Recording (`wf-recorder`).
 
 ---
 
-## 🪶 Feather Mode & Hardware Resource Throttling
+## 🚀 Installation & Requirements
 
-A precision power-capping profile engineered for maximum battery longevity, silent fan operation, and thermal management ([`island/scripts/feather-mode.py`](file://$HOME/.config/quickshell/cool-shell/island/scripts/feather-mode.py)).
+Full dependency matrices, package origins, and setup diagnostics are documented in **[`DEPENDENCIES.md`](file://$HOME/.config/quickshell/cool-shell/DEPENDENCIES.md)** and **[`requirements.txt`](file://$HOME/.config/quickshell/cool-shell/requirements.txt)**.
 
-### Architecture & Throttling Limits
-- **Hardware-Level CPU & GPU Capping**: Enforces strict operational ceilings via Linux kernel cpufreq governor, energy-performance preferences (`power`), and GPU frequency limiters:
-  - **20% Limit (`Feather 20%`)**: Absolute power minimization. Caps CPU clock ceiling to baseline, limits GPU compute, ideal for reading, note-taking, and battery emergency.
-  - **35% Limit (`Feather 35%`)**: Balanced whisper-quiet profile. Ample headroom for smooth 60fps desktop rendering while cutting package power draw by over 60%.
-- **Tactile Island & Control Center HUD**: Interactive pills (`20%` / `35%`) inside the Control Center allow instant 1-tap switching without root password prompts.
-- **Process Freeze & Scheduler Renicing**: Automatically freezes intensive background indexers and sets desktop interactive tasks to higher priority (`nice -n -5`), maintaining snappy UI response even under aggressive power caps.
-
----
-
-## 🔋 Hardware Battery Health Care Mode (Acer EC 80%)
-
-A direct hardware-level battery preservation system tailored for Acer laptops and Embedded Controller (EC) architectures ([`scripts/battery-limit.sh`](file://$HOME/.config/quickshell/cool-shell/scripts/battery-limit.sh)).
-
-### Electrical & Hardware Operation
-- **Acer EC Register Control**: Directly interacts with the Embedded Controller firmware (`ec_sys` / `/dev/port`) to activate native Acer Battery Care Mode (`0x01`).
-- **Physical 80% Cutoff**: The hardware EC microcontroller physically disconnects battery charging circuitry at 80% capacity, switching the laptop directly to wall AC bypass power.
-- **Settling Behavior**: If enabled while battery charge is above 80% (e.g. 85%), charging halts instantly. The system draws exclusively from the battery until 80% is reached, then locks indefinitely at 80% on AC power.
-- **Chemistry Protection**: Prevents high-voltage anode degradation and thermal saturation caused by prolonged 100% float charging (4.2V/cell).
-- **Hardened Safety Guardrails**:
-  - Validates EC register address boundaries before every read/write.
-  - Implements Polkit privilege delegation with zero desktop hang.
-  - Interactive toggle located in the Settings Window under **System Modes**.
-
----
-
-## 👁️ Screen Lens OCR & AI Multimodal Studio
-
-Integrated local perception and machine intelligence surfaces accessible right from the desktop and Dynamic Island.
-
-### 🔍 Screen Lens (OCR & Read-Aloud)
-- **Regional Capture**: Shortcut activates a tactile crosshair selector (`slurp` + `grim`) to drag a frame over any text, code, or document on screen.
-- **Local OCR Extraction**: Uses `tesseract` to parse textual content directly into the clipboard within milliseconds.
-- **Dynamic Island Read-Aloud**: Immediately morphs the Notch into an audio reader HUD (`🔊 Reading aloud...`), streaming localized speech synthesis (`speech-dispatcher` / `piper-tts`) with 1-click stop.
-
-### 🎨 AI Image Studio (Local LCM Generation)
-- **Dedicated Prompt Modal**: Press shortcut or click the AI icon on the notch to expand the **AI Prompt Panel** ([`island/panels/AiPromptPanel.qml`](file://$HOME/.config/quickshell/cool-shell/island/panels/AiPromptPanel.qml)).
-- **Sub-Second Daemon Preload**: Daemon keeps model weights hot in VRAM (`image-daemon.py`) for rapid generation without load penalty.
-- **Realistic Vision v5.1 + LCM**: Generates native 512×512 photo-realistic outputs locally on NVIDIA GPU in ~3 seconds.
-- **Instant Shelf Stash**: Completed renders fly into the Dynamic Island with transient preview and auto-stash into Drop Pocket.
-
----
-
-## 🎛️ Tactical Desktop Surfaces & Spatial Navigation
-
-Beyond the Dynamic Island, `cool-shell` provides a complete multi-layered cyber-tactical desktop cockpit:
-
-### 1. Slide-Out Sidebars
-- **Left Sidebar ([`panels/LeftSidebar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/LeftSidebar.qml))**: Hosts the full Control Center, system mode switches (Feather Mode, Study Mode, Battery Care, Game Mode), audio sink selectors, and performance graphs.
-- **Right Sidebar ([`panels/RightSidebar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/RightSidebar.qml))**: Application Overview with searchable running surfaces, window thumbnail previews, and window management controls.
-
-### 2. Workspace Navigator & Directional HUD
-- **Bottom Bar ([`panels/BottomBar.qml`](file://$HOME/.config/quickshell/cool-shell/panels/BottomBar.qml))**: Floating workspace pills with occupancy pips, urgency alerts, and active window counters.
-- **Spatial Transition Overlay ([`desktop/DesktopTransition.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/DesktopTransition.qml))**: Ephemeral HUD overlay indicating workspace switch direction (`← / →`) with spring physics.
-
-### 3. Idle-Triggered Ambient Layer
-- Activates automatically upon user inactivity via `ext_idle_notification_v1` ([`desktop/AmbientLayer.qml`](file://$HOME/.config/quickshell/cool-shell/desktop/AmbientLayer.qml)).
-- Features linear orbital telemetry rings, tactical corner brackets, and floating battery/workspace coordinates.
-
-### 4. GPU Procedural Shader Wallpaper
-- Live harmonic interference fragment shader ([`wallpaper/shaders/wallpaper.frag`](file://$HOME/.config/quickshell/cool-shell/wallpaper/shaders/wallpaper.frag)) compiled via Qt 6 Shader Baker (`qsb`).
-- Renders directly on `WlrLayer.Background` with zero CPU overhead.
-
----
-
-## 🚀 Installation & Setup
-
-### Automated Modular Installers
-Run the interactive master installer menu:
+### Arch Linux / Pacman & AUR Setup
 
 ```bash
-./install.sh
+# 1. Install official repository prerequisites
+sudo pacman -S --needed \
+    hyprland hyprlock pipewire wireplumber pipewire-pulse pipewire-alsa playerctl \
+    grim slurp wf-recorder tesseract tesseract-data-eng leptonica zbar imagemagick \
+    swappy wl-clipboard cliphist brightnessctl awww espeak-ng python uv nodejs npm \
+    jq curl socat psmisc procps-ng coreutils findutils fd ufw bitwarden scrcpy \
+    android-tools cava mpv ffmpeg zenity networkmanager bluez bluez-utils upower \
+    lm_sensors qt6-5compat qt6-multimedia qt6-multimedia-ffmpeg qt6-declarative \
+    qt6-svg ttf-jetbrains-mono-nerd inter-font noto-fonts noto-fonts-emoji
+
+# 2. Install AUR packages
+paru -S --needed quickshell-git hyprsunset sptlrx-bin matugen-bin ttf-geist
 ```
 
-Or run modular numbered installers directly:
-- `installers/01-quickshell.sh` — Builds/installs Quickshell with Hyprland & PipeWire support.
-- `installers/02-hyprland.sh` — Hyprland dependencies, Wayland tools, and portal backends.
-- `installers/03-audio.sh` — Pipewire, Wireplumber, playerctl, and SPTLRX lyrics daemon.
-- `installers/04-phone.sh` — Scrcpy, Android tools, ADB, and bridge requirements.
-- `installers/05-caption.sh` — NVIDIA FastConformer-CTC ONNX model, sherpa-onnx, and ffmpeg.
-- `installers/06-ai.sh` — Latent Consistency Models and diffusers runtime.
-
-### Launching
-Run `cool-shell` via Quickshell:
+### Python Machine Learning Virtual Environment
 
 ```bash
-quickshell -c cool-shell
+uv venv ~/.config/quickshell/cool-shell/.venv
+source ~/.config/quickshell/cool-shell/.venv/bin/activate
+uv pip install -r ~/.config/quickshell/cool-shell/requirements.txt
 ```
 
 ---
 
 ## 📡 Quickshell IPC Protocol
 
-`cool-shell` exposes native IPC endpoints for automation, scripts, and keybindings:
+`cool-shell` provides extensive IPC control via the `qs` command-line tool:
 
 ```bash
-# Query Dynamic Island state summary
-qs -c cool-shell ipc call island getSummary
+# Ambient HUD Controls
+qs -c cool-shell ipc call ambient setTemplate "pranc"     # "pranc" | "default" | "minimal"
+qs -c cool-shell ipc call ambient setClockPosition "center" # "top-left" | "center" | "bottom-left" | "top-right"
+qs -c cool-shell ipc call ambient toggleSunMoon             # Toggle solar & lunar orbit
+qs -c cool-shell ipc call ambient toggleParticles           # Toggle living air fireflies
+qs -c cool-shell ipc call ambient getSummary                # Query ambient status JSON
 
-# Trigger media captioning modal on a video
-qs -c cool-shell ipc call island captionMedia "/path/to/video.mp4"
+# Cheatsheet & Windows
+qs -c cool-shell ipc call shortcuts toggle                  # Toggle Shortcuts Cheatsheet (Super + .)
+qs -c cool-shell ipc call settings toggle                   # Toggle Settings Window (Super + I)
+qs -c cool-shell ipc call control setLeftSidebarOpen true   # Open Left Sidebar / Control Center
 
-# Add a file directly to Drop Pocket
-qs -c cool-shell ipc call island shelfAdd "/path/to/document.pdf"
-
-# Show custom transient notification with glow
-qs -c cool-shell ipc call island showTransient "🚀 Mission Accomplished" 3500
-
-# Toggle active system modes
-python3 scripts/study-mode.py start --duration 1800
-python3 island/scripts/feather-mode.py toggle 35
+# Dynamic Island Panels
+qs -c cool-shell ipc call notch toggle launcher             # Toggle App Launcher
+qs -c cool-shell ipc call notch toggle wallpaper            # Toggle Wallpaper Panel
+qs -c cool-shell ipc call notch toggle media                # Toggle Media Player & Lyrics
 ```
-
-
-
-
-
-
-
-

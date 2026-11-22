@@ -1588,6 +1588,11 @@ ShellRoot {
         screen: (ShellState.activeScreenName ? Quickshell.screens.find(s => s && s.name === ShellState.activeScreenName) : null) || (Quickshell.screens.length > 0 ? Quickshell.screens[0] : null)
     }
 
+    ShortcutsWindow {
+        id: shortcutsWindow
+        screen: (ShellState.activeScreenName ? Quickshell.screens.find(s => s && s.name === ShellState.activeScreenName) : null) || (Quickshell.screens.length > 0 ? Quickshell.screens[0] : null)
+    }
+
     SpatialWorkspaceMap {
         id: spatialWorkspaceMap
         open: shellRoot.overviewOpen && !ShellState.gameMode
@@ -1758,6 +1763,26 @@ ShellRoot {
 
         function close(): void {
             settingsWindow.hide();
+        }
+    }
+
+    IpcHandler {
+        target: "shortcuts"
+
+        function toggle(): void {
+            shortcutsWindow.toggle();
+        }
+
+        function open(): void {
+            shortcutsWindow.show();
+        }
+
+        function close(): void {
+            shortcutsWindow.hide();
+        }
+
+        function isOpen(): string {
+            return JSON.stringify({ success: true, open: shortcutsWindow.open });
         }
     }
 
