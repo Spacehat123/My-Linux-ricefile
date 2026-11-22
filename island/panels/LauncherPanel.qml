@@ -8,6 +8,7 @@ import "../components"
 
 FocusScope {
     id: root
+    focus: true
 
     property int selectedIndex: 0
     readonly property var answer: Expression.evaluate(searchInput.text)
@@ -144,6 +145,13 @@ FocusScope {
     // =========================================================================
     function takeInitialFocus() {
         searchInput.forceActiveFocus(Qt.TabFocusReason);
+        searchInput.cursorPosition = searchInput.text.length;
+    }
+
+    onVisibleChanged: {
+        if (visible) {
+            Qt.callLater(takeInitialFocus);
+        }
     }
 
     function currentCount() {
@@ -182,10 +190,19 @@ FocusScope {
 
     function activateSelection() {
         if (hasAnswer) {
-            Quickshell.clipboardText = String(answer);
-            IslandHub.showTransient("Copied to clipboard", 1500);
-            ShellState.close();
-            return;
+            const ansStr = String(answer);
+            Quickshell.clipboardText = ansStr;
+            const hasOperator = /[+\-*/%^×÷]/.test(searchInput.text);
+            if (hasOperator || searchInput.text.trim() !== ansStr) {
+                searchInput.text = ansStr;
+                searchInput.cursorPosition = ansStr.length;
+                IslandHub.showTransient("= " + ansStr, 1200);
+                return;
+            } else {
+                IslandHub.showTransient("Copied to clipboard: " + ansStr, 1500);
+                ShellState.close();
+                return;
+            }
         }
         if (isFileSearch) {
             if (fileResults.length > 0) {
@@ -282,6 +299,7 @@ FocusScope {
                 clip: true
                 selectByMouse: true
                 activeFocusOnTab: true
+                focus: true
                 onTextChanged: {
                     root.resetSelection();
                     if (root.isFileSearch) {
@@ -332,6 +350,10 @@ FocusScope {
                     font.pixelSize: 24
                     font.weight: Font.Bold
                 }
+            }
+
+            TapHandler {
+                onTapped: root.activateSelection()
             }
 
             Behavior on height {

@@ -175,6 +175,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     // Overlay layer so the island renders above fullscreen windows (e.g. games)
     WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: window.isExpanded ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     anchors {
         top: true
