@@ -38,6 +38,7 @@ Item {
                     if (obj.cpu !== undefined) root.cpuPercent = obj.cpu;
                     if (obj.ram !== undefined) root.ramPercent = obj.ram;
                     if (obj.temp !== undefined) root.tempC = obj.temp;
+                    if (obj.gpu !== undefined) root.gpuPercent = Math.max(0, Math.min(100, obj.gpu));
                 } catch(e) {}
             }
         }
@@ -47,7 +48,7 @@ Item {
         id: gpuProc
         command: [
             "sh", "-c",
-            "cat /sys/class/drm/card1/device/gpu_busy_percent 2>/dev/null || echo 0"
+            "cat /sys/class/drm/card1/device/gpu_busy_percent 2>/dev/null || cat /sys/class/drm/card0/device/gpu_busy_percent 2>/dev/null || echo 0"
         ]
         running: false
         stdout: SplitParser {
@@ -58,9 +59,11 @@ Item {
         }
     }
 
-    // Gentle 3-second polling timer for hardware telemetry
+    readonly property bool isIdle: (typeof shellRoot !== "undefined" && shellRoot) ? shellRoot.idle : false
+
+    // Optimized polling timer for hardware telemetry (8000ms idle/ambient rate)
     Timer {
-        interval: 3000
+        interval: 8000
         running: root.active && root.visible
         repeat: true
         triggeredOnStart: true
@@ -340,7 +343,6 @@ Item {
                     id: radialGauges
                     anchors.fill: parent
                     layer.enabled: true
-                    layer.samples: 4
                     layer.smooth: true
 
                     // ── TOP LINE: GPU (Red) ──────────────────────────────────

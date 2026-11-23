@@ -12,9 +12,9 @@
     "semantic_hash": ""
   },
   "Other-stuff/02-python-environment.sh": {
-    "mtime": 1792857717.4974668,
-    "seen": 1794841260.6717374,
-    "ast_hash": "631bee6b67bf11c0b03730cb50acdfa3",
+    "mtime": 1795370674.5411985,
+    "seen": 1795370714.4325209,
+    "ast_hash": "cec2e4ecfabf52eff62b3a4ad2ff9cbd",
     "semantic_hash": ""
   },
   "Other-stuff/03-light-models-tts-ocr.sh": {
@@ -36,9 +36,9 @@
     "semantic_hash": ""
   },
   "Other-stuff/hyprland.lua": {
-    "mtime": 1792857717.4968286,
-    "seen": 1794841260.671743,
-    "ast_hash": "8a0f9c293e389d2f2b8928e5f33d5177",
+    "mtime": 1795369878.110373,
+    "seen": 1795369893.1005104,
+    "ast_hash": "9889f4f9aefbd1f45915f3d460c8ff1a",
     "semantic_hash": ""
   },
   "Other-stuff/install-models.sh": {
@@ -60,9 +60,9 @@
     "semantic_hash": ""
   },
   "install.sh": {
-    "mtime": 1792857717.1734447,
-    "seen": 1794841260.671747,
-    "ast_hash": "ceab96271a7827dc61856ebf728f747b",
+    "mtime": 1795370709.1538353,
+    "seen": 1795370714.4325402,
+    "ast_hash": "ab19c9f525b690e6a92a0f3ff90d9185",
     "semantic_hash": ""
   },
   "island/Expression.js": {
@@ -1968,9 +1968,9 @@
     "semantic_hash": ""
   },
   "island/scripts/sysinfo.sh": {
-    "mtime": 1794910538.594188,
-    "seen": 1794911185.0056071,
-    "ast_hash": "0e1cda6aea68814926902e96ac3014b9",
+    "mtime": 1795368258.2195601,
+    "seen": 1795368276.8038373,
+    "ast_hash": "3306840c568ba06aa3e404597e9c0ba3",
     "semantic_hash": ""
   },
   "island/scripts/voice-note.sh": {
@@ -2127,6 +2127,72 @@
     "mtime": 1795363413.7552273,
     "seen": 1795363439.1102943,
     "ast_hash": "4c4d5ee5619bb7b48c81487cab772e2b",
+    "semantic_hash": ""
+  },
+  "tests/e2e/fixtures/corrupted_shortcuts.lua": {
+    "mtime": 1795367993.39349,
+    "seen": 1795368081.657395,
+    "ast_hash": "fa41fd1e6605b91e92d14faea2d5290c",
+    "semantic_hash": ""
+  },
+  "tests/e2e/fixtures/mock_hyprland.lua": {
+    "mtime": 1795367984.2713177,
+    "seen": 1795368081.6573966,
+    "ast_hash": "75e3040265bbbfeb62ea916a2d605bf3",
+    "semantic_hash": ""
+  },
+  "tests/e2e/fixtures/mock_shortcuts_custom.lua": {
+    "mtime": 1795367989.3604138,
+    "seen": 1795368081.6573982,
+    "ast_hash": "de5ab83dd041e342c8f826be88f30966",
+    "semantic_hash": ""
+  },
+  "tests/e2e/fixtures/sample_windows.json": {
+    "mtime": 1795368001.8376498,
+    "seen": 1795368081.6573992,
+    "ast_hash": "41e63da044857906fda77ecebcebb62f",
+    "semantic_hash": ""
+  },
+  "tests/e2e/framework.py": {
+    "mtime": 1795370135.8286297,
+    "seen": 1795370714.432619,
+    "ast_hash": "f6871c25708a8c790df7e39b2a776454",
+    "semantic_hash": ""
+  },
+  "tests/e2e/run_e2e.py": {
+    "mtime": 1795370160.0971234,
+    "seen": 1795370714.4326217,
+    "ast_hash": "95c771c44eec646520e1fbca8cbf721f",
+    "semantic_hash": ""
+  },
+  "tests/e2e/test_tier1_features.py": {
+    "mtime": 1795370244.0895965,
+    "seen": 1795370714.4326234,
+    "ast_hash": "63c6bec77dae2e95d512090c8b655a8a",
+    "semantic_hash": ""
+  },
+  "tests/e2e/test_tier2_boundaries.py": {
+    "mtime": 1795370372.5767896,
+    "seen": 1795370714.4326248,
+    "ast_hash": "36e6f271bd3392d36a9929b87636e827",
+    "semantic_hash": ""
+  },
+  "tests/e2e/report.json": {
+    "mtime": 1795370947.401283,
+    "seen": 1795371996.7959106,
+    "ast_hash": "0f9e359c0b898a85b7d02bd6de8d8c4e",
+    "semantic_hash": ""
+  },
+  "tests/e2e/test_tier3_interactions.py": {
+    "mtime": 1795370433.3408527,
+    "seen": 1795370714.432627,
+    "ast_hash": "ab6183f0518431a582ffd1d4ec01e172",
+    "semantic_hash": ""
+  },
+  "tests/e2e/test_tier4_scenarios.py": {
+    "mtime": 1795370479.8186758,
+    "seen": 1795370714.4326282,
+    "ast_hash": "a63a7c2bba3d9942304422ef9909bebb",
     "semantic_hash": ""
   }
 }

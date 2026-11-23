@@ -60,12 +60,31 @@ Item {
     // 14 Autonomous Celestial Living Air Stars
     readonly property int moteCount: 14
 
-    // Frame physics timer (50 FPS) for continuous 2D motion, bounce physics & cursor repulsion
+    // Authoritative idle state detection
+    readonly property bool isIdle: (typeof shellRoot !== "undefined" && shellRoot) ? shellRoot.idle : false
+
+    Connections {
+        target: typeof shellRoot !== "undefined" ? shellRoot : null
+        function onIdleChanged() {
+            if (shellRoot.idle) {
+                for (let i = 0; i < moteRepeater.count; i++) {
+                    const item = moteRepeater.itemAt(i);
+                    if (item && typeof item.stopTwinkle === "function") {
+                        item.stopTwinkle();
+                    }
+                }
+            }
+        }
+    }
+
+    // Frame physics timer (50 FPS) for continuous 2D motion, bounce physics & cursor repulsion.
+    // When cursor is not present or when system is idle, physics timer halts so coordinates remain
+    // stable at rest and SceneGraph redraw cycles are completely eliminated.
     Timer {
         id: physicsTimer
         interval: 20
         repeat: true
-        running: root.active && root.visible
+        running: root.active && root.visible && root.cursorPresent && !root.isIdle
         onTriggered: {
             for (let i = 0; i < moteRepeater.count; i++) {
                 const item = moteRepeater.itemAt(i);
@@ -138,7 +157,7 @@ Item {
             Timer {
                 id: twinkleTimer
                 interval: 800 + Math.floor(Math.random() * 2600) + (mote.index * 180)
-                running: root.active
+                running: root.active && root.cursorPresent && !root.isIdle
                 repeat: false
                 onTriggered: mote.triggerRandomTwinkle()
             }
@@ -200,7 +219,12 @@ Item {
             }
 
             function triggerRandomTwinkle() {
-                if (!root.active) return;
+                if (!root.active || !root.visible || root.isIdle) return;
+                // Throttle twinkles during idle / cursor-away: only allow occasional twinkle for subset
+                if (!root.cursorPresent && (mote.index % 3 !== 0)) {
+                    mote.scheduleNextTwinkle();
+                    return;
+                }
                 if (singleBlinkAnim.running || doubleBlinkAnim.running) return;
 
                 peak1 = 0.85 + Math.random() * 0.15;
@@ -223,10 +247,21 @@ Item {
             }
 
             function scheduleNextTwinkle() {
-                if (!root.active) return;
-                // Organic pause before the next twinkle event (0.8s to 4.5s)
-                twinkleTimer.interval = 800 + Math.floor(Math.random() * 3700);
+                if (!root.active || !root.visible || root.isIdle) return;
+                // Throttle twinkle interval: 1.2s-4.5s during active cursor interaction,
+                // and 8s-20s during ambient resting state
+                const minWait = root.cursorPresent ? 1200 : 8000;
+                const randWait = root.cursorPresent ? 3300 : 12000;
+                twinkleTimer.interval = minWait + Math.floor(Math.random() * randWait);
                 twinkleTimer.restart();
+            }
+
+            function stopTwinkle() {
+                twinkleTimer.stop();
+                if (singleBlinkAnim.running) singleBlinkAnim.stop();
+                if (doubleBlinkAnim.running) doubleBlinkAnim.stop();
+                twinkleOpacity = baseOpacity;
+                excitation = 0.0;
             }
 
             // Helper: Test if coordinate falls within any solid obstacle (plus safety padding)

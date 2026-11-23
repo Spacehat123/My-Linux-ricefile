@@ -1,0 +1,82 @@
+[
+  {
+    "desc": "Kitty Terminal",
+    "surface": {
+      "class": "kitty",
+      "initialClass": "kitty",
+      "title": "pranc@zenith:~",
+      "appId": "kitty"
+    },
+    "expectedSeeThrough": true
+  },
+  {
+    "desc": "Alacritty Terminal",
+    "surface": {
+      "class": "alacritty",
+      "initialClass": "Alacritty",
+      "title": "alacritty",
+      "appId": "alacritty"
+    },
+    "expectedSeeThrough": true
+  },
+  {
+    "desc": "YouTube Streamers Tab in Brave",
+    "surface": {
+      "class": "brave-browser",
+      "initialClass": "Brave-browser",
+      "title": "I Hustled Streamers for $250,000 - YouTube - Brave",
+      "appId": "brave"
+    },
+    "expectedSeeThrough": false
+  },
+  {
+    "desc": "Online Chess Fast Moves",
+    "surface": {
+      "class": "google-chrome",
+      "initialClass": "google-chrome",
+      "title": "Playing Chess Online - Fast Moves",
+      "appId": "google-chrome"
+    },
+    "expectedSeeThrough": false
+  },
+  {
+    "desc": "Suckless Terminal exact class st",
+    "surface": {
+      "class": "st",
+      "initialClass": "st-256color",
+      "title": "st",
+      "appId": "st"
+    },
+    "expectedSeeThrough": true
+  },
+  {
+    "desc": "Fastest streamer title with arbitrary class",
+    "surface": {
+      "class": "mpv",
+      "initialClass": "mpv",
+      "title": "fastest streamer alive",
+      "appId": "mpv"
+    },
+    "expectedSeeThrough": false
+  },
+  {
+    "desc": "Unicode Stream title",
+    "surface": {
+      "class": "chromium",
+      "initialClass": "chromium",
+      "title": "🎬 𝐒𝐭𝐫𝐞𝐚𝐦 🎥 - Live",
+      "appId": "chromium"
+    },
+    "expectedSeeThrough": false
+  },
+  {
+    "desc": "Null or empty properties",
+    "surface": {
+      "class": "",
+      "initialClass": "",
+      "title": "",
+      "appId": ""
+    },
+    "expectedSeeThrough": false
+  }
+]

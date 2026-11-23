@@ -431,6 +431,14 @@ hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd(shellDir .. "/scripts/screen-lens.s
 
 -- SUPER + ALT + P → CoolPhone Android Screen Mirroring Toggle
 hl.bind("SUPER + ALT + P", hl.dsp.exec_cmd(shellDir .. "/scripts/phone-ctl.sh toggle"))
+
+-- =============================================================================
+-- ⚙️ Custom User Keybinding Overrides
+-- =============================================================================
+pcall(function()
+    package.loaded["shortcuts_custom"] = nil
+    require("shortcuts_custom")
+end)
 --------------------------------
 ---- WINDOWS AND WORKSPACES ----
 --------------------------------

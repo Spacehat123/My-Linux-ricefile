@@ -1,0 +1,1423 @@
+{
+  "summary": {
+    "total": 141,
+    "passed": 135,
+    "failed": 6,
+    "errors": 0,
+    "skipped": 0,
+    "duration_seconds": 5.4813,
+    "all_passed": false
+  },
+  "tests": [
+    {
+      "id": "T1_R1_1_01",
+      "tier": 1,
+      "feature": "R1.1",
+      "description": "Verify exact terminal class matching: window with class 'kitty' is classified as transparent",
+      "status": "PASS",
+      "duration": 0.0357,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_1_02",
+      "tier": 1,
+      "feature": "R1.1",
+      "description": "Verify exact terminal class matching: window with class 'alacritty' is classified as transparent",
+      "status": "PASS",
+      "duration": 0.0318,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_1_03",
+      "tier": 1,
+      "feature": "R1.1",
+      "description": "Verify non-terminal window with 'st' in title is NOT classified as transparent",
+      "status": "PASS",
+      "duration": 0.0334,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_1_04",
+      "tier": 1,
+      "feature": "R1.1",
+      "description": "Verify window with title 'Playing Chess Online - Fast Moves' does not trigger false positive",
+      "status": "PASS",
+      "duration": 0.0304,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_1_05",
+      "tier": 1,
+      "feature": "R1.1",
+      "description": "Verify suckless terminal with exact class 'st' is correctly recognized without substring false-positives on title",
+      "status": "PASS",
+      "duration": 0.0741,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_2_01",
+      "tier": 1,
+      "feature": "R1.2",
+      "description": "Verify IPC wallpaper isLive returns {'live': false} when desktop is idle",
+      "status": "PASS",
+      "duration": 0.1833,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_2_02",
+      "tier": 1,
+      "feature": "R1.2",
+      "description": "Verify MediaPlayer state is stopped/source empty when live == false",
+      "status": "PASS",
+      "duration": 0.0004,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_2_03",
+      "tier": 1,
+      "feature": "R1.2",
+      "description": "Verify FFmpeg software decode threads are 0 when video wallpaper is unmapped",
+      "status": "PASS",
+      "duration": 0.0227,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_2_04",
+      "tier": 1,
+      "feature": "R1.2",
+      "description": "Verify static wallpaper daemon (awww-daemon) remains active when video wallpaper unmaps",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_2_05",
+      "tier": 1,
+      "feature": "R1.2",
+      "description": "Verify video wallpaper unmaps when an opaque fullscreen window covers the workspace",
+      "status": "PASS",
+      "duration": 0.0003,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_3_01",
+      "tier": 1,
+      "feature": "R1.3",
+      "description": "Verify AtmosphericMotes physics timer stops or freezes when cursorPresent == false",
+      "status": "PASS",
+      "duration": 0.0003,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_3_02",
+      "tier": 1,
+      "feature": "R1.3",
+      "description": "Verify motes positions do not mutate across 1-second sample when idle",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_3_03",
+      "tier": 1,
+      "feature": "R1.3",
+      "description": "Verify canvas SceneGraph dirtiness drops to zero when cursor is outside ambient slate",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_3_04",
+      "tier": 1,
+      "feature": "R1.3",
+      "description": "Verify motes smoothly resume physics when cursor movement is detected",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_3_05",
+      "tier": 1,
+      "feature": "R1.3",
+      "description": "Verify twinkle animations do not trigger continuous render loop when idle",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_4_01",
+      "tier": 1,
+      "feature": "R1.4",
+      "description": "Verify AmbientWeatherMist property animations have running: false when opacity == 0.0",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_4_02",
+      "tier": 1,
+      "feature": "R1.4",
+      "description": "Verify AmbientWeatherMist layer visibility is false when mist is disabled in profile",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_4_03",
+      "tier": 1,
+      "feature": "R1.4",
+      "description": "Verify animation driver tick count does not increment due to mist when hidden",
+      "status": "PASS",
+      "duration": 0.0,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_4_04",
+      "tier": 1,
+      "feature": "R1.4",
+      "description": "Verify mist layer does not allocate GPU offscreen surface when inactive",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_4_05",
+      "tier": 1,
+      "feature": "R1.4",
+      "description": "Verify activating mist properly starts animations and deactivating cleanly halts them",
+      "status": "PASS",
+      "duration": 0.0,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_5_01",
+      "tier": 1,
+      "feature": "R1.5",
+      "description": "Verify sysinfo.sh calculates instantaneous CPU delta rather than cumulative boot ticks",
+      "status": "PASS",
+      "duration": 0.0003,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_5_02",
+      "tier": 1,
+      "feature": "R1.5",
+      "description": "Verify telemetry timer interval in DesktopAmbientSlate is >= 3000ms",
+      "status": "PASS",
+      "duration": 0.0007,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_5_03",
+      "tier": 1,
+      "feature": "R1.5",
+      "description": "Verify radialGauges Shape does not use layer.samples: 4",
+      "status": "PASS",
+      "duration": 0.0004,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_5_04",
+      "tier": 1,
+      "feature": "R1.5",
+      "description": "Verify GPU busy percent polling safely handles dual-GPU setups (card0/card1)",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R1_5_05",
+      "tier": 1,
+      "feature": "R1.5",
+      "description": "Verify overall idle CPU of Quickshell process is < 5% of a single core",
+      "status": "PASS",
+      "duration": 0.8253,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_1_01",
+      "tier": 1,
+      "feature": "R2.1",
+      "description": "Verify install.sh --dry-run runs non-interactively without prompting stdin",
+      "status": "PASS",
+      "duration": 0.0731,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_1_02",
+      "tier": 1,
+      "feature": "R2.1",
+      "description": "Verify install.sh --turnkey or --yes executes cleanly without interactive user prompts",
+      "status": "PASS",
+      "duration": 0.0608,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_1_03",
+      "tier": 1,
+      "feature": "R2.1",
+      "description": "Verify install.sh detects paru if installed",
+      "status": "PASS",
+      "duration": 0.0646,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_1_04",
+      "tier": 1,
+      "feature": "R2.1",
+      "description": "Verify install.sh detects yay if paru is absent",
+      "status": "PASS",
+      "duration": 0.0672,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_1_05",
+      "tier": 1,
+      "feature": "R2.1",
+      "description": "Verify install.sh refuses to run with error exit code when executed as root (EUID == 0)",
+      "status": "PASS",
+      "duration": 0.0003,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_2_01",
+      "tier": 1,
+      "feature": "R2.2",
+      "description": "Verify install.sh targets ttf-jetbrains-mono-nerd",
+      "status": "PASS",
+      "duration": 0.0005,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_2_02",
+      "tier": 1,
+      "feature": "R2.2",
+      "description": "Verify install.sh targets inter-font",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_2_03",
+      "tier": 1,
+      "feature": "R2.2",
+      "description": "Verify install.sh targets ttf-geist via AUR helper",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_2_04",
+      "tier": 1,
+      "feature": "R2.2",
+      "description": "Verify pacman installation uses --needed --noconfirm flags",
+      "status": "PASS",
+      "duration": 0.0003,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_2_05",
+      "tier": 1,
+      "feature": "R2.2",
+      "description": "Verify missing fonts trigger installation command in dry-run/execution report",
+      "status": "PASS",
+      "duration": 0.0678,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_3_01",
+      "tier": 1,
+      "feature": "R2.3",
+      "description": "Verify directory creation creates ~/.config/quickshell/cool-shell",
+      "status": "PASS",
+      "duration": 0.0672,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_3_02",
+      "tier": 1,
+      "feature": "R2.3",
+      "description": "Verify directory creation creates ~/.local/share/cool-shell/models",
+      "status": "PASS",
+      "duration": 0.065,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_3_03",
+      "tier": 1,
+      "feature": "R2.3",
+      "description": "Verify directory creation creates wallpaper directories in ~/Pictures/Wallpapers",
+      "status": "PASS",
+      "duration": 0.0018,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_3_04",
+      "tier": 1,
+      "feature": "R2.3",
+      "description": "Verify Python virtual environment creation targets ~/.local/share/cool-shell/venv",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_3_05",
+      "tier": 1,
+      "feature": "R2.3",
+      "description": "Verify venv setup installs packages from requirements.txt",
+      "status": "PASS",
+      "duration": 0.0,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_4_01",
+      "tier": 1,
+      "feature": "R2.4",
+      "description": "Verify install.sh checks for existence of ~/.config/hypr/hyprland.lua",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_4_02",
+      "tier": 1,
+      "feature": "R2.4",
+      "description": "Verify install.sh verifies or adds sourcing block for shortcuts_custom.lua",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_4_03",
+      "tier": 1,
+      "feature": "R2.4",
+      "description": "Verify shortcuts_custom.lua template is touched/created if absent",
+      "status": "PASS",
+      "duration": 0.0624,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_4_04",
+      "tier": 1,
+      "feature": "R2.4",
+      "description": "Verify sourcing block uses pcall or safe require pattern",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R2_4_05",
+      "tier": 1,
+      "feature": "R2.4",
+      "description": "Verify Hyprland configuration syntax remains valid after integration",
+      "status": "PASS",
+      "duration": 0.0021,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_1_01",
+      "tier": 1,
+      "feature": "R3.1",
+      "description": "Verify ShortcutsWindow.qml contains text referencing ~/.config/hypr/hyprland.lua",
+      "status": "PASS",
+      "duration": 0.0011,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_1_02",
+      "tier": 1,
+      "feature": "R3.1",
+      "description": "Verify font size for config path display is small (<= 11px / pixelSize <= 11)",
+      "status": "PASS",
+      "duration": 0.0014,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_1_03",
+      "tier": 1,
+      "feature": "R3.1",
+      "description": "Verify config path text is visible when shortcuts window is toggled",
+      "status": "PASS",
+      "duration": 0.001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_1_04",
+      "tier": 1,
+      "feature": "R3.1",
+      "description": "Verify config path display uses monospace font (JetBrains Mono Nerd Font)",
+      "status": "PASS",
+      "duration": 0.0028,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_1_05",
+      "tier": 1,
+      "feature": "R3.1",
+      "description": "Verify config path text displays drop-in location ~/.config/hypr/shortcuts_custom.lua",
+      "status": "PASS",
+      "duration": 0.0008,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_2_01",
+      "tier": 1,
+      "feature": "R3.2",
+      "description": "Verify shortcut rows expose an interactive editing element (edit button or click-to-edit)",
+      "status": "PASS",
+      "duration": 0.0009,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_2_02",
+      "tier": 1,
+      "feature": "R3.2",
+      "description": "Verify edit interface allows modifying modifier keys (SUPER, CTRL, ALT, SHIFT)",
+      "status": "FAIL",
+      "duration": 0.0014,
+      "message": "ShortcutsWindow must implement modifier selection/editing logic (availableModifiers, toggleModifier, selectedModifiers)",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_2_03",
+      "tier": 1,
+      "feature": "R3.2",
+      "description": "Verify edit interface allows modifying key string",
+      "status": "PASS",
+      "duration": 0.0007,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_2_04",
+      "tier": 1,
+      "feature": "R3.2",
+      "description": "Verify input validation rejects empty key combination",
+      "status": "PASS",
+      "duration": 0.0007,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_2_05",
+      "tier": 1,
+      "feature": "R3.2",
+      "description": "Verify conflict detection flags duplicate key combinations",
+      "status": "PASS",
+      "duration": 0.0006,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_3_01",
+      "tier": 1,
+      "feature": "R3.3",
+      "description": "Verify saving modified shortcut writes valid Lua syntax to ~/.config/hypr/shortcuts_custom.lua",
+      "status": "PASS",
+      "duration": 0.0005,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_3_02",
+      "tier": 1,
+      "feature": "R3.3",
+      "description": "Verify drop-in file contains unbind for old key and bind for new key (hl.unbind, hl.bind)",
+      "status": "PASS",
+      "duration": 0.0006,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_3_03",
+      "tier": 1,
+      "feature": "R3.3",
+      "description": "Verify drop-in file stores metadata JSON (-- SHORTCUTS_DATA:) for bidirectional state load",
+      "status": "PASS",
+      "duration": 0.0006,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_3_04",
+      "tier": 1,
+      "feature": "R3.3",
+      "description": "Verify saving invokes hyprctl reload via process execution",
+      "status": "PASS",
+      "duration": 0.0006,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T1_R3_3_05",
+      "tier": 1,
+      "feature": "R3.3",
+      "description": "Verify re-opening ShortcutsWindow loads previously saved custom bindings from drop-in",
+      "status": "PASS",
+      "duration": 0.0007,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_1_01",
+      "tier": 2,
+      "feature": "R1.1",
+      "description": "Window with empty title and empty class returns false (no crash)",
+      "status": "PASS",
+      "duration": 0.039,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_1_02",
+      "tier": 2,
+      "feature": "R1.1",
+      "description": "Window title containing 'st' across word boundaries returns false",
+      "status": "PASS",
+      "duration": 0.0412,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_1_03",
+      "tier": 2,
+      "feature": "R1.1",
+      "description": "Window title with special unicode characters returns false",
+      "status": "PASS",
+      "duration": 0.0338,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_1_04",
+      "tier": 2,
+      "feature": "R1.1",
+      "description": "Surface with null or undefined properties does not throw TypeError",
+      "status": "PASS",
+      "duration": 0.035,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_1_05",
+      "tier": 2,
+      "feature": "R1.1",
+      "description": "Multiple windows on same workspace (1 opaque, 1 transparent) flags workspace as NOT live for video",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_2_01",
+      "tier": 2,
+      "feature": "R1.2",
+      "description": "Video wallpaper with non-existent or corrupted video file path fails gracefully",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_2_02",
+      "tier": 2,
+      "feature": "R1.2",
+      "description": "Rapid toggling of idle state (idle -> active -> idle within 100ms) does not leak media players",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_2_03",
+      "tier": 2,
+      "feature": "R1.2",
+      "description": "Switching workspaces rapidly between empty and tiled does not wedge MediaPlayer",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_2_04",
+      "tier": 2,
+      "feature": "R1.2",
+      "description": "External kill -9 of awww-daemon does not crash wallpaper component",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_2_05",
+      "tier": 2,
+      "feature": "R1.2",
+      "description": "Memory leak stress test: sequential unmap/map cycles does not increase RES memory > 50MB",
+      "status": "PASS",
+      "duration": 0.0227,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_3_01",
+      "tier": 2,
+      "feature": "R1.3",
+      "description": "Cursor moved outside all screen boundaries does not crash collision calculations",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_3_02",
+      "tier": 2,
+      "feature": "R1.3",
+      "description": "0 motes in Repeater (count: 0) causes no division by zero or errors",
+      "status": "PASS",
+      "duration": 0.0004,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_3_03",
+      "tier": 2,
+      "feature": "R1.3",
+      "description": "Extreme display resolutions handle bounds clamping correctly",
+      "status": "PASS",
+      "duration": 0.0003,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_3_04",
+      "tier": 2,
+      "feature": "R1.3",
+      "description": "Motes velocity vector NaN/Infinity protection during violent cursor flick",
+      "status": "PASS",
+      "duration": 0.0003,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_3_05",
+      "tier": 2,
+      "feature": "R1.3",
+      "description": "Long idle duration maintains 0 FPS without clock drift or animation wakeups",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_4_01",
+      "tier": 2,
+      "feature": "R1.4",
+      "description": "Rapid weather changes between misty and clear weather correctly starts/stops animations",
+      "status": "PASS",
+      "duration": 0.0,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_4_02",
+      "tier": 2,
+      "feature": "R1.4",
+      "description": "Width or height resizing of screen dynamically updates animation endpoints without hitching",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_4_03",
+      "tier": 2,
+      "feature": "R1.4",
+      "description": "Zero duration in weather profile defaults to safe non-zero duration",
+      "status": "PASS",
+      "duration": 0.0,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_4_04",
+      "tier": 2,
+      "feature": "R1.4",
+      "description": "Mist layer opacity at epsilon (0.001) does not activate expensive render pass",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_4_05",
+      "tier": 2,
+      "feature": "R1.4",
+      "description": "Component destruction during active animation does not leave dangling timers",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_5_01",
+      "tier": 2,
+      "feature": "R1.5",
+      "description": "/sys/class/drm/card* missing or unreadable falls back cleanly to 0% GPU without error logs",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_5_02",
+      "tier": 2,
+      "feature": "R1.5",
+      "description": "Counter overflow in /proc/stat handles delta calculation safely",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_5_03",
+      "tier": 2,
+      "feature": "R1.5",
+      "description": "Heavy system load does not hang sysinfo.sh execution",
+      "status": "PASS",
+      "duration": 0.1202,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_5_04",
+      "tier": 2,
+      "feature": "R1.5",
+      "description": "Subprocess timeout protection: hanging cat or script is terminated if exceeding 2000ms",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R1_5_05",
+      "tier": 2,
+      "feature": "R1.5",
+      "description": "Parsing malformed /proc/meminfo lines returns fallback values",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_1_01",
+      "tier": 2,
+      "feature": "R2.1",
+      "description": "Unknown flags display help usage and exit with non-zero",
+      "status": "PASS",
+      "duration": 0.0274,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_1_02",
+      "tier": 2,
+      "feature": "R2.1",
+      "description": "Piped stdin with --turnkey flag does not stall",
+      "status": "PASS",
+      "duration": 0.0613,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_1_03",
+      "tier": 2,
+      "feature": "R2.1",
+      "description": "Missing package manager displays informative error message and exits cleanly",
+      "status": "PASS",
+      "duration": 0.0292,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_1_04",
+      "tier": 2,
+      "feature": "R2.1",
+      "description": "Both paru and yay present: prefers paru without duplicate invocations",
+      "status": "PASS",
+      "duration": 0.0537,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_1_05",
+      "tier": 2,
+      "feature": "R2.1",
+      "description": "Running in non-interactive subshell without TTY correctly adopts turnkey defaults",
+      "status": "PASS",
+      "duration": 0.0634,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_2_01",
+      "tier": 2,
+      "feature": "R2.2",
+      "description": "Font already installed: pacman/helper skips without reinstalling or erroring",
+      "status": "PASS",
+      "duration": 0.0003,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_2_02",
+      "tier": 2,
+      "feature": "R2.2",
+      "description": "Network failure simulation during pacman check handles error gracefully",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_2_03",
+      "tier": 2,
+      "feature": "R2.2",
+      "description": "Custom font directory ~/.local/share/fonts has restricted permissions: catches error",
+      "status": "PASS",
+      "duration": 0.0337,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_2_04",
+      "tier": 2,
+      "feature": "R2.2",
+      "description": "Space characters in font paths handled with proper quoting",
+      "status": "PASS",
+      "duration": 0.0004,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_2_05",
+      "tier": 2,
+      "feature": "R2.2",
+      "description": "fc-cache called only once after all fonts are verified",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_3_01",
+      "tier": 2,
+      "feature": "R2.3",
+      "description": "Target directory already exists as regular file: flags collision",
+      "status": "PASS",
+      "duration": 0.0018,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_3_02",
+      "tier": 2,
+      "feature": "R2.3",
+      "description": "Existing venv with missing bin/activate or broken python symlink is detected and rebuilt",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_3_03",
+      "tier": 2,
+      "feature": "R2.3",
+      "description": "Missing requirements.txt file in installer directory gives clear error",
+      "status": "PASS",
+      "duration": 0.0601,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_3_04",
+      "tier": 2,
+      "feature": "R2.3",
+      "description": "Read-only filesystem for ~/.local/share reports write permission failure",
+      "status": "PASS",
+      "duration": 0.0307,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_3_05",
+      "tier": 2,
+      "feature": "R2.3",
+      "description": "Python version check: verifies Python 3.10+ compatibility",
+      "status": "PASS",
+      "duration": 0.0003,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_4_01",
+      "tier": 2,
+      "feature": "R2.4",
+      "description": "Idempotency: Running install.sh twice does NOT append duplicate sourcing blocks in hyprland.lua",
+      "status": "PASS",
+      "duration": 0.1119,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_4_02",
+      "tier": 2,
+      "feature": "R2.4",
+      "description": "Existing hyprland.lua with read-only permissions reports error without corrupting file",
+      "status": "PASS",
+      "duration": 0.0483,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_4_03",
+      "tier": 2,
+      "feature": "R2.4",
+      "description": "Sourcing block inserted into an empty hyprland.lua produces syntactically valid Lua",
+      "status": "PASS",
+      "duration": 0.0587,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_4_04",
+      "tier": 2,
+      "feature": "R2.4",
+      "description": "shortcuts_custom.lua created with 0644 permissions",
+      "status": "PASS",
+      "duration": 0.0573,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R2_4_05",
+      "tier": 2,
+      "feature": "R2.4",
+      "description": "Symlink loop in ~/.config/hypr detected and rejected",
+      "status": "PASS",
+      "duration": 0.0473,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_1_01",
+      "tier": 2,
+      "feature": "R3.1",
+      "description": "Very small window dimensions keep config path text elided or contained without overflow",
+      "status": "PASS",
+      "duration": 0.0009,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_1_02",
+      "tier": 2,
+      "feature": "R3.1",
+      "description": "Custom XDG_CONFIG_HOME set: path display reflects actual config path or standard tilde path",
+      "status": "PASS",
+      "duration": 0.0006,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_1_03",
+      "tier": 2,
+      "feature": "R3.1",
+      "description": "Non-ASCII user home directory paths display properly without glyph corruption",
+      "status": "PASS",
+      "duration": 0.0007,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_1_04",
+      "tier": 2,
+      "feature": "R3.1",
+      "description": "High DPI scaling keeps path text crisp and appropriately sized",
+      "status": "PASS",
+      "duration": 0.0007,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_1_05",
+      "tier": 2,
+      "feature": "R3.1",
+      "description": "Text selection / copyability of config path string",
+      "status": "FAIL",
+      "duration": 0.0021,
+      "message": "Config path in ShortcutsWindow must support text selection or copying",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_2_01",
+      "tier": 2,
+      "feature": "R3.2",
+      "description": "Entering key string with leading/trailing spaces trims input automatically",
+      "status": "PASS",
+      "duration": 0.0008,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_2_02",
+      "tier": 2,
+      "feature": "R3.2",
+      "description": "Entering reserved compositor key combinations triggers warning",
+      "status": "FAIL",
+      "duration": 0.0013,
+      "message": "ShortcutsWindow must check against reserved compositor key combinations",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_2_03",
+      "tier": 2,
+      "feature": "R3.2",
+      "description": "Re-binding a key to its existing binding is a no-op and does not generate redundant drop-in entries",
+      "status": "PASS",
+      "duration": 0.0007,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_2_04",
+      "tier": 2,
+      "feature": "R3.2",
+      "description": "Editing cancellation restores original key combination without saving",
+      "status": "PASS",
+      "duration": 0.0008,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_2_05",
+      "tier": 2,
+      "feature": "R3.2",
+      "description": "Rapid multi-clicks on Edit/Save buttons do not trigger race conditions",
+      "status": "FAIL",
+      "duration": 0.0012,
+      "message": "ShortcutsWindow must guard against double-clicking save with saving state lock (isSaving, savingLock)",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_3_01",
+      "tier": 2,
+      "feature": "R3.3",
+      "description": "Special characters in command dispatcher strings are properly escaped in Lua output",
+      "status": "PASS",
+      "duration": 0.0007,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_3_02",
+      "tier": 2,
+      "feature": "R3.3",
+      "description": "Disk full or unwritable shortcuts_custom.lua shows error notification in UI",
+      "status": "FAIL",
+      "duration": 0.0009,
+      "message": "ShortcutsWindow must capture file write errors and set an error status message or notification",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_3_03",
+      "tier": 2,
+      "feature": "R3.3",
+      "description": "hyprctl reload failure or timeout handled gracefully without crashing QML",
+      "status": "PASS",
+      "duration": 0.0007,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_3_04",
+      "tier": 2,
+      "feature": "R3.3",
+      "description": "Reset all shortcuts to default deletes or empties shortcuts_custom.lua cleanly",
+      "status": "PASS",
+      "duration": 0.0007,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T2_R3_3_05",
+      "tier": 2,
+      "feature": "R3.3",
+      "description": "Corrupted JSON in -- SHORTCUTS_DATA: comments falls back to parsing raw Lua bindings",
+      "status": "FAIL",
+      "duration": 0.0008,
+      "message": "ShortcutsWindow.qml must fall back to raw Lua binding parsing when JSON is corrupt",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_01",
+      "tier": 3,
+      "feature": "R2.4+R3.3",
+      "description": "Installer provisions shortcuts_custom.lua in hyprland.lua; UI writes binding; reload executes cleanly",
+      "status": "PASS",
+      "duration": 0.0558,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_02",
+      "tier": 3,
+      "feature": "R2.1+R2.2+R2.3",
+      "description": "Installer turnkey run with --dry-run validates packages, fonts, and directories atomically",
+      "status": "PASS",
+      "duration": 0.0604,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_03",
+      "tier": 3,
+      "feature": "R3.1+R3.2",
+      "description": "ShortcutsWindow displays config path, user edits shortcut, path display remains steady",
+      "status": "PASS",
+      "duration": 0.0009,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_04",
+      "tier": 3,
+      "feature": "R1.1+R1.2",
+      "description": "Launching terminal triggers live wallpaper; launching browser with 'st' pauses live wallpaper",
+      "status": "PASS",
+      "duration": 0.0624,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_05",
+      "tier": 3,
+      "feature": "R1.2+R1.3",
+      "description": "Transitioning system to idle pauses video wallpaper and freezes motes physics simultaneously",
+      "status": "PASS",
+      "duration": 0.0007,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_06",
+      "tier": 3,
+      "feature": "R1.3+R1.5",
+      "description": "Ambient mode enabled: telemetry polls at >= 3s while motes freeze when mouse leaves screen",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_07",
+      "tier": 3,
+      "feature": "R3.2+R3.3+R1.5",
+      "description": "Editing and saving shortcut does not spike Quickshell CPU or cause persistent polling churn",
+      "status": "PASS",
+      "duration": 0.5206,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_08",
+      "tier": 3,
+      "feature": "R2.4+R3.1",
+      "description": "ShortcutsWindow config path matches the exact file verified and configured by install.sh",
+      "status": "PASS",
+      "duration": 0.0012,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_09",
+      "tier": 3,
+      "feature": "R1.2+R1.4",
+      "description": "Video wallpaper unmapped and weather mist disabled: SceneGraph render thread CPU drops",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_10",
+      "tier": 3,
+      "feature": "R3.2+R2.4",
+      "description": "User rebinds terminal shortcut from SUPER+T to SUPER+Return; drop-in written; Hyprland config valid",
+      "status": "PASS",
+      "duration": 0.0673,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_11",
+      "tier": 3,
+      "feature": "R1.1+R1.3",
+      "description": "Opening transparent terminal over motes keeps motes throttled when cursor inside terminal",
+      "status": "PASS",
+      "duration": 0.0001,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_12",
+      "tier": 3,
+      "feature": "R2.3+R1.5",
+      "description": "Python venv verified by installer runs helper daemons without high-frequency polling",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_13",
+      "tier": 3,
+      "feature": "R3.3+R3.2",
+      "description": "User modifies multiple shortcuts in one session; single consolidated drop-in file written",
+      "status": "PASS",
+      "duration": 0.0008,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_14",
+      "tier": 3,
+      "feature": "R1.2+R3.1",
+      "description": "ShortcutsWindow overlay opened on top of live wallpaper pauses video or renders smoothly",
+      "status": "PASS",
+      "duration": 0.0002,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T3_PAIR_15",
+      "tier": 3,
+      "feature": "R2.1+R3.3",
+      "description": "Fresh setup where hyprland.lua is newly copied by installer supports custom shortcut overrides",
+      "status": "PASS",
+      "duration": 0.0604,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T4_SCEN_01",
+      "tier": 4,
+      "feature": "Workflow",
+      "description": "Scenario 1: Clean Turnkey Installation & Verification",
+      "status": "PASS",
+      "duration": 0.0564,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T4_SCEN_02",
+      "tier": 4,
+      "feature": "Workflow",
+      "description": "Scenario 2: Normal Desktop Idle & Resource Throttling Lifecycle",
+      "status": "PASS",
+      "duration": 1.6101,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T4_SCEN_03",
+      "tier": 4,
+      "feature": "Workflow",
+      "description": "Scenario 3: Custom Shortcut Configuration & Hot-Reload",
+      "status": "PASS",
+      "duration": 0.0035,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T4_SCEN_04",
+      "tier": 4,
+      "feature": "Workflow",
+      "description": "Scenario 4: Browser Video Playback & Window Title Isolation",
+      "status": "PASS",
+      "duration": 0.0697,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T4_SCEN_05",
+      "tier": 4,
+      "feature": "Workflow",
+      "description": "Scenario 5: Ambient HUD Display & Long-Term Telemetry Stability",
+      "status": "PASS",
+      "duration": 0.0004,
+      "message": "OK",
+      "details": {}
+    },
+    {
+      "id": "T4_SCEN_06",
+      "tier": 4,
+      "feature": "Workflow",
+      "description": "Scenario 6: Full System Integration & Idempotent Configuration Recovery",
+      "status": "PASS",
+      "duration": 0.1215,
+      "message": "OK",
+      "details": {}
+    }
+  ]
+}

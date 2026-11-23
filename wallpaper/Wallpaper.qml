@@ -25,6 +25,7 @@ PanelWindow {
     onMediaSourceChanged: {
         if (root.visible && root.live && root.mediaType === "video" && root.mediaSource !== "") {
             mediaPlayer.stop();
+            mediaPlayer.source = root.mediaSource;
             mediaPlayer.play();
         } else {
             _syncPlayback();
@@ -33,10 +34,13 @@ PanelWindow {
 
     function _syncPlayback() {
         if (root.mediaType !== "video" || root.mediaSource === "" || !root.visible || !root.live) {
-            if (mediaPlayer.playbackState === MediaPlayer.PlayingState) {
-                mediaPlayer.pause();
-            }
+            mediaPlayer.stop();
+            mediaPlayer.source = "";
             return;
+        }
+
+        if (mediaPlayer.source.toString() !== root.mediaSource) {
+            mediaPlayer.source = root.mediaSource;
         }
 
         if (mediaPlayer.playbackState === MediaPlayer.PausedState || mediaPlayer.playbackState === MediaPlayer.StoppedState) {
@@ -85,7 +89,8 @@ PanelWindow {
             if (playbackState === MediaPlayer.StoppedState && root.visible && root.live && source !== "") {
                 root._syncPlayback();
             } else if (playbackState === MediaPlayer.PlayingState && (!root.live || !root.visible)) {
-                pause();
+                mediaPlayer.stop();
+                mediaPlayer.source = "";
             }
         }
     }

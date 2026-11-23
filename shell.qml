@@ -154,51 +154,68 @@ ShellRoot {
     property string wallpaperMediaSource: ""
     property bool autoPauseOnOpaque: true
 
-    readonly property var seeThroughPatterns: [
-        "kitty", "alacritty", "foot", "wezterm", "ghostty",
-        "urxvt", "st", "xterm", "terminal", "console",
-        "cava", "glava", "peaclock"
+    readonly property var seeThroughExactPatterns: [
+        "kitty", "alacritty", "foot", "footclient", "wezterm", "ghostty",
+        "urxvt", "st", "st-256color", "xterm", "cava", "glava", "peaclock"
     ]
+
+    readonly property var seeThroughPrefixPatterns: [
+        "kitty", "alacritty", "foot", "wezterm", "ghostty",
+        "urxvt", "xterm", "terminal", "console", "cava", "glava", "peaclock"
+    ]
+
+    readonly property alias seeThroughPatterns: shellRoot.seeThroughExactPatterns
 
     readonly property int _wallpaperLiveTick: {
         let wsId = workspaceManager ? workspaceManager.focusedWorkspaceId : 0;
         let surfCount = surfaceManager ? surfaceManager.count : 0;
         let activeAddr = surfaceManager ? surfaceManager.activeAddress : "";
         let wsCount = workspaceManager ? workspaceManager.count : 0;
-        return wsId * 10000 + surfCount * 100 + (activeAddr ? activeAddr.length : 0) + wsCount;
+        let idleVal = shellRoot.idle ? 1 : 0;
+        return idleVal * 100000 + wsId * 10000 + surfCount * 100 + (activeAddr ? activeAddr.length : 0) + wsCount;
     }
 
     function isSurfaceSeeThrough(surface): bool {
         if (!surface) return false;
         let cls = "";
         let initialCls = "";
-        let title = "";
+        let app = "";
 
         if (surface.windowClass !== undefined) cls = String(surface.windowClass).toLowerCase();
         else if (surface.lastIpcObject && surface.lastIpcObject.class) cls = String(surface.lastIpcObject.class).toLowerCase();
 
         if (surface.appId !== undefined) {
-            let app = String(surface.appId).toLowerCase();
+            app = String(surface.appId).toLowerCase();
             if (!cls) cls = app;
         }
 
         if (surface.initialClass !== undefined) initialCls = String(surface.initialClass).toLowerCase();
         else if (surface.lastIpcObject && surface.lastIpcObject.initialClass) initialCls = String(surface.lastIpcObject.initialClass).toLowerCase();
 
-        if (surface.title !== undefined) title = String(surface.title).toLowerCase();
-
-        for (let i = 0; i < shellRoot.seeThroughPatterns.length; ++i) {
-            let pat = shellRoot.seeThroughPatterns[i];
-            if (cls.includes(pat) || initialCls.includes(pat) || title.includes(pat)) {
+        // 1. Exact match on class or appId (handles short identifiers like "st" without false positives)
+        for (let i = 0; i < shellRoot.seeThroughExactPatterns.length; ++i) {
+            let pat = shellRoot.seeThroughExactPatterns[i];
+            if (cls === pat || initialCls === pat || app === pat) {
                 return true;
             }
         }
+
+        // 2. Safe substring match on class or appId (excluding short ambiguous patterns like "st")
+        // NEVER match against surface.title to prevent false positives from page titles
+        for (let i = 0; i < shellRoot.seeThroughPrefixPatterns.length; ++i) {
+            let pat = shellRoot.seeThroughPrefixPatterns[i];
+            if (cls.includes(pat) || initialCls.includes(pat) || app.includes(pat)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
     function shouldWallpaperBeLiveForMonitor(screen): bool {
         if (!shellRoot.wallpaperEnabled || ShellState.gameMode || ShellState.featherMode) return false;
         if (shellRoot.wallpaperMediaType !== "video") return false;
+        if (shellRoot.idle) return false;
         if (!shellRoot.autoPauseOnOpaque) return true;
 
         let screenName = (screen && screen.name) ? screen.name : "";

@@ -37,11 +37,13 @@ Item {
     // Layer 1: Primary Valley Mist Ribbon (Left-to-Right Drift)
     Item {
         id: layer1
+        visible: root.opacity > 0.0
         width: root.width * 2
         height: root.height * 0.42
         y: root.height * 0.52 + root.profile.yOffset
 
         NumberAnimation on x {
+            running: root.opacity > 0.0 && root.active
             from: 0
             to: -root.width
             duration: root.profile.durationL1
@@ -49,6 +51,7 @@ Item {
         }
 
         SequentialAnimation on y {
+            running: root.opacity > 0.0 && root.active
             loops: Animation.Infinite
             NumberAnimation { to: root.height * 0.52 + root.profile.yOffset + 10; duration: 15000; easing.type: Easing.InOutSine }
             NumberAnimation { to: root.height * 0.52 + root.profile.yOffset - 10; duration: 15000; easing.type: Easing.InOutSine }
@@ -68,11 +71,13 @@ Item {
     // Layer 2: Sub-Ridge Counter-Drift Ribbon (Right-to-Left Drift)
     Item {
         id: layer2
+        visible: root.opacity > 0.0
         width: root.width * 2
         height: root.height * 0.34
         y: root.height * 0.64 + root.profile.yOffset
 
         NumberAnimation on x {
+            running: root.opacity > 0.0 && root.active
             from: -root.width
             to: 0
             duration: root.profile.durationL2
@@ -80,6 +85,7 @@ Item {
         }
 
         SequentialAnimation on y {
+            running: root.opacity > 0.0 && root.active
             loops: Animation.Infinite
             NumberAnimation { to: root.height * 0.64 + root.profile.yOffset - 8; duration: 18000; easing.type: Easing.InOutSine }
             NumberAnimation { to: root.height * 0.64 + root.profile.yOffset + 8; duration: 18000; easing.type: Easing.InOutSine }
